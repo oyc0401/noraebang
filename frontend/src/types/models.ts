@@ -9,6 +9,7 @@ export interface Artist {
   name: string;
   nameKo: string;
   nameNorm: string;
+  pathname: string;
   youtubeChannelUrl?: string;
   tjSongRequestUrl?: string;
   createdAt: Date;
