@@ -8,12 +8,12 @@ export const higedanArtist: Artist = {
   nameKo: '오피셜 히게단디즘',
   nameNorm: 'official hige dandism',
   youtubeChannelUrl: 'https://www.youtube.com/@officialhigedism',
-  tjSongRequestUrl: undefined,
+  tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=7&dt_code=30&singer=Official髭男dism',
   createdAt: now,
   updatedAt: now,
 };
 
-// Artist ID 1: Songs 1000-1999, Karaoke 1000-1999
+// Artist ID 1: Songs 1000-1999, Karaoke songId*3 ~ songId*3+2
 export const higedanSongs: Song[] = [
   {
     id: 1000,
@@ -27,9 +27,9 @@ export const higedanSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 1000, songId: 1000, provider: Provider.TJ, karaokeNo: '68720', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1001, songId: 1000, provider: Provider.KY, karaokeNo: '44868', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1002, songId: 1000, provider: Provider.JOYSOUND, karaokeNo: '611846', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3000, songId: 1000, provider: Provider.TJ, karaokeNo: '68720', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3001, songId: 1000, provider: Provider.KY, karaokeNo: '44868', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3002, songId: 1000, provider: Provider.JOYSOUND, karaokeNo: '611846', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -44,9 +44,9 @@ export const higedanSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 1003, songId: 1001, provider: Provider.TJ, karaokeNo: '68600', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1004, songId: 1001, provider: Provider.KY, karaokeNo: '44783', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1005, songId: 1001, provider: Provider.JOYSOUND, karaokeNo: '497256', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3003, songId: 1001, provider: Provider.TJ, karaokeNo: '68600', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3004, songId: 1001, provider: Provider.KY, karaokeNo: '44783', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3005, songId: 1001, provider: Provider.JOYSOUND, karaokeNo: '497256', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -61,9 +61,9 @@ export const higedanSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 1006, songId: 1002, provider: Provider.TJ, karaokeNo: '68058', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1007, songId: 1002, provider: Provider.KY, karaokeNo: '44438', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1008, songId: 1002, provider: Provider.JOYSOUND, karaokeNo: '438945', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3006, songId: 1002, provider: Provider.TJ, karaokeNo: '68058', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3007, songId: 1002, provider: Provider.KY, karaokeNo: '44438', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3008, songId: 1002, provider: Provider.JOYSOUND, karaokeNo: '438945', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -78,9 +78,9 @@ export const higedanSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 1009, songId: 1003, provider: Provider.TJ, karaokeNo: '52994', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1010, songId: 1003, provider: Provider.KY, karaokeNo: '44507', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1011, songId: 1003, provider: Provider.JOYSOUND, karaokeNo: '429234', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3009, songId: 1003, provider: Provider.TJ, karaokeNo: '52994', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3010, songId: 1003, provider: Provider.KY, karaokeNo: '44507', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3011, songId: 1003, provider: Provider.JOYSOUND, karaokeNo: '429234', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -95,9 +95,9 @@ export const higedanSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 1012, songId: 1004, provider: Provider.TJ, karaokeNo: '68407', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1013, songId: 1004, provider: Provider.KY, karaokeNo: '44674', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1014, songId: 1004, provider: Provider.JOYSOUND, karaokeNo: '490401', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3012, songId: 1004, provider: Provider.TJ, karaokeNo: '68407', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3013, songId: 1004, provider: Provider.KY, karaokeNo: '44674', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3014, songId: 1004, provider: Provider.JOYSOUND, karaokeNo: '490401', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -112,9 +112,9 @@ export const higedanSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 1015, songId: 1005, provider: Provider.TJ, karaokeNo: '68200', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1016, songId: 1005, provider: Provider.KY, karaokeNo: '44519', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1017, songId: 1005, provider: Provider.JOYSOUND, karaokeNo: '446104', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3015, songId: 1005, provider: Provider.TJ, karaokeNo: '68200', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3016, songId: 1005, provider: Provider.KY, karaokeNo: '44519', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3017, songId: 1005, provider: Provider.JOYSOUND, karaokeNo: '446104', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -129,9 +129,9 @@ export const higedanSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 1018, songId: 1006, provider: Provider.TJ, karaokeNo: '68087', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1019, songId: 1006, provider: Provider.KY, karaokeNo: '44440', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1020, songId: 1006, provider: Provider.JOYSOUND, karaokeNo: '428218', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3018, songId: 1006, provider: Provider.TJ, karaokeNo: '68087', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3019, songId: 1006, provider: Provider.KY, karaokeNo: '44440', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3020, songId: 1006, provider: Provider.JOYSOUND, karaokeNo: '428218', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -146,9 +146,9 @@ export const higedanSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 1021, songId: 1007, provider: Provider.TJ, karaokeNo: '68104', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1022, songId: 1007, provider: Provider.KY, karaokeNo: '44458', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 1023, songId: 1007, provider: Provider.JOYSOUND, karaokeNo: '441868', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3021, songId: 1007, provider: Provider.TJ, karaokeNo: '68104', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3022, songId: 1007, provider: Provider.KY, karaokeNo: '44458', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3023, songId: 1007, provider: Provider.JOYSOUND, karaokeNo: '441868', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
 ];

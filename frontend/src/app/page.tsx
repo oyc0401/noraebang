@@ -16,7 +16,7 @@ export default function Home() {
             노래방 검색
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400">
-            요루시카(ヨルシカ) 노래를 검색해보세요
+            일본 노래를 검색해보세요
           </p>
         </header>
 
@@ -54,14 +54,26 @@ export default function Home() {
                   key={song.id}
                   className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
                 >
-                  <div className="mb-3">
-                    <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-                      {song.title}
-                    </h2>
-                    {song.titleKo && (
-                      <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-                        {song.titleKo}
-                      </p>
+                  <div className="mb-4">
+                    <div className="mb-2">
+                      <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+                        {song.title}
+                      </h2>
+                      {song.titleKo && (
+                        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+                          {song.titleKo}
+                        </p>
+                      )}
+                    </div>
+                    {song.primaryArtist && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="rounded-full bg-zinc-200 px-3 py-1 font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                          {song.primaryArtist.name}
+                        </span>
+                        <span className="text-zinc-500 dark:text-zinc-500">
+                          {song.primaryArtist.nameKo}
+                        </span>
+                      </div>
                     )}
                   </div>
 
