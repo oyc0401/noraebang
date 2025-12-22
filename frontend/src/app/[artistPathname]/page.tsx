@@ -5,16 +5,34 @@ import { useSongs } from '@/hooks/use-songs';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Provider } from '@/types/models';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ArtistPage() {
   const params = useParams();
   const artistPathname = params.artistPathname as string;
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
 
   const { data: artist, isLoading: artistLoading, error: artistError } = useArtist(artistPathname);
   const artistId = artist?.id;
   const { data: songs, isLoading: songsLoading, error: songsError } = useSongs(searchQuery, artistId);
+
+  // Handle hash navigation on mount and when songs load
+  useEffect(() => {
+    if (!songs || songs.length === 0) return;
+
+    const hash = window.location.hash;
+    if (hash) {
+      const songId = hash.replace('#', '');
+      setSelectedSongId(songId);
+      const element = document.getElementById(songId);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }
+  }, [songs]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
@@ -152,47 +170,62 @@ export default function ArtistPage() {
                     검색 결과가 없습니다
                   </div>
                 ) : (
-                  songs.map((song) => (
-                    <div
-                      key={song.id}
-                      className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
-                    >
-                      <div className="mb-4">
-                        <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-                          {song.title}
-                        </h2>
-                        {song.titleKo && (
-                          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-                            {song.titleKo}
-                          </p>
-                        )}
-                      </div>
+                  songs.map((song) => {
+                    const isSelected = selectedSongId === song.id.toString();
 
-                      <div className="flex flex-wrap gap-2">
-                        {song.karaokeSongs.map((karaoke) => (
-                          <div
-                            key={karaoke.id}
-                            className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-sm dark:bg-zinc-800"
-                          >
-                            <span
-                              className={`font-semibold ${
-                                karaoke.provider === Provider.TJ
-                                  ? 'text-blue-600 dark:text-blue-400'
-                                  : karaoke.provider === Provider.KY
-                                    ? 'text-green-600 dark:text-green-400'
-                                    : 'text-purple-600 dark:text-purple-400'
-                              }`}
+                    return (
+                      <div
+                        key={song.id}
+                        id={song.id.toString()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const newHash = `#${song.id}`;
+                          window.history.replaceState(null, '', newHash);
+                          setSelectedSongId(song.id.toString());
+                        }}
+                        className={`rounded-lg border p-6 shadow-sm transition-all scroll-mt-8 cursor-pointer ${
+                          isSelected
+                            ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-500 ring-opacity-50 dark:border-blue-400 dark:bg-blue-950 dark:ring-blue-400'
+                            : 'border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700'
+                        }`}
+                      >
+                        <div className="mb-4">
+                          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+                            {song.title}
+                          </h2>
+                          {song.titleKo && (
+                            <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+                              {song.titleKo}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {song.karaokeSongs.map((karaoke) => (
+                            <div
+                              key={karaoke.id}
+                              className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-sm dark:bg-zinc-800"
                             >
-                              {karaoke.provider}
-                            </span>
-                            <span className="text-zinc-700 dark:text-zinc-300">
-                              {karaoke.karaokeNo}
-                            </span>
-                          </div>
-                        ))}
+                              <span
+                                className={`font-semibold ${
+                                  karaoke.provider === Provider.TJ
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : karaoke.provider === Provider.KY
+                                      ? 'text-green-600 dark:text-green-400'
+                                      : 'text-purple-600 dark:text-purple-400'
+                                }`}
+                              >
+                                {karaoke.provider}
+                              </span>
+                              <span className="text-zinc-700 dark:text-zinc-300">
+                                {karaoke.karaokeNo}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             )}

@@ -5,6 +5,6 @@ import { yonezuKenshiArtist, yonezuKenshiSongs } from './yonezu-kenshi';
 import { yuikaArtist, yuikaSongs } from './yuika';
 import { yoasobiArtist, yoasobiSongs } from './yoasobi';
 
-export const allArtists = [yorushikaArtist, higedanArtist, mrsGreenAppleArtist, yonezuKenshiArtist, yuikaArtist, yoasobiArtist];
+export const allArtists = [higedanArtist, mrsGreenAppleArtist, yonezuKenshiArtist, yuikaArtist, yoasobiArtist,yorushikaArtist];
 
-export const allSongs = [...yorushikaSongs, ...higedanSongs, ...mrsGreenAppleSongs, ...yonezuKenshiSongs, ...yuikaSongs, ...yoasobiSongs];
+export const allSongs = [ ...higedanSongs, ...mrsGreenAppleSongs, ...yonezuKenshiSongs, ...yuikaSongs, ...yoasobiSongs,...yorushikaSongs];

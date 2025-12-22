@@ -12,7 +12,17 @@ export async function GET(request: NextRequest) {
 
     let songs;
 
-    if (artistId) {
+    if (artistId && query) {
+      // Both artistId and query: filter by artist first, then search within
+      const artistSongs = await songService.getSongsByArtist(Number(artistId));
+      const lowerQuery = query.toLowerCase();
+      songs = artistSongs.filter(
+        (song) =>
+          song.title.toLowerCase().includes(lowerQuery) ||
+          song.titleKo?.toLowerCase().includes(lowerQuery) ||
+          song.titleNorm.toLowerCase().includes(lowerQuery)
+      );
+    } else if (artistId) {
       songs = await songService.getSongsByArtist(Number(artistId));
     } else if (query) {
       songs = await songService.searchSongs(query);
