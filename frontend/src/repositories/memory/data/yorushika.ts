@@ -7,13 +7,14 @@ export const yorushikaArtist: Artist = {
   name: 'ヨルシカ',
   nameKo: '요루시카',
   nameNorm: 'yorushika',
+  pathname: 'yorushika',
   youtubeChannelUrl: 'https://www.youtube.com/@nbuna',
   tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=ヨルシカ',
   createdAt: now,
   updatedAt: now,
 };
 
-// Artist ID 0: Songs 0-999, Karaoke songId*3 ~ songId*3+2
+// Artist ID 0: Songs 0-999, Karaoke 0-999
 export const yorushikaSongs: Song[] = [
   {
     id: 0,

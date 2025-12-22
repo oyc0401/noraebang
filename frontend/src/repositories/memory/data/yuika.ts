@@ -7,13 +7,14 @@ export const yuikaArtist: Artist = {
   name: '『ユイカ』',
   nameKo: '『유이카』',
   nameNorm: 'yuika',
+  pathname: 'yuika',
   youtubeChannelUrl: 'https://www.youtube.com/@yuika_singuitar',
   tjSongRequestUrl: "https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=『ユイカ』",
   createdAt: now,
   updatedAt: now,
 };
 
-// Artist ID 4: Songs 4000-4999, Karaoke songId*3 ~ songId*3+2
+// Artist ID 4: Songs 4000-4999, Karaoke 4000-4999
 export const yuikaSongs: Song[] = [
   {
     id: 4000,

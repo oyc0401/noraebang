@@ -7,13 +7,14 @@ export const yonezuKenshiArtist: Artist = {
   name: '米津玄師',
   nameKo: '요네즈 켄시',
   nameNorm: 'yonezu kenshi',
+  pathname: 'yonezu-kenshi',
   youtubeChannelUrl: 'https://www.youtube.com/@KenshiYonezu',
   tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=米津玄師',
   createdAt: now,
   updatedAt: now,
 };
 
-// Artist ID 3: Songs 3000-3999, Karaoke songId*3 ~ songId*3+2
+// Artist ID 3: Songs 3000-3999, Karaoke 3000-3999
 export const yonezuKenshiSongs: Song[] = [
   {
     id: 3000,

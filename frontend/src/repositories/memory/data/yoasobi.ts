@@ -7,13 +7,14 @@ export const yoasobiArtist: Artist = {
   name: 'YOASOBI',
   nameKo: '요아소비',
   nameNorm: 'yoasobi',
+  pathname: 'yoasobi',
   youtubeChannelUrl: 'https://www.youtube.com/@Ayase_YOASOBI',
   tjSongRequestUrl: "https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=YOASOBI",
   createdAt: now,
   updatedAt: now,
 };
 
-// Artist ID 5: Songs 5000-5999, Karaoke songId*3 ~ songId*3+2
+// Artist ID 5: Songs 5000-5999, Karaoke 5000-5999
 export const yoasobiSongs: Song[] = [
   {
     id: 5000,
