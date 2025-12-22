@@ -28,9 +28,9 @@ export const yonezuKenshiSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9000, songId: 3000, provider: Provider.TJ, karaokeNo: '52959', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9001, songId: 3000, provider: Provider.KY, karaokeNo: '57785', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9002, songId: 3000, provider: Provider.JOYSOUND, karaokeNo: '640256', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3000, songId: 3000, provider: Provider.TJ, karaokeNo: '52959', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3001, songId: 3000, provider: Provider.KY, karaokeNo: '57785', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3002, songId: 3000, provider: Provider.JOYSOUND, karaokeNo: '640256', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -45,9 +45,9 @@ export const yonezuKenshiSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9003, songId: 3001, provider: Provider.TJ, karaokeNo: '52972', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9004, songId: 3001, provider: Provider.KY, karaokeNo: '57784', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9005, songId: 3001, provider: Provider.JOYSOUND, karaokeNo: '640251', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3003, songId: 3001, provider: Provider.TJ, karaokeNo: '52972', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3004, songId: 3001, provider: Provider.KY, karaokeNo: '57784', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3005, songId: 3001, provider: Provider.JOYSOUND, karaokeNo: '640251', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -62,9 +62,9 @@ export const yonezuKenshiSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9006, songId: 3002, provider: Provider.TJ, karaokeNo: '68677', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9007, songId: 3002, provider: Provider.KY, karaokeNo: '44855', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9008, songId: 3002, provider: Provider.JOYSOUND, karaokeNo: '612362', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3006, songId: 3002, provider: Provider.TJ, karaokeNo: '68677', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3007, songId: 3002, provider: Provider.KY, karaokeNo: '44855', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3008, songId: 3002, provider: Provider.JOYSOUND, karaokeNo: '612362', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -79,9 +79,9 @@ export const yonezuKenshiSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9009, songId: 3003, provider: Provider.TJ, karaokeNo: '28822', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9010, songId: 3003, provider: Provider.KY, karaokeNo: '44253', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9011, songId: 3003, provider: Provider.JOYSOUND, karaokeNo: '425691', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3009, songId: 3003, provider: Provider.TJ, karaokeNo: '28822', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3010, songId: 3003, provider: Provider.KY, karaokeNo: '44253', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3011, songId: 3003, provider: Provider.JOYSOUND, karaokeNo: '425691', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -96,9 +96,9 @@ export const yonezuKenshiSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9012, songId: 3004, provider: Provider.TJ, karaokeNo: '52580', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9013, songId: 3004, provider: Provider.KY, karaokeNo: '75948', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9014, songId: 3004, provider: Provider.JOYSOUND, karaokeNo: '625973', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3012, songId: 3004, provider: Provider.TJ, karaokeNo: '52580', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3013, songId: 3004, provider: Provider.KY, karaokeNo: '75948', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3014, songId: 3004, provider: Provider.JOYSOUND, karaokeNo: '625973', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -113,9 +113,9 @@ export const yonezuKenshiSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9015, songId: 3005, provider: Provider.TJ, karaokeNo: '52905', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9016, songId: 3005, provider: Provider.KY, karaokeNo: '57825', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9017, songId: 3005, provider: Provider.JOYSOUND, karaokeNo: '634217', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3015, songId: 3005, provider: Provider.TJ, karaokeNo: '52905', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3016, songId: 3005, provider: Provider.KY, karaokeNo: '57825', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3017, songId: 3005, provider: Provider.JOYSOUND, karaokeNo: '634217', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -130,9 +130,9 @@ export const yonezuKenshiSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9018, songId: 3006, provider: Provider.TJ, karaokeNo: '28720', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9019, songId: 3006, provider: Provider.KY, karaokeNo: '44170', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9020, songId: 3006, provider: Provider.JOYSOUND, karaokeNo: '695350', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3018, songId: 3006, provider: Provider.TJ, karaokeNo: '28720', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3019, songId: 3006, provider: Provider.KY, karaokeNo: '44170', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3020, songId: 3006, provider: Provider.JOYSOUND, karaokeNo: '695350', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -147,9 +147,9 @@ export const yonezuKenshiSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9021, songId: 3007, provider: Provider.TJ, karaokeNo: '28607', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9022, songId: 3007, provider: Provider.KY, karaokeNo: '44040', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9023, songId: 3007, provider: Provider.JOYSOUND, karaokeNo: '738366', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3021, songId: 3007, provider: Provider.TJ, karaokeNo: '28607', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3022, songId: 3007, provider: Provider.KY, karaokeNo: '44040', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3023, songId: 3007, provider: Provider.JOYSOUND, karaokeNo: '738366', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -164,9 +164,9 @@ export const yonezuKenshiSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9024, songId: 3008, provider: Provider.TJ, karaokeNo: '52796', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9025, songId: 3008, provider: Provider.KY, karaokeNo: '57822', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9026, songId: 3008, provider: Provider.JOYSOUND, karaokeNo: '634248', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3024, songId: 3008, provider: Provider.TJ, karaokeNo: '52796', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3025, songId: 3008, provider: Provider.KY, karaokeNo: '57822', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3026, songId: 3008, provider: Provider.JOYSOUND, karaokeNo: '634248', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -181,9 +181,9 @@ export const yonezuKenshiSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9027, songId: 3009, provider: Provider.TJ, karaokeNo: '52977', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9028, songId: 3009, provider: Provider.KY, karaokeNo: '57782', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 9029, songId: 3009, provider: Provider.JOYSOUND, karaokeNo: '640250', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3027, songId: 3009, provider: Provider.TJ, karaokeNo: '52977', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3028, songId: 3009, provider: Provider.KY, karaokeNo: '57782', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3029, songId: 3009, provider: Provider.JOYSOUND, karaokeNo: '640250', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
 

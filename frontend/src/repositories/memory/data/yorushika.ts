@@ -14,7 +14,7 @@ export const yorushikaArtist: Artist = {
   updatedAt: now,
 };
 
-// Artist ID 0: Songs 0-999, Karaoke 0-999
+// Artist ID 0: Songs 0-999, KaraokeSongs 0-999
 export const yorushikaSongs: Song[] = [
   {
     id: 0,
@@ -44,9 +44,9 @@ export const yorushikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 3, songId: 1, provider: Provider.TJ, karaokeNo: '68230', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 4, songId: 1, provider: Provider.KY, karaokeNo: '44542', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 5, songId: 1, provider: Provider.JOYSOUND, karaokeNo: '448351', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2, songId: 1, provider: Provider.TJ, karaokeNo: '68230', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 3, songId: 1, provider: Provider.KY, karaokeNo: '44542', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4, songId: 1, provider: Provider.JOYSOUND, karaokeNo: '448351', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -61,9 +61,9 @@ export const yorushikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6, songId: 2, provider: Provider.TJ, karaokeNo: '68953', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 7, songId: 2, provider: Provider.KY, karaokeNo: '75893', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 8, songId: 2, provider: Provider.JOYSOUND, karaokeNo: '623132', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 5, songId: 2, provider: Provider.TJ, karaokeNo: '68953', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 6, songId: 2, provider: Provider.KY, karaokeNo: '75893', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 7, songId: 2, provider: Provider.JOYSOUND, karaokeNo: '623132', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -78,8 +78,8 @@ export const yorushikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 9, songId: 3, provider: Provider.TJ, karaokeNo: '68049', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 10, songId: 3, provider: Provider.JOYSOUND, karaokeNo: '438251', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 8, songId: 3, provider: Provider.TJ, karaokeNo: '68049', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 9, songId: 3, provider: Provider.JOYSOUND, karaokeNo: '438251', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -94,9 +94,9 @@ export const yorushikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12, songId: 4, provider: Provider.TJ, karaokeNo: '68456', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 13, songId: 4, provider: Provider.KY, karaokeNo: '75952', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 14, songId: 4, provider: Provider.JOYSOUND, karaokeNo: '614452', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 10, songId: 4, provider: Provider.TJ, karaokeNo: '68456', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 11, songId: 4, provider: Provider.KY, karaokeNo: '75952', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 12, songId: 4, provider: Provider.JOYSOUND, karaokeNo: '614452', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -111,9 +111,9 @@ export const yorushikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 15, songId: 5, provider: Provider.TJ, karaokeNo: '68365', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 16, songId: 5, provider: Provider.KY, karaokeNo: '44646', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 17, songId: 5, provider: Provider.JOYSOUND, karaokeNo: '449083', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 13, songId: 5, provider: Provider.TJ, karaokeNo: '68365', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 14, songId: 5, provider: Provider.KY, karaokeNo: '44646', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 15, songId: 5, provider: Provider.JOYSOUND, karaokeNo: '449083', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -128,8 +128,8 @@ export const yorushikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 18, songId: 6, provider: Provider.TJ, karaokeNo: '68078', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 19, songId: 6, provider: Provider.JOYSOUND, karaokeNo: '698277', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 16, songId: 6, provider: Provider.TJ, karaokeNo: '68078', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 17, songId: 6, provider: Provider.JOYSOUND, karaokeNo: '698277', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -144,9 +144,9 @@ export const yorushikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 21, songId: 7, provider: Provider.TJ, karaokeNo: '68212', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 22, songId: 7, provider: Provider.KY, karaokeNo: '44548', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 23, songId: 7, provider: Provider.JOYSOUND, karaokeNo: '441971', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 18, songId: 7, provider: Provider.TJ, karaokeNo: '68212', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 19, songId: 7, provider: Provider.KY, karaokeNo: '44548', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 20, songId: 7, provider: Provider.JOYSOUND, karaokeNo: '441971', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
 ];

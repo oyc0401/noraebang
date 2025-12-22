@@ -14,7 +14,7 @@ export const mrsGreenAppleArtist: Artist = {
   updatedAt: now,
 };
 
-// Artist ID 2: Songs 2000-2999, Karaoke 2000-2999
+// Artist ID 2: Songs 2000-2999, KaraokeSongs 2000-2999
 export const mrsGreenAppleSongs: Song[] = [
   {
     id: 2000,
@@ -28,9 +28,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6000, songId: 2000, provider: Provider.TJ, karaokeNo: '68127', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6001, songId: 2000, provider: Provider.KY, karaokeNo: '44466', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6002, songId: 2000, provider: Provider.JOYSOUND, karaokeNo: '430643', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2000, songId: 2000, provider: Provider.TJ, karaokeNo: '68127', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2001, songId: 2000, provider: Provider.KY, karaokeNo: '44466', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2002, songId: 2000, provider: Provider.JOYSOUND, karaokeNo: '430643', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -45,9 +45,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6003, songId: 2001, provider: Provider.TJ, karaokeNo: '68141', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6004, songId: 2001, provider: Provider.KY, karaokeNo: '44547', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6005, songId: 2001, provider: Provider.JOYSOUND, karaokeNo: '430642', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2003, songId: 2001, provider: Provider.TJ, karaokeNo: '68141', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2004, songId: 2001, provider: Provider.KY, karaokeNo: '44547', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2005, songId: 2001, provider: Provider.JOYSOUND, karaokeNo: '430642', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -62,9 +62,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6006, songId: 2002, provider: Provider.TJ, karaokeNo: '52844', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6007, songId: 2002, provider: Provider.KY, karaokeNo: '57810', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6008, songId: 2002, provider: Provider.JOYSOUND, karaokeNo: '617082', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2006, songId: 2002, provider: Provider.TJ, karaokeNo: '52844', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2007, songId: 2002, provider: Provider.KY, karaokeNo: '57810', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2008, songId: 2002, provider: Provider.JOYSOUND, karaokeNo: '617082', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -79,9 +79,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6009, songId: 2003, provider: Provider.TJ, karaokeNo: '68620', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6010, songId: 2003, provider: Provider.KY, karaokeNo: '44808', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6011, songId: 2003, provider: Provider.JOYSOUND, karaokeNo: '499083', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2009, songId: 2003, provider: Provider.TJ, karaokeNo: '68620', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2010, songId: 2003, provider: Provider.KY, karaokeNo: '44808', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2011, songId: 2003, provider: Provider.JOYSOUND, karaokeNo: '499083', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -96,9 +96,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6012, songId: 2004, provider: Provider.TJ, karaokeNo: '52793', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6013, songId: 2004, provider: Provider.KY, karaokeNo: '57823', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6014, songId: 2004, provider: Provider.JOYSOUND, karaokeNo: '633793', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2012, songId: 2004, provider: Provider.TJ, karaokeNo: '52793', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2013, songId: 2004, provider: Provider.KY, karaokeNo: '57823', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2014, songId: 2004, provider: Provider.JOYSOUND, karaokeNo: '633793', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -113,9 +113,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6015, songId: 2005, provider: Provider.TJ, karaokeNo: '68095', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6016, songId: 2005, provider: Provider.KY, karaokeNo: '44455', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6017, songId: 2005, provider: Provider.JOYSOUND, karaokeNo: '440807', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2015, songId: 2005, provider: Provider.TJ, karaokeNo: '68095', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2016, songId: 2005, provider: Provider.KY, karaokeNo: '44455', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2017, songId: 2005, provider: Provider.JOYSOUND, karaokeNo: '440807', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -130,9 +130,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6018, songId: 2006, provider: Provider.TJ, karaokeNo: '52924', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6019, songId: 2006, provider: Provider.KY, karaokeNo: '57798', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6020, songId: 2006, provider: Provider.JOYSOUND, karaokeNo: '636457', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2018, songId: 2006, provider: Provider.TJ, karaokeNo: '52924', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2019, songId: 2006, provider: Provider.KY, karaokeNo: '57798', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2020, songId: 2006, provider: Provider.JOYSOUND, karaokeNo: '636457', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -147,8 +147,8 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6021, songId: 2007, provider: Provider.TJ, karaokeNo: '52935', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6022, songId: 2007, provider: Provider.JOYSOUND, karaokeNo: '637422', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2021, songId: 2007, provider: Provider.TJ, karaokeNo: '52935', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2022, songId: 2007, provider: Provider.JOYSOUND, karaokeNo: '637422', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -163,9 +163,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6023, songId: 2008, provider: Provider.TJ, karaokeNo: '68461', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6024, songId: 2008, provider: Provider.KY, karaokeNo: '75996', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6025, songId: 2008, provider: Provider.JOYSOUND, karaokeNo: '625838', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2023, songId: 2008, provider: Provider.TJ, karaokeNo: '68461', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2024, songId: 2008, provider: Provider.KY, karaokeNo: '75996', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2025, songId: 2008, provider: Provider.JOYSOUND, karaokeNo: '625838', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -180,9 +180,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6026, songId: 2009, provider: Provider.TJ, karaokeNo: '68736', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6027, songId: 2009, provider: Provider.KY, karaokeNo: '44878', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6028, songId: 2009, provider: Provider.JOYSOUND, karaokeNo: '612122', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2026, songId: 2009, provider: Provider.TJ, karaokeNo: '68736', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2027, songId: 2009, provider: Provider.KY, karaokeNo: '44878', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2028, songId: 2009, provider: Provider.JOYSOUND, karaokeNo: '612122', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -197,9 +197,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6029, songId: 2010, provider: Provider.TJ, karaokeNo: '52834', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6030, songId: 2010, provider: Provider.KY, karaokeNo: '57783', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6031, songId: 2010, provider: Provider.JOYSOUND, karaokeNo: '635504', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2029, songId: 2010, provider: Provider.TJ, karaokeNo: '52834', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2030, songId: 2010, provider: Provider.KY, karaokeNo: '57783', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2031, songId: 2010, provider: Provider.JOYSOUND, karaokeNo: '635504', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -214,9 +214,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6032, songId: 2011, provider: Provider.TJ, karaokeNo: '68248', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6033, songId: 2011, provider: Provider.KY, karaokeNo: '44894', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6034, songId: 2011, provider: Provider.JOYSOUND, karaokeNo: '435229', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2032, songId: 2011, provider: Provider.TJ, karaokeNo: '68248', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2033, songId: 2011, provider: Provider.KY, karaokeNo: '44894', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2034, songId: 2011, provider: Provider.JOYSOUND, karaokeNo: '435229', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -231,7 +231,7 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6035, songId: 2012, provider: Provider.JOYSOUND, karaokeNo: '639551', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2035, songId: 2012, provider: Provider.JOYSOUND, karaokeNo: '639551', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -246,9 +246,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6036, songId: 2013, provider: Provider.TJ, karaokeNo: '52721', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6037, songId: 2013, provider: Provider.KY, karaokeNo: '76522', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6038, songId: 2013, provider: Provider.JOYSOUND, karaokeNo: '629477', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2036, songId: 2013, provider: Provider.TJ, karaokeNo: '52721', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2037, songId: 2013, provider: Provider.KY, karaokeNo: '76522', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2038, songId: 2013, provider: Provider.JOYSOUND, karaokeNo: '629477', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -263,7 +263,7 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6039, songId: 2014, provider: Provider.JOYSOUND, karaokeNo: '623429', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2039, songId: 2014, provider: Provider.JOYSOUND, karaokeNo: '623429', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -278,9 +278,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6040, songId: 2015, provider: Provider.TJ, karaokeNo: '52804', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6041, songId: 2015, provider: Provider.KY, karaokeNo: '57819', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6042, songId: 2015, provider: Provider.JOYSOUND, karaokeNo: '632140', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2040, songId: 2015, provider: Provider.TJ, karaokeNo: '52804', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2041, songId: 2015, provider: Provider.KY, karaokeNo: '57819', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2042, songId: 2015, provider: Provider.JOYSOUND, karaokeNo: '632140', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -295,9 +295,9 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6043, songId: 2016, provider: Provider.TJ, karaokeNo: '68636', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6044, songId: 2016, provider: Provider.KY, karaokeNo: '44824', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6045, songId: 2016, provider: Provider.JOYSOUND, karaokeNo: '499124', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2043, songId: 2016, provider: Provider.TJ, karaokeNo: '68636', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2044, songId: 2016, provider: Provider.KY, karaokeNo: '44824', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2045, songId: 2016, provider: Provider.JOYSOUND, karaokeNo: '499124', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -312,8 +312,8 @@ export const mrsGreenAppleSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 6046, songId: 2017, provider: Provider.TJ, karaokeNo: '52974', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 6047, songId: 2017, provider: Provider.JOYSOUND, karaokeNo: '641010', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2046, songId: 2017, provider: Provider.TJ, karaokeNo: '52974', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 2047, songId: 2017, provider: Provider.JOYSOUND, karaokeNo: '641010', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
 ];

@@ -28,9 +28,9 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12000, songId: 4000, provider: Provider.TJ, karaokeNo: '68523', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 12001, songId: 4000, provider: Provider.KY, karaokeNo: '44734', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 12002, songId: 4000, provider: Provider.JOYSOUND, karaokeNo: '491155', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4000, songId: 4000, provider: Provider.TJ, karaokeNo: '68523', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4001, songId: 4000, provider: Provider.KY, karaokeNo: '44734', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4002, songId: 4000, provider: Provider.JOYSOUND, karaokeNo: '491155', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -45,9 +45,9 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12003, songId: 4001, provider: Provider.TJ, karaokeNo: '68661', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 12004, songId: 4001, provider: Provider.KY, karaokeNo: '44954', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 12005, songId: 4001, provider: Provider.JOYSOUND, karaokeNo: '497074', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4003, songId: 4001, provider: Provider.TJ, karaokeNo: '68661', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4004, songId: 4001, provider: Provider.KY, karaokeNo: '44954', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4005, songId: 4001, provider: Provider.JOYSOUND, karaokeNo: '497074', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -62,8 +62,8 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12006, songId: 4002, provider: Provider.KY, karaokeNo: '57777', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 12007, songId: 4002, provider: Provider.JOYSOUND, karaokeNo: '627343', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4006, songId: 4002, provider: Provider.KY, karaokeNo: '57777', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4007, songId: 4002, provider: Provider.JOYSOUND, karaokeNo: '627343', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -78,7 +78,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12008, songId: 4003, provider: Provider.JOYSOUND, karaokeNo: '640928', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4008, songId: 4003, provider: Provider.JOYSOUND, karaokeNo: '640928', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -93,8 +93,8 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12009, songId: 4004, provider: Provider.TJ, karaokeNo: '52976', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 12010, songId: 4004, provider: Provider.JOYSOUND, karaokeNo: '640968', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4009, songId: 4004, provider: Provider.TJ, karaokeNo: '52976', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4010, songId: 4004, provider: Provider.JOYSOUND, karaokeNo: '640968', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -109,7 +109,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12011, songId: 4005, provider: Provider.JOYSOUND, karaokeNo: '634367', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4011, songId: 4005, provider: Provider.JOYSOUND, karaokeNo: '634367', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -124,7 +124,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12012, songId: 4006, provider: Provider.JOYSOUND, karaokeNo: '622195', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4012, songId: 4006, provider: Provider.JOYSOUND, karaokeNo: '622195', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -139,7 +139,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12013, songId: 4007, provider: Provider.JOYSOUND, karaokeNo: '633059', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4013, songId: 4007, provider: Provider.JOYSOUND, karaokeNo: '633059', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -154,7 +154,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12014, songId: 4008, provider: Provider.JOYSOUND, karaokeNo: '638314', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4014, songId: 4008, provider: Provider.JOYSOUND, karaokeNo: '638314', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -169,7 +169,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12015, songId: 4009, provider: Provider.JOYSOUND, karaokeNo: '638838', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4015, songId: 4009, provider: Provider.JOYSOUND, karaokeNo: '638838', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -184,8 +184,8 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12016, songId: 4010, provider: Provider.TJ, karaokeNo: '52565', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 12017, songId: 4010, provider: Provider.JOYSOUND, karaokeNo: '624088', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4016, songId: 4010, provider: Provider.TJ, karaokeNo: '52565', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4017, songId: 4010, provider: Provider.JOYSOUND, karaokeNo: '624088', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -200,8 +200,8 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12018, songId: 4011, provider: Provider.TJ, karaokeNo: '68708', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 12019, songId: 4011, provider: Provider.JOYSOUND, karaokeNo: '498324', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4018, songId: 4011, provider: Provider.TJ, karaokeNo: '68708', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4019, songId: 4011, provider: Provider.JOYSOUND, karaokeNo: '498324', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -216,7 +216,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12020, songId: 4012, provider: Provider.JOYSOUND, karaokeNo: '627879', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4020, songId: 4012, provider: Provider.JOYSOUND, karaokeNo: '627879', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -231,8 +231,8 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12021, songId: 4013, provider: Provider.TJ, karaokeNo: '68486', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
-      { id: 12022, songId: 4013, provider: Provider.JOYSOUND, karaokeNo: '627879', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4021, songId: 4013, provider: Provider.TJ, karaokeNo: '68486', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4022, songId: 4013, provider: Provider.JOYSOUND, karaokeNo: '627879', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -247,7 +247,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12023, songId: 4014, provider: Provider.JOYSOUND, karaokeNo: '493254', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4023, songId: 4014, provider: Provider.JOYSOUND, karaokeNo: '493254', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -262,7 +262,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12024, songId: 4015, provider: Provider.JOYSOUND, karaokeNo: '627628', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4024, songId: 4015, provider: Provider.JOYSOUND, karaokeNo: '627628', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -277,7 +277,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12025, songId: 4016, provider: Provider.JOYSOUND, karaokeNo: '633176', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4025, songId: 4016, provider: Provider.JOYSOUND, karaokeNo: '633176', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -292,7 +292,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12026, songId: 4017, provider: Provider.JOYSOUND, karaokeNo: '631147', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4026, songId: 4017, provider: Provider.JOYSOUND, karaokeNo: '631147', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -307,7 +307,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12027, songId: 4018, provider: Provider.JOYSOUND, karaokeNo: '629652', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4027, songId: 4018, provider: Provider.JOYSOUND, karaokeNo: '629652', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
   {
@@ -322,7 +322,7 @@ export const yuikaSongs: Song[] = [
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
-      { id: 12028, songId: 4019, provider: Provider.JOYSOUND, karaokeNo: '615296', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
+      { id: 4028, songId: 4019, provider: Provider.JOYSOUND, karaokeNo: '615296', providerSongUrl: undefined, lastSeenAt: now, ingestedAt: now, ingestedFrom: 'manual' },
     ],
   },
 
