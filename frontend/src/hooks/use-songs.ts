@@ -30,12 +30,10 @@ export function useSongs(query?: string, artistId?: number) {
   });
 }
 
-export function useSong(id: number | null) {
+export function useSong(id: number) {
   return useQuery({
     queryKey: ['song', id],
     queryFn: async (): Promise<Song> => {
-      if (!id) throw new Error('Song ID is required');
-
       const response = await fetch(`/api/songs/${id}`);
 
       if (!response.ok) {
@@ -45,6 +43,5 @@ export function useSong(id: number | null) {
       const result: SongResponse = await response.json();
       return result.data;
     },
-    enabled: !!id,
   });
 }

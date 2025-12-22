@@ -25,12 +25,10 @@ export function useArtists() {
   });
 }
 
-export function useArtist(pathname: string | null) {
+export function useArtist(pathname: string) {
   return useQuery({
     queryKey: ['artist', pathname],
     queryFn: async (): Promise<Artist> => {
-      if (!pathname) throw new Error('Artist pathname is required');
-
       const response = await fetch(`/api/artists/${pathname}`);
 
       if (!response.ok) {
@@ -40,6 +38,5 @@ export function useArtist(pathname: string | null) {
       const result: ArtistResponse = await response.json();
       return result.data;
     },
-    enabled: !!pathname,
   });
 }
