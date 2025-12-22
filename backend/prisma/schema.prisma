@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Artist {
+  id                Int      @id @default(autoincrement())
+  name              String
+  nameNorm          String   @map("name_norm")
+
+  youtubeChannelUrl String?  @map("youtube_channel_url")
+  tjSongRequestUrl  String?  @map("tj_song_request_url")
+
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt      @map("updated_at")
+
+  primarySongs      Song[]   @relation("PrimaryArtist")
+
+  @@map("artist")
+}
+
+model Song {
+  id               Int       @id @default(autoincrement())
+  title            String
+  titleKo          String?   @map("title_ko")
+  titleNorm        String    @map("title_norm")
+
+  youtubeVideoId   String?   @map("youtube_video_id")
+  youtubeFetchedAt DateTime? @map("youtube_fetched_at")
+
+  primaryArtistId  Int?      @map("primary_artist_id")
+  primaryArtist    Artist?   @relation("PrimaryArtist", fields: [primaryArtistId], references: [id])
+
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt      @map("updated_at")
+
+  karaokeSongs     KaraokeSong[]
+
+  @@map("song")
+}
+
+model KaraokeSong {
+  id              Int       @id @default(autoincrement())
+  songId          Int       @map("song_id")
+
+  provider        Provider
+  karaokeNo       String    @map("karaoke_no")
+
+  providerSongUrl String?   @map("provider_song_url")
+  lastSeenAt      DateTime? @map("last_seen_at")
+  ingestedAt      DateTime? @map("ingested_at")
+  ingestedFrom    String?   @map("ingested_from")
+
+  song            Song      @relation(fields: [songId], references: [id])
+
+  @@unique([provider, karaokeNo])
+  @@map("karaoke_song")
+}
+
+enum Provider {
+  TJ
+  KY
+  JOYSOUND
+}
