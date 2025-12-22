@@ -7,8 +7,8 @@ export const mrsGreenAppleArtist: Artist = {
   name: 'Mrs. GREEN APPLE',
   nameKo: '미세스 그린 애플',
   nameNorm: 'mrs green apple',
-  youtubeChannelUrl: 'https://www.youtube.com/@MrsGREENAPPLE',
-  tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=7&dt_code=30&singer=Mrs.+GREEN+APPLE',
+  youtubeChannelUrl: 'https://www.youtube.com/@MrsGREENAPPLE_Official',
+  tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=Mrs.+GREEN+APPLE',
   createdAt: now,
   updatedAt: now,
 };

@@ -7,8 +7,8 @@ export const higedanArtist: Artist = {
   name: 'Official髭男dism',
   nameKo: '오피셜 히게단디즘',
   nameNorm: 'official hige dandism',
-  youtubeChannelUrl: 'https://www.youtube.com/@officialhigedism',
-  tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=7&dt_code=30&singer=Official髭男dism',
+  youtubeChannelUrl: 'https://www.youtube.com/@officialhigedandism',
+  tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=Official髭男dism',
   createdAt: now,
   updatedAt: now,
 };
