@@ -2,9 +2,72 @@
 
 import { useArtists } from '@/hooks/use-artists';
 import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const { data: artists, isLoading, error } = useArtists();
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searchLog, setSearchLog] = useState<string[]>([]);
+  const router = useRouter();
+
+  const handleYoutubeSearch = async () => {
+    if (!youtubeUrl.trim()) return;
+
+    setSearching(true);
+    setSearchLog([]);
+
+    try {
+      // Fetch YouTube title
+      setSearchLog(prev => [...prev, `유튜브 정보 가져오는 중...`]);
+      const response = await fetch(`/api/youtube?url=${encodeURIComponent(youtubeUrl)}`);
+
+      if (!response.ok) {
+        setSearchLog(prev => [...prev, `❌ 유튜브 정보를 가져올 수 없습니다.`]);
+        return;
+      }
+
+      const { data } = await response.json();
+      const title = data.title;
+      setSearchLog(prev => [...prev, `✓ 제목: ${title}`]);
+
+      // Search for song
+      setSearchLog(prev => [...prev, `곡 검색 중...`]);
+      const songsResponse = await fetch(`/api/songs`);
+      const { data: songs } = await songsResponse.json();
+
+      const foundSong = songs.find((song: any) =>
+        song.title.toLowerCase().includes(title.toLowerCase()) ||
+        title.toLowerCase().includes(song.title.toLowerCase()) ||
+        (song.titleKo && title.toLowerCase().includes(song.titleKo.toLowerCase()))
+      );
+
+      if (foundSong) {
+        setSearchLog(prev => [...prev, `✓ 곡을 찾았습니다: ${foundSong.title}`]);
+
+        // Get artist pathname
+        const artistResponse = await fetch(`/api/artists`);
+        const { data: artistsList } = await artistResponse.json();
+        const artist = artistsList.find((a: any) => a.id === foundSong.primaryArtistId);
+
+        if (artist) {
+          setSearchLog(prev => [...prev, `✓ ${artist.nameKo} 페이지로 이동합니다...`]);
+          setTimeout(() => {
+            router.push(`/${artist.pathname}#${foundSong.id}`);
+          }, 500);
+        } else {
+          setSearchLog(prev => [...prev, `❌ 아티스트 정보를 찾을 수 없습니다.`]);
+        }
+      } else {
+        setSearchLog(prev => [...prev, `❌ 해당 곡을 찾을 수 없습니다.`]);
+      }
+    } catch (error) {
+      setSearchLog(prev => [...prev, `❌ 오류가 발생했습니다: ${error}`]);
+    } finally {
+      setSearching(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
@@ -14,9 +77,47 @@ export default function Home() {
             노래방 검색
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400">
-            아티스트를 선택해주세요
+            아티스트를 선택하거나 유튜브 링크로 검색하세요
           </p>
         </header>
+
+        <div className="mb-12">
+          <div className="mb-4">
+            <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              유튜브 링크로 검색
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleYoutubeSearch()}
+                placeholder="https://music.youtube.com/watch?v=..."
+                className="flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:border-zinc-400"
+                disabled={searching}
+              />
+              <button
+                onClick={handleYoutubeSearch}
+                disabled={searching || !youtubeUrl.trim()}
+                className="rounded-lg bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
+              >
+                {searching ? '검색 중...' : '검색'}
+              </button>
+            </div>
+          </div>
+
+          {searchLog.length > 0 && (
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="space-y-1 font-mono text-sm">
+                {searchLog.map((log, index) => (
+                  <div key={index} className="text-zinc-700 dark:text-zinc-300">
+                    {log}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {isLoading && (
           <div className="text-center text-zinc-600 dark:text-zinc-400">
