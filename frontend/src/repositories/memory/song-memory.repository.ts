@@ -1,9 +1,9 @@
 import { SongRepository } from '../song.repository';
 import { Song } from '@/types/models';
-import { yorushikaSongs } from './yorushika-data';
+import { allSongs } from './data';
 
 export class SongMemoryRepository implements SongRepository {
-  private songs: Song[] = yorushikaSongs;
+  private songs: Song[] = allSongs;
 
   async findAll(): Promise<Song[]> {
     // Simulate async operation

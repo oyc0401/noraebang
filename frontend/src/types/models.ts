@@ -7,6 +7,7 @@ export enum Provider {
 export interface Artist {
   id: number;
   name: string;
+  nameKo: string;
   nameNorm: string;
   youtubeChannelUrl?: string;
   tjSongRequestUrl?: string;
