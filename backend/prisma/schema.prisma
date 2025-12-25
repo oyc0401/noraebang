@@ -7,22 +7,29 @@ datasource db {
 }
 
 model Artist {
-  id                Int      @id @default(autoincrement())
-  name              String
-  nameKo            String   @map("name_ko")
-  nameNorm          String   @map("name_norm")
-  alias             String   @unique
+  id                      Int      @id @default(autoincrement())
+  name                    String
+  nameKo                  String   @map("name_ko")
+  nameNorm                String   @map("name_norm")
+  alias                   String   @unique
 
-  blogId            String?  @map("blog_id")
+  blogId                  String?  @map("blog_id")
 
-  youtubeChannelId  String?  @map("youtube_channel_id")
-  youtubeThumbnail  String?  @map("youtube_thumbnail")
-  tjSongRequestUrl  String?  @map("tj_song_request_url")
+  youtubeChannelId          String?  @map("youtube_channel_id")
+  youtubeChannelTitle       String?  @map("youtube_channel_title")
+  youtubeChannelDescription String?  @map("youtube_channel_description")
+  youtubeChannelPublished   DateTime? @map("youtube_channel_published")
+  youtubeFetchedAt          DateTime? @map("youtube_fetched_at")
+  youtubeThumbnail        String?  @map("youtube_thumbnail")
+  youtubeThumbnailDefault String?  @map("youtube_thumbnail_default")
+  youtubeThumbnailMedium  String?  @map("youtube_thumbnail_medium")
+  youtubeThumbnailHigh    String?  @map("youtube_thumbnail_high")
+  tjSongRequestUrl        String?  @map("tj_song_request_url")
 
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt      @map("updated_at")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt      @map("updated_at")
 
-  songs             Song[]   @relation("Artist")
+  songs                   Song[]   @relation("Artist")
 
   @@map("artist")
 }

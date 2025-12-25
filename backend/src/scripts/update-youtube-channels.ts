@@ -18,7 +18,11 @@ interface YouTubeChannelResult {
   channelUrl: string;
   title: string;
   description: string;
+  publishedAt: string;
   thumbnail: string;
+  thumbnailDefault: string | null;
+  thumbnailMedium: string | null;
+  thumbnailHigh: string | null;
 }
 
 async function searchArtistChannel(artistName: string): Promise<YouTubeChannelResult | null> {
@@ -38,17 +42,27 @@ async function searchArtistChannel(artistName: string): Promise<YouTubeChannelRe
 
     const data = await response.json();
 
+    // console.log('\n=== YouTube API Response ===');
+    // console.log(JSON.stringify(data, null, 2));
+    // console.log('=========================\n');
+
     if (!data.items || data.items.length === 0) {
       return null;
     }
 
     const channel = data.items[0];
+    const thumbnails = channel.snippet.thumbnails;
+
     return {
       channelId: channel.id.channelId,
       channelUrl: `https://www.youtube.com/channel/${channel.id.channelId}`,
       title: channel.snippet.title,
       description: channel.snippet.description,
-      thumbnail: channel.snippet.thumbnails.high?.url || channel.snippet.thumbnails.default.url,
+      publishedAt: channel.snippet.publishedAt,
+      thumbnail: thumbnails.high?.url || thumbnails.default?.url || '',
+      thumbnailDefault: thumbnails.default?.url || null,
+      thumbnailMedium: thumbnails.medium?.url || null,
+      thumbnailHigh: thumbnails.high?.url || null,
     };
   } catch (error: any) {
     console.error(`   ❌ Error searching channel: ${error.message}`);
@@ -56,7 +70,7 @@ async function searchArtistChannel(artistName: string): Promise<YouTubeChannelRe
   }
 }
 
-async function updateYouTubeChannels(batchSize: number = 50, skipExisting: boolean = true) {
+async function updateYouTubeChannels(batchSize: number = 1, skipExisting: boolean = true) {
   try {
     console.log('🎵 Starting YouTube channel update...\n');
 
@@ -66,11 +80,24 @@ async function updateYouTubeChannels(batchSize: number = 50, skipExisting: boole
       process.exit(1);
     }
 
-    // 업데이트가 필요한 아티스트만 조회 (채널 ID가 없는 경우)
-    const whereClause = skipExisting ? { youtubeChannelId: null } : {};
+    // 업데이트가 필요한 아티스트만 조회
+    // 우선순위: 1) youtubeThumbnail 없음, 2) youtubeThumbnailDefault 없음, 3) 가장 오래된 업데이트
+    const whereClause = skipExisting
+      ? {
+          OR: [
+            { youtubeThumbnail: null },
+            { youtubeThumbnailDefault: null },
+          ]
+        }
+      : {};
+
     const artists = await prisma.artist.findMany({
       where: whereClause,
-      orderBy: { name: 'asc' },
+      orderBy: [
+        { youtubeThumbnail: 'asc' },  // null이 먼저 (asc에서 null이 앞)
+        { youtubeThumbnailDefault: 'asc' },
+        { youtubeFetchedAt: 'asc' },  // 가장 오래된 것부터
+      ],
       take: batchSize, // 한 번에 처리할 개수 제한
     });
 
@@ -106,7 +133,14 @@ async function updateYouTubeChannels(batchSize: number = 50, skipExisting: boole
           where: { id: artist.id },
           data: {
             youtubeChannelId: channelData.channelId,
+            youtubeChannelTitle: channelData.title,
+            youtubeChannelDescription: channelData.description,
+            youtubeChannelPublished: new Date(channelData.publishedAt),
+            youtubeFetchedAt: new Date(),
             youtubeThumbnail: channelData.thumbnail,
+            youtubeThumbnailDefault: channelData.thumbnailDefault,
+            youtubeThumbnailMedium: channelData.thumbnailMedium,
+            youtubeThumbnailHigh: channelData.thumbnailHigh,
           },
         });
 
@@ -114,7 +148,7 @@ async function updateYouTubeChannels(batchSize: number = 50, skipExisting: boole
         updated++;
 
         // YouTube API rate limit을 고려한 딜레이 (1초)
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 200));
 
       } catch (error: any) {
         // 403 에러 (쿼터 초과)가 발생하면 중단
@@ -138,7 +172,12 @@ async function updateYouTubeChannels(batchSize: number = 50, skipExisting: boole
 
     // 남은 아티스트 확인
     const remaining = await prisma.artist.count({
-      where: { youtubeChannelId: null },
+      where: {
+        OR: [
+          { youtubeThumbnail: null },
+          { youtubeThumbnailDefault: null },
+        ]
+      },
     });
 
     if (remaining > 0) {
@@ -158,7 +197,7 @@ async function updateYouTubeChannels(batchSize: number = 50, skipExisting: boole
 
 // 스크립트 실행
 if (require.main === module) {
-  updateYouTubeChannels()
+  updateYouTubeChannels(50)
     .then(() => process.exit(0))
     .catch(() => process.exit(1));
 }
