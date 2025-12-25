@@ -1,9 +1,15 @@
+import 'dotenv/config';
 import { PrismaClient, Provider } from '@prisma/client';
 import { BlogScrapeService } from '../blog-scrape/blog-scrape.service';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
+
 
 // pnpm ts-node src/scripts/crawl-and-save-songs.ts
 
-const prisma = new PrismaClient();
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 function normalizeString(str: string): string {
   return str

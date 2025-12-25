@@ -1,9 +1,14 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { blogArtist } from '../data/artist';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
 // pnpm ts-node src/scripts/seed-artists.ts
 
-const prisma = new PrismaClient();
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 function normalizeString(str: string): string {
   return str
