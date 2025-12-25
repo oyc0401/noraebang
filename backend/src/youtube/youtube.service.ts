@@ -309,4 +309,124 @@ export class YoutubeService {
       );
     }
   }
+
+  /**
+   * 채널의 재생목록들 가져오기
+   */
+  async getPlaylistsFromChannel(channelId: string, maxResults: number = 100): Promise<{
+    playlistId: string;
+    title: string;
+    description: string;
+    itemCount: number;
+    publishedAt: string;
+  }[]> {
+    if (!this.API_KEY) {
+      throw new HttpException(
+        'YouTube API key not configured',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+
+    try {
+      const url = `${this.API_BASE_URL}/playlists?part=snippet,contentDetails&channelId=${channelId}&maxResults=${maxResults}&key=${this.API_KEY}`;
+      const response = await fetch(url);
+
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || `YouTube API error: ${response.status}`;
+
+        throw new HttpException(
+          {
+            statusCode: response.status,
+            message: errorMessage,
+            details: errorData,
+          },
+          response.status
+        );
+      }
+
+      const data = await response.json();
+            console.log(data)
+
+      if (!data.items || data.items.length === 0) {
+        return [];
+      }
+
+      return data.items.map((item: any) => ({
+        playlistId: item.id,
+        title: item.snippet.title,
+        description: item.snippet.description || '',
+        itemCount: item.contentDetails.itemCount || 0,
+        publishedAt: item.snippet.publishedAt,
+      }));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to fetch channel playlists',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  /**
+   * 재생목록의 동영상들 가져오기
+   */
+  async getVideosFromPlaylist(playlistId: string, maxResults: number = 100): Promise<{
+    videoId: string;
+    title: string;
+    description: string;
+    publishedAt: string;
+    channelTitle: string;
+  }[]> {
+    if (!this.API_KEY) {
+      throw new HttpException(
+        'YouTube API key not configured',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+
+    try {
+      const url = `${this.API_BASE_URL}/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=${maxResults}&key=${this.API_KEY}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || `YouTube API error: ${response.status}`;
+
+        throw new HttpException(
+          {
+            statusCode: response.status,
+            message: errorMessage,
+            details: errorData,
+          },
+          response.status
+        );
+      }
+
+      const data = await response.json();
+
+      if (!data.items || data.items.length === 0) {
+        return [];
+      }
+
+      return data.items.map((item: any) => ({
+        videoId: item.snippet.resourceId.videoId,
+        title: item.snippet.title,
+        description: item.snippet.description || '',
+        publishedAt: item.snippet.publishedAt,
+        channelTitle: item.snippet.channelTitle,
+      }));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to fetch playlist videos',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 }
