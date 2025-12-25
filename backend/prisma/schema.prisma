@@ -13,6 +13,8 @@ model Artist {
   nameNorm          String   @map("name_norm")
   pathname          String   @unique
 
+  blogId            String?  @map("blog_id")
+
   youtubeChannelUrl String?  @map("youtube_channel_url")
   tjSongRequestUrl  String?  @map("tj_song_request_url")
 
