@@ -311,7 +311,7 @@ export class YoutubeService {
   }
 
   /**
-   * 채널의 재생목록들 가져오기
+   * 채널의 재생목록들 가져오기 (모든 재생목록)
    */
   async getPlaylistsFromChannel(channelId: string, maxResults: number = 100): Promise<{
     playlistId: string;
@@ -331,7 +331,6 @@ export class YoutubeService {
       const url = `${this.API_BASE_URL}/playlists?part=snippet,contentDetails&channelId=${channelId}&maxResults=${maxResults}&key=${this.API_KEY}`;
       const response = await fetch(url);
 
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.error?.message || `YouTube API error: ${response.status}`;
@@ -347,7 +346,6 @@ export class YoutubeService {
       }
 
       const data = await response.json();
-            console.log(data)
 
       if (!data.items || data.items.length === 0) {
         return [];
@@ -372,6 +370,59 @@ export class YoutubeService {
   }
 
   /**
+   * 채널의 모든 동영상 가져오기 (uploads 재생목록 사용 - 쿼터 1)
+   */
+  async getVideosFromChannel(channelId: string, maxResults: number = 50): Promise<{
+    videoId: string;
+    title: string;
+    description: string;
+    publishedAt: string;
+    thumbnailUrl: string | null;
+  }[]> {
+    if (!this.API_KEY) {
+      throw new HttpException(
+        'YouTube API key not configured',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+
+    try {
+      // 1. 채널 정보에서 uploads playlist ID 가져오기 (캐시된 경우 DB에서)
+      const channelDetails = await this.getChannelDetails(channelId);
+
+      if (!channelDetails.uploadsPlaylistId) {
+        throw new HttpException(
+          'Uploads playlist not found',
+          HttpStatus.NOT_FOUND
+        );
+      }
+
+      // 2. uploads playlist에서 동영상 가져오기 (playlistItems API - 쿼터 1)
+      const playlistVideos = await this.getVideosFromPlaylist(
+        channelDetails.uploadsPlaylistId,
+        maxResults
+      );
+
+      // 3. 형식 변환
+      return playlistVideos.map((video) => ({
+        videoId: video.videoId,
+        title: video.title,
+        description: video.description,
+        publishedAt: video.publishedAt,
+        thumbnailUrl: null, // playlistItems에는 썸네일이 포함되어 있지만 여기선 생략
+      }));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to fetch channel videos',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  /**
    * 재생목록의 동영상들 가져오기
    */
   async getVideosFromPlaylist(playlistId: string, maxResults: number = 100): Promise<{
@@ -379,6 +430,7 @@ export class YoutubeService {
     title: string;
     description: string;
     publishedAt: string;
+    channelId: string;
     channelTitle: string;
   }[]> {
     if (!this.API_KEY) {
@@ -417,7 +469,8 @@ export class YoutubeService {
         title: item.snippet.title,
         description: item.snippet.description || '',
         publishedAt: item.snippet.publishedAt,
-        channelTitle: item.snippet.channelTitle,
+        channelId: item.snippet.videoOwnerChannelId || item.snippet.channelId,
+        channelTitle: item.snippet.videoOwnerChannelTitle || item.snippet.channelTitle,
       }));
     } catch (error) {
       if (error instanceof HttpException) {
