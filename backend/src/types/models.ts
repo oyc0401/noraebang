@@ -7,6 +7,7 @@ export enum Provider {
 export interface Artist {
   id: number;
   name: string;
+  nameKo: string;
   nameNorm: string;
   pathname: string;
   youtubeChannelUrl?: string | null;
@@ -20,20 +21,20 @@ export interface KaraokeSong {
   songId: number;
   provider: Provider;
   karaokeNo: string;
-  providerSongUrl?: string | null;
-  lastSeenAt?: Date | null;
-  ingestedAt?: Date | null;
-  ingestedFrom?: string | null;
+  providerSongUrl?: string ;
+  lastSeenAt?: Date ;
+  ingestedAt?: Date ;
+  ingestedFrom?: string ;
 }
 
 export interface Song {
   id: number;
   title: string;
-  titleKo?: string | null;
+  titleKo?: string;
   titleNorm: string;
-  youtubeVideoId?: string | null;
-  youtubeFetchedAt?: Date | null;
-  primaryArtistId?: number | null;
+  youtubeVideoId?: string ;
+  youtubeFetchedAt?: Date ;
+  primaryArtistId?: number ;
   primaryArtist?: Artist;
   createdAt: Date;
   updatedAt: Date;

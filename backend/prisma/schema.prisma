@@ -9,7 +9,9 @@ datasource db {
 model Artist {
   id                Int      @id @default(autoincrement())
   name              String
+  nameKo            String   @map("name_ko")
   nameNorm          String   @map("name_norm")
+  pathname          String   @unique
 
   youtubeChannelUrl String?  @map("youtube_channel_url")
   tjSongRequestUrl  String?  @map("tj_song_request_url")

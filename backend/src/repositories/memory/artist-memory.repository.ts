@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import type { ArtistRepository } from '../artist.repository';
+import { ArtistRepository } from '../artist.repository';
 import type { Artist } from '@prisma/client';
 import { allArtists } from './data';
 
 @Injectable()
 export class ArtistMemoryRepository implements ArtistRepository {
-  private artists: Artist[] = allArtists;
+  private artists: Artist[] = allArtists as Artist[];
 
   async findAll(): Promise<Artist[]> {
     return this.artists;

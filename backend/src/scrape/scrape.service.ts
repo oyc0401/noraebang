@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 
-interface ScrapedSong {
+export interface ScrapedSong {
   title: string;
   titleKo?: string;
   tj?: string;

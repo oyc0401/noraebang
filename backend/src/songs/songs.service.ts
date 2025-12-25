@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import type { SongRepository } from '../repositories/song.repository';
-import { SONG_REPOSITORY } from './songs.module';
+import { SONG_REPOSITORY } from '../repositories/tokens';
 
 @Injectable()
 export class SongsService {
