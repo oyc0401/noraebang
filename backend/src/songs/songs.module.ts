@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SongsController } from './songs.controller';
 import { SongsService } from './songs.service';
-import { SongMemoryRepository } from '../repositories/memory/song-memory.repository';
+import { SongPrismaRepository } from '../repositories/prisma/song-prisma.repository';
 import { SONG_REPOSITORY } from '../repositories/tokens';
 
 @Module({
@@ -10,7 +10,7 @@ import { SONG_REPOSITORY } from '../repositories/tokens';
     SongsService,
     {
       provide: SONG_REPOSITORY,
-      useClass: SongMemoryRepository,
+      useClass: SongPrismaRepository,
     },
   ],
   exports: [SongsService],
