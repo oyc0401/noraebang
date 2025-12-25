@@ -5,7 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ArtistsModule } from './artists/artists.module';
 import { SongsModule } from './songs/songs.module';
 import { YoutubeModule } from './youtube/youtube.module';
-import { ScrapeModule } from './scrape/scrape.module';
+import { BlogScrapeModule } from './blog-scrape/blog-scrape.module';
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { ScrapeModule } from './scrape/scrape.module';
     ArtistsModule,
     SongsModule,
     YoutubeModule,
-    ScrapeModule,
+    BlogScrapeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

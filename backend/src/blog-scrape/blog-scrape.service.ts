@@ -10,7 +10,7 @@ export interface ScrapedSong {
 }
 
 @Injectable()
-export class ScrapeService {
+export class BlogScrapeService {
   async scrapeSongs(url: string): Promise<ScrapedSong[]> {
     try {
       const response = await fetch(url);
