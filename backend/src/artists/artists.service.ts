@@ -8,7 +8,7 @@ export class ArtistsService {
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5분
 
   constructor(
-    @Inject(ARTIST_REPOSITORY) private artistRepository: ArtistRepository
+    @Inject(ARTIST_REPOSITORY) private artistRepository: ArtistRepository,
   ) {}
 
   async findAll() {
@@ -42,5 +42,10 @@ export class ArtistsService {
 
   async findByAlias(alias: string) {
     return this.artistRepository.findByAlias(alias);
+  }
+
+  // 캐시 초기화 메서드 (외부에서 호출 가능)
+  clearCache() {
+    this.cache.clear();
   }
 }

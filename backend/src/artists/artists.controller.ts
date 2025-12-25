@@ -20,10 +20,11 @@ export class ArtistsController {
         youtube: artist.youtubeChannel ? {
           channelId: artist.youtubeChannel.channelId,
           title: artist.youtubeChannel.title,
+          description: artist.youtubeChannel.description,
+          customUrl: artist.youtubeChannel.customUrl,
           subscriberCount: artist.youtubeChannel.subscriberCount,
           videoCount: artist.youtubeChannel.videoCount,
           thumbnail: artist.youtubeChannel.thumbnailMedium || artist.youtubeChannel.thumbnailDefault,
-          customUrl: artist.youtubeChannel.customUrl,
         } : null,
       }));
 

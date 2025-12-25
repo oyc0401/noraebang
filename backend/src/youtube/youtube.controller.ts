@@ -1,4 +1,4 @@
-import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Query, BadRequestException, Param } from '@nestjs/common';
 import { YoutubeService } from './youtube.service';
 
 @Controller('youtube')
@@ -23,5 +23,32 @@ export class YoutubeController {
 
     const data = await this.youtubeService.searchArtistChannel(name);
     return { data };
+  }
+
+  @Get('search-channels')
+  async searchChannels(@Query('name') name: string) {
+    if (!name) {
+      throw new BadRequestException('Artist name is required');
+    }
+
+    const data = await this.youtubeService.searchChannels(name);
+    return { success: true, data };
+  }
+
+  @Post('update-artist-channel/:alias')
+  async updateArtistChannel(
+    @Param('alias') alias: string,
+    @Query('channelId') channelId: string,
+  ) {
+    if (!channelId) {
+      throw new BadRequestException('channelId is required');
+    }
+
+    const data = await this.youtubeService.updateArtistChannel(alias, channelId);
+    return {
+      success: true,
+      data,
+      message: 'YouTube channel updated successfully'
+    };
   }
 }
