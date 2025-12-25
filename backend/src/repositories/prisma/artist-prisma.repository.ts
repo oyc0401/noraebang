@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ArtistRepository } from '../artist.repository';
+import { ArtistRepository, ArtistWithYoutube } from '../artist.repository';
 import type { Artist } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -10,6 +10,19 @@ export class ArtistPrismaRepository implements ArtistRepository {
   async findAll(): Promise<Artist[]> {
     return this.prisma.artist.findMany({
       orderBy: { id: 'asc' },
+    });
+  }
+
+  async findAllWithYoutube(): Promise<ArtistWithYoutube[]> {
+    return this.prisma.artist.findMany({
+      include: {
+        youtubeChannel: true,
+      },
+      orderBy: {
+        youtubeChannel: {
+          subscriberCount: 'desc',
+        },
+      },
     });
   }
 
