@@ -22,11 +22,11 @@ export function useArtists() {
   });
 }
 
-export function useArtist(pathname: string) {
+export function useArtist(alias: string) {
   return useQuery({
-    queryKey: ['artist', pathname],
+    queryKey: ['artist', alias],
     queryFn: async (): Promise<Artist> => {
-      const response = await fetch(`${API_BASE_URL}/artists/${pathname}`);
+      const response = await fetch(`${API_BASE_URL}/artists/${alias}`);
       if (!response.ok) throw new Error('Failed to fetch artist');
       const result: ArtistResponse = await response.json();
       return result.data;

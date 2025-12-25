@@ -9,6 +9,7 @@ export class SongPrismaRepository implements SongRepository {
 
   async findAll(): Promise<Song[]> {
     return this.prisma.song.findMany({
+      include: { karaokeSongs: true },
       orderBy: { id: 'asc' },
     });
   }
@@ -16,6 +17,7 @@ export class SongPrismaRepository implements SongRepository {
   async findById(id: number): Promise<Song | null> {
     return this.prisma.song.findUnique({
       where: { id },
+      include: { karaokeSongs: true },
     });
   }
 
@@ -34,6 +36,7 @@ export class SongPrismaRepository implements SongRepository {
           { titleNorm: { contains: lowerQuery, mode: 'insensitive' } },
         ],
       },
+      include: { karaokeSongs: true },
       orderBy: { id: 'asc' },
     });
   }
@@ -41,6 +44,7 @@ export class SongPrismaRepository implements SongRepository {
   async findByArtistId(artistId: number): Promise<Song[]> {
     return this.prisma.song.findMany({
       where: { artistId },
+      include: { karaokeSongs: true },
       orderBy: { id: 'asc' },
     });
   }

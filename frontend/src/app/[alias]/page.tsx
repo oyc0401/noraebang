@@ -9,11 +9,11 @@ import { useState, useEffect } from 'react';
 
 export default function ArtistPage() {
   const params = useParams();
-  const artistPathname = params.artistPathname as string;
+  const alias = params.alias as string;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
 
-  const { data: artist, isLoading: artistLoading, error: artistError } = useArtist(artistPathname);
+  const { data: artist, isLoading: artistLoading, error: artistError } = useArtist(alias);
   const artistId = artist?.id;
   const { data: songs, isLoading: songsLoading, error: songsError } = useSongs(searchQuery, artistId);
 

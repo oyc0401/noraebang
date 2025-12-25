@@ -46,15 +46,15 @@ export default function Home() {
       if (foundSong) {
         setSearchLog(prev => [...prev, `✓ 곡을 찾았습니다: ${foundSong.title}`]);
 
-        // Get artist pathname
+        // Get artist alias
         const artistResponse = await fetch(`/api/artists`);
         const { data: artistsList } = await artistResponse.json();
-        const artist = artistsList.find((a: any) => a.id === foundSong.primaryArtistId);
+        const artist = artistsList.find((a: any) => a.id === foundSong.artistId);
 
         if (artist) {
           setSearchLog(prev => [...prev, `✓ ${artist.nameKo} 페이지로 이동합니다...`]);
           setTimeout(() => {
-            router.push(`/${artist.pathname}#${foundSong.id}`);
+            router.push(`/${artist.alias}#${foundSong.id}`);
           }, 500);
         } else {
           setSearchLog(prev => [...prev, `❌ 아티스트 정보를 찾을 수 없습니다.`]);
@@ -136,7 +136,7 @@ export default function Home() {
             {artists.map((artist) => (
               <Link
                 key={artist.id}
-                href={`/${artist.pathname}`}
+                href={`/${artist.alias}`}
                 className="group rounded-lg border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
               >
                 <h2 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50 group-hover:text-zinc-700 dark:group-hover:text-zinc-200">
