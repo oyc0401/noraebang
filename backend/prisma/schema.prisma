@@ -11,7 +11,7 @@ model Artist {
   name              String
   nameKo            String   @map("name_ko")
   nameNorm          String   @map("name_norm")
-  pathname          String   @unique
+  alias             String   @unique
 
   blogId            String?  @map("blog_id")
 
@@ -21,7 +21,7 @@ model Artist {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt      @map("updated_at")
 
-  primarySongs      Song[]   @relation("PrimaryArtist")
+  songs             Song[]   @relation("Artist")
 
   @@map("artist")
 }
@@ -35,14 +35,15 @@ model Song {
   youtubeVideoId   String?   @map("youtube_video_id")
   youtubeFetchedAt DateTime? @map("youtube_fetched_at")
 
-  primaryArtistId  Int?      @map("primary_artist_id")
-  primaryArtist    Artist?   @relation("PrimaryArtist", fields: [primaryArtistId], references: [id])
+  artistId  Int       @map("artist_id")
+  artist    Artist    @relation("Artist", fields: [artistId], references: [id])
 
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt      @map("updated_at")
 
   karaokeSongs     KaraokeSong[]
 
+  @@unique([artistId, titleNorm])
   @@map("song")
 }
 
