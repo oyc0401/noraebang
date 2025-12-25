@@ -1,12 +1,12 @@
-import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Param, BadRequestException } from '@nestjs/common';
 import { BlogScrapeService } from './blog-scrape.service';
 
-@Controller('blog-scrape')
+@Controller('scrape')
 export class BlogScrapeController {
   constructor(private readonly blogScrapeService: BlogScrapeService) {}
 
-  @Get()
-  async scrapeBlog(@Query('id') id: string) {
+  @Get('blog/:id')
+  async scrapeBlog(@Param('id') id: string) {
     if (!id) {
       throw new BadRequestException('id parameter is required');
     }

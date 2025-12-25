@@ -57,29 +57,28 @@ export class BlogScrapeService {
           const joysoundCell = $(cells[3]);
 
           // Extract title and Korean title
-          const titleLink = titleCell.find('a');
-          const titleSpans = titleCell.find('span');
+          const htmlContent = titleCell.html() || '';
+          const parts = htmlContent.split('<br>');
 
           let title = '';
           let titleKo = '';
 
-          if (titleLink.length > 0) {
-            // Has a link
-            title = titleLink.text().trim();
-          } else {
-            // No link, get first span
-            title = titleSpans.first().text().trim();
+          // Get first line (title)
+          if (parts.length > 0) {
+            const $firstPart = cheerio.load(parts[0]);
+            // Get the innermost span text to avoid duplication
+            const spans = $firstPart('span');
+            if (spans.length > 0) {
+              title = spans.last().text().trim();
+            }
           }
 
-          // Get Korean title (usually the second line)
-          const brElements = titleCell.find('br');
-          if (brElements.length > 0) {
-            // Get text after <br>
-            const htmlContent = titleCell.html() || '';
-            const parts = htmlContent.split('<br>');
-            if (parts.length > 1) {
-              const $secondPart = cheerio.load(parts[1]);
-              titleKo = $secondPart('span').text().trim();
+          // Get second line (Korean title)
+          if (parts.length > 1) {
+            const $secondPart = cheerio.load(parts[1]);
+            const spans = $secondPart('span');
+            if (spans.length > 0) {
+              titleKo = spans.last().text().trim();
             }
           }
 
