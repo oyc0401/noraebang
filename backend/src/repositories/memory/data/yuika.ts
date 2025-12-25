@@ -7,7 +7,7 @@ export const yuikaArtist: Artist = {
   name: '『ユイカ』',
   nameKo: '『유이카』',
   nameNorm: 'yuika',
-  pathname: 'yuika',
+  alias: 'yuika',
   youtubeChannelUrl: 'https://www.youtube.com/@yuika_singuitar',
   tjSongRequestUrl: "https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=『ユイカ』",
   createdAt: now,
@@ -23,8 +23,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'sukidakara',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -40,8 +39,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'koi dorobou',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -57,8 +55,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'sniper',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -73,8 +70,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'ichizu na onna no ko',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -88,8 +84,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'rose hip tea',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -104,8 +99,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'okusuri',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -119,8 +113,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'unmei no hito',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -134,8 +127,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'last teen',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -149,8 +141,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'hanakotoba wa shirabenaide',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -164,8 +155,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'yurei ni naritai',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -179,8 +169,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'koi wo shiteiru mitainano',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -195,8 +184,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: '17sai no uta',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -211,8 +199,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'snow dome',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -226,8 +213,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'koniro ni akogarete',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -242,8 +228,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'soba ni ite',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -257,8 +242,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'wagamama',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -272,8 +256,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'christmas no hi janakute iikara',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -287,8 +270,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'bokurashisa',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -302,8 +284,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'anata ga shiranai anata no uta',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -317,8 +298,7 @@ export const yuikaSongs: Song[] = [
     titleNorm: 'joshou',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 4,
-    primaryArtist: yuikaArtist,
+    artistId: 4,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [

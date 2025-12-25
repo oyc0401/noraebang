@@ -7,7 +7,7 @@ export const higedanArtist: Artist = {
   name: 'Official髭男dism',
   nameKo: '오피셜 히게단디즘',
   nameNorm: 'official hige dandism',
-  pathname: 'higedan',
+  alias: 'higedan',
   youtubeChannelUrl: 'https://www.youtube.com/@officialhigedandism',
   tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=Official髭男dism',
   createdAt: now,
@@ -23,8 +23,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'subtitle',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -40,8 +39,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'mixed nuts',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -57,8 +55,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'pretender',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -74,8 +71,7 @@ export const higedanSongs: Song[] = [
     titleNorm: '115 man kiro no film',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -91,8 +87,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'cry baby',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -108,8 +103,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'i love',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -125,8 +119,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'no doubt',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -142,8 +135,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'yesterday',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -159,8 +151,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'same blue',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -174,8 +165,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'ホワイトノイズ',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -191,8 +181,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'soulsoup',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -208,8 +197,7 @@ export const higedanSongs: Song[] = [
     titleNorm: '50%',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -223,8 +211,7 @@ export const higedanSongs: Song[] = [
     titleNorm: '宿命',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -240,8 +227,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'らしさ',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -256,8 +242,7 @@ export const higedanSongs: Song[] = [
     titleNorm: 'chessboard',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -273,8 +258,7 @@ export const higedanSongs: Song[] = [
     titleNorm: '日常',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 1,
-    primaryArtist: higedanArtist,
+    artistId: 1,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [

@@ -16,7 +16,7 @@ export class ArtistsService {
     return this.artistRepository.findById(id);
   }
 
-  async findByPathname(pathname: string) {
-    return this.artistRepository.findByPathname(pathname);
+  async findByAlias(alias: string) {
+    return this.artistRepository.findByAlias(alias);
   }
 }

@@ -30,6 +30,6 @@ export class SongMemoryRepository implements SongRepository {
   }
 
   async findByArtistId(artistId: number): Promise<Song[]> {
-    return this.songs.filter((song) => song.primaryArtistId === artistId);
+    return this.songs.filter((song) => song.artistId === artistId);
   }
 }

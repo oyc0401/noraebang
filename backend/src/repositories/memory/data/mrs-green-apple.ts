@@ -7,7 +7,7 @@ export const mrsGreenAppleArtist: Artist = {
   name: 'Mrs. GREEN APPLE',
   nameKo: '미세스 그린 애플',
   nameNorm: 'mrs green apple',
-  pathname: 'mrs-green-apple',
+  alias: 'mrs-green-apple',
   youtubeChannelUrl: 'https://www.youtube.com/@MrsGREENAPPLE_Official',
   tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=Mrs.+GREEN+APPLE',
   createdAt: now,
@@ -23,8 +23,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'ao to natsu',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -40,8 +39,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'tenbyo no uta',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -57,8 +55,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'que sera sera',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -74,8 +71,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'dance hall',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -91,8 +87,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'darling',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -108,8 +103,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'inferno',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -125,8 +119,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'tengoku',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -142,8 +135,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'breakfast',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -158,8 +150,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'lilac',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -175,8 +166,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'soranji',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -192,8 +182,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'kusushiki',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -209,8 +198,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'boku no koto',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -226,8 +214,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'natsu no kage',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -241,8 +228,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'familie',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -258,8 +244,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'nacht musik',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -273,8 +258,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'bitter vacance',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -290,8 +274,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'blue ambience feat asmi',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -307,8 +290,7 @@ export const mrsGreenAppleSongs: Song[] = [
     titleNorm: 'good day',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 2,
-    primaryArtist: mrsGreenAppleArtist,
+    artistId: 2,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [

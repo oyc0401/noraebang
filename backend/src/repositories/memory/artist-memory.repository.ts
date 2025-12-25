@@ -15,7 +15,7 @@ export class ArtistMemoryRepository implements ArtistRepository {
     return this.artists.find((artist) => artist.id === id) || null;
   }
 
-  async findByPathname(pathname: string): Promise<Artist | null> {
-    return this.artists.find((artist) => artist.pathname === pathname) || null;
+  async findByAlias(alias: string): Promise<Artist | null> {
+    return this.artists.find((artist) => artist.alias === alias) || null;
   }
 }

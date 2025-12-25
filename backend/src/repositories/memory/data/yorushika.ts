@@ -7,7 +7,7 @@ export const yorushikaArtist: Artist = {
   name: 'ヨルシカ',
   nameKo: '요루시카',
   nameNorm: 'yorushika',
-  pathname: 'yorushika',
+  alias: 'yorushika',
   youtubeChannelUrl: 'https://www.youtube.com/@nbuna',
   tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=ヨルシカ',
   createdAt: now,
@@ -23,8 +23,7 @@ export const yorushikaSongs: Song[] = [
     titleNorm: 'tada kimi ni hare',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 6,
-    primaryArtist: yorushikaArtist,
+    artistId: 6,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -39,8 +38,7 @@ export const yorushikaSongs: Song[] = [
     titleNorm: 'hana ni bourei',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 6,
-    primaryArtist: yorushikaArtist,
+    artistId: 6,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -56,8 +54,7 @@ export const yorushikaSongs: Song[] = [
     titleNorm: 'haru',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 6,
-    primaryArtist: yorushikaArtist,
+    artistId: 6,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -73,8 +70,7 @@ export const yorushikaSongs: Song[] = [
     titleNorm: 'dakara boku wa ongaku wo yameta',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 6,
-    primaryArtist: yorushikaArtist,
+    artistId: 6,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -89,8 +85,7 @@ export const yorushikaSongs: Song[] = [
     titleNorm: 'algernon',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 6,
-    primaryArtist: yorushikaArtist,
+    artistId: 6,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -106,8 +101,7 @@ export const yorushikaSongs: Song[] = [
     titleNorm: 'haru dorobou',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 6,
-    primaryArtist: yorushikaArtist,
+    artistId: 6,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -123,8 +117,7 @@ export const yorushikaSongs: Song[] = [
     titleNorm: 'itte',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 6,
-    primaryArtist: yorushikaArtist,
+    artistId: 6,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -139,8 +132,7 @@ export const yorushikaSongs: Song[] = [
     titleNorm: 'ame to cappuccino',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 6,
-    primaryArtist: yorushikaArtist,
+    artistId: 6,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [

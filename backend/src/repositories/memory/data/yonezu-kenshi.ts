@@ -7,7 +7,7 @@ export const yonezuKenshiArtist: Artist = {
   name: '米津玄師',
   nameKo: '요네즈 켄시',
   nameNorm: 'yonezu kenshi',
-  pathname: 'yonezu-kenshi',
+  alias: 'yonezu-kenshi',
   youtubeChannelUrl: 'https://www.youtube.com/@KenshiYonezu',
   tjSongRequestUrl: 'https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=米津玄師',
   createdAt: now,
@@ -23,8 +23,7 @@ export const yonezuKenshiSongs: Song[] = [
     titleNorm: 'iris out',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 3,
-    primaryArtist: yonezuKenshiArtist,
+    artistId: 3,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -40,8 +39,7 @@ export const yonezuKenshiSongs: Song[] = [
     titleNorm: 'jane doe',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 3,
-    primaryArtist: yonezuKenshiArtist,
+    artistId: 3,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -57,8 +55,7 @@ export const yonezuKenshiSongs: Song[] = [
     titleNorm: 'kick back',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 3,
-    primaryArtist: yonezuKenshiArtist,
+    artistId: 3,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -74,8 +71,7 @@ export const yonezuKenshiSongs: Song[] = [
     titleNorm: 'lemon',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 3,
-    primaryArtist: yonezuKenshiArtist,
+    artistId: 3,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -91,8 +87,7 @@ export const yonezuKenshiSongs: Song[] = [
     titleNorm: 'sayonara mata itsuka',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 3,
-    primaryArtist: yonezuKenshiArtist,
+    artistId: 3,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -108,8 +103,7 @@ export const yonezuKenshiSongs: Song[] = [
     titleNorm: 'plazma',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 3,
-    primaryArtist: yonezuKenshiArtist,
+    artistId: 3,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -125,8 +119,7 @@ export const yonezuKenshiSongs: Song[] = [
     titleNorm: 'peace sign',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 3,
-    primaryArtist: yonezuKenshiArtist,
+    artistId: 3,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -142,8 +135,7 @@ export const yonezuKenshiSongs: Song[] = [
     titleNorm: 'eine kleine',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 3,
-    primaryArtist: yonezuKenshiArtist,
+    artistId: 3,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -159,8 +151,7 @@ export const yonezuKenshiSongs: Song[] = [
     titleNorm: 'bow and arrow',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 3,
-    primaryArtist: yonezuKenshiArtist,
+    artistId: 3,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -176,8 +167,7 @@ export const yonezuKenshiSongs: Song[] = [
     titleNorm: '1991',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 3,
-    primaryArtist: yonezuKenshiArtist,
+    artistId: 3,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [

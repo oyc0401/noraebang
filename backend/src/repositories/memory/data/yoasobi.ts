@@ -7,7 +7,7 @@ export const yoasobiArtist: Artist = {
   name: 'YOASOBI',
   nameKo: '요아소비',
   nameNorm: 'yoasobi',
-  pathname: 'yoasobi',
+  alias: 'yoasobi',
   youtubeChannelUrl: 'https://www.youtube.com/@Ayase_YOASOBI',
   tjSongRequestUrl: "https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=YOASOBI",
   createdAt: now,
@@ -23,8 +23,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'idol',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -40,8 +39,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'yoru ni kakeru',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -57,8 +55,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'kaibutsu',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -74,8 +71,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'yusha',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -91,8 +87,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'gunjou',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -108,8 +103,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'adventure',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -125,8 +119,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'watch me',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -142,8 +135,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'shukufuku',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -159,8 +151,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'ano yume wo nazotte',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -176,8 +167,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'san genshoku',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -193,8 +183,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'undead',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -210,8 +199,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'haruka',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -227,8 +215,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'yasashii suisei',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -244,8 +231,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'harujion',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -261,8 +247,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'encore',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -278,8 +263,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'seventeen',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [
@@ -295,8 +279,7 @@ export const yoasobiSongs: Song[] = [
     titleNorm: 'tabun',
     youtubeVideoId: undefined,
     youtubeFetchedAt: undefined,
-    primaryArtistId: 5,
-    primaryArtist: yoasobiArtist,
+    artistId: 5,
     createdAt: now,
     updatedAt: now,
     karaokeSongs: [

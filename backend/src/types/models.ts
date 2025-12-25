@@ -9,7 +9,7 @@ export interface Artist {
   name: string;
   nameKo: string;
   nameNorm: string;
-  pathname: string;
+  alias: string;
   youtubeChannelUrl?: string | null;
   tjSongRequestUrl?: string | null;
   createdAt: Date;
@@ -34,8 +34,7 @@ export interface Song {
   titleNorm: string;
   youtubeVideoId?: string ;
   youtubeFetchedAt?: Date ;
-  primaryArtistId?: number ;
-  primaryArtist?: Artist;
+  artistId: number;
   createdAt: Date;
   updatedAt: Date;
   karaokeSongs: KaraokeSong[];
