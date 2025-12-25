@@ -172,8 +172,15 @@ export class YoutubeService {
       const response = await fetch(url);
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || `YouTube API error: ${response.status}`;
+
         throw new HttpException(
-          `YouTube API error: ${response.status}`,
+          {
+            statusCode: response.status,
+            message: errorMessage,
+            details: errorData,
+          },
           response.status
         );
       }

@@ -148,15 +148,60 @@ async function searchArtistChannels(batchSize: number = 1, skipExisting: boolean
           }
         }
 
-        // 아티스트에는 채널 ID만 저장
+        // 채널 상세 정보 가져오기
+        const detailedChannelData = await youtubeService.getChannelDetails(channelData.channelId);
+
+        // Artist 업데이트
         await prisma.artist.update({
           where: { id: artist.id },
           data: {
-            youtubeChannelId: channelData.channelId,
+            youtubeChannelId: detailedChannelData.channelId,
           },
         });
 
-        console.log(`   💾 Channel ID saved successfully`);
+        // YoutubeChannel 테이블 upsert
+        await prisma.youtubeChannel.upsert({
+          where: { artistId: artist.id },
+          create: {
+            artistId: artist.id,
+            channelId: detailedChannelData.channelId,
+            title: detailedChannelData.title,
+            description: detailedChannelData.description,
+            customUrl: detailedChannelData.customUrl,
+            publishedAt: new Date(detailedChannelData.publishedAt),
+            country: detailedChannelData.country,
+            defaultLanguage: detailedChannelData.defaultLanguage,
+            thumbnailDefault: detailedChannelData.thumbnailDefault,
+            thumbnailMedium: detailedChannelData.thumbnailMedium,
+            thumbnailHigh: detailedChannelData.thumbnailHigh,
+            subscriberCount: detailedChannelData.subscriberCount,
+            videoCount: detailedChannelData.videoCount,
+            viewCount: detailedChannelData.viewCount,
+            hiddenSubscriberCount: detailedChannelData.hiddenSubscriberCount,
+            uploadsPlaylistId: detailedChannelData.uploadsPlaylistId,
+            fetchedAt: new Date(),
+          },
+          update: {
+            channelId: detailedChannelData.channelId,
+            title: detailedChannelData.title,
+            description: detailedChannelData.description,
+            customUrl: detailedChannelData.customUrl,
+            publishedAt: new Date(detailedChannelData.publishedAt),
+            country: detailedChannelData.country,
+            defaultLanguage: detailedChannelData.defaultLanguage,
+            thumbnailDefault: detailedChannelData.thumbnailDefault,
+            thumbnailMedium: detailedChannelData.thumbnailMedium,
+            thumbnailHigh: detailedChannelData.thumbnailHigh,
+            subscriberCount: detailedChannelData.subscriberCount,
+            videoCount: detailedChannelData.videoCount,
+            viewCount: detailedChannelData.viewCount,
+            hiddenSubscriberCount: detailedChannelData.hiddenSubscriberCount,
+            uploadsPlaylistId: detailedChannelData.uploadsPlaylistId,
+            fetchedAt: new Date(),
+          },
+        });
+
+        console.log(`   💾 Channel data saved successfully`);
         updated++;
 
         // YouTube API rate limit을 고려한 딜레이 (200ms)
