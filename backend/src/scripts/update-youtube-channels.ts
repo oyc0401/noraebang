@@ -80,24 +80,29 @@ async function updateYouTubeChannels(batchSize: number = 1, skipExisting: boolea
       process.exit(1);
     }
 
-    // 업데이트가 필요한 아티스트만 조회
-    // 우선순위: 1) youtubeThumbnail 없음, 2) youtubeThumbnailDefault 없음, 3) 가장 오래된 업데이트
+    // 업데이트가 필요한 아티스트만 조회 (채널 ID가 없는 경우)
     const whereClause = skipExisting
-      ? {
-          OR: [
-            { youtubeThumbnail: null },
-            { youtubeThumbnailDefault: null },
-          ]
-        }
+      ? { youtubeChannelId: null }
       : {};
+
+    // 우선순위: 1) youtubeThumbnail 없음, 2) youtubeThumbnailDefault 없음, 3) 가장 오래된 업데이트
+    // const whereClause = skipExisting
+    //   ? {
+    //       OR: [
+    //         { youtubeThumbnail: null },
+    //         { youtubeThumbnailDefault: null },
+    //       ]
+    //     }
+    //   : {};
 
     const artists = await prisma.artist.findMany({
       where: whereClause,
-      orderBy: [
-        { youtubeThumbnail: 'asc' },  // null이 먼저 (asc에서 null이 앞)
-        { youtubeThumbnailDefault: 'asc' },
-        { youtubeFetchedAt: 'asc' },  // 가장 오래된 것부터
-      ],
+      orderBy: { name: 'asc' },
+      // orderBy: [
+      //   { youtubeThumbnail: 'asc' },  // null이 먼저 (asc에서 null이 앞)
+      //   { youtubeThumbnailDefault: 'asc' },
+      //   { youtubeFetchedAt: 'asc' },  // 가장 오래된 것부터
+      // ],
       take: batchSize, // 한 번에 처리할 개수 제한
     });
 
@@ -172,13 +177,17 @@ async function updateYouTubeChannels(batchSize: number = 1, skipExisting: boolea
 
     // 남은 아티스트 확인
     const remaining = await prisma.artist.count({
-      where: {
-        OR: [
-          { youtubeThumbnail: null },
-          { youtubeThumbnailDefault: null },
-        ]
-      },
+      where: { youtubeChannelId: null },
     });
+
+    // const remaining = await prisma.artist.count({
+    //   where: {
+    //     OR: [
+    //       { youtubeThumbnail: null },
+    //       { youtubeThumbnailDefault: null },
+    //     ]
+    //   },
+    // });
 
     if (remaining > 0) {
       console.log(`\n⚠️  ${remaining} artists still need YouTube channel data`);

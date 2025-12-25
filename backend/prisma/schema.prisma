@@ -30,6 +30,7 @@ model Artist {
   updatedAt               DateTime @updatedAt      @map("updated_at")
 
   songs                   Song[]   @relation("Artist")
+  youtubeChannel          YoutubeChannel?
 
   @@map("artist")
 }
@@ -77,4 +78,36 @@ enum Provider {
   TJ
   KY
   JOYSOUND
+}
+
+model YoutubeChannel {
+  id                     Int       @id @default(autoincrement())
+  artistId               Int       @unique @map("artist_id")
+
+  channelId              String    @unique @map("channel_id")
+  title                  String?
+  description            String?   @db.Text
+  customUrl              String?   @map("custom_url")
+  publishedAt            DateTime? @map("published_at")
+  country                String?
+  defaultLanguage        String?   @map("default_language")
+
+  thumbnailDefault       String?   @map("thumbnail_default")
+  thumbnailMedium        String?   @map("thumbnail_medium")
+  thumbnailHigh          String?   @map("thumbnail_high")
+
+  subscriberCount        Int?      @map("subscriber_count")
+  videoCount             Int?      @map("video_count")
+  viewCount              BigInt?   @map("view_count")
+  hiddenSubscriberCount  Boolean?  @map("hidden_subscriber_count")
+
+  uploadsPlaylistId      String?   @map("uploads_playlist_id")
+
+  fetchedAt              DateTime? @map("fetched_at")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  artist                 Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@map("youtube_channel")
 }
