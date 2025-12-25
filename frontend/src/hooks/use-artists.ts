@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Artist } from '@/types/models';
+import { API_BASE_URL } from '@/lib/api';
 
 interface ArtistsResponse {
   data: Artist[];
@@ -13,12 +14,8 @@ export function useArtists() {
   return useQuery({
     queryKey: ['artists'],
     queryFn: async (): Promise<Artist[]> => {
-      const response = await fetch('/api/artists');
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch artists');
-      }
-
+      const response = await fetch(`${API_BASE_URL}/artists`);
+      if (!response.ok) throw new Error('Failed to fetch artists');
       const result: ArtistsResponse = await response.json();
       return result.data;
     },
@@ -29,12 +26,8 @@ export function useArtist(pathname: string) {
   return useQuery({
     queryKey: ['artist', pathname],
     queryFn: async (): Promise<Artist> => {
-      const response = await fetch(`/api/artists/${pathname}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch artist');
-      }
-
+      const response = await fetch(`${API_BASE_URL}/artists/${pathname}`);
+      if (!response.ok) throw new Error('Failed to fetch artist');
       const result: ArtistResponse = await response.json();
       return result.data;
     },
