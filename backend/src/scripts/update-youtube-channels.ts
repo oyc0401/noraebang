@@ -132,24 +132,18 @@ async function updateYouTubeChannels(batchSize: number = 1, skipExisting: boolea
 
         console.log(`   ✅ Found: ${channelData.title}`);
         console.log(`   🔗 URL: ${channelData.channelUrl}`);
+        console.log(`   📝 Description: ${channelData.description.substring(0, 50)}...`);
+        console.log(`   🖼️  Thumbnail: ${channelData.thumbnail}`);
 
-        // 아티스트 정보 업데이트
+        // 아티스트에는 채널 ID만 저장
         await prisma.artist.update({
           where: { id: artist.id },
           data: {
             youtubeChannelId: channelData.channelId,
-            youtubeChannelTitle: channelData.title,
-            youtubeChannelDescription: channelData.description,
-            youtubeChannelPublished: new Date(channelData.publishedAt),
-            youtubeFetchedAt: new Date(),
-            youtubeThumbnail: channelData.thumbnail,
-            youtubeThumbnailDefault: channelData.thumbnailDefault,
-            youtubeThumbnailMedium: channelData.thumbnailMedium,
-            youtubeThumbnailHigh: channelData.thumbnailHigh,
           },
         });
 
-        console.log(`   💾 Updated successfully`);
+        console.log(`   💾 Channel ID saved successfully`);
         updated++;
 
         // YouTube API rate limit을 고려한 딜레이 (1초)

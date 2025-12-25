@@ -15,16 +15,8 @@ model Artist {
 
   blogId                  String?  @map("blog_id")
 
-  youtubeChannelId          String?  @map("youtube_channel_id")
-  youtubeChannelTitle       String?  @map("youtube_channel_title")
-  youtubeChannelDescription String?  @map("youtube_channel_description")
-  youtubeChannelPublished   DateTime? @map("youtube_channel_published")
-  youtubeFetchedAt          DateTime? @map("youtube_fetched_at")
-  youtubeThumbnail        String?  @map("youtube_thumbnail")
-  youtubeThumbnailDefault String?  @map("youtube_thumbnail_default")
-  youtubeThumbnailMedium  String?  @map("youtube_thumbnail_medium")
-  youtubeThumbnailHigh    String?  @map("youtube_thumbnail_high")
-  tjSongRequestUrl        String?  @map("tj_song_request_url")
+  youtubeChannelId    String?  @map("youtube_channel_id")
+  tjSongRequestUrl    String?  @map("tj_song_request_url")
 
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt      @map("updated_at")
@@ -84,7 +76,7 @@ model YoutubeChannel {
   id                     Int       @id @default(autoincrement())
   artistId               Int       @unique @map("artist_id")
 
-  channelId              String    @unique @map("channel_id")
+  channelId              String    @map("channel_id")
   title                  String?
   description            String?   @db.Text
   customUrl              String?   @map("custom_url")
