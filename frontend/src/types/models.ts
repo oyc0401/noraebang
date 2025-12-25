@@ -7,6 +7,7 @@ export enum Provider {
 export interface YoutubeChannel {
   channelId: string;
   title: string;
+  description: string | null;
   subscriberCount: number | null;
   videoCount: number | null;
   thumbnail: string | null;

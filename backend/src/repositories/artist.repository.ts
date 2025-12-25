@@ -9,4 +9,5 @@ export interface ArtistRepository {
   findAllWithYoutube(): Promise<ArtistWithYoutube[]>;
   findById(id: number): Promise<Artist | null>;
   findByAlias(alias: string): Promise<Artist | null>;
+  findByAliases(aliases: string[]): Promise<Artist[]>;
 }

@@ -48,4 +48,12 @@ export class SongPrismaRepository implements SongRepository {
       orderBy: { id: 'asc' },
     });
   }
+
+  async findByArtistIds(artistIds: number[]): Promise<Song[]> {
+    return this.prisma.song.findMany({
+      where: { artistId: { in: artistIds } },
+      include: { karaokeSongs: true },
+      orderBy: { id: 'asc' },
+    });
+  }
 }

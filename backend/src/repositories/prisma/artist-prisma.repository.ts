@@ -37,4 +37,11 @@ export class ArtistPrismaRepository implements ArtistRepository {
       where: { alias },
     });
   }
+
+  async findByAliases(aliases: string[]): Promise<Artist[]> {
+    return this.prisma.artist.findMany({
+      where: { alias: { in: aliases } },
+      orderBy: { id: 'asc' },
+    });
+  }
 }

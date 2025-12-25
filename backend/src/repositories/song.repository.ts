@@ -5,4 +5,5 @@ export interface SongRepository {
   findById(id: number): Promise<Song | null>;
   searchByTitle(query: string): Promise<Song[]>;
   findByArtistId(artistId: number): Promise<Song[]>;
+  findByArtistIds(artistIds: number[]): Promise<Song[]>;
 }

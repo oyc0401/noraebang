@@ -13,6 +13,6 @@ import { ARTIST_REPOSITORY } from '../repositories/tokens';
       useClass: ArtistPrismaRepository,
     },
   ],
-  exports: [ArtistsService],
+  exports: [ArtistsService, ARTIST_REPOSITORY],
 })
 export class ArtistsModule {}
