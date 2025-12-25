@@ -4,6 +4,15 @@ export enum Provider {
   JOYSOUND = 'JOYSOUND',
 }
 
+export interface YoutubeChannel {
+  channelId: string;
+  title: string;
+  subscriberCount: number | null;
+  videoCount: number | null;
+  thumbnail: string | null;
+  customUrl: string | null;
+}
+
 export interface Artist {
   id: number;
   name: string;
@@ -11,10 +20,13 @@ export interface Artist {
   nameNorm: string;
   alias: string;
   youtubeChannelId?: string;
-  youtubeThumbnail?: string;
   tjSongRequestUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ArtistWithYoutube extends Artist {
+  youtube: YoutubeChannel | null;
 }
 
 export interface Song {

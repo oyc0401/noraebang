@@ -1,9 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { Artist } from '@/types/models';
+import { Artist, ArtistWithYoutube } from '@/types/models';
 import { API_BASE_URL } from '@/lib/api';
 
 interface ArtistsResponse {
   data: Artist[];
+}
+
+interface ArtistsWithYoutubeResponse {
+  data: ArtistWithYoutube[];
+  cached: boolean;
 }
 
 interface ArtistResponse {
@@ -19,6 +24,19 @@ export function useArtists() {
       const result: ArtistsResponse = await response.json();
       return result.data;
     },
+  });
+}
+
+export function useArtistsWithYoutube() {
+  return useQuery({
+    queryKey: ['artists', 'youtube'],
+    queryFn: async (): Promise<ArtistWithYoutube[]> => {
+      const response = await fetch(`${API_BASE_URL}/artists?includeYoutube=true`);
+      if (!response.ok) throw new Error('Failed to fetch artists');
+      const result: ArtistsWithYoutubeResponse = await response.json();
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5분 캐시 (서버와 동일)
   });
 }
 
