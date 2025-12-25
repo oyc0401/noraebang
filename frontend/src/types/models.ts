@@ -10,7 +10,8 @@ export interface Artist {
   nameKo: string;
   nameNorm: string;
   alias: string;
-  youtubeChannelUrl?: string;
+  youtubeChannelId?: string;
+  youtubeThumbnail?: string;
   tjSongRequestUrl?: string;
   createdAt: Date;
   updatedAt: Date;

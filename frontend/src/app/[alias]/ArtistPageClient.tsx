@@ -68,9 +68,9 @@ export default function ArtistPageClient({ artist, initialSongs }: ArtistPageCli
             className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:border-zinc-400"
           />
           <div className="flex flex-wrap gap-3">
-            {artist.youtubeChannelUrl && (
+            {artist.youtubeChannelId && (
               <a
-                href={artist.youtubeChannelUrl}
+                href={`https://www.youtube.com/channel/${artist.youtubeChannelId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-2 rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-red-100 px-5 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition-all hover:border-red-300 hover:shadow-md active:scale-[0.98] dark:border-red-900 dark:from-red-950 dark:to-red-900 dark:text-red-300 dark:hover:border-red-800"

@@ -15,7 +15,8 @@ model Artist {
 
   blogId            String?  @map("blog_id")
 
-  youtubeChannelUrl String?  @map("youtube_channel_url")
+  youtubeChannelId  String?  @map("youtube_channel_id")
+  youtubeThumbnail  String?  @map("youtube_thumbnail")
   tjSongRequestUrl  String?  @map("tj_song_request_url")
 
   createdAt         DateTime @default(now()) @map("created_at")
