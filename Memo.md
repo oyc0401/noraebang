@@ -33,8 +33,15 @@ PGPASSWORD=postgres pg_dump -h localhost -p 5432 -U postgres -d song_db \
   --clean --if-exists --no-owner --no-acl \
   song_public.dump
 
-  ### 
+  ### 최근 아티스트 보기
    SELECT id, name, alias, created_at
   FROM artist
   ORDER BY created_at DESC
+  LIMIT 30;
+
+  ## 최근 곡 보기
+SELECT s.id, s.title, a.name as artist_name, s.created_at
+  FROM song s
+  JOIN artist a ON s.artist_id = a.id
+  ORDER BY s.created_at DESC
   LIMIT 30;

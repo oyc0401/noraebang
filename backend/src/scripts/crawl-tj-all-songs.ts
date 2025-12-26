@@ -174,6 +174,67 @@ async function generateAlias(artistName: string): Promise<string> {
  */
 async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
   try {
+    // 아티스트 찾기 또는 생성
+    let artist = await prisma.artist.findFirst({
+      where: {
+        OR: [{ name: song.artist }, { nameNorm: song.artist }],
+      },
+    });
+
+    // 새로운 alias 생성
+    const newAlias = await generateAlias(song.artist);
+
+    if (!artist) {
+      // alias 중복 체크
+      const existingArtist = await prisma.artist.findUnique({
+        where: { alias: newAlias },
+      });
+
+      if (existingArtist) {
+        console.error(`❌ Alias 중복! "${song.artist}" → "${newAlias}"`);
+        console.error(`   이미 존재하는 아티스트: "${existingArtist.name}"`);
+        throw new Error(
+          `Alias collision: "${newAlias}" already exists for "${existingArtist.name}"`,
+        );
+      }
+
+      artist = await prisma.artist.create({
+        data: {
+          name: song.artist,
+          nameKo: song.artist,
+          nameNorm: song.artist,
+          alias: newAlias,
+        },
+      });
+      console.log(`✅ 새 아티스트 생성: "${song.artist}" → "${newAlias}"`);
+    } else {
+      // 기존 아티스트가 있는 경우 alias 체크
+      if (artist.alias !== newAlias) {
+        console.log(
+          `🔄 Alias 불일치 감지! "${song.artist}": "${artist.alias}" → "${newAlias}"`,
+        );
+
+        // 새 alias가 다른 아티스트와 충돌하는지 확인
+        const existingArtist = await prisma.artist.findUnique({
+          where: { alias: newAlias },
+        });
+
+        if (existingArtist && existingArtist.id !== artist.id) {
+          console.error(`❌ Alias 중복! 다른 아티스트 "${existingArtist.name}"와 충돌`);
+          throw new Error(
+            `Alias collision: "${newAlias}" already exists for "${existingArtist.name}"`,
+          );
+        }
+
+        // alias 업데이트
+        artist = await prisma.artist.update({
+          where: { id: artist.id },
+          data: { alias: newAlias },
+        });
+        console.log(`✅ Alias 업데이트 완료: "${artist.alias}"`);
+      }
+    }
+
     // 기존 곡이 있는지 확인
     const existingSong = await prisma.karaokeSong.findUnique({
       where: {
@@ -186,38 +247,6 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
 
     if (existingSong) {
       return false; // 이미 존재
-    }
-
-    // 아티스트 찾기 또는 생성
-    let artist = await prisma.artist.findFirst({
-      where: {
-        OR: [{ name: song.artist }, { nameNorm: song.artist }],
-      },
-    });
-
-    if (!artist) {
-      const alias = await generateAlias(song.artist);
-
-      // alias 중복 체크
-      const existingArtist = await prisma.artist.findUnique({
-        where: { alias },
-      });
-
-      if (existingArtist) {
-        console.error(`❌ Alias 중복! "${song.artist}" → "${alias}"`);
-        console.error(`   이미 존재하는 아티스트: "${existingArtist.name}"`);
-        throw new Error(`Alias collision: "${alias}" already exists for "${existingArtist.name}"`);
-      }
-
-      artist = await prisma.artist.create({
-        data: {
-          name: song.artist,
-          nameKo: song.artist,
-          nameNorm: song.artist,
-          alias,
-        },
-      });
-      console.log(`✅ 새 아티스트 생성: "${song.artist}" → "${alias}"`);
     }
 
     // 곡 찾기 또는 생성
