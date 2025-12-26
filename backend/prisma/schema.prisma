@@ -7,42 +7,34 @@ datasource db {
 }
 
 model Artist {
-  id                      Int      @id @default(autoincrement())
-  name                    String
-  nameKo                  String   @map("name_ko")
-  nameNorm                String   @map("name_norm")
-  alias                   String   @unique
-
-  blogId                  String?  @map("blog_id")
-
-  youtubeChannelId    String?  @map("youtube_channel_id")
-  tjSongRequestUrl    String?  @map("tj_song_request_url")
-
-  createdAt               DateTime @default(now()) @map("created_at")
-  updatedAt               DateTime @updatedAt      @map("updated_at")
-
-  songs                   Song[]   @relation("Artist")
-  youtubeChannel          YoutubeChannel?
+  id               Int             @id @default(autoincrement())
+  name             String
+  nameNorm         String          @map("name_norm")
+  tjSongRequestUrl String?         @map("tj_song_request_url")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+  nameKo           String          @map("name_ko")
+  blogId           String?         @map("blog_id")
+  alias            String          @unique
+  youtubeChannelId String?         @map("youtube_channel_id")
+  songs            Song[]          @relation("Artist")
+  youtubeChannel   YoutubeChannel?
 
   @@map("artist")
 }
 
 model Song {
-  id               Int       @id @default(autoincrement())
+  id               Int           @id @default(autoincrement())
   title            String
-  titleKo          String?   @map("title_ko")
-  titleNorm        String    @map("title_norm")
-
-  youtubeVideoId   String?   @map("youtube_video_id")
-  youtubeFetchedAt DateTime? @map("youtube_fetched_at")
-
-  artistId  Int       @map("artist_id")
-  artist    Artist    @relation("Artist", fields: [artistId], references: [id])
-
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt      @map("updated_at")
-
+  titleKo          String?       @map("title_ko")
+  titleNorm        String        @map("title_norm")
+  youtubeVideoId   String?       @map("youtube_video_id")
+  youtubeFetchedAt DateTime?     @map("youtube_fetched_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  artistId         Int           @map("artist_id")
   karaokeSongs     KaraokeSong[]
+  artist           Artist        @relation("Artist", fields: [artistId], references: [id])
 
   @@unique([artistId, titleNorm])
   @@map("song")
@@ -51,56 +43,47 @@ model Song {
 model KaraokeSong {
   id              Int       @id @default(autoincrement())
   songId          Int       @map("song_id")
-
   provider        Provider
   karaokeNo       String    @map("karaoke_no")
-
   providerSongUrl String?   @map("provider_song_url")
   lastSeenAt      DateTime? @map("last_seen_at")
   ingestedAt      DateTime? @map("ingested_at")
   ingestedFrom    String?   @map("ingested_from")
-
   song            Song      @relation(fields: [songId], references: [id])
 
   @@unique([provider, karaokeNo])
   @@map("karaoke_song")
 }
 
+model YoutubeChannel {
+  id                    Int       @id @default(autoincrement())
+  artistId              Int       @unique @map("artist_id")
+  channelId             String    @map("channel_id")
+  title                 String?
+  description           String?
+  customUrl             String?   @map("custom_url")
+  publishedAt           DateTime? @map("published_at")
+  country               String?
+  defaultLanguage       String?   @map("default_language")
+  thumbnailDefault      String?   @map("thumbnail_default")
+  thumbnailMedium       String?   @map("thumbnail_medium")
+  thumbnailHigh         String?   @map("thumbnail_high")
+  subscriberCount       Int?      @map("subscriber_count")
+  videoCount            Int?      @map("video_count")
+  viewCount             BigInt?   @map("view_count")
+  hiddenSubscriberCount Boolean?  @map("hidden_subscriber_count")
+  uploadsPlaylistId     String?   @map("uploads_playlist_id")
+  fetchedAt             DateTime? @map("fetched_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  artist                Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@index([subscriberCount(sort: Desc)])
+  @@map("youtube_channel")
+}
+
 enum Provider {
   TJ
   KY
   JOYSOUND
-}
-
-model YoutubeChannel {
-  id                     Int       @id @default(autoincrement())
-  artistId               Int       @unique @map("artist_id")
-
-  channelId              String    @map("channel_id")
-  title                  String?
-  description            String?   @db.Text
-  customUrl              String?   @map("custom_url")
-  publishedAt            DateTime? @map("published_at")
-  country                String?
-  defaultLanguage        String?   @map("default_language")
-
-  thumbnailDefault       String?   @map("thumbnail_default")
-  thumbnailMedium        String?   @map("thumbnail_medium")
-  thumbnailHigh          String?   @map("thumbnail_high")
-
-  subscriberCount        Int?      @map("subscriber_count")
-  videoCount             Int?      @map("video_count")
-  viewCount              BigInt?   @map("view_count")
-  hiddenSubscriberCount  Boolean?  @map("hidden_subscriber_count")
-
-  uploadsPlaylistId      String?   @map("uploads_playlist_id")
-
-  fetchedAt              DateTime? @map("fetched_at")
-  createdAt              DateTime  @default(now()) @map("created_at")
-  updatedAt              DateTime  @updatedAt @map("updated_at")
-
-  artist                 Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
-
-  @@index([subscriberCount(sort: Desc)])
-  @@map("youtube_channel")
 }
