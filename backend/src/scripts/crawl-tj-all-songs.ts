@@ -3,10 +3,19 @@ import * as cheerio from 'cheerio';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import { convert as romanize } from 'hangul-romanization';
+
+import hanja from 'hanja';
+import Kuroshiro from 'kuroshiro';
+import KuromojiAnalyzer from 'kuroshiro-analyzer-kuromoji';
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
+
+// Kuroshiro 초기화 (일본어 처리용)
+const kuroshiro = new Kuroshiro();
+let kuroshiroInitialized = false;
 
 interface TJSongData {
   karaokeNo: string;
@@ -105,6 +114,62 @@ async function searchBySongNumber(songNumber: number): Promise<TJSongData | null
 }
 
 /**
+ * 아티스트 이름을 alias로 변환
+ * 한자 → 한글 → 로마자
+ * 일본어 → 로마자
+ * 한글 → 로마자
+ */
+async function generateAlias(artistName: string): Promise<string> {
+  console.log(`🔤 Converting "${artistName}" to alias...`);
+
+  // Kuroshiro 초기화 (최초 1회만)
+  if (!kuroshiroInitialized) {
+    await kuroshiro.init(new KuromojiAnalyzer());
+    kuroshiroInitialized = true;
+  }
+
+  // 1. 한자가 있으면 한글로 변환 시도
+  let processed = artistName;
+  try {
+    // @ts-expect-error - hanja 타입 정의 불완전
+    processed = hanja.translate(artistName, 'substitution') || artistName;
+    console.log(`   한자→한글: "${processed}"`);
+  } catch (e) {
+    console.log(`   한자→한글 변환 실패, 원본 사용: "${processed}"`);
+  }
+
+  // 2. 일본어(히라가나/가타카나) 체크
+  const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF]/.test(processed);
+  if (hasJapanese) {
+    // 일본어를 로마자로 변환
+    const romanized = await kuroshiro.convert(processed, {
+      to: 'romaji',
+      mode: 'spaced',
+    });
+    processed = romanized;
+    console.log(`   일본어→로마자: "${processed}"`);
+  }
+
+  // 3. 한글을 로마자로 변환
+  const hasKorean = /[가-힣]/.test(processed);
+  if (hasKorean) {
+    processed = romanize(processed);
+    console.log(`   한글→로마자: "${processed}"`);
+  }
+
+  // 4. 특수문자 처리 및 정리
+  const alias = processed
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-') // 알파벳, 숫자 외 모두 -로
+    .replace(/-+/g, '-') // 연속된 - 하나로
+    .replace(/^-|-$/g, ''); // 시작/끝 - 제거
+
+  console.log(`   최종 alias: "${alias}"\n`);
+
+  return alias;
+}
+
+/**
  * 곡 데이터를 DB에 저장
  */
 async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
@@ -131,17 +196,28 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
     });
 
     if (!artist) {
+      const alias = await generateAlias(song.artist);
+
+      // alias 중복 체크
+      const existingArtist = await prisma.artist.findUnique({
+        where: { alias },
+      });
+
+      if (existingArtist) {
+        console.error(`❌ Alias 중복! "${song.artist}" → "${alias}"`);
+        console.error(`   이미 존재하는 아티스트: "${existingArtist.name}"`);
+        throw new Error(`Alias collision: "${alias}" already exists for "${existingArtist.name}"`);
+      }
+
       artist = await prisma.artist.create({
         data: {
           name: song.artist,
           nameKo: song.artist,
           nameNorm: song.artist,
-          alias: song.artist
-            .toLowerCase()
-            .replace(/[^a-z0-9]/g, '-')
-            .replace(/-+/g, '-'),
+          alias,
         },
       });
+      console.log(`✅ 새 아티스트 생성: "${song.artist}" → "${alias}"`);
     }
 
     // 곡 찾기 또는 생성
@@ -186,11 +262,11 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
  */
 async function crawlAllTJSongs() {
   console.log('🚀 Starting TJ Media ALL songs crawl...\n');
-  console.log('📋 Crawling song numbers: 1 ~ 99999');
-  console.log('⏱️  Estimated time: ~27 hours (with 1s delay)\n');
+  console.log('📋 Crawling song numbers: 0 ~ 10');
+  console.log('⏱️  Estimated time: ~11 seconds (with 1s delay)\n');
 
-  const START_NUMBER = 1;
-  const END_NUMBER = 99999;
+  const START_NUMBER = 10000;
+  const END_NUMBER = 10010;
   const DELAY_MS = 1000;
 
   let totalFound = 0;
@@ -204,17 +280,21 @@ async function crawlAllTJSongs() {
 
     if (song) {
       totalFound++;
+      console.log(
+        `✅ [${songNo}/${END_NUMBER}] ${song.karaokeNo} - ${song.title} / ${song.artist} (작사: ${song.lyricist}, 작곡: ${song.composer}, 국가: ${song.nationType})`,
+      );
+
+      // DB에 저장
       const saved = await saveSongToDatabase(song);
 
       if (saved) {
         totalSaved++;
-        console.log(
-          `✅ [${songNo}/${END_NUMBER}] ${song.karaokeNo} - ${song.title} / ${song.artist}`,
-        );
       } else {
         totalSkipped++;
-        console.log(`⏭️  [${songNo}/${END_NUMBER}] ${song.karaokeNo} - Already exists`);
+        console.log(`   ⏭️  이미 존재하는 곡`);
       }
+    } else {
+      console.log(`⏭️  [${songNo}/${END_NUMBER}] No song found`);
     }
 
     // 진행 상황 로깅 (1000곡마다)
