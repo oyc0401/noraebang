@@ -78,6 +78,18 @@ export default function AdminPage() {
 
       const result = await response.json();
 
+      // 에러 응답 처리
+      if (!response.ok) {
+        // 백엔드에서 보낸 상세 에러 메시지 표시
+        const errorMessage = result.message || result.error?.message || `오류 (${response.status})`;
+        setMessage({
+          type: 'error',
+          text: `❌ ${selectedArtist.name}: ${errorMessage}`,
+        });
+        return;
+      }
+
+      // 성공 응답 처리
       if (result.success) {
         setMessage({
           type: 'success',
@@ -89,11 +101,6 @@ export default function AdminPage() {
         setSelectedArtist(null);
         // 목록 새로고침
         refetch();
-      } else {
-        setMessage({
-          type: 'error',
-          text: `❌ ${selectedArtist.name}: ${result.error || '업데이트 실패'}`,
-        });
       }
     } catch (error: any) {
       setMessage({
@@ -307,6 +314,13 @@ export default function AdminPage() {
                   채널 페이지 URL을 복사해서 붙여넣기 하세요
                 </p>
               </div>
+
+              {/* 에러 메시지 표시 */}
+              {message && message.type === 'error' && (
+                <div className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-900/20 dark:text-red-400">
+                  {message.text}
+                </div>
+              )}
             </div>
 
             <div className="border-t border-zinc-200 px-6 py-4 dark:border-zinc-800 flex gap-3 justify-end">

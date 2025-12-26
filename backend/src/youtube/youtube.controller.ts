@@ -15,16 +15,6 @@ export class YoutubeController {
     return { data };
   }
 
-  @Get('search-artist')
-  async searchArtistChannel(@Query('name') name: string) {
-    if (!name) {
-      throw new BadRequestException('Artist name is required');
-    }
-
-    const data = await this.youtubeService.searchArtistChannel(name);
-    return { data };
-  }
-
   @Get('search-channels')
   async searchChannels(@Query('name') name: string) {
     if (!name) {
