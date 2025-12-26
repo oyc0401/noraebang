@@ -1,173 +1,15 @@
 import 'dotenv/config';
-import * as cheerio from 'cheerio';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
-import { convert as romanize } from 'hangul-romanization';
-
-import hanja from 'hanja';
-import Kuroshiro from 'kuroshiro';
-import KuromojiAnalyzer from 'kuroshiro-analyzer-kuromoji';
+import { TJService, type TJSongData } from '../tj/tj.service';
+import { generateAlias } from '../lib/alias-generator';
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-// Kuroshiro 초기화 (일본어 처리용)
-const kuroshiro = new Kuroshiro();
-let kuroshiroInitialized = false;
-
-interface TJSongData {
-  karaokeNo: string;
-  title: string;
-  artist: string;
-  lyricist: string;
-  composer: string;
-  nationType: string;
-}
-
-const BASE_URL = 'https://www.tjmedia.com/song/accompaniment_search';
-
-/**
- * 곡번호로 TJ 곡 검색
- */
-async function searchBySongNumber(songNumber: number): Promise<TJSongData | null> {
-  const url = `${BASE_URL}?nationType=&strType=16&searchTxt=${songNumber}&pageNo=1&pageRowCnt=100`;
-
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
-    });
-
-    if (!response.ok) {
-      console.error(`❌ HTTP Error: ${response.status}`);
-      return null;
-    }
-
-    const html = await response.text();
-    const $ = cheerio.load(html);
-
-    // 곡번호 검색은 정확히 매칭되는 1곡만 반환
-    const row = $('ul.grid-container.list').first();
-    if (row.length === 0) {
-      return null;
-    }
-
-    const items = row.find('li.grid-item');
-    if (items.length === 0) {
-      return null;
-    }
-
-    // 곡번호 추출
-    const karaokeNo = $(items[0]).find('.num2').text().trim();
-    if (!karaokeNo || karaokeNo !== songNumber.toString()) {
-      // 정확히 매칭되지 않으면 무시 (부분 매칭 방지)
-      return null;
-    }
-
-    // 곡제목 추출
-    const title = $(items[1]).find('p span').first().text().trim();
-
-    // 가수 추출
-    let artist = $(items[2]).find('.highlight').text().trim();
-    if (!artist) {
-      artist = $(items[2]).find('p > span > span').first().text().trim();
-    }
-    if (!artist) {
-      artist = $(items[2]).find('p').text().trim();
-    }
-
-    // 작사가 추출
-    const lyricist = $(items[3]).find('p span').text().trim();
-
-    // 작곡가 추출
-    const composer = $(items[4]).find('p span').text().trim();
-
-    if (!title || !artist) {
-      return null;
-    }
-
-    // 국가 타입 추정 (간단한 휴리스틱)
-    let nationType = 'KOR'; // 기본값
-    if (/[\u3040-\u309F\u30A0-\u30FF]/.test(title) || /[\u3040-\u309F\u30A0-\u30FF]/.test(artist)) {
-      nationType = 'JPN';
-    } else if (/[a-zA-Z]/.test(title) && !/[가-힣]/.test(title)) {
-      nationType = 'ENG';
-    }
-
-    return {
-      karaokeNo,
-      title,
-      artist,
-      lyricist: lyricist || '',
-      composer: composer || '',
-      nationType,
-    };
-  } catch (error) {
-    console.error(`❌ Fetch error for song ${songNumber}:`, error);
-    return null;
-  }
-}
-
-/**
- * 아티스트 이름을 alias로 변환
- * 한자 → 한글 → 로마자
- * 일본어 → 로마자
- * 한글 → 로마자
- */
-async function generateAlias(artistName: string): Promise<string> {
-  console.log(`🔤 Converting "${artistName}" to alias...`);
-
-  // Kuroshiro 초기화 (최초 1회만)
-  if (!kuroshiroInitialized) {
-    await kuroshiro.init(new KuromojiAnalyzer());
-    kuroshiroInitialized = true;
-  }
-
-  // 1. 한자가 있으면 한글로 변환 시도
-  let processed = artistName;
-  try {
-    // @ts-expect-error - hanja 타입 정의 불완전
-    processed = hanja.translate(artistName, 'substitution') || artistName;
-    console.log(`   한자→한글: "${processed}"`);
-  } catch (e) {
-    console.log(`   한자→한글 변환 실패, 원본 사용: "${processed}"`);
-  }
-
-  // 2. 일본어(히라가나/가타카나) 체크
-  const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF]/.test(processed);
-  if (hasJapanese) {
-    // 일본어를 로마자로 변환
-    const romanized = await kuroshiro.convert(processed, {
-      to: 'romaji',
-      mode: 'spaced',
-    });
-    processed = romanized;
-    console.log(`   일본어→로마자: "${processed}"`);
-  }
-
-  // 3. 한글을 로마자로 변환
-  const hasKorean = /[가-힣]/.test(processed);
-  if (hasKorean) {
-    processed = romanize(processed);
-    console.log(`   한글→로마자: "${processed}"`);
-  }
-
-  // 4. 특수문자 처리 및 정리
-  const alias = processed
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '-') // 알파벳, 숫자 외 모두 -로
-    .replace(/-+/g, '-') // 연속된 - 하나로
-    .replace(/^-|-$/g, ''); // 시작/끝 - 제거
-
-  console.log(`   최종 alias: "${alias}"\n`);
-
-  return alias;
-}
+const tjService = new TJService();
 
 /**
  * 곡 데이터를 DB에 저장
@@ -305,7 +147,7 @@ async function crawlAllTJSongs() {
   const startTime = Date.now();
 
   for (let songNo = START_NUMBER; songNo <= END_NUMBER; songNo++) {
-    const song = await searchBySongNumber(songNo);
+    const song = await tjService.searchBySongNumber(songNo);
 
     if (song) {
       totalFound++;
