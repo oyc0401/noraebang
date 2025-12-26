@@ -5,6 +5,8 @@ import pg from 'pg';
 import { TJService, type TJSongData } from '../../tj/tj.service';
 import { generateAlias } from '../../lib/alias-generator';
 
+// pnpm ts-node src/scripts/tj/fetch-new-songs.ts
+
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
@@ -135,44 +137,44 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
 async function crawlNewTJSongs() {
   console.log('🚀 Starting TJ Media NEW songs crawl...\n');
 
-  // 1. 최신곡 페이지에서 곡번호 목록 가져오기
-  const songNumbers = await tjService.fetchRecentSongNumbers();
+  // 1. 최신곡 페이지에서 곡 정보 통으로 가져오기
+  const songs = await tjService.fetchRecentSongs();
 
-  if (songNumbers.length === 0) {
+  if (songs.length === 0) {
     console.log('⚠️  No recent songs found');
     return;
   }
 
-  console.log(`\n📋 Processing ${songNumbers.length} recent songs\n`);
+  console.log(`\n📋 Processing ${songs.length} recent songs\n`);
 
   let totalSaved = 0;
   let totalSkipped = 0;
   let totalErrors = 0;
 
-  // 2. 각 곡번호로 상세 정보 조회 및 저장
-  for (let i = 0; i < songNumbers.length; i++) {
-    const songNo = songNumbers[i];
-    console.log(`\n[${i + 1}/${songNumbers.length}] 🔍 Fetching song ${songNo}...`);
+  // 2. 각 곡 정보 저장
+  for (let i = 0; i < songs.length; i++) {
+    const song = songs[i];
+    console.log(
+      `\n[${i + 1}/${songs.length}] 💿 ${song.karaokeNo} - ${song.title} / ${song.artist}`,
+    );
 
-    const song = await tjService.searchBySongNumber(parseInt(songNo));
-
-    if (song) {
+    try {
       const saved = await saveSongToDatabase(song);
 
       if (saved) {
         totalSaved++;
-        console.log(`  ✅ Saved: ${song.title} / ${song.artist}`);
+        console.log(`  ✅ Saved`);
       } else {
         totalSkipped++;
         console.log(`  ⏭️  Skipped: Already exists`);
       }
-    } else {
+    } catch (error) {
       totalErrors++;
-      console.log(`  ❌ Not found or error`);
+      console.log(`  ❌ Error:`, error);
     }
 
-    // Rate limiting: 1초 대기
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Rate limiting: 500ms 대기 (API 호출 안하므로 짧게)
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   console.log(`\n✅ Crawl completed!`);

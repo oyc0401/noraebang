@@ -2,8 +2,10 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
-import { TJService, type TJSongData } from '../tj/tj.service';
-import { generateAlias } from '../lib/alias-generator';
+import { TJService, type TJSongData } from  '../../tj/tj.service';
+import { generateAlias } from '../../lib/alias-generator';
+
+// pnpm ts-node src/scripts/tj/fetch-all-songs.ts
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -129,66 +131,74 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
 }
 
 /**
- * 메인 크롤링 함수
+ * 메인 크롤링 함수 - 2001년 1월부터 현재까지 모든 월 크롤링
  */
 async function crawlAllTJSongs() {
-  console.log('🚀 Starting TJ Media ALL songs crawl...\n');
-  console.log('📋 Crawling song numbers: 0 ~ 10');
-  console.log('⏱️  Estimated time: ~11 seconds (with 1s delay)\n');
-
-  const START_NUMBER = 10000;
-  const END_NUMBER = 10010;
-  const DELAY_MS = 1000;
+  console.log('🚀 Starting TJ Media ALL songs crawl (2001-01 ~ now)...\n');
 
   let totalFound = 0;
   let totalSaved = 0;
   let totalSkipped = 0;
+  let totalErrors = 0;
+  let monthsProcessed = 0;
 
   const startTime = Date.now();
 
-  for (let songNo = START_NUMBER; songNo <= END_NUMBER; songNo++) {
-    const song = await tjService.searchBySongNumber(songNo);
+  // AsyncGenerator를 사용해서 월별 데이터 가져오기
+  for await (const { yearMonth, songs } of tjService.fetchAllMonthsSongs()) {
+    monthsProcessed++;
 
-    if (song) {
-      totalFound++;
-      console.log(
-        `✅ [${songNo}/${END_NUMBER}] ${song.karaokeNo} - ${song.title} / ${song.artist} (작사: ${song.lyricist}, 작곡: ${song.composer}, 국가: ${song.nationType})`,
-      );
+    console.log(`\n📅 [Month ${monthsProcessed}] Processing ${yearMonth}...`);
 
-      // DB에 저장
-      const saved = await saveSongToDatabase(song);
+    if (songs.length === 0) {
+      console.log(`   ⚠️  No songs found`);
+      continue;
+    }
 
-      if (saved) {
-        totalSaved++;
-      } else {
-        totalSkipped++;
-        console.log(`   ⏭️  이미 존재하는 곡`);
+    console.log(`   📋 Found ${songs.length} songs`);
+    totalFound += songs.length;
+
+    // 각 곡 저장
+    let monthSaved = 0;
+    let monthSkipped = 0;
+    let monthErrors = 0;
+
+    for (const song of songs) {
+      try {
+        const saved = await saveSongToDatabase(song);
+        if (saved) {
+          monthSaved++;
+          totalSaved++;
+        } else {
+          monthSkipped++;
+          totalSkipped++;
+        }
+      } catch (error) {
+        monthErrors++;
+        totalErrors++;
+        console.error(`   ❌ Error saving ${song.karaokeNo}:`, error);
       }
-    } else {
-      console.log(`⏭️  [${songNo}/${END_NUMBER}] No song found`);
     }
 
-    // 진행 상황 로깅 (1000곡마다)
-    if (songNo % 1000 === 0) {
-      const elapsed = Date.now() - startTime;
-      const avgTimePerSong = elapsed / (songNo - START_NUMBER + 1);
-      const remaining = (END_NUMBER - songNo) * avgTimePerSong;
-      const remainingHours = (remaining / (1000 * 60 * 60)).toFixed(1);
+    console.log(
+      `   ✅ Month result: Saved ${monthSaved}, Skipped ${monthSkipped}, Errors ${monthErrors}`,
+    );
 
-      console.log(`\n📊 Progress: ${songNo}/${END_NUMBER}`);
-      console.log(`   Found: ${totalFound}, Saved: ${totalSaved}, Skipped: ${totalSkipped}`);
-      console.log(`   Estimated remaining time: ${remainingHours} hours\n`);
-    }
+    // 전체 진행 상황
+    const elapsed = Date.now() - startTime;
+    const elapsedHours = (elapsed / (1000 * 60 * 60)).toFixed(2);
 
-    // Rate limiting
-    await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+    console.log(`   📊 Total: Found ${totalFound}, Saved ${totalSaved}, Skipped ${totalSkipped}, Errors ${totalErrors}`);
+    console.log(`   ⏱️  Elapsed: ${elapsedHours} hours`);
   }
 
   const totalTime = ((Date.now() - startTime) / (1000 * 60 * 60)).toFixed(2);
   console.log(`\n✅ Crawl completed!`);
+  console.log(`   Months processed: ${monthsProcessed}`);
   console.log(`   Total found: ${totalFound}`);
   console.log(`   Total saved: ${totalSaved}`);
   console.log(`   Total skipped: ${totalSkipped}`);
+  console.log(`   Total errors: ${totalErrors}`);
   console.log(`   Total time: ${totalTime} hours`);
 }
 
