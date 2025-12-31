@@ -21,7 +21,7 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
     // 아티스트 찾기 또는 생성
     let artist = await prisma.artist.findFirst({
       where: {
-        OR: [{ name: song.artist }, { nameNorm: song.artist }],
+        name: song.artist,
       },
     });
 
@@ -46,7 +46,6 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
         data: {
           name: song.artist,
           nameKo: song.artist,
-          nameNorm: song.artist,
           alias: newAlias,
         },
       });
@@ -109,7 +108,6 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
       songRecord = await prisma.song.create({
         data: {
           title: song.title,
-          titleNorm: song.title,
           artistSongs: {
             create: {
               artistId: artist.id,

@@ -10,13 +10,6 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-function normalizeString(str: string): string {
-  return str
-    .toLowerCase()
-    .replace(/[\s\-_\.。]+/g, '')
-    .replace(/[^\w]/g, '');
-}
-
 async function seedArtists() {
   try {
     console.log('🎵 Starting to seed artists...\n');
@@ -25,8 +18,6 @@ async function seedArtists() {
     let updated = 0;
 
     for (const artist of blogArtist) {
-      const nameNorm = normalizeString(artist.name);
-
       try {
         // Upsert: Create or Update
         const result = await prisma.artist.upsert({
@@ -34,13 +25,11 @@ async function seedArtists() {
           update: {
             name: artist.name,
             nameKo: artist.nameKo,
-            nameNorm,
             blogId: String(artist.blogId),
           },
           create: {
             name: artist.name,
             nameKo: artist.nameKo,
-            nameNorm,
             alias: artist.alias,
             blogId: String(artist.blogId),
           },

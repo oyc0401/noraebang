@@ -33,8 +33,7 @@ export default function ArtistPageClient({ artist, initialSongs }: ArtistPageCli
   const filteredSongs = searchQuery.trim()
     ? songs.filter((song) =>
         song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        song.titleKo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        song.titleNorm.toLowerCase().includes(searchQuery.toLowerCase())
+        song.titleKo?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : songs;
 
