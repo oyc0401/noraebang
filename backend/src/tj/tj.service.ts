@@ -14,20 +14,13 @@ export interface TJSongData {
 export class TJService {
   private readonly BASE_URL =
     'https://www.tjmedia.com/song/accompaniment_search';
-  private readonly RECENT_SONG_URL = 'https://www.tjmedia.com/song/recent_song';
 
   /**
-   * 최신곡 API에서 곡 정보 전체 추출
-   * @param yearMonth - 년월 (예: "202512", "200301" 등). 미지정 시 현재 년월
+   * 특정 년월의 곡 정보 가져오기
+   * @param yearMonth - 년월 (예: "202512", "200301" 등)
    */
-  async fetchRecentSongs(yearMonth?: string): Promise<TJSongData[]> {
+  async fetchSongsByMonth(yearMonth: string): Promise<TJSongData[]> {
     try {
-      // 년월이 지정되지 않으면 현재 년월 사용
-      if (!yearMonth) {
-        const now = new Date();
-        yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
-      }
-
       console.log(`📅 Fetching songs for ${yearMonth}`);
 
       const response = await fetch(
@@ -94,7 +87,7 @@ export class TJService {
   /**
    * 2001년 1월부터 현재까지 모든 월의 데이터를 가져오기
    */
-  async *fetchAllMonthsSongs(): AsyncGenerator<{
+  async *fetchAllSongs(): AsyncGenerator<{
     yearMonth: string;
     songs: TJSongData[];
   }> {
@@ -110,7 +103,7 @@ export class TJService {
 
       for (let month = monthStart; month <= monthEnd; month++) {
         const yearMonth = `${year}${String(month).padStart(2, '0')}`;
-        const songs = await this.fetchRecentSongs(yearMonth);
+        const songs = await this.fetchSongsByMonth(yearMonth);
 
         yield { yearMonth, songs };
 

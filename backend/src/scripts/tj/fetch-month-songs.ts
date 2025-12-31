@@ -2,9 +2,9 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
-import { TJService, type TJSongData } from  '../../tj/tj.service';
+import { TJService, type TJSongData } from '../../tj/tj.service';
 
-// pnpm ts-node src/scripts/tj/fetch-all-songs.ts
+// pnpm ts-node src/scripts/tj/fetch-month-songs.ts 202512
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -16,6 +16,8 @@ const tjService = new TJService();
  * 곡 데이터를 DB에 저장
  */
 async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
+      // Rate limiting: 50ms 대기 (API 호출 안하므로 짧게)
+    await new Promise((resolve) => setTimeout(resolve, 50));
   try {
     // 아티스트 찾기 또는 생성
     let artist = await prisma.artist.findFirst({
@@ -32,7 +34,7 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
           nameKo: song.artist,
         },
       });
-      console.log(`✅ 새 아티스트 생성: "${song.artist}"`);
+      console.log(`  📝 Created new artist: ${song.artist}`);
     }
 
     // 기존 곡이 있는지 확인
@@ -46,7 +48,7 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
     });
 
     if (existingSong) {
-      return false; // 이미 존재
+      return false;
     }
 
     // 곡 찾기 또는 생성 (ArtistSong 관계를 통해)
@@ -73,6 +75,7 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
           },
         },
       });
+      console.log(`  🎵 Created new song: ${song.title}`);
     }
 
     // KaraokeSong 생성
@@ -83,91 +86,88 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
         karaokeNo: song.karaokeNo,
         lastSeenAt: new Date(),
         ingestedAt: new Date(),
-        ingestedFrom: `TJ_ALL_CRAWL`,
+        ingestedFrom: `TJ_MONTH_CRAWL`,
       },
     });
 
     return true;
   } catch (error) {
-    console.error(`❌ Error saving song ${song.karaokeNo}:`, error);
+    console.error(`  ❌ Error saving song ${song.karaokeNo}:`, error);
     return false;
   }
 }
 
 /**
- * 메인 크롤링 함수 - 2001년 1월부터 현재까지 모든 월 크롤링
+ * 메인 크롤링 함수
  */
-async function crawlAllTJSongs() {
-  console.log('🚀 Starting TJ Media ALL songs crawl (2001-01 ~ now)...\n');
+async function crawlMonthTJSongs(yearMonth: string) {
+  console.log(`🚀 Starting TJ Media songs crawl for ${yearMonth}...\n`);
 
-  let totalFound = 0;
+  // 1. 해당 월의 곡 정보 가져오기
+  const songs = await tjService.fetchSongsByMonth(yearMonth);
+
+  if (songs.length === 0) {
+    console.log(`⚠️  No songs found for ${yearMonth}`);
+    return;
+  }
+
+  console.log(`\n📋 Processing ${songs.length} songs from ${yearMonth}\n`);
+
   let totalSaved = 0;
   let totalSkipped = 0;
   let totalErrors = 0;
-  let monthsProcessed = 0;
 
-  const startTime = Date.now();
-
-  // AsyncGenerator를 사용해서 월별 데이터 가져오기
-  for await (const { yearMonth, songs } of tjService.fetchAllSongs()) {
-    monthsProcessed++;
-
-    console.log(`\n📅 [Month ${monthsProcessed}] Processing ${yearMonth}...`);
-
-    if (songs.length === 0) {
-      console.log(`   ⚠️  No songs found`);
-      continue;
-    }
-
-    console.log(`   📋 Found ${songs.length} songs`);
-    totalFound += songs.length;
-
-    // 각 곡 저장
-    let monthSaved = 0;
-    let monthSkipped = 0;
-    let monthErrors = 0;
-
-    for (const song of songs) {
-      try {
-        const saved = await saveSongToDatabase(song);
-        if (saved) {
-          monthSaved++;
-          totalSaved++;
-        } else {
-          monthSkipped++;
-          totalSkipped++;
-        }
-      } catch (error) {
-        monthErrors++;
-        totalErrors++;
-        console.error(`   ❌ Error saving ${song.karaokeNo}:`, error);
-      }
-    }
-
+  // 2. 각 곡 정보 로그 출력
+  for (let i = 0; i < songs.length; i++) {
+    const song = songs[i];
     console.log(
-      `   ✅ Month result: Saved ${monthSaved}, Skipped ${monthSkipped}, Errors ${monthErrors}`,
+      `\n[${i + 1}/${songs.length}] 💿 ${song.karaokeNo} - ${song.title} / ${song.artist}`,
     );
 
-    // 전체 진행 상황
-    const elapsed = Date.now() - startTime;
-    const elapsedHours = (elapsed / (1000 * 60 * 60)).toFixed(2);
+    // DB 저장 부분 주석 처리 - 데이터 확인용
+    console.log('  📊 Song Data:', JSON.stringify(song, null, 2));
 
-    console.log(`   📊 Total: Found ${totalFound}, Saved ${totalSaved}, Skipped ${totalSkipped}, Errors ${totalErrors}`);
-    console.log(`   ⏱️  Elapsed: ${elapsedHours} hours`);
+    // try {
+    //   const saved = await saveSongToDatabase(song);
+
+    //   if (saved) {
+    //     totalSaved++;
+    //     console.log(`  ✅ Saved`);
+    //   } else {
+    //     totalSkipped++;
+    //     console.log(`  ⏭️  Skipped: Already exists`);
+    //   }
+    // } catch (error) {
+    //   totalErrors++;
+    //   console.log(`  ❌ Error:`, error);
+    // }
+
   }
 
-  const totalTime = ((Date.now() - startTime) / (1000 * 60 * 60)).toFixed(2);
   console.log(`\n✅ Crawl completed!`);
-  console.log(`   Months processed: ${monthsProcessed}`);
-  console.log(`   Total found: ${totalFound}`);
+  console.log(`   Total songs: ${songs.length}`);
   console.log(`   Total saved: ${totalSaved}`);
   console.log(`   Total skipped: ${totalSkipped}`);
   console.log(`   Total errors: ${totalErrors}`);
-  console.log(`   Total time: ${totalTime} hours`);
+}
+
+// 커맨드 라인 인자에서 yearMonth 가져오기
+const yearMonth = process.argv[2];
+
+if (!yearMonth) {
+  console.error('❌ Error: Please provide yearMonth (e.g., 202512)');
+  console.log('Usage: pnpm ts-node src/scripts/tj/fetch-month-songs.ts 202512');
+  process.exit(1);
+}
+
+// yearMonth 형식 검증 (YYYYMM)
+if (!/^\d{6}$/.test(yearMonth)) {
+  console.error('❌ Error: Invalid yearMonth format. Expected YYYYMM (e.g., 202512)');
+  process.exit(1);
 }
 
 // 스크립트 실행
-crawlAllTJSongs()
+crawlMonthTJSongs(yearMonth)
   .then(async () => {
     console.log('\n🎉 Done!');
     await prisma.$disconnect();
