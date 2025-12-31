@@ -93,11 +93,15 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
       return false; // 이미 존재
     }
 
-    // 곡 찾기 또는 생성
+    // 곡 찾기 또는 생성 (ArtistSong 관계를 통해)
     let songRecord = await prisma.song.findFirst({
       where: {
         title: song.title,
-        artistId: artist.id,
+        artistSongs: {
+          some: {
+            artistId: artist.id,
+          },
+        },
       },
     });
 
@@ -106,7 +110,12 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
         data: {
           title: song.title,
           titleNorm: song.title,
-          artistId: artist.id,
+          artistSongs: {
+            create: {
+              artistId: artist.id,
+              order: 0,
+            },
+          },
         },
       });
     }

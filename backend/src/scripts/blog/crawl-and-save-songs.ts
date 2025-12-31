@@ -61,25 +61,43 @@ async function crawlAndSaveSongs() {
           const titleNorm = scrapedSong.title; // title과 동일하게 설정
 
           try {
-            // Upsert Song
-            const song = await prisma.song.upsert({
+            // Song 찾기 (ArtistSong 관계를 통해)
+            let song = await prisma.song.findFirst({
               where: {
-                artistId_titleNorm: {
-                  artistId: artist.id,
-                  titleNorm,
+                titleNorm,
+                artistSongs: {
+                  some: {
+                    artistId: artist.id,
+                  },
                 },
               },
-              update: {
-                title: scrapedSong.title,
-                titleKo: scrapedSong.titleKo || null,
-              },
-              create: {
-                title: scrapedSong.title,
-                titleKo: scrapedSong.titleKo || null,
-                titleNorm,
-                artistId: artist.id,
-              },
             });
+
+            if (song) {
+              // 기존 곡 업데이트
+              song = await prisma.song.update({
+                where: { id: song.id },
+                data: {
+                  title: scrapedSong.title,
+                  titleKo: scrapedSong.titleKo || null,
+                },
+              });
+            } else {
+              // 새로운 곡 생성 + ArtistSong 관계 생성
+              song = await prisma.song.create({
+                data: {
+                  title: scrapedSong.title,
+                  titleKo: scrapedSong.titleKo || null,
+                  titleNorm,
+                  artistSongs: {
+                    create: {
+                      artistId: artist.id,
+                      order: 0,
+                    },
+                  },
+                },
+              });
+            }
 
             const isNewSong = song.createdAt.getTime() === song.updatedAt.getTime();
             if (isNewSong) {
