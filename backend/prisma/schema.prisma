@@ -17,7 +17,7 @@ model Artist {
   blogId           String?         @map("blog_id")
   alias            String          @unique
   youtubeChannelId String?         @map("youtube_channel_id")
-  songs            Song[]          @relation("Artist")
+  artistSongs      ArtistSong[]
   youtubeChannel   YoutubeChannel?
 
   @@map("artist")
@@ -32,12 +32,27 @@ model Song {
   youtubeFetchedAt DateTime?     @map("youtube_fetched_at")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
-  artistId         Int           @map("artist_id")
   karaokeSongs     KaraokeSong[]
-  artist           Artist        @relation("Artist", fields: [artistId], references: [id])
+  artistSongs      ArtistSong[]
 
-  @@unique([artistId, titleNorm])
   @@map("song")
+}
+
+model ArtistSong {
+  id        Int      @id @default(autoincrement())
+  artistId  Int      @map("artist_id")
+  songId    Int      @map("song_id")
+  order     Int      @default(0)
+  role      String?  // 'main', 'featuring' 등
+  createdAt DateTime @default(now()) @map("created_at")
+
+  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([artistId, songId])
+  @@index([songId])
+  @@index([artistId])
+  @@map("artist_song")
 }
 
 model KaraokeSong {
