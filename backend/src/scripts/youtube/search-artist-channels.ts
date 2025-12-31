@@ -68,9 +68,12 @@ async function searchArtistChannels(batchSize: number = 1, skipExisting: boolean
     const artists = await prisma.artist.findMany({
       where: whereClause,
       include: {
-        songs: {
+        artistSongs: {
           take: 1,
-          orderBy: { id: 'asc' }, // 첫 번째 곡 (대표곡으로 가정)
+          orderBy: { order: 'asc' },
+          include: {
+            song: true, // 실제 Song 데이터
+          },
         },
         youtubeChannel: true, // 토픽 채널 확인을 위해 포함
       },
@@ -100,8 +103,8 @@ async function searchArtistChannels(batchSize: number = 1, skipExisting: boolean
       try {
         // 검색어: 아티스트명 + 대표곡명
         let searchQuery = artist.name;
-        if (artist.songs.length > 0) {
-          const topSong = artist.songs[0];
+        if (artist.artistSongs.length > 0 && artist.artistSongs[0].song) {
+          const topSong = artist.artistSongs[0].song;
           searchQuery = `${artist.name} ${topSong.title}`;
           console.log(`   🔍 Search: "${searchQuery}"`);
         } else {
