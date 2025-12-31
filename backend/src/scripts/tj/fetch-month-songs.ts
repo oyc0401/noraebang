@@ -1,8 +1,9 @@
 import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import { TJService, type TJSongData } from '../../tj/tj.service';
+import { parseTJArtist } from '../../lib/artist-parser';
 
 // pnpm ts-node src/scripts/tj/fetch-month-songs.ts 202512
 
@@ -16,26 +17,21 @@ const tjService = new TJService();
  * 곡 데이터를 DB에 저장
  */
 async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
-      // Rate limiting: 50ms 대기 (API 호출 안하므로 짧게)
-    await new Promise((resolve) => setTimeout(resolve, 50));
   try {
-    // 아티스트 찾기 또는 생성
-    let artist = await prisma.artist.findFirst({
-      where: {
-        name: song.artist,
-      },
-    });
+    // 아티스트 문자열 파싱
+    const parsed = parseTJArtist(song.artist);
 
-    if (!artist) {
-      // alias 없이 아티스트 생성
-      artist = await prisma.artist.create({
-        data: {
-          name: song.artist,
-          nameKo: song.artist,
-        },
-      });
-      console.log(`  📝 Created new artist: ${song.artist}`);
+    if (parsed.artist.length === 0) {
+      console.log(`  ⚠️  No main artists found for: ${song.artist}`);
+      return false;
     }
+
+    const logParts = [`Main: ${parsed.artist.join(', ')}`];
+    if (parsed.feature.length > 0)
+      logParts.push(`Feat: ${parsed.feature.join(', ')}`);
+    if (parsed.producer.length > 0)
+      logParts.push(`Prod: ${parsed.producer.join(', ')}`);
+    console.log(`  👥 ${logParts.join(' / ')}`);
 
     // 기존 곡이 있는지 확인
     const existingSong = await prisma.karaokeSong.findUnique({
@@ -51,27 +47,79 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
       return false;
     }
 
-    // 곡 찾기 또는 생성 (ArtistSong 관계를 통해)
+    // 모든 아티스트(메인, 피처링, 프로듀서) 처리
+    const allArtistNames = [
+      ...parsed.artist,
+      ...parsed.feature,
+      ...parsed.producer,
+    ];
+    const uniqueArtistNames = [...new Set(allArtistNames)];
+
+    // 각 아티스트에 대해 Artist 레코드 찾기 또는 생성
+    const artistMap = new Map<string, { id: number; name: string }>();
+    for (const artistName of uniqueArtistNames) {
+      let artist = await prisma.artist.findFirst({
+        where: {
+          name: artistName,
+        },
+      });
+
+      if (!artist) {
+        artist = await prisma.artist.create({
+          data: {
+            name: artistName,
+            nameKo: artistName,
+          },
+        });
+        console.log(`  📝 Created new artist: ${artistName}`);
+      }
+
+      artistMap.set(artistName, { id: artist.id, name: artist.name });
+    }
+
+    // 첫 번째 메인 아티스트를 기준으로 기존 곡 찾기
+    const firstMainArtist = artistMap.get(parsed.artist[0])!;
     let songRecord = await prisma.song.findFirst({
       where: {
         title: song.title,
         artistSongs: {
           some: {
-            artistId: artist.id,
+            artistId: firstMainArtist.id,
+            role: 'MAIN',
           },
         },
       },
     });
 
     if (!songRecord) {
+      // 곡 생성 및 모든 아티스트와 관계 생성
+      const artistSongRelations: Prisma.ArtistSongUncheckedCreateWithoutSongInput[] =
+        [
+          // 메인 아티스트
+          ...parsed.artist.map((name, index) => ({
+            artistId: artistMap.get(name)!.id,
+            order: index,
+            role: 'MAIN' as const,
+          })),
+          // 피처링 아티스트
+          ...parsed.feature.map((name, index) => ({
+            artistId: artistMap.get(name)!.id,
+            order: index,
+            role: 'FEATURING' as const,
+          })),
+          // 프로듀서
+          ...parsed.producer.map((name, index) => ({
+            artistId: artistMap.get(name)!.id,
+            order: index,
+            role: 'PRODUCER' as const,
+          })),
+        ];
+
       songRecord = await prisma.song.create({
         data: {
           title: song.title,
           artistSongs: {
-            create: {
-              artistId: artist.id,
-              order: 0,
-            },
+            create: artistSongRelations,
           },
         },
       });
@@ -117,31 +165,30 @@ async function crawlMonthTJSongs(yearMonth: string) {
   let totalSkipped = 0;
   let totalErrors = 0;
 
-  // 2. 각 곡 정보 로그 출력
+  // 2. 각 곡 정보 저장
   for (let i = 0; i < songs.length; i++) {
     const song = songs[i];
     console.log(
       `\n[${i + 1}/${songs.length}] 💿 ${song.karaokeNo} - ${song.title} / ${song.artist}`,
     );
 
-    // DB 저장 부분 주석 처리 - 데이터 확인용
-    console.log('  📊 Song Data:', JSON.stringify(song, null, 2));
+    try {
+      const saved = await saveSongToDatabase(song);
 
-    // try {
-    //   const saved = await saveSongToDatabase(song);
+      if (saved) {
+        totalSaved++;
+        console.log(`  ✅ Saved`);
+      } else {
+        totalSkipped++;
+        console.log(`  ⏭️  Skipped: Already exists`);
+      }
+    } catch (error) {
+      totalErrors++;
+      console.log(`  ❌ Error:`, error);
+    }
 
-    //   if (saved) {
-    //     totalSaved++;
-    //     console.log(`  ✅ Saved`);
-    //   } else {
-    //     totalSkipped++;
-    //     console.log(`  ⏭️  Skipped: Already exists`);
-    //   }
-    // } catch (error) {
-    //   totalErrors++;
-    //   console.log(`  ❌ Error:`, error);
-    // }
-
+    // Rate limiting: 50ms 대기
+    await new Promise((resolve) => setTimeout(resolve, 50));
   }
 
   console.log(`\n✅ Crawl completed!`);
