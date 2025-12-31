@@ -33,6 +33,11 @@ PGPASSWORD=postgres pg_dump -h localhost -p 5432 -U postgres -d song_db \
   --clean --if-exists --no-owner --no-acl \
   song_public.dump
 
+### 덤프를 개발db에 업로드
+  psql -h localhost -p 5432 -U postgres -c "DROP DATABASE IF EXISTS song_db;"
+  psql -h localhost -p 5432 -U postgres -c "CREATE DATABASE song_db;"
+  pg_restore -h localhost -p 5432 -U postgres -d song_db migrations-archive/v1-artist-song-many-to-many/backup_20251231_225507.dump
+
   ### 최근 아티스트 보기
    SELECT id, name, alias, created_at
   FROM artist
