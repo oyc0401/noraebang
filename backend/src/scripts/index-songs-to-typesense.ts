@@ -35,11 +35,9 @@ async function main() {
       { name: 'id', type: 'int32' as const },
       { name: 'title', type: 'string' as const },
       { name: 'titleKo', type: 'string' as const, optional: true },
-      { name: 'titleNorm', type: 'string' as const },
-      { name: 'artistId', type: 'int32' as const },
-      { name: 'artistName', type: 'string' as const },
-      { name: 'artistNameKo', type: 'string' as const },
-      { name: 'artistAlias', type: 'string' as const },
+      { name: 'artistIds', type: 'int32[]' as const },
+      { name: 'artistNames', type: 'string[]' as const },
+      { name: 'artistNamesKo', type: 'string[]' as const },
       { name: 'karaokeNo', type: 'string[]' as const, optional: true },
       { name: 'provider', type: 'string[]' as const, optional: true },
     ],
@@ -66,7 +64,11 @@ async function main() {
   // 4. DB에서 데이터 가져오기
   const songs = await prisma.song.findMany({
     include: {
-      artist: true,
+      artistSongs: {
+        include: {
+          artist: true,
+        },
+      },
       karaokeSongs: true,
     },
   });
@@ -74,18 +76,20 @@ async function main() {
   console.log(`Found ${songs.length} songs to index`);
 
   // 5. Typesense에 데이터 인덱싱
-  const documents = songs.map((song) => ({
-    id: song.id,
-    title: song.title,
-    titleKo: song.titleKo || undefined,
-    titleNorm: song.titleNorm,
-    artistId: song.artistId,
-    artistName: song.artist.name,
-    artistNameKo: song.artist.nameKo,
-    artistAlias: song.artist.alias,
-    karaokeNo: song.karaokeSongs.map((ks) => ks.karaokeNo),
-    provider: song.karaokeSongs.map((ks) => ks.provider),
-  }));
+  const documents = songs.map((song) => {
+    const artists = song.artistSongs.map((as) => as.artist);
+
+    return {
+      id: song.id,
+      title: song.title,
+      titleKo: song.titleKo || undefined,
+      artistIds: artists.map((a) => a.id),
+      artistNames: artists.map((a) => a.name),
+      artistNamesKo: artists.map((a) => a.nameKo),
+      karaokeNo: song.karaokeSongs.map((ks) => ks.karaokeNo),
+      provider: song.karaokeSongs.map((ks) => ks.provider),
+    };
+  });
 
   // 배치로 인덱싱 (100개씩)
   const batchSize = 100;

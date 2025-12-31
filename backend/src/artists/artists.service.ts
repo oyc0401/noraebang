@@ -44,6 +44,22 @@ export class ArtistsService {
     return this.artistRepository.findByAlias(alias);
   }
 
+  /**
+   * ID 또는 alias로 아티스트 조회
+   * - 숫자면 ID로 조회
+   * - 문자열이면 alias로 조회
+   */
+  async findByIdOrAlias(identifier: string) {
+    // 숫자인지 체크
+    const parsedId = parseInt(identifier, 10);
+    if (!isNaN(parsedId) && parsedId.toString() === identifier) {
+      return this.artistRepository.findById(parsedId);
+    }
+
+    // alias로 조회
+    return this.artistRepository.findByAlias(identifier);
+  }
+
   // 캐시 초기화 메서드 (외부에서 호출 가능)
   clearCache() {
     this.cache.clear();

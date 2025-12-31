@@ -39,9 +39,9 @@ export class ArtistsController {
     return { data: artists };
   }
 
-  @Get(':alias')
-  async findByAlias(@Param('alias') alias: string) {
-    const artist = await this.artistsService.findByAlias(alias);
+  @Get(':identifier')
+  async findByIdOrAlias(@Param('identifier') identifier: string) {
+    const artist = await this.artistsService.findByIdOrAlias(identifier);
     if (!artist) {
       throw new NotFoundException('Artist not found');
     }
