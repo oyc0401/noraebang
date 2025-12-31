@@ -1,6 +1,7 @@
 
 ### postgresql
-로컬 접속 psql -U postgres song_db
+로컬 접속 
+psql -U postgres song_db
 
 테이블 조회
 SELECT tablename FROM pg_tables WHERE schemaname = 'public';

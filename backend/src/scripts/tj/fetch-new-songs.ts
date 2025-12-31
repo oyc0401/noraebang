@@ -16,6 +16,8 @@ const tjService = new TJService();
  * 곡 데이터를 DB에 저장
  */
 async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
+      // Rate limiting: 50ms 대기 (API 호출 안하므로 짧게)
+    await new Promise((resolve) => setTimeout(resolve, 50));
   try {
     // 아티스트 찾기 또는 생성
     let artist = await prisma.artist.findFirst({
@@ -101,8 +103,12 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
 async function crawlNewTJSongs() {
   console.log('🚀 Starting TJ Media NEW songs crawl...\n');
 
+  // 현재 년월 계산
+  const now = new Date();
+  const currentYearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+
   // 1. 최신곡 페이지에서 곡 정보 통으로 가져오기
-  const songs = await tjService.fetchRecentSongs();
+  const songs = await tjService.fetchSongsByMonth(currentYearMonth);
 
   if (songs.length === 0) {
     console.log('⚠️  No recent songs found');
@@ -115,30 +121,31 @@ async function crawlNewTJSongs() {
   let totalSkipped = 0;
   let totalErrors = 0;
 
-  // 2. 각 곡 정보 저장
+  // 2. 각 곡 정보 로그 출력
   for (let i = 0; i < songs.length; i++) {
     const song = songs[i];
     console.log(
       `\n[${i + 1}/${songs.length}] 💿 ${song.karaokeNo} - ${song.title} / ${song.artist}`,
     );
 
-    try {
-      const saved = await saveSongToDatabase(song);
+    // DB 저장 부분 주석 처리 - 데이터 확인용
+    console.log('  📊 Song Data:', JSON.stringify(song, null, 2));
 
-      if (saved) {
-        totalSaved++;
-        console.log(`  ✅ Saved`);
-      } else {
-        totalSkipped++;
-        console.log(`  ⏭️  Skipped: Already exists`);
-      }
-    } catch (error) {
-      totalErrors++;
-      console.log(`  ❌ Error:`, error);
-    }
+    // try {
+    //   const saved = await saveSongToDatabase(song);
 
-    // Rate limiting: 500ms 대기 (API 호출 안하므로 짧게)
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    //   if (saved) {
+    //     totalSaved++;
+    //     console.log(`  ✅ Saved`);
+    //   } else {
+    //     totalSkipped++;
+    //     console.log(`  ⏭️  Skipped: Already exists`);
+    //   }
+    // } catch (error) {
+    //   totalErrors++;
+    //   console.log(`  ❌ Error:`, error);
+    // }
+
   }
 
   console.log(`\n✅ Crawl completed!`);
