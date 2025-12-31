@@ -7,6 +7,8 @@ import { ArtistsModule } from './artists/artists.module';
 import { SongsModule } from './songs/songs.module';
 import { YoutubeModule } from './youtube/youtube.module';
 import { BlogScrapeModule } from './blog-scrape/blog-scrape.module';
+import { TypesenseModule } from './typesense/typesense.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { BlogScrapeModule } from './blog-scrape/blog-scrape.module';
       isGlobal: true,
     }),
     PrismaModule,
+    TypesenseModule,
+    SearchModule,
     ArtistsModule,
     SongsModule,
     YoutubeModule,

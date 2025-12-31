@@ -21,7 +21,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "ts-node prisma/seed.ts"
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "typesense:index": "ts-node src/scripts/index-songs-to-typesense.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -31,6 +32,7 @@
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "cheerio": "^1.1.2",
+    "dotenv": "^17.2.3",
     "hangul-romanization": "^1.0.1",
     "hanja": "^1.1.5",
     "kuroshiro": "^1.2.0",
@@ -38,7 +40,8 @@
     "pg": "^8.16.3",
     "prisma": "^7.2.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "typesense": "^2.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
