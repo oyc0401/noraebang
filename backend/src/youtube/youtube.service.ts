@@ -227,13 +227,31 @@ export class YoutubeService {
 
   /**
    * 선택한 채널 ID로 아티스트의 YouTube 채널 정보 업데이트
+   * @param identifier - Artist ID(숫자) 또는 alias(문자열)
+   * @param channelId - YouTube channel ID
    */
-  async updateArtistChannel(alias: string, channelId: string) {
+  async updateArtistChannel(identifier: string | number, channelId: string) {
     try {
-      // 1. 아티스트 찾기
-      const artist = await this.prisma.artist.findUnique({
-        where: { alias },
-      });
+      // 1. 아티스트 찾기 (ID 또는 alias)
+      let artist;
+      if (typeof identifier === 'number') {
+        artist = await this.prisma.artist.findUnique({
+          where: { id: identifier },
+        });
+      } else {
+        // 숫자 문자열이면 ID로 조회
+        const parsedId = parseInt(identifier, 10);
+        if (!isNaN(parsedId) && parsedId.toString() === identifier) {
+          artist = await this.prisma.artist.findUnique({
+            where: { id: parsedId },
+          });
+        } else {
+          // alias로 조회
+          artist = await this.prisma.artist.findUnique({
+            where: { alias: identifier },
+          });
+        }
+      }
 
       if (!artist) {
         throw new HttpException('Artist not found', HttpStatus.NOT_FOUND);

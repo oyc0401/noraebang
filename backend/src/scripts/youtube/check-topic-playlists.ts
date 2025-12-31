@@ -117,7 +117,7 @@ async function checkTopicChannelPlaylists() {
 
             // DB에 원본 채널로 업데이트
             console.log(`   💾 Updating DB with original channel...`);
-            await youtubeService.updateArtistChannel(artist.alias, originalChannel.channelId);
+            await youtubeService.updateArtistChannel(artist.id, originalChannel.channelId);
             console.log(`   ✅ DB updated successfully!`);
 
           } catch (error: any) {

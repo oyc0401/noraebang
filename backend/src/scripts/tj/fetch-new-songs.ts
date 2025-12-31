@@ -3,7 +3,6 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import { TJService, type TJSongData } from '../../tj/tj.service';
-import { generateAlias } from '../../lib/alias-generator';
 
 // pnpm ts-node src/scripts/tj/fetch-new-songs.ts
 
@@ -25,57 +24,15 @@ async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
       },
     });
 
-    // 새로운 alias 생성
-    const newAlias = await generateAlias(song.artist);
-
     if (!artist) {
-      // alias 중복 체크
-      const existingArtist = await prisma.artist.findUnique({
-        where: { alias: newAlias },
-      });
-
-      if (existingArtist) {
-        console.error(`  ❌ Alias 중복! "${song.artist}" → "${newAlias}"`);
-        console.error(`     이미 존재하는 아티스트: "${existingArtist.name}"`);
-        throw new Error(
-          `Alias collision: "${newAlias}" already exists for "${existingArtist.name}"`,
-        );
-      }
-
+      // alias 없이 아티스트 생성
       artist = await prisma.artist.create({
         data: {
           name: song.artist,
           nameKo: song.artist,
-          alias: newAlias,
         },
       });
-      console.log(`  📝 Created new artist: ${song.artist} → "${newAlias}"`);
-    } else {
-      // 기존 아티스트가 있는 경우 alias 체크
-      if (artist.alias !== newAlias) {
-        console.log(
-          `  🔄 Alias 불일치! "${song.artist}": "${artist.alias}" → "${newAlias}"`,
-        );
-
-        // 새 alias가 다른 아티스트와 충돌하는지 확인
-        const existingArtist = await prisma.artist.findUnique({
-          where: { alias: newAlias },
-        });
-
-        if (existingArtist && existingArtist.id !== artist.id) {
-          console.error(`  ❌ Alias 중복! 다른 아티스트 "${existingArtist.name}"와 충돌`);
-          throw new Error(
-            `Alias collision: "${newAlias}" already exists for "${existingArtist.name}"`,
-          );
-        }
-
-        // alias 업데이트
-        artist = await prisma.artist.update({
-          where: { id: artist.id },
-          data: { alias: newAlias },
-        });
-        console.log(`  ✅ Alias 업데이트 완료: "${artist.alias}"`);
-      }
+      console.log(`  📝 Created new artist: ${song.artist}`);
     }
 
     // 기존 곡이 있는지 확인
