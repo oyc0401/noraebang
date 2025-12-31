@@ -39,15 +39,15 @@ model Song {
 }
 
 model ArtistSong {
-  id        Int      @id @default(autoincrement())
-  artistId  Int      @map("artist_id")
-  songId    Int      @map("song_id")
-  order     Int      @default(0)
-  role      String?  // 'main', 'featuring' 등
-  createdAt DateTime @default(now()) @map("created_at")
+  id        Int          @id @default(autoincrement())
+  artistId  Int          @map("artist_id")
+  songId    Int          @map("song_id")
+  order     Int          @default(0)
+  role      ArtistRole? // main, featuring, collaboration
+  createdAt DateTime     @default(now()) @map("created_at")
 
-  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  artist    Artist       @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  song      Song         @relation(fields: [songId], references: [id], onDelete: Cascade)
 
   @@unique([artistId, songId])
   @@index([songId])
@@ -95,6 +95,12 @@ model YoutubeChannel {
 
   @@index([subscriberCount(sort: Desc)])
   @@map("youtube_channel")
+}
+
+enum ArtistRole {
+  MAIN
+  FEATURING
+  COLLABORATION
 }
 
 enum Provider {
