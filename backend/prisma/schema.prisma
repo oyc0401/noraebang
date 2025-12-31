@@ -98,7 +98,7 @@ model YoutubeChannel {
 enum ArtistRole {
   MAIN
   FEATURING
-  COLLABORATION
+  PRODUCER
 }
 
 enum Provider {
