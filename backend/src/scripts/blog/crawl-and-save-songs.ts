@@ -11,13 +11,6 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-function normalizeString(str: string): string {
-  return str
-    .toLowerCase()
-    .replace(/[\s\-_\.。]+/g, '')
-    .replace(/[^\w]/g, '');
-}
-
 async function crawlAndSaveSongs() {
   const scrapeService = new BlogScrapeService();
 
@@ -58,13 +51,11 @@ async function crawlAndSaveSongs() {
         let karaokeCreated = 0;
 
         for (const scrapedSong of scrapedSongs) {
-          const titleNorm = scrapedSong.title; // title과 동일하게 설정
-
           try {
             // Song 찾기 (ArtistSong 관계를 통해)
             let song = await prisma.song.findFirst({
               where: {
-                titleNorm,
+                title: scrapedSong.title,
                 artistSongs: {
                   some: {
                     artistId: artist.id,
@@ -88,7 +79,6 @@ async function crawlAndSaveSongs() {
                 data: {
                   title: scrapedSong.title,
                   titleKo: scrapedSong.titleKo || null,
-                  titleNorm,
                   artistSongs: {
                     create: {
                       artistId: artist.id,

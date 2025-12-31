@@ -18,7 +18,6 @@ export interface Artist {
   id: number;
   name: string;
   nameKo: string;
-  nameNorm: string;
   alias: string;
   youtubeChannelId?: string;
   tjSongRequestUrl?: string;
@@ -34,7 +33,6 @@ export interface Song {
   id: number;
   title: string;
   titleKo?: string;
-  titleNorm: string;
   youtubeVideoId?: string;
   youtubeFetchedAt?: Date;
   artistId: number;

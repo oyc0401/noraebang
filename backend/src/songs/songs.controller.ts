@@ -23,8 +23,7 @@ export class SongsController {
       songs = artistSongs.filter(
         (song) =>
           song.title.toLowerCase().includes(lowerQuery) ||
-          song.titleKo?.toLowerCase().includes(lowerQuery) ||
-          song.titleNorm.toLowerCase().includes(lowerQuery)
+          song.titleKo?.toLowerCase().includes(lowerQuery)
       );
     } else if (artistId) {
       songs = await this.songsService.findByArtistId(Number(artistId));

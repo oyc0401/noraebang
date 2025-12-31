@@ -33,7 +33,6 @@ export class SongPrismaRepository implements SongRepository {
         OR: [
           { title: { contains: lowerQuery, mode: 'insensitive' } },
           { titleKo: { contains: lowerQuery, mode: 'insensitive' } },
-          { titleNorm: { contains: lowerQuery, mode: 'insensitive' } },
         ],
       },
       include: { karaokeSongs: true },
