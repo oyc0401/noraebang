@@ -1,18 +1,50 @@
 import { Injectable } from "@nestjs/common";
-import type { Artist, YoutubeChannel } from "@prisma/client";
+import type { Artist, Prisma, YoutubeChannel } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
 export type ArtistWithYoutube = Artist & {
   youtubeChannel: YoutubeChannel | null;
 };
 
+export const ARTIST_SORT_OPTIONS = [
+  "id_desc",
+  "name_asc",
+  "name_desc",
+  "subscriber_desc",
+  "subscriber_asc",
+  "song_count_asc",
+  "song_count_desc",
+] as const;
+
+export type ArtistSortOption = (typeof ARTIST_SORT_OPTIONS)[number];
+export const DEFAULT_ARTIST_SORT: ArtistSortOption = "id_desc";
+
+const ARTIST_SORT_ORDER_MAP: Record<
+  ArtistSortOption,
+  Prisma.ArtistOrderByWithRelationInput[]
+> = {
+  id_desc: [{ id: "desc" }],
+  name_asc: [{ name: "asc" }, { id: "desc" }],
+  name_desc: [{ name: "desc" }, { id: "desc" }],
+  subscriber_desc: [
+    { youtubeChannel: { subscriberCount: "desc" } },
+    { id: "desc" },
+  ],
+  subscriber_asc: [
+    { youtubeChannel: { subscriberCount: "asc" } },
+    { id: "desc" },
+  ],
+  song_count_asc: [{ artistSongs: { _count: "asc" } }, { id: "desc" }],
+  song_count_desc: [{ artistSongs: { _count: "desc" } }, { id: "desc" }],
+};
+
 @Injectable()
 export class ArtistsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
+  async findAll(sort: ArtistSortOption = DEFAULT_ARTIST_SORT) {
     return this.prisma.artist.findMany({
-      orderBy: { id: "asc" },
+      orderBy: ARTIST_SORT_ORDER_MAP[sort],
     });
   }
 

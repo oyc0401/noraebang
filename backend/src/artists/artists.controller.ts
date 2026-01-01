@@ -5,12 +5,14 @@ import {
   NotFoundException,
   Param,
   Post,
+  Query,
 } from "@nestjs/common";
 import {
   ApiOperation,
   ApiParam,
   ApiTags,
   ApiResponse as SwaggerApiResponse,
+  ApiQuery,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../dto/api-response.dto";
 import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
@@ -22,6 +24,14 @@ import {
   ArtistWithYoutubeListResponseDto,
   YoutubeChannelUpdateResponseDto,
 } from "./dto/artist-response.dto";
+import {
+  ARTIST_SORT_OPTIONS,
+  ArtistSortOption,
+  DEFAULT_ARTIST_SORT,
+} from "./artists.service";
+
+const isArtistSortOption = (value?: string): value is ArtistSortOption =>
+  !!value && ARTIST_SORT_OPTIONS.includes(value as ArtistSortOption);
 
 @ApiTags("Artists")
 @Controller("artists")
@@ -36,13 +46,23 @@ export class ArtistsController {
     summary: "아티스트 목록 조회",
     description: "전체 아티스트를 반환합니다.",
   })
+  @ApiQuery({
+    name: "sort",
+    required: false,
+    enum: ARTIST_SORT_OPTIONS,
+    description:
+      "정렬 기준 (id_desc, name_asc, name_desc, subscriber_desc, subscriber_asc, song_count_asc, song_count_desc)",
+  })
   @SwaggerApiResponse({
     status: 200,
     description: "아티스트 목록",
     type: ArtistListResponseDto,
   })
-  async findAll(): Promise<ArtistListResponseDto> {
-    const artists = await this.artistsService.findAll();
+  async findAll(
+    @Query("sort") sort?: string,
+  ): Promise<ArtistListResponseDto> {
+    const sortOption = isArtistSortOption(sort) ? sort : DEFAULT_ARTIST_SORT;
+    const artists = await this.artistsService.findAll(sortOption);
     return ApiResponse.success(artists);
   }
 
