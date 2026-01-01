@@ -5,7 +5,7 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
-import { ApiResponse } from "../common/dto/api-response.dto";
+import { ApiResponse } from "../dto/api-response.dto";
 import { AdminService } from "./admin.service";
 
 @ApiTags("Admin")

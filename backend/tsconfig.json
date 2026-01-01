@@ -22,6 +22,10 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "scripts/blog/blog-scrape.service.ts",
+    "scripts/blog/data"
+  ],
   "exclude": ["node_modules", "dist", "scripts"]
 }
