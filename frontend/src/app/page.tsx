@@ -13,9 +13,7 @@ export default function Home() {
     data: artists = [],
     isLoading,
     error,
-  } = useArtistsControllerFindAll<
-    ArtistWithYoutube[]
-  >(
+  } = useArtistsControllerFindAll<ArtistWithYoutube[]>(
     { includeYoutube: "true" },
     {
       query: {

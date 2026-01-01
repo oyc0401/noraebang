@@ -9,8 +9,8 @@ import {
   ApiOperation,
   ApiParam,
   ApiQuery,
-  ApiResponse as SwaggerApiResponse,
   ApiTags,
+  ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../common/dto/api-response.dto";
 import { ArtistsService } from "./artists.service";

@@ -34,11 +34,7 @@ export function getResponseData<T>(response: unknown): T {
 }
 
 export function getResponseMessage(response: unknown): string | undefined {
-  if (
-    response &&
-    typeof response === "object" &&
-    "message" in response
-  ) {
+  if (response && typeof response === "object" && "message" in response) {
     return (response as ApiResponse<unknown>).message;
   }
   return undefined;

@@ -1,14 +1,13 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Param, Post } from "@nestjs/common";
 import {
   ApiOperation,
   ApiParam,
-  ApiQuery,
-  ApiResponse as SwaggerApiResponse,
   ApiTags,
+  ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../common/dto/api-response.dto";
-import { YoutubeService } from "./youtube.service";
 import { YoutubeChannelUpdateDto } from "./dto/youtube-channel-update.dto";
+import { YoutubeService } from "./youtube.service";
 
 @ApiTags("YouTube")
 @Controller("youtube")

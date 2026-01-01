@@ -19,9 +19,7 @@ export const customFetch = async <T>({
   signal,
 }: CustomFetchConfig): Promise<T> => {
   const queryString = params
-    ? `?${new URLSearchParams(
-        params as Record<string, string>,
-      ).toString()}`
+    ? `?${new URLSearchParams(params as Record<string, string>).toString()}`
     : "";
 
   const response = await fetch(`${API_BASE_URL}${url}${queryString}`, {
@@ -37,8 +35,7 @@ export const customFetch = async <T>({
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     throw new Error(
-      (errorBody as { message?: string }).message ||
-        `HTTP ${response.status}`,
+      (errorBody as { message?: string }).message || `HTTP ${response.status}`,
     );
   }
 
