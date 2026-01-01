@@ -272,7 +272,12 @@ export class YoutubeService {
       // 3. Artist의 channelId 업데이트
       await this.prisma.artist.update({
         where: { id: artist.id },
-        data: { youtubeChannelId: channelData.channelId },
+        data: {
+          youtubeChannelId: channelData.channelId,
+          thumbnailDefault: channelData.thumbnailDefault,
+          thumbnailMedium: channelData.thumbnailMedium,
+          thumbnailHigh: channelData.thumbnailHigh,
+        },
       });
 
       // 4. YoutubeChannel 테이블 upsert
