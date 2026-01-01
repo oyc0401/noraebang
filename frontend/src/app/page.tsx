@@ -4,9 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { searchSongByYoutubeUrl } from "@/api/custom/searchSongByYoutubeUrl";
 import { useArtistsControllerFindAllWithYoutube } from "@/api/model/artists/artists";
-import { searchControllerGetYoutubeOembed } from "@/api/model/search/search";
-import { songsControllerFindAll } from "@/api/model/songs/songs";
 
 export default function Home() {
   const { data, isLoading, error } = useArtistsControllerFindAllWithYoutube();
@@ -21,58 +20,50 @@ export default function Home() {
     if (!youtubeUrl.trim()) return;
 
     setSearching(true);
-    setSearchLog([]);
+    setSearchLog([`유튜브 정보 가져오는 중...`]);
 
     try {
-      // Fetch YouTube title
-      setSearchLog((prev) => [...prev, `유튜브 정보 가져오는 중...`]);
-      const youtubeResponse = await searchControllerGetYoutubeOembed({
-        url: youtubeUrl,
+      const response = await searchSongByYoutubeUrl({
+        url: youtubeUrl.trim(),
       });
-      const title = youtubeResponse.data.title;
-      setSearchLog((prev) => [...prev, `✓ 제목: ${title}`]);
 
-      // Search for song
-      setSearchLog((prev) => [...prev, `곡 검색 중...`]);
-      const songsResponse = await songsControllerFindAll();
-      const songs = songsResponse.data ?? [];
+      const logs = [`유튜브 정보 가져오는 중...`];
+      if (response.message) {
+        logs.push(`✓ 제목: ${response.message}`);
+      }
+      logs.push(`곡 검색 중...`);
 
-      const foundSong = songs.find(
-        (song) =>
-          song.title.toLowerCase().includes(title.toLowerCase()) ||
-          title.toLowerCase().includes(song.title.toLowerCase()) ||
-          (song.titleKo &&
-            title.toLowerCase().includes(song.titleKo.toLowerCase())),
-      );
+      const song = response.data;
 
-      if (foundSong) {
-        setSearchLog((prev) => [
-          ...prev,
-          `✓ 곡을 찾았습니다: ${foundSong.title}`,
-        ]);
+      if (song) {
+        logs.push(`✓ 곡을 찾았습니다: ${song.title}`);
 
-        // Get artist from already loaded data
-        const artist = artists.find((a) => a.id === foundSong.artistIds[0]);
+        const artist = artists.find((a) => a.id === song.artistIds[0]);
 
         if (artist) {
-          setSearchLog((prev) => [
-            ...prev,
-            `✓ ${artist.nameKo} 페이지로 이동합니다...`,
-          ]);
+          logs.push(`✓ ${artist.nameKo} 페이지로 이동합니다...`);
+          setSearchLog(logs);
+
           setTimeout(() => {
-            router.push(`/channel/${artist.alias}#${foundSong.id}`);
+            router.push(`/channel/${artist.alias}#${song.id}`);
           }, 500);
-        } else {
-          setSearchLog((prev) => [
-            ...prev,
-            `❌ 아티스트 정보를 찾을 수 없습니다.`,
-          ]);
+          return;
         }
-      } else {
-        setSearchLog((prev) => [...prev, `❌ 해당 곡을 찾을 수 없습니다.`]);
+
+        logs.push(`❌ 아티스트 정보를 찾을 수 없습니다.`);
+        setSearchLog(logs);
+        return;
       }
+
+      logs.push(`❌ 해당 곡을 찾을 수 없습니다.`);
+      setSearchLog(logs);
     } catch (error) {
-      setSearchLog((prev) => [...prev, `❌ 오류가 발생했습니다: ${error}`]);
+      const message =
+        error instanceof Error ? error.message : String(error ?? "unknown");
+      setSearchLog((prev) => [
+        ...prev,
+        `❌ 오류가 발생했습니다: ${message}`,
+      ]);
     } finally {
       setSearching(false);
     }
