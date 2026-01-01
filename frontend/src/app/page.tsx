@@ -119,38 +119,46 @@ export default function Home() {
 
         {artists.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {artists.map((artist) => (
-              <Link
-                key={artist.id}
-                href={`/channel/${artist.alias}`}
-                className="group rounded-lg border border-zinc-200 bg-white shadow-sm transition-all hover:shadow-md hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 overflow-hidden"
-              >
-                {artist.youtube?.thumbnail && (
-                  <div className="aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-                    <Image
-                      src={artist.youtube.thumbnail}
-                      alt={artist.nameKo}
-                      width={320}
-                      height={180}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    />
-                  </div>
-                )}
-                <div className="p-4">
-                  <h2 className="mb-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50 group-hover:text-zinc-700 dark:group-hover:text-zinc-200">
-                    {artist.nameKo}
-                  </h2>
-                  <p className="mb-2 text-sm text-zinc-500 dark:text-zinc-500">
-                    {artist.name}
-                  </p>
-                  {artist.youtube?.subscriberCount && (
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                      구독자 {artist.youtube.subscriberCount.toLocaleString()}명
-                    </p>
+            {artists.map((artist) => {
+              const displayThumbnail =
+                artist.thumbnailHigh ||
+                artist.thumbnailMedium ||
+                artist.thumbnailDefault;
+
+              return (
+                <Link
+                  key={artist.id}
+                  href={`/channel/${artist.alias}`}
+                  className="group rounded-lg border border-zinc-200 bg-white shadow-sm transition-all hover:shadow-md hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 overflow-hidden"
+                >
+                  {displayThumbnail && (
+                    <div className="aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                      <Image
+                        src={displayThumbnail}
+                        alt={artist.nameKo}
+                        width={320}
+                        height={180}
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      />
+                    </div>
                   )}
-                </div>
-              </Link>
-            ))}
+                  <div className="p-4">
+                    <h2 className="mb-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50 group-hover:text-zinc-700 dark:group-hover:text-zinc-200">
+                      {artist.nameKo}
+                    </h2>
+                    <p className="mb-2 text-sm text-zinc-500 dark:text-zinc-500">
+                      {artist.name}
+                    </p>
+                    {artist.youtube?.subscriberCount && (
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                        구독자 {artist.youtube.subscriberCount.toLocaleString()}
+                        명
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

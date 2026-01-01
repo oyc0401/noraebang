@@ -13,8 +13,6 @@ export interface ArtistDto {
   /** @nullable */
   alias?: string | null;
   /** @nullable */
-  imageUrl?: string | null;
-  /** @nullable */
   thumbnailDefault?: string | null;
   /** @nullable */
   thumbnailMedium?: string | null;

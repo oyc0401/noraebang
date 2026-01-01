@@ -14,5 +14,11 @@ export interface ArtistWithYoutubeDto {
   /** @nullable */
   alias?: string | null;
   /** @nullable */
+  thumbnailDefault?: string | null;
+  /** @nullable */
+  thumbnailMedium?: string | null;
+  /** @nullable */
+  thumbnailHigh?: string | null;
+  /** @nullable */
   youtube?: ArtistWithYoutubeDtoYoutube;
 }

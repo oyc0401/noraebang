@@ -66,6 +66,9 @@ export class ArtistsController {
       name: artist.name,
       nameKo: artist.nameKo,
       alias: artist.alias,
+      thumbnailDefault: artist.thumbnailDefault,
+      thumbnailMedium: artist.thumbnailMedium,
+      thumbnailHigh: artist.thumbnailHigh,
       youtube: artist.youtubeChannel
         ? {
             channelId: artist.youtubeChannel.channelId,
