@@ -7,6 +7,11 @@ import {
 } from "@nestjs/swagger";
 import { ApiResponse } from "../dto/api-response.dto";
 import { YoutubeService } from "../youtube/youtube.service";
+import {
+  ArtistSearchResultListResponseDto,
+  SearchResultListResponseDto,
+  TitleSearchResultListResponseDto,
+} from "./dto/search-response.dto";
 import { YoutubeOembedResponseDto } from "./dto/youtube-oembed-response.dto";
 import { SearchService } from "./search.service";
 
@@ -38,25 +43,13 @@ export class SearchController {
   @SwaggerApiResponse({
     status: 200,
     description: "검색 결과",
-    schema: {
-      example: {
-        data: [
-          {
-            id: 101,
-            title: "夜に駆ける",
-            artistName: "YOASOBI",
-            karaokeNo: "12345",
-            provider: "TJ",
-          },
-        ],
-      },
-    },
+    type: SearchResultListResponseDto,
   })
   async search(
     @Query("q") query: string,
     @Query("provider") provider?: string,
     @Query("limit") limit?: string,
-  ) {
+  ): Promise<SearchResultListResponseDto> {
     if (!query) {
       return { data: [] };
     }
@@ -84,24 +77,12 @@ export class SearchController {
   @SwaggerApiResponse({
     status: 200,
     description: "검색 결과",
-    schema: {
-      example: {
-        data: [
-          {
-            id: 101,
-            title: "夜に駆ける",
-            artistName: "YOASOBI",
-            karaokeNo: "12345",
-            provider: "TJ",
-          },
-        ],
-      },
-    },
+    type: SearchResultListResponseDto,
   })
   async searchByKaraokeNo(
     @Query("no") karaokeNo: string,
     @Query("provider") provider?: string,
-  ) {
+  ): Promise<SearchResultListResponseDto> {
     if (!karaokeNo) {
       return { data: [] };
     }
@@ -124,19 +105,11 @@ export class SearchController {
   @SwaggerApiResponse({
     status: 200,
     description: "검색 결과",
-    schema: {
-      example: {
-        data: [
-          {
-            id: 1,
-            name: "YOASOBI",
-            alias: "yoasobi",
-          },
-        ],
-      },
-    },
+    type: ArtistSearchResultListResponseDto,
   })
-  async searchByArtist(@Query("name") artistName: string) {
+  async searchByArtist(
+    @Query("name") artistName: string,
+  ): Promise<ArtistSearchResultListResponseDto> {
     if (!artistName) {
       return { data: [] };
     }
@@ -155,19 +128,11 @@ export class SearchController {
   @SwaggerApiResponse({
     status: 200,
     description: "검색 결과",
-    schema: {
-      example: {
-        data: [
-          {
-            id: 101,
-            title: "夜に駆ける",
-            titleKo: "밤을 달리다",
-          },
-        ],
-      },
-    },
+    type: TitleSearchResultListResponseDto,
   })
-  async searchByTitle(@Query("q") title: string) {
+  async searchByTitle(
+    @Query("q") title: string,
+  ): Promise<TitleSearchResultListResponseDto> {
     if (!title) {
       return { data: [] };
     }
@@ -185,7 +150,9 @@ export class SearchController {
     type: YoutubeOembedResponseDto,
   })
   @SwaggerApiResponse({ status: 400, description: "URL 파라미터 필요" })
-  async getYoutubeOembed(@Query("url") url: string) {
+  async getYoutubeOembed(
+    @Query("url") url: string,
+  ): Promise<YoutubeOembedResponseDto> {
     if (!url) {
       throw new BadRequestException("URL parameter is required");
     }

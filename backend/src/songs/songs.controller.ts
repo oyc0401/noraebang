@@ -15,6 +15,10 @@ import {
 } from "@nestjs/swagger";
 import type { Song } from "@prisma/client";
 import { ApiResponse } from "../dto/api-response.dto";
+import {
+  SongDetailResponseDto,
+  SongListResponseDto,
+} from "./dto/song-response.dto";
 import { SongsService } from "./songs.service";
 
 @ApiTags("Songs")
@@ -41,27 +45,12 @@ export class SongsController {
   @SwaggerApiResponse({
     status: 200,
     description: "곡 목록",
-    schema: {
-      example: {
-        data: [
-          {
-            id: 101,
-            title: "夜に駆ける",
-            titleKo: "밤을 달리다",
-            karaokeSongs: [
-              { provider: "TJ", karaokeNo: "12345" },
-              { provider: "KY", karaokeNo: "67890" },
-            ],
-          },
-        ],
-        message: null,
-      },
-    },
+    type: SongListResponseDto,
   })
   async findAll(
     @Query("q") query?: string,
     @Query("artistId") artistId?: string,
-  ) {
+  ): Promise<SongListResponseDto> {
     let songs: Song[];
 
     if (artistId && query) {
@@ -95,20 +84,10 @@ export class SongsController {
   @SwaggerApiResponse({
     status: 200,
     description: "곡 상세 정보",
-    schema: {
-      example: {
-        data: {
-          id: 101,
-          title: "夜に駆ける",
-          titleKo: "밤을 달리다",
-          karaokeSongs: [{ provider: "TJ", karaokeNo: "12345" }],
-        },
-        message: null,
-      },
-    },
+    type: SongDetailResponseDto,
   })
   @SwaggerApiResponse({ status: 404, description: "곡을 찾을 수 없음" })
-  async findOne(@Param("id", ParseIntPipe) id: number) {
+  async findOne(@Param("id", ParseIntPipe) id: number): Promise<SongDetailResponseDto> {
     const song = await this.songsService.findById(id);
     if (!song) {
       throw new NotFoundException("Song not found");

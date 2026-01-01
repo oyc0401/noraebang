@@ -21,6 +21,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  SongDetailResponseDto,
+  SongListResponseDto,
   SongsControllerFindAllParams
 } from '.././models';
 
@@ -39,7 +41,7 @@ export const songsControllerFindAll = (
 ) => {
       
       
-      return customFetch<unknown>(
+      return customFetch<SongListResponseDto>(
       {url: `/songs`, method: 'GET',
         params, signal
     },
@@ -133,7 +135,7 @@ export const songsControllerFindOne = (
 ) => {
       
       
-      return customFetch<unknown>(
+      return customFetch<SongDetailResponseDto>(
       {url: `/songs/${id}`, method: 'GET', signal
     },
       );

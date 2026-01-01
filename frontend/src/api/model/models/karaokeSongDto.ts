@@ -6,9 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export type ArtistsControllerFindAllParams = {
-/**
- * YouTube 정보 포함 여부 (true/false)
- */
-includeYoutube?: string;
-};
+export interface KaraokeSongDto {
+  provider: string;
+  karaokeNo: string;
+}

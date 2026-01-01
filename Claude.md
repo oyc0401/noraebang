@@ -5,7 +5,7 @@
 이 프로젝트는 2년이상 유지보수 해야하므로 대충 코드짜지 마세요
 귀찮다고 작성한 잘못된 코드 하나가 나중에 무조건 몇배가 되어 본인과 다른사람들을 고통스럽게 합니다.
 
-any, unknown 등등의 타입 절대 금지.
+any, unknown, never 등등의 타입 절대 금지.
 
 null인데 ! 되도록 금지.
 
@@ -21,6 +21,46 @@ foo: string | null; 보다는 foo?: string 이 좋아요
 
 # 아키텍쳐 규칙 (필수)
 
+**데이터베이스 접근:**
+- Service에서 PrismaService를 직접 사용하세요
+- Repository 패턴은 사용하지 않습니다
+- Prisma가 이미 Repository 역할을 하므로 추가 레이어를 만들지 마세요
+
+**스크립트:**
+- `backend/scripts/` 내 npx로 실행 가능한 스크립트에서는 Prisma Client를 직접 생성 가능합니다
+
+**컨트롤러 (Controller) 규칙:**
+- 모든 컨트롤러 메서드는 **무조건 반환 타입을 명시**하세요
+  ```typescript
+  // ✅ 좋은 예
+  async getYoutubeOembed(@Query("url") url: string): Promise<YoutubeOembedResponseDto> {
+    const data = await this.youtubeService.getOembedData(url);
+    return ApiResponse.success(data);
+  }
+
+  // ❌ 나쁜 예
+  async getYoutubeOembed(@Query("url") url: string) {  // 반환 타입 없음
+    const data = await this.youtubeService.getOembedData(url);
+    return ApiResponse.success(data);
+  }
+  ```
+
+- 모든 API 응답은 **무조건 DTO 클래스를 사용**하세요
+  - `@SwaggerApiResponse({ type: XxxResponseDto })` 데코레이터에 DTO 지정
+  - 응답 타입: `Promise<XxxResponseDto>` 형태로 명시
+  - Service에서 반환하는 타입도 DTO로 정의 (interface 대신 class 사용)
+  - 제네릭 타입(`ApiResponse<T>`)은 Swagger가 인식 못하므로 구체적인 DTO 클래스 생성
+
+- DTO는 `@ApiProperty()` 데코레이터로 Swagger 문서화
+  ```typescript
+  export class OembedDataDto {
+    @ApiProperty({ example: "YOASOBI - 夜に駆ける" })
+    title: string;
+
+    @ApiProperty({ required: false })
+    description?: string;
+  }
+  ```
 
 # 규칙
 절대로 개발 서버를 실행하지 마세요

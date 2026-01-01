@@ -25,8 +25,11 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  ArtistsControllerFindAllParams,
-  YoutubeChannelUpdateDto
+  ArtistDetailResponseDto,
+  ArtistListResponseDto,
+  ArtistWithYoutubeListResponseDto,
+  YoutubeChannelUpdateDto,
+  YoutubeChannelUpdateResponseDto
 } from '.././models';
 
 import { customFetch } from '../../client';
@@ -35,18 +38,17 @@ import { customFetch } from '../../client';
 
 
 /**
- * 전체 아티스트를 반환합니다. includeYoutube=true 를 지정하면 관련 YouTube 채널 정보가 포함됩니다.
+ * 전체 아티스트를 반환합니다.
  * @summary 아티스트 목록 조회
  */
 export const artistsControllerFindAll = (
-    params?: ArtistsControllerFindAllParams,
+    
  signal?: AbortSignal
 ) => {
       
       
-      return customFetch<unknown>(
-      {url: `/artists`, method: 'GET',
-        params, signal
+      return customFetch<ArtistListResponseDto>(
+      {url: `/artists`, method: 'GET', signal
     },
       );
     }
@@ -54,23 +56,23 @@ export const artistsControllerFindAll = (
 
 
 
-export const getArtistsControllerFindAllQueryKey = (params?: ArtistsControllerFindAllParams,) => {
+export const getArtistsControllerFindAllQueryKey = () => {
     return [
-    `/artists`, ...(params ? [params]: [])
+    `/artists`
     ] as const;
     }
 
     
-export const getArtistsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof artistsControllerFindAll>>, TError = unknown>(params?: ArtistsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAll>>, TError, TData>>, }
+export const getArtistsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof artistsControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAll>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getArtistsControllerFindAllQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getArtistsControllerFindAllQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof artistsControllerFindAll>>> = ({ signal }) => artistsControllerFindAll(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artistsControllerFindAll>>> = ({ signal }) => artistsControllerFindAll(signal);
 
       
 
@@ -84,7 +86,7 @@ export type ArtistsControllerFindAllQueryError = unknown
 
 
 export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof artistsControllerFindAll>>, TError = unknown>(
- params: undefined |  ArtistsControllerFindAllParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAll>>, TError, TData>> & Pick<
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAll>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof artistsControllerFindAll>>,
           TError,
@@ -94,7 +96,7 @@ export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof ar
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof artistsControllerFindAll>>, TError = unknown>(
- params?: ArtistsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAll>>, TError, TData>> & Pick<
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAll>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof artistsControllerFindAll>>,
           TError,
@@ -104,7 +106,7 @@ export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof ar
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof artistsControllerFindAll>>, TError = unknown>(
- params?: ArtistsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAll>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAll>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -112,11 +114,104 @@ export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof ar
  */
 
 export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof artistsControllerFindAll>>, TError = unknown>(
- params?: ArtistsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAll>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAll>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getArtistsControllerFindAllQueryOptions(params,options)
+  const queryOptions = getArtistsControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * 전체 아티스트를 YouTube 채널 정보와 함께 반환합니다. 구독자 수 기준으로 정렬됩니다.
+ * @summary 아티스트 목록 조회 (YouTube 정보 포함)
+ */
+export const artistsControllerFindAllWithYoutube = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customFetch<ArtistWithYoutubeListResponseDto>(
+      {url: `/artists/with-youtube`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getArtistsControllerFindAllWithYoutubeQueryKey = () => {
+    return [
+    `/artists/with-youtube`
+    ] as const;
+    }
+
+    
+export const getArtistsControllerFindAllWithYoutubeQueryOptions = <TData = Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getArtistsControllerFindAllWithYoutubeQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>> = ({ signal }) => artistsControllerFindAllWithYoutube(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ArtistsControllerFindAllWithYoutubeQueryResult = NonNullable<Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>>
+export type ArtistsControllerFindAllWithYoutubeQueryError = unknown
+
+
+export function useArtistsControllerFindAllWithYoutube<TData = Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>,
+          TError,
+          Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtistsControllerFindAllWithYoutube<TData = Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>,
+          TError,
+          Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtistsControllerFindAllWithYoutube<TData = Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 아티스트 목록 조회 (YouTube 정보 포함)
+ */
+
+export function useArtistsControllerFindAllWithYoutube<TData = Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllWithYoutube>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getArtistsControllerFindAllWithYoutubeQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -138,7 +233,7 @@ export const artistsControllerFindByIdOrAlias = (
 ) => {
       
       
-      return customFetch<unknown>(
+      return customFetch<ArtistDetailResponseDto>(
       {url: `/artists/${identifier}`, method: 'GET', signal
     },
       );
@@ -232,7 +327,7 @@ export const artistsControllerUpdateYoutubeChannel = (
 ) => {
       
       
-      return customFetch<unknown | void>(
+      return customFetch<YoutubeChannelUpdateResponseDto | YoutubeChannelUpdateResponseDto>(
       {url: `/artists/${alias}/youtube-channel`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: youtubeChannelUpdateDto, signal

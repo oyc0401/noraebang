@@ -20,6 +20,11 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
+import type {
+  AdminArtistListResponseDto,
+  AdminSongListResponseDto
+} from '.././models';
+
 import { customFetch } from '../../client';
 
 
@@ -35,7 +40,7 @@ export const adminControllerGetArtists = (
 ) => {
       
       
-      return customFetch<unknown>(
+      return customFetch<AdminArtistListResponseDto>(
       {url: `/admin/artists`, method: 'GET', signal
     },
       );
@@ -128,7 +133,7 @@ export const adminControllerGetArtistSongs = (
 ) => {
       
       
-      return customFetch<unknown>(
+      return customFetch<AdminSongListResponseDto>(
       {url: `/admin/artists/${id}/songs`, method: 'GET', signal
     },
       );
