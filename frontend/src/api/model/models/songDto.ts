@@ -13,5 +13,7 @@ export interface SongDto {
   /** @nullable */
   titleKo?: string | null;
   artistIds: number[];
+  /** @nullable */
+  role?: string | null;
   karaokeSongs?: KaraokeSongDto[];
 }

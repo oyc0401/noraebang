@@ -77,6 +77,7 @@ export class SongsController {
       title: song.title,
       titleKo: song.titleKo,
       artistIds: song.artistSongs.map((as) => as.artistId),
+      role: song.artistSongs[0]?.role ?? null,
       karaokeSongs: song.karaokeSongs.map(({ provider, karaokeNo }) => ({
         provider,
         karaokeNo,
@@ -111,6 +112,7 @@ export class SongsController {
       title: song.title,
       titleKo: song.titleKo,
       artistIds: song.artistSongs.map((as) => as.artistId),
+      role: song.artistSongs[0]?.role ?? null,
       karaokeSongs: song.karaokeSongs.map(({ provider, karaokeNo }) => ({
         provider,
         karaokeNo,
