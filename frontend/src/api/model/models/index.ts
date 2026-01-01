@@ -12,6 +12,4 @@ export * from './searchControllerSearchByKaraokeNoParams';
 export * from './searchControllerSearchByTitleParams';
 export * from './searchControllerSearchParams';
 export * from './songsControllerFindAllParams';
-export * from './youtubeControllerGetOembedDataParams';
-export * from './youtubeControllerSearchChannelsParams';
-export * from './youtubeControllerUpdateArtistChannelParams';
+export * from './youtubeChannelUpdateDto';

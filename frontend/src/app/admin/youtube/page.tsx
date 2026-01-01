@@ -8,15 +8,18 @@ import { getResponseMessage, mapResponseData } from "@/api/utils";
 import type { ArtistWithYoutube } from "@/types/models";
 
 export default function AdminPage() {
-  const { data: artists = [], isLoading, refetch } =
-    useArtistsControllerFindAll<ArtistWithYoutube[]>(
-      { includeYoutube: "true" },
-      {
-        query: {
-          select: mapResponseData<ArtistWithYoutube[]>([]),
-        },
+  const {
+    data: artists = [],
+    isLoading,
+    refetch,
+  } = useArtistsControllerFindAll<ArtistWithYoutube[]>(
+    { includeYoutube: "true" },
+    {
+      query: {
+        select: mapResponseData<ArtistWithYoutube[]>([]),
       },
-    );
+    },
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const youtubeMutation = useYoutubeControllerUpdateArtistChannel();
   const updating = youtubeMutation.isPending;
@@ -91,7 +94,7 @@ export default function AdminPage() {
     try {
       const response = await youtubeMutation.mutateAsync({
         alias: selectedArtist.alias,
-        params: { channelId },
+        data: { channelId },
       });
 
       const updatedChannel = mapResponseData<{ channelTitle?: string } | null>(

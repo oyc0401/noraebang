@@ -23,7 +23,11 @@ export class SongsController {
   constructor(private readonly songsService: SongsService) {}
 
   @Get()
-  @ApiOperation({ summary: "곡 목록 조회 (검색 및 필터링)" })
+  @ApiOperation({
+    summary: "곡 목록 조회 (검색 및 필터링)",
+    description:
+      "검색어(q) 또는 artistId를 이용해 곡을 조회합니다. 둘 다 없으면 전체 곡을 반환합니다.",
+  })
   @ApiQuery({
     name: "q",
     required: false,
@@ -83,7 +87,10 @@ export class SongsController {
   }
 
   @Get(":id")
-  @ApiOperation({ summary: "곡 상세 조회" })
+  @ApiOperation({
+    summary: "곡 상세 조회",
+    description: "곡 ID로 단일 곡 상세 정보를 조회합니다.",
+  })
   @ApiParam({ name: "id", description: "곡 ID" })
   @SwaggerApiResponse({
     status: 200,

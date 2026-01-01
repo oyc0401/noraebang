@@ -30,6 +30,7 @@ import { customFetch } from '../../client';
 
 
 /**
+ * 검색어(q) 또는 artistId를 이용해 곡을 조회합니다. 둘 다 없으면 전체 곡을 반환합니다.
  * @summary 곡 목록 조회 (검색 및 필터링)
  */
 export const songsControllerFindAll = (
@@ -123,6 +124,7 @@ export function useSongsControllerFindAll<TData = Awaited<ReturnType<typeof song
 
 
 /**
+ * 곡 ID로 단일 곡 상세 정보를 조회합니다.
  * @summary 곡 상세 조회
  */
 export const songsControllerFindOne = (
