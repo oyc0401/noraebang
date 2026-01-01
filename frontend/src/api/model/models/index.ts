@@ -6,13 +6,9 @@
  * OpenAPI spec version: 1.0
  */
 
-export * from './adminArtistDto';
-export * from './adminArtistDtoAliasGroup';
-export * from './adminArtistListResponseDto';
 export * from './adminKaraokeNumberDto';
 export * from './adminSongDto';
 export * from './adminSongListResponseDto';
-export * from './aliasGroupDto';
 export * from './artistAliasGroupDto';
 export * from './artistDatailsDto';
 export * from './artistDatailsDtoAliasGroup';
