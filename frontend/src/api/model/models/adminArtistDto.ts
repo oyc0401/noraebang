@@ -16,4 +16,10 @@ export interface AdminArtistDto {
   songCount: number;
   /** @nullable */
   aliasGroup?: AdminArtistDtoAliasGroup;
+  /** @nullable */
+  thumbnailDefault?: string | null;
+  /** @nullable */
+  thumbnailMedium?: string | null;
+  /** @nullable */
+  thumbnailHigh?: string | null;
 }

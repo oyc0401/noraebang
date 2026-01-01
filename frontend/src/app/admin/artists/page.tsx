@@ -6,66 +6,32 @@ import {
   useAdminControllerGetArtistSongs,
   useAdminControllerGetArtists,
 } from "@/api/model/admin/admin";
-import { useArtistsControllerFindAll } from "@/api/model/artists/artists";
-import { useYoutubeControllerUpdateArtistChannel } from "@/api/model/you-tube/you-tube";
-import { getResponseMessage, mapResponseData } from "@/api/utils";
-import type { ArtistWithYoutube } from "@/types/models";
-
-interface Artist {
-  id: number;
-  name: string;
-  nameKo: string;
-  alias: string | null;
-  imageUrl: string | null;
-  songCount: number;
-  aliasGroup?: {
-    groupId: string;
-    aliases: string[];
-  } | null;
-}
-
-interface Song {
-  id: number;
-  title: string;
-  titleKo: string | null;
-  role: string | null;
-  karaokeNumbers: {
-    provider: string;
-    karaokeNo: string;
-  }[];
-}
+import {
+  useArtistsControllerFindAllWithYoutube,
+  useArtistsControllerUpdateYoutubeChannel,
+} from "@/api/model/artists/artists";
+import type { AdminArtistDto } from "@/api/model/models";
 
 export default function AdminArtistsPage() {
-  const { data: artists = [], isLoading: artistsLoading } =
-    useAdminControllerGetArtists<Artist[]>({
-      query: {
-        select: mapResponseData<Artist[]>([]),
-      },
-    });
+  const { data: artistsData, isLoading: artistsLoading } =
+    useAdminControllerGetArtists();
+  const artists = artistsData?.data ?? [];
 
-  const { data: artistsWithYoutube = [], refetch: refetchYoutube } =
-    useArtistsControllerFindAll<ArtistWithYoutube[]>(
-      { includeYoutube: "true" },
-      {
-        query: {
-          select: mapResponseData<ArtistWithYoutube[]>([]),
-        },
-      },
-    );
-  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const { data: artistsWithYoutubeData, refetch: refetchYoutube } =
+    useArtistsControllerFindAllWithYoutube();
+  const artistsWithYoutube = artistsWithYoutubeData?.data ?? [];
+
+  const [selectedArtist, setSelectedArtist] = useState<AdminArtistDto | null>(null);
   const selectedArtistId = selectedArtist?.id ?? 0;
-  const { data: songs = [], isLoading: songsLoading } =
-    useAdminControllerGetArtistSongs<Song[]>(selectedArtistId, {
-      query: {
-        select: mapResponseData<Song[]>([]),
-      },
-    });
+  const { data: songsData, isLoading: songsLoading } =
+    useAdminControllerGetArtistSongs(selectedArtistId);
+  const songs = songsData?.data ?? [];
   const [searchQuery, setSearchQuery] = useState("");
 
   // YouTube 채널 관리
   const [showYoutubeSection, setShowYoutubeSection] = useState(false);
   const [channelUrl, setChannelUrl] = useState("");
-  const youtubeMutation = useYoutubeControllerUpdateArtistChannel();
+  const youtubeMutation = useArtistsControllerUpdateYoutubeChannel();
   const updating = youtubeMutation.isPending;
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -73,7 +39,7 @@ export default function AdminArtistsPage() {
   } | null>(null);
 
   // Merge artists with YouTube info
-  const mergedArtists = artists?.map((artist: Artist) => {
+  const mergedArtists = artists?.map((artist) => {
     const youtubeInfo = artistsWithYoutube?.find((yt) => yt.id === artist.id);
     return {
       ...artist,
@@ -82,7 +48,7 @@ export default function AdminArtistsPage() {
   });
 
   const filteredArtists = mergedArtists?.filter(
-    (artist: Artist & { youtube?: any }) =>
+    (artist) =>
       artist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       artist.nameKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       artist.alias?.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -95,7 +61,7 @@ export default function AdminArtistsPage() {
     const hash = window.location.hash;
     if (hash) {
       const artistId = parseInt(hash.replace("#", ""), 10);
-      const artist = mergedArtists.find((a: Artist) => a.id === artistId);
+      const artist = mergedArtists.find((a) => a.id === artistId);
       if (artist) {
         setSelectedArtist(artist);
       }
@@ -125,7 +91,7 @@ export default function AdminArtistsPage() {
         e.preventDefault();
 
         const currentIndex = selectedArtist
-          ? filteredArtists.findIndex((a: Artist) => a.id === selectedArtist.id)
+          ? filteredArtists.findIndex((a) => a.id === selectedArtist.id)
           : -1;
 
         let nextIndex: number;
@@ -196,11 +162,8 @@ export default function AdminArtistsPage() {
         data: { channelId },
       });
 
-      const updatedChannel = mapResponseData<{ channelTitle?: string } | null>(
-        null,
-      )(response);
-      const responseMessage =
-        getResponseMessage(response) ?? "YouTube channel updated.";
+      const updatedChannel = response.data;
+      const responseMessage = response.message ?? "YouTube channel updated.";
 
       setMessage({
         type: "success",
@@ -314,17 +277,18 @@ export default function AdminArtistsPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  {artist.youtube?.thumbnail ? (
+                  {artist.youtube?.thumbnail ||
+                  artist.thumbnailHigh ||
+                  artist.thumbnailMedium ||
+                  artist.thumbnailDefault ? (
                     <Image
-                      src={artist.youtube.thumbnail}
-                      alt={artist.nameKo}
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 rounded-full object-cover"
-                    />
-                  ) : artist.imageUrl ? (
-                    <Image
-                      src={artist.imageUrl}
+                      src={
+                        artist.youtube?.thumbnail ||
+                        artist.thumbnailHigh ||
+                        artist.thumbnailMedium ||
+                        artist.thumbnailDefault ||
+                        ""
+                      }
                       alt={artist.nameKo}
                       width={40}
                       height={40}
@@ -363,17 +327,16 @@ export default function AdminArtistsPage() {
               {/* Artist Info Header */}
               <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4">
                 <div className="flex items-center gap-3">
-                  {(selectedArtist as any).youtube?.thumbnail ? (
+                  {selectedArtist.thumbnailHigh ||
+                  selectedArtist.thumbnailMedium ||
+                  selectedArtist.thumbnailDefault ? (
                     <Image
-                      src={(selectedArtist as any).youtube.thumbnail}
-                      alt={selectedArtist.nameKo}
-                      width={48}
-                      height={48}
-                      className="h-12 w-12 rounded-full object-cover"
-                    />
-                  ) : selectedArtist.imageUrl ? (
-                    <Image
-                      src={selectedArtist.imageUrl}
+                      src={
+                        selectedArtist.thumbnailHigh ||
+                        selectedArtist.thumbnailMedium ||
+                        selectedArtist.thumbnailDefault ||
+                        ""
+                      }
                       alt={selectedArtist.nameKo}
                       width={48}
                       height={48}
@@ -569,7 +532,7 @@ export default function AdminArtistsPage() {
                 )}
 
                 <div className="space-y-2">
-                  {songs?.map((song: Song) => (
+                  {songs?.map((song) => (
                     <div
                       key={song.id}
                       className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 hover:shadow-md transition-shadow"
@@ -584,9 +547,9 @@ export default function AdminArtistsPage() {
                               {song.titleKo}
                             </div>
                           )}
-                          {song.karaokeNumbers.length > 0 && (
+                          {song.karaokeNumbers && song.karaokeNumbers.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
-                              {song.karaokeNumbers.map((kn) => (
+                              {song.karaokeNumbers.map((kn: { provider: string; karaokeNo: string }) => (
                                 <span
                                   key={`${kn.provider}-${kn.karaokeNo}`}
                                   className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"

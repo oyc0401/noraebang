@@ -26,6 +26,24 @@ export class AdminArtistDto {
 
   @ApiProperty({ type: AliasGroupDto, required: false })
   aliasGroup?: AliasGroupDto | null;
+
+  @ApiProperty({
+    example: "https://yt3.googleusercontent.com/...",
+    required: false,
+  })
+  thumbnailDefault?: string | null;
+
+  @ApiProperty({
+    example: "https://yt3.googleusercontent.com/...",
+    required: false,
+  })
+  thumbnailMedium?: string | null;
+
+  @ApiProperty({
+    example: "https://yt3.googleusercontent.com/...",
+    required: false,
+  })
+  thumbnailHigh?: string | null;
 }
 
 export class AdminKaraokeNumberDto {

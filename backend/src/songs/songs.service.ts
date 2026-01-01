@@ -8,7 +8,13 @@ export class SongsService {
 
   async findAll() {
     return this.prisma.song.findMany({
-      include: { karaokeSongs: true },
+      include: {
+        karaokeSongs: true,
+        artistSongs: {
+          orderBy: { order: "asc" },
+          take: 1,
+        },
+      },
       orderBy: { id: "asc" },
     });
   }
@@ -16,7 +22,13 @@ export class SongsService {
   async findById(id: number) {
     return this.prisma.song.findUnique({
       where: { id },
-      include: { karaokeSongs: true },
+      include: {
+        karaokeSongs: true,
+        artistSongs: {
+          orderBy: { order: "asc" },
+          take: 1,
+        },
+      },
     });
   }
 
@@ -34,7 +46,13 @@ export class SongsService {
           { titleKo: { contains: lowerQuery, mode: "insensitive" } },
         ],
       },
-      include: { karaokeSongs: true },
+      include: {
+        karaokeSongs: true,
+        artistSongs: {
+          orderBy: { order: "asc" },
+          take: 1,
+        },
+      },
       orderBy: { id: "asc" },
     });
   }
@@ -55,7 +73,13 @@ export class SongsService {
             },
           },
         },
-        include: { karaokeSongs: true },
+        include: {
+          karaokeSongs: true,
+          artistSongs: {
+            orderBy: { order: "asc" },
+            take: 1,
+          },
+        },
         orderBy: { id: "asc" },
       });
     }
@@ -73,7 +97,13 @@ export class SongsService {
             },
           },
         },
-        include: { karaokeSongs: true },
+        include: {
+          karaokeSongs: true,
+          artistSongs: {
+            orderBy: { order: "asc" },
+            take: 1,
+          },
+        },
         orderBy: { id: "asc" },
       });
     }
@@ -94,7 +124,13 @@ export class SongsService {
           },
         },
       },
-      include: { karaokeSongs: true },
+      include: {
+        karaokeSongs: true,
+        artistSongs: {
+          orderBy: { order: "asc" },
+          take: 1,
+        },
+      },
       orderBy: { id: "asc" },
     });
   }

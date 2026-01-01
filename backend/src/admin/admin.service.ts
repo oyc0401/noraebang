@@ -10,7 +10,9 @@ export interface ArtistListItem {
   name: string;
   nameKo: string;
   alias?: string;
-  imageUrl?: string;
+  thumbnailDefault?: string;
+  thumbnailMedium?: string;
+  thumbnailHigh?: string;
   songCount: number;
   aliasGroup?: {
     groupId: string;
@@ -38,6 +40,13 @@ export class AdminService {
       include: {
         _count: {
           select: { artistSongs: true },
+        },
+        youtubeChannel: {
+          select: {
+            thumbnailDefault: true,
+            thumbnailMedium: true,
+            thumbnailHigh: true,
+          },
         },
       },
       orderBy: { name: "asc" },
@@ -68,7 +77,9 @@ export class AdminService {
         name: artist.name,
         nameKo: artist.nameKo,
         alias: artist.alias ?? undefined,
-        imageUrl: undefined, // TODO: Add imageUrl to Artist schema
+        thumbnailDefault: artist.youtubeChannel?.thumbnailDefault ?? undefined,
+        thumbnailMedium: artist.youtubeChannel?.thumbnailMedium ?? undefined,
+        thumbnailHigh: artist.youtubeChannel?.thumbnailHigh ?? undefined,
         songCount: artist._count.artistSongs,
         aliasGroup,
       };

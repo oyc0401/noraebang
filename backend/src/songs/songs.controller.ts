@@ -13,10 +13,10 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
-import type { Song } from "@prisma/client";
 import { ApiResponse } from "../dto/api-response.dto";
 import {
   SongDetailResponseDto,
+  SongDto,
   SongListResponseDto,
 } from "./dto/song-response.dto";
 import { SongsService } from "./songs.service";
@@ -51,7 +51,7 @@ export class SongsController {
     @Query("q") query?: string,
     @Query("artistId") artistId?: string,
   ): Promise<SongListResponseDto> {
-    let songs: Song[];
+    let songs: Awaited<ReturnType<typeof this.songsService.findAll>>;
 
     if (artistId && query) {
       // Both artistId and query: filter by artist first, then search within
@@ -72,7 +72,15 @@ export class SongsController {
       songs = await this.songsService.findAll();
     }
 
-    return ApiResponse.success(songs);
+    const mapped: SongDto[] = songs.map((song) => ({
+      id: song.id,
+      title: song.title,
+      titleKo: song.titleKo,
+      artistIds: song.artistSongs.map((as) => as.artistId),
+      karaokeSongs: song.karaokeSongs,
+    }));
+
+    return ApiResponse.success(mapped);
   }
 
   @Get(":id")
@@ -92,6 +100,15 @@ export class SongsController {
     if (!song) {
       throw new NotFoundException("Song not found");
     }
-    return ApiResponse.success(song);
+
+    const mapped: SongDto = {
+      id: song.id,
+      title: song.title,
+      titleKo: song.titleKo,
+      artistIds: song.artistSongs.map((as) => as.artistId),
+      karaokeSongs: song.karaokeSongs,
+    };
+
+    return ApiResponse.success(mapped);
   }
 }
