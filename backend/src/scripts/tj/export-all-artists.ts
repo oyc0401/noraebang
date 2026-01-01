@@ -5,9 +5,9 @@ import pg from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// TJ 노래 데이터베이스에서 모든 아티스트(artistList, featureList, producerList)를 추출하여 파일로 저장
+// TJ 노래 데이터베이스에서 모든 아티스트(artistList, featureList, producerList)를 추출하여 CSV 파일로 저장
 // pnpm ts-node src/scripts/tj/export-all-artists.ts
-// pnpm ts-node src/scripts/tj/export-all-artists.ts --output=backend/data/tj_all_artists.txt
+// pnpm ts-node src/scripts/tj/export-all-artists.ts --output=backend/data/tj_all_artists.csv
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -18,7 +18,7 @@ async function main() {
   const outputArg = process.argv.find((arg) => arg.startsWith('--output='));
   const outputPath = outputArg
     ? outputArg.split('=')[1]
-    : path.join(__dirname, '../../../data/tj_all_artists.txt');
+    : path.join(__dirname, '../../../data/tj_all_artists.csv');
 
   console.log('🎵 TJ 아티스트 추출 시작');
   console.log(`📄 출력 파일: ${outputPath}`);
@@ -43,20 +43,16 @@ async function main() {
   console.log(`✅ 총 ${result.length.toLocaleString()}명의 아티스트 발견`);
   console.log('');
 
-  // 테이블 형식으로 포맷팅
-  const maxArtistLength = Math.max(
-    ...result.map((r) => r.artist.length),
-    'artist'.length,
-  );
-  const header = `${'artist'.padEnd(maxArtistLength)} | song_count`;
-  const separator = '-'.repeat(maxArtistLength) + '-+-' + '-'.repeat(10);
-
+  // CSV 형식으로 포맷팅
   const lines = [
-    header,
-    separator,
+    'artist,song_count',
     ...result.map((r) => {
       const count = Number(r.song_count);
-      return `${r.artist.padEnd(maxArtistLength)} | ${count.toString().padStart(10)}`;
+      // CSV 이스케이프: 쉼표나 따옴표가 있으면 큰따옴표로 감싸기
+      const artist = r.artist.includes(',') || r.artist.includes('"')
+        ? `"${r.artist.replace(/"/g, '""')}"`
+        : r.artist;
+      return `${artist},${count}`;
     }),
   ];
 
