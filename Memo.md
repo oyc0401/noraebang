@@ -38,3 +38,7 @@ pnpm --filter frontend codegen
 
 ## api-spec.json 생성
 pnpm ts-node download-api-json.ts
+
+pnpm --filter backend build
+
+pnpm --filter frontend build
