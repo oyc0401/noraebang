@@ -12,7 +12,7 @@ export default function Home() {
   const artists = data?.data ?? [];
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [searching, setSearching] = useState(false);
-  const [searchLog, setSearchLog] = useState<string[]>([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const router = useRouter();
   const queryError = error instanceof Error ? error : null;
 
@@ -20,50 +20,37 @@ export default function Home() {
     if (!youtubeUrl.trim()) return;
 
     setSearching(true);
-    setSearchLog([`유튜브 정보 가져오는 중...`]);
+    setSearchError(null);
 
     try {
       const response = await searchSongByYoutubeUrl({
         url: youtubeUrl.trim(),
       });
 
-      const logs = [`유튜브 정보 가져오는 중...`];
-      if (response.message) {
-        logs.push(`✓ 제목: ${response.message}`);
-      }
-      logs.push(`곡 검색 중...`);
-
       const song = response.data;
 
-      if (song) {
-        logs.push(`✓ 곡을 찾았습니다: ${song.title}`);
-
-        const artist = artists.find((a) => a.id === song.artistIds[0]);
-
-        if (artist) {
-          logs.push(`✓ ${artist.nameKo} 페이지로 이동합니다...`);
-          setSearchLog(logs);
-
-          setTimeout(() => {
-            router.push(`/channel/${artist.alias}#${song.id}`);
-          }, 500);
-          return;
-        }
-
-        logs.push(`❌ 아티스트 정보를 찾을 수 없습니다.`);
-        setSearchLog(logs);
+      if (!song) {
+        const message = response.message
+          ? `"${response.message}"에 해당하는 곡을 찾을 수 없습니다.`
+          : "해당 곡을 찾을 수 없습니다.";
+        setSearchError(`❌ ${message}`);
         return;
       }
 
-      logs.push(`❌ 해당 곡을 찾을 수 없습니다.`);
-      setSearchLog(logs);
+      const artist = artists.find((a) => a.id === song.artistIds[0]);
+
+      if (!artist) {
+        setSearchError(`❌ 아티스트 정보를 찾을 수 없습니다.`);
+        return;
+      }
+
+      setTimeout(() => {
+        router.push(`/channel/${artist.alias}#${song.id}`);
+      }, 200);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : String(error ?? "unknown");
-      setSearchLog((prev) => [
-        ...prev,
-        `❌ 오류가 발생했습니다: ${message}`,
-      ]);
+      setSearchError(`❌ 오류가 발생했습니다: ${message}`);
     } finally {
       setSearching(false);
     }
@@ -111,15 +98,9 @@ export default function Home() {
             </div>
           </div>
 
-          {searchLog.length > 0 && (
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="space-y-1 font-mono text-sm">
-                {searchLog.map((log) => (
-                  <div key={log} className="text-zinc-700 dark:text-zinc-300">
-                    {log}
-                  </div>
-                ))}
-              </div>
+          {searchError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
+              {searchError}
             </div>
           )}
         </div>
