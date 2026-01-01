@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import {
-  useArtistsControllerFindAllWithYoutube,
+  useArtistsControllerFindAllDetails,
   useArtistsControllerUpdateYoutubeChannel,
 } from "@/api/model/artists/artists";
 
@@ -12,7 +12,7 @@ export default function AdminPage() {
     data: artists = [],
     isLoading,
     refetch,
-  } = useArtistsControllerFindAllWithYoutube({
+  } = useArtistsControllerFindAllDetails({
     query: {
       select: (response) => response.data,
     },
