@@ -54,7 +54,7 @@ export default function Home() {
         if (artist) {
           setSearchLog(prev => [...prev, `✓ ${artist.nameKo} 페이지로 이동합니다...`]);
           setTimeout(() => {
-            router.push(`/${artist.alias}#${foundSong.id}`);
+            router.push(`/channel/${artist.alias}#${foundSong.id}`);
           }, 500);
         } else {
           setSearchLog(prev => [...prev, `❌ 아티스트 정보를 찾을 수 없습니다.`]);
@@ -136,7 +136,7 @@ export default function Home() {
             {artists.map((artist) => (
               <Link
                 key={artist.id}
-                href={`/${artist.alias}`}
+                href={`/channel/${artist.alias}`}
                 className="group rounded-lg border border-zinc-200 bg-white shadow-sm transition-all hover:shadow-md hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 overflow-hidden"
               >
                 {artist.youtube?.thumbnail && (
