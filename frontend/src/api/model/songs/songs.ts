@@ -22,8 +22,7 @@ import type {
 
 import type {
   SongDetailResponseDto,
-  SongListResponseDto,
-  SongsControllerFindAllParams
+  SongListResponseDto
 } from '.././models';
 
 import { customFetch } from '../../client';
@@ -32,18 +31,17 @@ import { customFetch } from '../../client';
 
 
 /**
- * 검색어(q) 또는 artistId를 이용해 곡을 조회합니다. 둘 다 없으면 전체 곡을 반환합니다.
- * @summary 곡 목록 조회 (검색 및 필터링)
+ * 아티스트 ID로 해당 아티스트의 곡 목록을 조회합니다.
+ * @summary 특정 아티스트의 곡 목록 조회
  */
-export const songsControllerFindAll = (
-    params?: SongsControllerFindAllParams,
+export const songsControllerFindByArtistId = (
+    artistId: number,
  signal?: AbortSignal
 ) => {
       
       
       return customFetch<SongListResponseDto>(
-      {url: `/songs`, method: 'GET',
-        params, signal
+      {url: `/songs/artist/${artistId}`, method: 'GET', signal
     },
       );
     }
@@ -51,69 +49,69 @@ export const songsControllerFindAll = (
 
 
 
-export const getSongsControllerFindAllQueryKey = (params?: SongsControllerFindAllParams,) => {
+export const getSongsControllerFindByArtistIdQueryKey = (artistId?: number,) => {
     return [
-    `/songs`, ...(params ? [params]: [])
+    `/songs/artist/${artistId}`
     ] as const;
     }
 
     
-export const getSongsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof songsControllerFindAll>>, TError = unknown>(params?: SongsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindAll>>, TError, TData>>, }
+export const getSongsControllerFindByArtistIdQueryOptions = <TData = Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError = unknown>(artistId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSongsControllerFindAllQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getSongsControllerFindByArtistIdQueryKey(artistId);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof songsControllerFindAll>>> = ({ signal }) => songsControllerFindAll(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof songsControllerFindByArtistId>>> = ({ signal }) => songsControllerFindByArtistId(artistId, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(artistId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type SongsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof songsControllerFindAll>>>
-export type SongsControllerFindAllQueryError = unknown
+export type SongsControllerFindByArtistIdQueryResult = NonNullable<Awaited<ReturnType<typeof songsControllerFindByArtistId>>>
+export type SongsControllerFindByArtistIdQueryError = unknown
 
 
-export function useSongsControllerFindAll<TData = Awaited<ReturnType<typeof songsControllerFindAll>>, TError = unknown>(
- params: undefined |  SongsControllerFindAllParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindAll>>, TError, TData>> & Pick<
+export function useSongsControllerFindByArtistId<TData = Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError = unknown>(
+ artistId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof songsControllerFindAll>>,
+          Awaited<ReturnType<typeof songsControllerFindByArtistId>>,
           TError,
-          Awaited<ReturnType<typeof songsControllerFindAll>>
+          Awaited<ReturnType<typeof songsControllerFindByArtistId>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSongsControllerFindAll<TData = Awaited<ReturnType<typeof songsControllerFindAll>>, TError = unknown>(
- params?: SongsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindAll>>, TError, TData>> & Pick<
+export function useSongsControllerFindByArtistId<TData = Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError = unknown>(
+ artistId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof songsControllerFindAll>>,
+          Awaited<ReturnType<typeof songsControllerFindByArtistId>>,
           TError,
-          Awaited<ReturnType<typeof songsControllerFindAll>>
+          Awaited<ReturnType<typeof songsControllerFindByArtistId>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSongsControllerFindAll<TData = Awaited<ReturnType<typeof songsControllerFindAll>>, TError = unknown>(
- params?: SongsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindAll>>, TError, TData>>, }
+export function useSongsControllerFindByArtistId<TData = Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError = unknown>(
+ artistId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 곡 목록 조회 (검색 및 필터링)
+ * @summary 특정 아티스트의 곡 목록 조회
  */
 
-export function useSongsControllerFindAll<TData = Awaited<ReturnType<typeof songsControllerFindAll>>, TError = unknown>(
- params?: SongsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindAll>>, TError, TData>>, }
+export function useSongsControllerFindByArtistId<TData = Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError = unknown>(
+ artistId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSongsControllerFindAllQueryOptions(params,options)
+  const queryOptions = getSongsControllerFindByArtistIdQueryOptions(artistId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

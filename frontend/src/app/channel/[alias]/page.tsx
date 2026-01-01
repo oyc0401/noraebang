@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { artistsControllerFindByIdOrAlias } from "@/api/model/artists/artists";
 import type { ArtistDto, SongDto } from "@/api/model/models";
-import { songsControllerFindAll } from "@/api/model/songs/songs";
+import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
 import ArtistPageClient from "./ArtistPageClient";
 
 async function getArtist(alias: string): Promise<ArtistDto> {
@@ -15,9 +15,7 @@ async function getArtist(alias: string): Promise<ArtistDto> {
 
 async function getSongs(artistId: number): Promise<SongDto[]> {
   try {
-    const response = await songsControllerFindAll({
-      artistId: artistId.toString(),
-    });
+    const response = await songsControllerFindByArtistId(artistId);
     return response.data;
   } catch {
     return [];

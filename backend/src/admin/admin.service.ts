@@ -1,8 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import {
-  ARTIST_ALIAS_GROUPS,
-  getArtistAliases,
-} from "../config/artist-aliases";
 import { PrismaService } from "../prisma/prisma.service";
 
 export interface ArtistListItem {

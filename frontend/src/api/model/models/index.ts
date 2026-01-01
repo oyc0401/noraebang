@@ -6,9 +6,6 @@
  * OpenAPI spec version: 1.0
  */
 
-export * from './adminKaraokeNumberDto';
-export * from './adminSongDto';
-export * from './adminSongListResponseDto';
 export * from './artistAliasGroupDto';
 export * from './artistDetailResponseDto';
 export * from './artistDetailsDto';
@@ -26,7 +23,6 @@ export * from './searchControllerGetSongByYoutubeUrlParams';
 export * from './songDetailResponseDto';
 export * from './songDto';
 export * from './songListResponseDto';
-export * from './songsControllerFindAllParams';
 export * from './youtubeChannelUpdateDto';
 export * from './youtubeChannelUpdateResponseDataDto';
 export * from './youtubeChannelUpdateResponseDto';
