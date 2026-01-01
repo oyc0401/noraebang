@@ -2,9 +2,9 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, Provider } from "@prisma/client";
 import pg from "pg";
-import { BlogScrapeService } from "../../blog-scrape/blog-scrape.service";
+import { BlogScrapeService } from "../src/blog-scrape/blog-scrape.service";
 
-// pnpm ts-node src/scripts/blog/crawl-and-save-songs.ts
+// pnpm ts-node scripts/blog/crawl-and-save-songs.ts
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);

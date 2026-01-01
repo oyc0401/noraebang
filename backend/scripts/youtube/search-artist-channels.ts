@@ -1,13 +1,13 @@
 import "dotenv/config";
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "../../app.module";
-import { PrismaService } from "../../prisma/prisma.service";
+import { AppModule } from "../src/app.module";
+import { PrismaService } from "../src/prisma/prisma.service";
 import {
   type ChannelSearchResult,
   YoutubeService,
-} from "../../youtube/youtube.service";
+} from "../src/youtube/youtube.service";
 
-// pnpm ts-node src/scripts/youtube/search-artist-channels.ts
+// pnpm ts-node scripts/youtube/search-artist-channels.ts
 
 /**
  * 최적의 채널 선택 로직

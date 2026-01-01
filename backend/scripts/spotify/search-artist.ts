@@ -1,10 +1,10 @@
 import "dotenv/config";
-import { SpotifyService } from "../../spotify/spotify.service";
+import { SpotifyService } from "../src/spotify/spotify.service";
 
 // Spotify에서 특정 아티스트 검색하여 raw 정보 출력
-// pnpm ts-node src/scripts/spotify/search-artist.ts 아이유
-// pnpm ts-node src/scripts/spotify/search-artist.ts "방탄소년단"
-// pnpm ts-node src/scripts/spotify/search-artist.ts "영재(4MEN)"
+// pnpm ts-node scripts/spotify/search-artist.ts 아이유
+// pnpm ts-node scripts/spotify/search-artist.ts "방탄소년단"
+// pnpm ts-node scripts/spotify/search-artist.ts "영재(4MEN)"
 
 const spotifyService = new SpotifyService();
 
@@ -83,16 +83,16 @@ if (args.length === 0) {
   console.error("");
   console.error("Usage:");
   console.error(
-    "  pnpm ts-node src/scripts/spotify/search-artist.ts <artist_name>",
+    "  pnpm ts-node scripts/spotify/search-artist.ts <artist_name>",
   );
   console.error("");
   console.error("Examples:");
-  console.error("  pnpm ts-node src/scripts/spotify/search-artist.ts 아이유");
+  console.error("  pnpm ts-node scripts/spotify/search-artist.ts 아이유");
   console.error(
-    '  pnpm ts-node src/scripts/spotify/search-artist.ts "방탄소년단"',
+    '  pnpm ts-node scripts/spotify/search-artist.ts "방탄소년단"',
   );
   console.error(
-    '  pnpm ts-node src/scripts/spotify/search-artist.ts "영재(4MEN)"',
+    '  pnpm ts-node scripts/spotify/search-artist.ts "영재(4MEN)"',
   );
   process.exit(1);
 }

@@ -2,11 +2,11 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
-import { parseTJArtist } from "../../lib/artist-parser";
+import { parseTJArtist } from "../src/lib/artist-parser";
 
 // 기존 TJ 곡의 artist 필드를 재파싱하여 featureList, producerList 업데이트
-// pnpm ts-node src/scripts/tj/reparse-artists.ts
-// pnpm ts-node src/scripts/tj/reparse-artists.ts --dry-run
+// pnpm ts-node scripts/tj/reparse-artists.ts
+// pnpm ts-node scripts/tj/reparse-artists.ts --dry-run
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);

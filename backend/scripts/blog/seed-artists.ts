@@ -2,9 +2,9 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
-import { blogArtist } from "../../data/artist";
+import { blogArtist } from "../src/data/artist";
 
-// pnpm ts-node src/scripts/blog/seed-artists.ts
+// pnpm ts-node scripts/blog/seed-artists.ts
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);

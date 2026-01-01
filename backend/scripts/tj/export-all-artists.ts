@@ -6,8 +6,8 @@ import { PrismaClient } from "@prisma/client";
 import pg from "pg";
 
 // TJ 노래 데이터베이스에서 모든 아티스트(artistList, featureList, producerList)를 추출하여 CSV 파일로 저장
-// pnpm ts-node src/scripts/tj/export-all-artists.ts
-// pnpm ts-node src/scripts/tj/export-all-artists.ts --output=backend/data/tj_all_artists.csv
+// pnpm ts-node scripts/tj/export-all-artists.ts
+// pnpm ts-node scripts/tj/export-all-artists.ts --output=backend/data/tj_all_artists.csv
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
