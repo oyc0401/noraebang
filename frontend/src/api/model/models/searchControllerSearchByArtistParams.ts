@@ -7,5 +7,8 @@
  */
 
 export type SearchControllerSearchByArtistParams = {
+/**
+ * 아티스트 이름
+ */
 name: string;
 };

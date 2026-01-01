@@ -7,6 +7,12 @@
  */
 
 export type SearchControllerSearchByKaraokeNoParams = {
+/**
+ * 노래방 번호
+ */
 no: string;
-provider: string;
+/**
+ * 노래방 기기 (예: TJ, KY)
+ */
+provider?: string;
 };

@@ -7,5 +7,8 @@
  */
 
 export type SearchControllerSearchByTitleParams = {
+/**
+ * 곡 제목
+ */
 q: string;
 };

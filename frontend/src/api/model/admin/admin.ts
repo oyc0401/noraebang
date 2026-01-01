@@ -34,7 +34,7 @@ export const adminControllerGetArtists = (
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<unknown>(
       {url: `/admin/artists`, method: 'GET', signal
     },
       );
@@ -126,7 +126,7 @@ export const adminControllerGetArtistSongs = (
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<unknown>(
       {url: `/admin/artists/${id}/songs`, method: 'GET', signal
     },
       );

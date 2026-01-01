@@ -27,7 +27,33 @@ export class ArtistsController {
     required: false,
     description: "YouTube 정보 포함 여부 (true/false)",
   })
-  @SwaggerApiResponse({ status: 200, description: "아티스트 목록" })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "아티스트 목록",
+    schema: {
+      example: {
+        data: [
+          {
+            id: 1,
+            name: "YOASOBI",
+            nameKo: "요아소비",
+            alias: "yoasobi",
+            youtube: {
+              channelId: "UCvpredjG93ifbCP1Y77JyFA",
+              title: "Ayase / YOASOBI",
+              description: "YOASOBI 공식 채널",
+              customUrl: "@Ayase_YOASOBI",
+              subscriberCount: 1000000,
+              videoCount: 200,
+              thumbnail:
+                "https://yt3.googleusercontent.com/yoasobi-thumbnail.jpg",
+            },
+          },
+        ],
+        message: null,
+      },
+    },
+  })
   async findAll(@Query("includeYoutube") includeYoutube?: string) {
     // includeYoutube=true인 경우 YouTube 정보 포함
     if (includeYoutube === "true") {
@@ -68,7 +94,22 @@ export class ArtistsController {
     name: "identifier",
     description: "아티스트 ID 또는 alias",
   })
-  @SwaggerApiResponse({ status: 200, description: "아티스트 상세 정보" })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "아티스트 상세 정보",
+    schema: {
+      example: {
+        data: {
+          id: 1,
+          name: "YOASOBI",
+          nameKo: "요아소비",
+          alias: "yoasobi",
+          imageUrl: null,
+        },
+        message: null,
+      },
+    },
+  })
   @SwaggerApiResponse({ status: 404, description: "아티스트를 찾을 수 없음" })
   async findByIdOrAlias(@Param("identifier") identifier: string) {
     const artist = await this.artistsService.findByIdOrAlias(identifier);
