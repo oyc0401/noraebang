@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { TypesenseService } from "../typesense/typesense.service";
+import { TypesenseService } from "../typesense/typesense.service";
 
 @Injectable()
 export class SearchService {

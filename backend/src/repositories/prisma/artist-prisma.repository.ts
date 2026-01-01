@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import type { Artist } from "@prisma/client";
-import type { PrismaService } from "../../prisma/prisma.service";
+import { PrismaService } from "../../prisma/prisma.service";
 import type { ArtistRepository, ArtistWithYoutube } from "../artist.repository";
 
 @Injectable()

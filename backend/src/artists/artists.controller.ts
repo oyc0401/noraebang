@@ -13,7 +13,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../common/dto/api-response.dto";
-import type { ArtistsService } from "./artists.service";
+import { ArtistsService } from "./artists.service";
 
 @ApiTags("Artists")
 @Controller("artists")
