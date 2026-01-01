@@ -1,0 +1,110 @@
+import { ApiProperty } from "@nestjs/swagger";
+
+export class ArtistDto {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: "YOASOBI" })
+  name: string;
+
+  @ApiProperty({ example: "요아소비" })
+  nameKo: string;
+
+  @ApiProperty({ example: "yoasobi", required: false })
+  alias?: string | null;
+
+  @ApiProperty({ example: null, required: false })
+  imageUrl?: string | null;
+}
+
+export class YoutubeInfoDto {
+  @ApiProperty({ example: "UCvpredjG93ifbCP1Y77JyFA" })
+  channelId: string;
+
+  @ApiProperty({ example: "Ayase / YOASOBI", required: false })
+  title?: string | null;
+
+  @ApiProperty({ example: "YOASOBI 공식 채널", required: false })
+  description?: string | null;
+
+  @ApiProperty({ example: "@Ayase_YOASOBI", required: false })
+  customUrl?: string | null;
+
+  @ApiProperty({ example: 1000000, required: false })
+  subscriberCount?: number | null;
+
+  @ApiProperty({ example: 200, required: false })
+  videoCount?: number | null;
+
+  @ApiProperty({
+    example: "https://yt3.googleusercontent.com/yoasobi-thumbnail.jpg",
+    required: false,
+  })
+  thumbnail?: string | null;
+}
+
+export class ArtistWithYoutubeDto {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: "YOASOBI" })
+  name: string;
+
+  @ApiProperty({ example: "요아소비" })
+  nameKo: string;
+
+  @ApiProperty({ example: "yoasobi", required: false })
+  alias?: string | null;
+
+  @ApiProperty({ type: YoutubeInfoDto, required: false })
+  youtube?: YoutubeInfoDto | null;
+}
+
+export class ArtistListResponseDto {
+  @ApiProperty({ type: [ArtistDto] })
+  data: ArtistDto[];
+
+  @ApiProperty({ example: null, required: false })
+  message?: string | null;
+}
+
+export class ArtistWithYoutubeListResponseDto {
+  @ApiProperty({ type: [ArtistWithYoutubeDto] })
+  data: ArtistWithYoutubeDto[];
+
+  @ApiProperty({ example: null, required: false })
+  message?: string | null;
+}
+
+export class ArtistDetailResponseDto {
+  @ApiProperty({ type: ArtistDto })
+  data: ArtistDto;
+
+  @ApiProperty({ example: null, required: false })
+  message?: string | null;
+}
+
+export class YoutubeChannelUpdateResponseDataDto {
+  @ApiProperty({ example: "YOASOBI" })
+  artist: string;
+
+  @ApiProperty({ example: "UCvpredjG93ifbCP1Y77JyFA" })
+  channelId: string;
+
+  @ApiProperty({ example: "Ayase / YOASOBI" })
+  channelTitle: string;
+
+  @ApiProperty({ example: 1000000, required: false })
+  subscriberCount?: number | null;
+}
+
+export class YoutubeChannelUpdateResponseDto {
+  @ApiProperty({ type: YoutubeChannelUpdateResponseDataDto })
+  data: YoutubeChannelUpdateResponseDataDto;
+
+  @ApiProperty({
+    example: "YouTube channel updated successfully",
+    required: false,
+  })
+  message?: string;
+}

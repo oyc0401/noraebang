@@ -1,5 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { TypesenseService } from "../typesense/typesense.service";
+import type {
+  ArtistSearchResultDto,
+  SearchResultDto,
+  TitleSearchResultDto,
+} from "./dto/search-response.dto";
 
 @Injectable()
 export class SearchService {
@@ -7,13 +12,13 @@ export class SearchService {
 
   constructor(private readonly typesenseService: TypesenseService) {}
 
-  async search(
+  async search<T = SearchResultDto>(
     query: string,
     options?: {
       provider?: string;
       limit?: number;
     },
-  ) {
+  ): Promise<T[]> {
     const client = this.typesenseService.getClient();
 
     const searchParameters = {
@@ -31,22 +36,25 @@ export class SearchService {
         .documents()
         .search(searchParameters);
 
-      return searchResults.hits?.map((hit) => hit.document) || [];
+      return (searchResults.hits?.map((hit) => hit.document) || []) as T[];
     } catch (error) {
       console.error("Search error:", error);
       return [];
     }
   }
 
-  async searchByKaraokeNo(karaokeNo: string, provider?: string) {
-    return this.search(karaokeNo, { provider });
+  async searchByKaraokeNo(
+    karaokeNo: string,
+    provider?: string,
+  ): Promise<SearchResultDto[]> {
+    return this.search<SearchResultDto>(karaokeNo, { provider });
   }
 
-  async searchByArtist(artistName: string) {
-    return this.search(artistName);
+  async searchByArtist(artistName: string): Promise<ArtistSearchResultDto[]> {
+    return this.search<ArtistSearchResultDto>(artistName);
   }
 
-  async searchByTitle(title: string) {
-    return this.search(title);
+  async searchByTitle(title: string): Promise<TitleSearchResultDto[]> {
+    return this.search<TitleSearchResultDto>(title);
   }
 }

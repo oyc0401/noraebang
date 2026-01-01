@@ -7,6 +7,10 @@ import {
 } from "@nestjs/swagger";
 import { ApiResponse } from "../dto/api-response.dto";
 import { AdminService } from "./admin.service";
+import {
+  AdminArtistListResponseDto,
+  AdminSongListResponseDto,
+} from "./dto/admin-response.dto";
 
 @ApiTags("Admin")
 @Controller("admin")
@@ -22,26 +26,9 @@ export class AdminController {
   @SwaggerApiResponse({
     status: 200,
     description: "아티스트 목록",
-    schema: {
-      example: {
-        data: [
-          {
-            id: 1,
-            name: "YOASOBI",
-            nameKo: "요아소비",
-            alias: "yoasobi",
-            songCount: 25,
-            aliasGroup: {
-              groupId: "yoasobi",
-              aliases: ["yoasobi", "아야세"],
-            },
-          },
-        ],
-        message: null,
-      },
-    },
+    type: AdminArtistListResponseDto,
   })
-  async getArtists() {
+  async getArtists(): Promise<AdminArtistListResponseDto> {
     const artists = await this.adminService.getArtists();
     return ApiResponse.success(artists);
   }
@@ -56,25 +43,11 @@ export class AdminController {
   @SwaggerApiResponse({
     status: 200,
     description: "곡 목록",
-    schema: {
-      example: {
-        data: [
-          {
-            id: 101,
-            title: "夜に駆ける",
-            titleKo: "밤을 달리다",
-            role: "MAIN",
-            karaokeNumbers: [
-              { provider: "TJ", karaokeNo: "12345" },
-              { provider: "KY", karaokeNo: "67890" },
-            ],
-          },
-        ],
-        message: null,
-      },
-    },
+    type: AdminSongListResponseDto,
   })
-  async getArtistSongs(@Param("id", ParseIntPipe) id: number) {
+  async getArtistSongs(
+    @Param("id", ParseIntPipe) id: number,
+  ): Promise<AdminSongListResponseDto> {
     const songs = await this.adminService.getArtistSongs(id);
     return ApiResponse.success(songs);
   }

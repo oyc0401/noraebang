@@ -5,18 +5,22 @@ import {
   NotFoundException,
   Param,
   Post,
-  Query,
 } from "@nestjs/common";
 import {
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../dto/api-response.dto";
 import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
 import { YoutubeService } from "../youtube/youtube.service";
+import {
+  ArtistDetailResponseDto,
+  ArtistListResponseDto,
+  ArtistWithYoutubeListResponseDto,
+  YoutubeChannelUpdateResponseDto,
+} from "./dto/artist-response.dto";
 import { ArtistsService } from "./artists.service";
 
 @ApiTags("Artists")
@@ -30,73 +34,54 @@ export class ArtistsController {
   @Get()
   @ApiOperation({
     summary: "아티스트 목록 조회",
-    description:
-      "전체 아티스트를 반환합니다. includeYoutube=true 를 지정하면 관련 YouTube 채널 정보가 포함됩니다.",
-  })
-  @ApiQuery({
-    name: "includeYoutube",
-    required: false,
-    description: "YouTube 정보 포함 여부 (true/false)",
+    description: "전체 아티스트를 반환합니다.",
   })
   @SwaggerApiResponse({
     status: 200,
     description: "아티스트 목록",
-    schema: {
-      example: {
-        data: [
-          {
-            id: 1,
-            name: "YOASOBI",
-            nameKo: "요아소비",
-            alias: "yoasobi",
-            youtube: {
-              channelId: "UCvpredjG93ifbCP1Y77JyFA",
-              title: "Ayase / YOASOBI",
-              description: "YOASOBI 공식 채널",
-              customUrl: "@Ayase_YOASOBI",
-              subscriberCount: 1000000,
-              videoCount: 200,
-              thumbnail:
-                "https://yt3.googleusercontent.com/yoasobi-thumbnail.jpg",
-            },
-          },
-        ],
-        message: null,
-      },
-    },
+    type: ArtistListResponseDto,
   })
-  async findAll(@Query("includeYoutube") includeYoutube?: string) {
-    // includeYoutube=true인 경우 YouTube 정보 포함
-    if (includeYoutube === "true") {
-      const artists = await this.artistsService.findAllWithYoutube();
-
-      // 응답 포맷: 구독자 수와 미디엄 썸네일 포함
-      const formatted = artists.map((artist) => ({
-        id: artist.id,
-        name: artist.name,
-        nameKo: artist.nameKo,
-        alias: artist.alias,
-        youtube: artist.youtubeChannel
-          ? {
-              channelId: artist.youtubeChannel.channelId,
-              title: artist.youtubeChannel.title,
-              description: artist.youtubeChannel.description,
-              customUrl: artist.youtubeChannel.customUrl,
-              subscriberCount: artist.youtubeChannel.subscriberCount,
-              videoCount: artist.youtubeChannel.videoCount,
-              thumbnail:
-                artist.youtubeChannel.thumbnailMedium ||
-                artist.youtubeChannel.thumbnailDefault,
-            }
-          : null,
-      }));
-
-      return ApiResponse.success(formatted);
-    }
-
-    // 기본: YouTube 정보 없이 반환
+  async findAll(): Promise<ArtistListResponseDto> {
     const artists = await this.artistsService.findAll();
     return ApiResponse.success(artists);
+  }
+
+  @Get("with-youtube")
+  @ApiOperation({
+    summary: "아티스트 목록 조회 (YouTube 정보 포함)",
+    description:
+      "전체 아티스트를 YouTube 채널 정보와 함께 반환합니다. 구독자 수 기준으로 정렬됩니다.",
+  })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "아티스트 목록 (YouTube 정보 포함)",
+    type: ArtistWithYoutubeListResponseDto,
+  })
+  async findAllWithYoutube(): Promise<ArtistWithYoutubeListResponseDto> {
+    const artists = await this.artistsService.findAllWithYoutube();
+
+    // 응답 포맷: 구독자 수와 미디엄 썸네일 포함
+    const formatted = artists.map((artist) => ({
+      id: artist.id,
+      name: artist.name,
+      nameKo: artist.nameKo,
+      alias: artist.alias,
+      youtube: artist.youtubeChannel
+        ? {
+            channelId: artist.youtubeChannel.channelId,
+            title: artist.youtubeChannel.title,
+            description: artist.youtubeChannel.description,
+            customUrl: artist.youtubeChannel.customUrl,
+            subscriberCount: artist.youtubeChannel.subscriberCount,
+            videoCount: artist.youtubeChannel.videoCount,
+            thumbnail:
+              artist.youtubeChannel.thumbnailMedium ||
+              artist.youtubeChannel.thumbnailDefault,
+          }
+        : null,
+    }));
+
+    return ApiResponse.success(formatted);
   }
 
   @Get(":identifier")
@@ -112,21 +97,12 @@ export class ArtistsController {
   @SwaggerApiResponse({
     status: 200,
     description: "아티스트 상세 정보",
-    schema: {
-      example: {
-        data: {
-          id: 1,
-          name: "YOASOBI",
-          nameKo: "요아소비",
-          alias: "yoasobi",
-          imageUrl: null,
-        },
-        message: null,
-      },
-    },
+    type: ArtistDetailResponseDto,
   })
   @SwaggerApiResponse({ status: 404, description: "아티스트를 찾을 수 없음" })
-  async findByIdOrAlias(@Param("identifier") identifier: string) {
+  async findByIdOrAlias(
+    @Param("identifier") identifier: string,
+  ): Promise<ArtistDetailResponseDto> {
     const artist = await this.artistsService.findByIdOrAlias(identifier);
     if (!artist) {
       throw new NotFoundException("Artist not found");
@@ -144,21 +120,13 @@ export class ArtistsController {
   @SwaggerApiResponse({
     status: 200,
     description: "업데이트 성공",
-    schema: {
-      example: {
-        data: {
-          channelId: "UCvpredjG93ifbCP1Y77JyFA",
-          channelTitle: "Ayase / YOASOBI",
-        },
-        message: "YouTube channel updated successfully",
-      },
-    },
+    type: YoutubeChannelUpdateResponseDto,
   })
   @SwaggerApiResponse({ status: 400, description: "channelId 필요" })
   async updateYoutubeChannel(
     @Param("alias") alias: string,
     @Body() body: YoutubeChannelUpdateDto,
-  ) {
+  ): Promise<YoutubeChannelUpdateResponseDto> {
     const data = await this.youtubeService.updateArtistChannel(
       alias,
       body.channelId,

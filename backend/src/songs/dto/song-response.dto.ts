@@ -18,25 +18,22 @@ export class SongDto {
   @ApiProperty({ example: "밤을 달리다", required: false })
   titleKo?: string | null;
 
-  @ApiProperty({ type: [KaraokeSongDto] })
-  karaokeSongs: KaraokeSongDto[];
-
-  @ApiProperty({ example: 1 })
-  artistId: number;
+  @ApiProperty({ type: [KaraokeSongDto], required: false })
+  karaokeSongs?: KaraokeSongDto[];
 }
 
 export class SongListResponseDto {
   @ApiProperty({ type: [SongDto] })
   data: SongDto[];
 
-  @ApiProperty({ example: "success", required: false })
-  message?: string;
+  @ApiProperty({ example: null, required: false })
+  message?: string | null;
 }
 
 export class SongDetailResponseDto {
   @ApiProperty({ type: SongDto })
   data: SongDto;
 
-  @ApiProperty({ example: "success", required: false })
-  message?: string;
+  @ApiProperty({ example: null, required: false })
+  message?: string | null;
 }

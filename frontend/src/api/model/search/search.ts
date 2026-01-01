@@ -21,11 +21,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ArtistSearchResultListResponseDto,
   SearchControllerGetYoutubeOembedParams,
   SearchControllerSearchByArtistParams,
   SearchControllerSearchByKaraokeNoParams,
   SearchControllerSearchByTitleParams,
   SearchControllerSearchParams,
+  SearchResultListResponseDto,
+  TitleSearchResultListResponseDto,
   YoutubeOembedResponseDto
 } from '.././models';
 
@@ -44,7 +47,7 @@ export const searchControllerSearch = (
 ) => {
       
       
-      return customFetch<unknown>(
+      return customFetch<SearchResultListResponseDto>(
       {url: `/search`, method: 'GET',
         params, signal
     },
@@ -138,7 +141,7 @@ export const searchControllerSearchByKaraokeNo = (
 ) => {
       
       
-      return customFetch<unknown>(
+      return customFetch<SearchResultListResponseDto>(
       {url: `/search/karaoke`, method: 'GET',
         params, signal
     },
@@ -232,7 +235,7 @@ export const searchControllerSearchByArtist = (
 ) => {
       
       
-      return customFetch<unknown>(
+      return customFetch<ArtistSearchResultListResponseDto>(
       {url: `/search/artist`, method: 'GET',
         params, signal
     },
@@ -326,7 +329,7 @@ export const searchControllerSearchByTitle = (
 ) => {
       
       
-      return customFetch<unknown>(
+      return customFetch<TitleSearchResultListResponseDto>(
       {url: `/search/title`, method: 'GET',
         params, signal
     },
