@@ -30,7 +30,7 @@ import type {
   YoutubeControllerUpdateArtistChannelParams
 } from '.././models';
 
-import { customFetch } from '../../api-client';
+import { customFetch } from '../../lib/api-client';
 
 
 

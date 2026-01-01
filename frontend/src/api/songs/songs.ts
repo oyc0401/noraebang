@@ -24,7 +24,7 @@ import type {
   SongsControllerFindAllParams
 } from '.././models';
 
-import { customFetch } from '../../api-client';
+import { customFetch } from '../../lib/api-client';
 
 
 
