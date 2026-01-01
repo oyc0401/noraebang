@@ -14,6 +14,12 @@ export interface ArtistDto {
   alias?: string | null;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  thumbnailDefault?: string | null;
+  /** @nullable */
+  thumbnailMedium?: string | null;
+  /** @nullable */
+  thumbnailHigh?: string | null;
   /**
    * 연결된 YouTube 채널 ID
    * @nullable
