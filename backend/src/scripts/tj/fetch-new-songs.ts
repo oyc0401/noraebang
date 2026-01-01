@@ -49,7 +49,7 @@ async function fetchNewTJSongs(force: boolean) {
     console.log(`[${i + 1}/${songs.length}] ${song.karaokeNo} - ${song.title}`);
 
     try {
-      const result = await saveSongToDatabase(song, force);
+      const result = await saveSongToDatabase(song, force, currentYearMonth);
       if (result === 'created') {
         totalCreated++;
       } else if (result === 'updated') {
@@ -61,7 +61,7 @@ async function fetchNewTJSongs(force: boolean) {
       totalErrors++;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
 
   console.log(`\n✅ Fetch completed!`);
