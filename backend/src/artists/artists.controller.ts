@@ -166,13 +166,13 @@ export class ArtistsController {
     return ApiResponse.success(artist);
   }
 
-  @Post(":alias/youtube-channel")
+  @Post(":artistId/youtube-channel")
   @ApiOperation({
     summary: "아티스트 YouTube 채널 정보 업데이트",
     description:
       "선택한 아티스트에 YouTube 채널 ID 또는 @handle 을 연결합니다.",
   })
-  @ApiParam({ name: "alias", description: "아티스트 alias" })
+  @ApiParam({ name: "artistId", description: "아티스트 ID" })
   @SwaggerApiResponse({
     status: 200,
     description: "업데이트 성공",
@@ -180,11 +180,11 @@ export class ArtistsController {
   })
   @SwaggerApiResponse({ status: 400, description: "channelId 필요" })
   async updateYoutubeChannel(
-    @Param("alias") alias: string,
+    @Param("artistId") artistId: number,
     @Body() body: YoutubeChannelUpdateDto,
   ): Promise<YoutubeChannelUpdateResponseDto> {
     const data = await this.youtubeService.updateArtistChannel(
-      alias,
+      artistId,
       body.channelId,
     );
     return ApiResponse.success(data, "YouTube channel updated successfully");

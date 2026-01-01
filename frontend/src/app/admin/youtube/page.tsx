@@ -29,7 +29,7 @@ export default function AdminPage() {
   const [showChannelModal, setShowChannelModal] = useState(false);
   const [channelUrl, setChannelUrl] = useState("");
   const [selectedArtist, setSelectedArtist] = useState<{
-    alias: string;
+    artistId: number;
     name: string;
   } | null>(null);
 
@@ -40,8 +40,8 @@ export default function AdminPage() {
       artist.alias?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const handleOpenChannelModal = (alias: string, artistName: string) => {
-    setSelectedArtist({ alias, name: artistName });
+  const handleOpenChannelModal = (artistId: number, artistName: string) => {
+    setSelectedArtist({ artistId, name: artistName });
     setChannelUrl("");
     setShowChannelModal(true);
     setMessage(null);
@@ -90,7 +90,7 @@ export default function AdminPage() {
 
     try {
       const response = await youtubeMutation.mutateAsync({
-        alias: selectedArtist.alias,
+        artistId: selectedArtist.artistId,
         data: { channelId },
       });
 
@@ -278,7 +278,7 @@ export default function AdminPage() {
                         type="button"
                         onClick={() =>
                           artist.alias &&
-                          handleOpenChannelModal(artist.alias, artist.nameKo)
+                          handleOpenChannelModal(artist.id, artist.nameKo)
                         }
                         disabled={updating || !artist.alias}
                         className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"

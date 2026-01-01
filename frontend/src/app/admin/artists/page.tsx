@@ -147,17 +147,9 @@ export default function AdminArtistsPage() {
 
     setMessage(null);
 
-    if (!selectedArtist.alias) {
-      setMessage({
-        type: "error",
-        text: "선택된 아티스트에 alias가 없습니다.",
-      });
-      return;
-    }
-
     try {
       const response = await youtubeMutation.mutateAsync({
-        alias: selectedArtist.alias,
+        artistId: selectedArtist.id,
         data: { channelId },
       });
 
