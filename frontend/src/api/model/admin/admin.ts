@@ -21,104 +21,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  AdminArtistListResponseDto,
   AdminSongListResponseDto
 } from '.././models';
 
 import { customFetch } from '../../client';
-
-
-
-
-/**
- * 관리자 페이지에서 사용하는 API로, 각 아티스트의 곡 개수와 별칭 그룹 정보를 함께 제공합니다.
- * @summary 아티스트 목록 조회 (관리자용, 곡 수 포함)
- */
-export const adminControllerGetArtists = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customFetch<AdminArtistListResponseDto>(
-      {url: `/admin/artists`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getAdminControllerGetArtistsQueryKey = () => {
-    return [
-    `/admin/artists`
-    ] as const;
-    }
-
-    
-export const getAdminControllerGetArtistsQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetArtists>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetArtists>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetArtistsQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetArtists>>> = ({ signal }) => adminControllerGetArtists(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetArtists>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminControllerGetArtistsQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerGetArtists>>>
-export type AdminControllerGetArtistsQueryError = unknown
-
-
-export function useAdminControllerGetArtists<TData = Awaited<ReturnType<typeof adminControllerGetArtists>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetArtists>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminControllerGetArtists>>,
-          TError,
-          Awaited<ReturnType<typeof adminControllerGetArtists>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminControllerGetArtists<TData = Awaited<ReturnType<typeof adminControllerGetArtists>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetArtists>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminControllerGetArtists>>,
-          TError,
-          Awaited<ReturnType<typeof adminControllerGetArtists>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminControllerGetArtists<TData = Awaited<ReturnType<typeof adminControllerGetArtists>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetArtists>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 아티스트 목록 조회 (관리자용, 곡 수 포함)
- */
-
-export function useAdminControllerGetArtists<TData = Awaited<ReturnType<typeof adminControllerGetArtists>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetArtists>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminControllerGetArtistsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
 
 
 

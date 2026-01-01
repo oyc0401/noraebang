@@ -1,12 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import type {
-  Artist,
-  Prisma,
-  YoutubeChannel,
-} from "@prisma/client";
+import type { Artist, Prisma, YoutubeChannel } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
-export type ArtistWithYoutube = Artist & {
+export type ArtistDetails = Artist & {
   youtubeChannel: YoutubeChannel | null;
   _count: {
     artistSongs: number;
@@ -55,7 +51,7 @@ export class ArtistsService {
     });
   }
 
-  async findAllDetails(): Promise<ArtistWithYoutube[]> {
+  async findAllDetails(): Promise<ArtistDetails[]> {
     return this.prisma.artist.findMany({
       include: {
         youtubeChannel: true,

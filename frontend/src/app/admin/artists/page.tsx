@@ -2,26 +2,23 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import {
-  useAdminControllerGetArtistSongs,
-  useAdminControllerGetArtists,
-} from "@/api/model/admin/admin";
+import { useAdminControllerGetArtistSongs } from "@/api/model/admin/admin";
 import {
   useArtistsControllerFindAllDetails,
   useArtistsControllerUpdateYoutubeChannel,
 } from "@/api/model/artists/artists";
-import type { AdminArtistDto } from "@/api/model/models";
+import type { ArtistDatailsDto } from "@/api/model/models";
 
 export default function AdminArtistsPage() {
   const { data: artistsData, isLoading: artistsLoading } =
-    useAdminControllerGetArtists();
+    useArtistsControllerFindAllDetails();
   const artists = artistsData?.data ?? [];
 
   const { data: artistsWithYoutubeData, refetch: refetchYoutube } =
     useArtistsControllerFindAllDetails();
   const artistsWithYoutube = artistsWithYoutubeData?.data ?? [];
 
-  const [selectedArtist, setSelectedArtist] = useState<AdminArtistDto | null>(
+  const [selectedArtist, setSelectedArtist] = useState<ArtistDatailsDto | null>(
     null,
   );
   const selectedArtistId = selectedArtist?.id ?? 0;
