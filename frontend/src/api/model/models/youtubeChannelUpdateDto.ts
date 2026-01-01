@@ -6,9 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export type YoutubeControllerUpdateArtistChannelParams = {
-/**
- * YouTube 채널 ID
- */
-channelId: string;
-};
+export interface YoutubeChannelUpdateDto {
+  /** YouTube 채널 ID 또는 @handle */
+  channelId: string;
+}

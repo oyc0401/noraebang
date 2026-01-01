@@ -30,6 +30,7 @@ import { customFetch } from '../../client';
 
 
 /**
+ * 전체 아티스트를 반환합니다. includeYoutube=true 를 지정하면 관련 YouTube 채널 정보가 포함됩니다.
  * @summary 아티스트 목록 조회
  */
 export const artistsControllerFindAll = (
@@ -123,6 +124,7 @@ export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof ar
 
 
 /**
+ * 숫자는 ID로, 문자열은 alias 로 판단하여 해당 아티스트 정보를 반환합니다.
  * @summary 아티스트 상세 조회 (ID 또는 alias)
  */
 export const artistsControllerFindByIdOrAlias = (

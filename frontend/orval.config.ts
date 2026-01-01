@@ -12,7 +12,7 @@ export default defineConfig({
       mode: "tags-split",
       target: "./src/api/model/endpoints.ts",
       schemas: "./src/api/model/models",
-      clean: ["./src/api/model"],
+      //clean: ["./src/api/model"],
       client: "react-query",
       override: {
         query: {

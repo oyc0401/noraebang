@@ -2,7 +2,10 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useAdminControllerGetArtistSongs, useAdminControllerGetArtists } from "@/api/model/admin/admin";
+import {
+  useAdminControllerGetArtistSongs,
+  useAdminControllerGetArtists,
+} from "@/api/model/admin/admin";
 import { useArtistsControllerFindAll } from "@/api/model/artists/artists";
 import { useYoutubeControllerUpdateArtistChannel } from "@/api/model/you-tube/you-tube";
 import { getResponseMessage, mapResponseData } from "@/api/utils";
@@ -40,17 +43,15 @@ export default function AdminArtistsPage() {
       },
     });
 
-  const {
-    data: artistsWithYoutube = [],
-    refetch: refetchYoutube,
-  } = useArtistsControllerFindAll<ArtistWithYoutube[]>(
-    { includeYoutube: "true" },
-    {
-      query: {
-        select: mapResponseData<ArtistWithYoutube[]>([]),
+  const { data: artistsWithYoutube = [], refetch: refetchYoutube } =
+    useArtistsControllerFindAll<ArtistWithYoutube[]>(
+      { includeYoutube: "true" },
+      {
+        query: {
+          select: mapResponseData<ArtistWithYoutube[]>([]),
+        },
       },
-    },
-  );
+    );
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const selectedArtistId = selectedArtist?.id ?? 0;
   const { data: songs = [], isLoading: songsLoading } =
@@ -192,7 +193,7 @@ export default function AdminArtistsPage() {
     try {
       const response = await youtubeMutation.mutateAsync({
         alias: selectedArtist.alias,
-        params: { channelId },
+        data: { channelId },
       });
 
       const updatedChannel = mapResponseData<{ channelTitle?: string } | null>(

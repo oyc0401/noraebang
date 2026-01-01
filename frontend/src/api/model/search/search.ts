@@ -33,6 +33,7 @@ import { customFetch } from '../../client';
 
 
 /**
+ * 입력한 검색어를 곡 제목, 아티스트 이름, 노래방 번호 필드에서 동시에 검색하여 결과를 반환합니다.
  * @summary 통합 검색 (제목, 가수, 노래방 번호)
  */
 export const searchControllerSearch = (
@@ -126,6 +127,7 @@ export function useSearchControllerSearch<TData = Awaited<ReturnType<typeof sear
 
 
 /**
+ * 노래방 번호로 정확하게 검색합니다. provider 를 지정하면 특정 기기만 필터링할 수 있습니다.
  * @summary 노래방 곡 번호 검색
  */
 export const searchControllerSearchByKaraokeNo = (
@@ -219,6 +221,7 @@ export function useSearchControllerSearchByKaraokeNo<TData = Awaited<ReturnType<
 
 
 /**
+ * 입력한 이름을 포함하는 아티스트를 검색하여 간단한 정보 목록을 반환합니다.
  * @summary 아티스트 이름으로 검색
  */
 export const searchControllerSearchByArtist = (
@@ -312,6 +315,7 @@ export function useSearchControllerSearchByArtist<TData = Awaited<ReturnType<typ
 
 
 /**
+ * 곡 제목 또는 한글 제목이 검색어를 포함하는 항목을 반환합니다.
  * @summary 곡 제목으로 검색
  */
 export const searchControllerSearchByTitle = (

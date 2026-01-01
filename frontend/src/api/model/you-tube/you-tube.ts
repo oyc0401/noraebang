@@ -6,28 +6,17 @@
  * OpenAPI spec version: 1.0
  */
 import {
-  useMutation,
-  useQuery
+  useMutation
 } from '@tanstack/react-query';
 import type {
-  DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
-  QueryFunction,
-  QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult
+  UseMutationResult
 } from '@tanstack/react-query';
 
 import type {
-  YoutubeControllerGetOembedDataParams,
-  YoutubeControllerSearchChannelsParams,
-  YoutubeControllerUpdateArtistChannelParams
+  YoutubeChannelUpdateDto
 } from '.././models';
 
 import { customFetch } from '../../client';
@@ -36,204 +25,20 @@ import { customFetch } from '../../client';
 
 
 /**
- * @summary YouTube 동영상 OEmbed 데이터 조회
- */
-export const youtubeControllerGetOembedData = (
-    params: YoutubeControllerGetOembedDataParams,
- signal?: AbortSignal
-) => {
-      
-      
-      return customFetch<unknown>(
-      {url: `/youtube`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-  
-
-
-
-export const getYoutubeControllerGetOembedDataQueryKey = (params?: YoutubeControllerGetOembedDataParams,) => {
-    return [
-    `/youtube`, ...(params ? [params]: [])
-    ] as const;
-    }
-
-    
-export const getYoutubeControllerGetOembedDataQueryOptions = <TData = Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError = void>(params: YoutubeControllerGetOembedDataParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getYoutubeControllerGetOembedDataQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof youtubeControllerGetOembedData>>> = ({ signal }) => youtubeControllerGetOembedData(params, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type YoutubeControllerGetOembedDataQueryResult = NonNullable<Awaited<ReturnType<typeof youtubeControllerGetOembedData>>>
-export type YoutubeControllerGetOembedDataQueryError = void
-
-
-export function useYoutubeControllerGetOembedData<TData = Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError = void>(
- params: YoutubeControllerGetOembedDataParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof youtubeControllerGetOembedData>>,
-          TError,
-          Awaited<ReturnType<typeof youtubeControllerGetOembedData>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useYoutubeControllerGetOembedData<TData = Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError = void>(
- params: YoutubeControllerGetOembedDataParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof youtubeControllerGetOembedData>>,
-          TError,
-          Awaited<ReturnType<typeof youtubeControllerGetOembedData>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useYoutubeControllerGetOembedData<TData = Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError = void>(
- params: YoutubeControllerGetOembedDataParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary YouTube 동영상 OEmbed 데이터 조회
- */
-
-export function useYoutubeControllerGetOembedData<TData = Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError = void>(
- params: YoutubeControllerGetOembedDataParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerGetOembedData>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getYoutubeControllerGetOembedDataQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary YouTube 채널 검색
- */
-export const youtubeControllerSearchChannels = (
-    params: YoutubeControllerSearchChannelsParams,
- signal?: AbortSignal
-) => {
-      
-      
-      return customFetch<unknown>(
-      {url: `/youtube/search-channels`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-  
-
-
-
-export const getYoutubeControllerSearchChannelsQueryKey = (params?: YoutubeControllerSearchChannelsParams,) => {
-    return [
-    `/youtube/search-channels`, ...(params ? [params]: [])
-    ] as const;
-    }
-
-    
-export const getYoutubeControllerSearchChannelsQueryOptions = <TData = Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError = void>(params: YoutubeControllerSearchChannelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getYoutubeControllerSearchChannelsQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof youtubeControllerSearchChannels>>> = ({ signal }) => youtubeControllerSearchChannels(params, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type YoutubeControllerSearchChannelsQueryResult = NonNullable<Awaited<ReturnType<typeof youtubeControllerSearchChannels>>>
-export type YoutubeControllerSearchChannelsQueryError = void
-
-
-export function useYoutubeControllerSearchChannels<TData = Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError = void>(
- params: YoutubeControllerSearchChannelsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof youtubeControllerSearchChannels>>,
-          TError,
-          Awaited<ReturnType<typeof youtubeControllerSearchChannels>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useYoutubeControllerSearchChannels<TData = Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError = void>(
- params: YoutubeControllerSearchChannelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof youtubeControllerSearchChannels>>,
-          TError,
-          Awaited<ReturnType<typeof youtubeControllerSearchChannels>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useYoutubeControllerSearchChannels<TData = Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError = void>(
- params: YoutubeControllerSearchChannelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary YouTube 채널 검색
- */
-
-export function useYoutubeControllerSearchChannels<TData = Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError = void>(
- params: YoutubeControllerSearchChannelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof youtubeControllerSearchChannels>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getYoutubeControllerSearchChannelsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
+ * 선택한 아티스트에 YouTube 채널 ID 또는 @handle 을 연결합니다.
  * @summary 아티스트 YouTube 채널 정보 업데이트
  */
 export const youtubeControllerUpdateArtistChannel = (
     alias: string,
-    params: YoutubeControllerUpdateArtistChannelParams,
+    youtubeChannelUpdateDto: YoutubeChannelUpdateDto,
  signal?: AbortSignal
 ) => {
       
       
       return customFetch<unknown | void>(
       {url: `/youtube/update-artist-channel/${alias}`, method: 'POST',
-        params, signal
+      headers: {'Content-Type': 'application/json', },
+      data: youtubeChannelUpdateDto, signal
     },
       );
     }
@@ -241,8 +46,8 @@ export const youtubeControllerUpdateArtistChannel = (
 
 
 export const getYoutubeControllerUpdateArtistChannelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof youtubeControllerUpdateArtistChannel>>, TError,{alias: string;params: YoutubeControllerUpdateArtistChannelParams}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof youtubeControllerUpdateArtistChannel>>, TError,{alias: string;params: YoutubeControllerUpdateArtistChannelParams}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof youtubeControllerUpdateArtistChannel>>, TError,{alias: string;data: YoutubeChannelUpdateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof youtubeControllerUpdateArtistChannel>>, TError,{alias: string;data: YoutubeChannelUpdateDto}, TContext> => {
 
 const mutationKey = ['youtubeControllerUpdateArtistChannel'];
 const {mutation: mutationOptions} = options ?
@@ -254,10 +59,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof youtubeControllerUpdateArtistChannel>>, {alias: string;params: YoutubeControllerUpdateArtistChannelParams}> = (props) => {
-          const {alias,params} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof youtubeControllerUpdateArtistChannel>>, {alias: string;data: YoutubeChannelUpdateDto}> = (props) => {
+          const {alias,data} = props ?? {};
 
-          return  youtubeControllerUpdateArtistChannel(alias,params,)
+          return  youtubeControllerUpdateArtistChannel(alias,data,)
         }
 
         
@@ -266,18 +71,18 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type YoutubeControllerUpdateArtistChannelMutationResult = NonNullable<Awaited<ReturnType<typeof youtubeControllerUpdateArtistChannel>>>
-    
+    export type YoutubeControllerUpdateArtistChannelMutationBody = YoutubeChannelUpdateDto
     export type YoutubeControllerUpdateArtistChannelMutationError = void
 
     /**
  * @summary 아티스트 YouTube 채널 정보 업데이트
  */
 export const useYoutubeControllerUpdateArtistChannel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof youtubeControllerUpdateArtistChannel>>, TError,{alias: string;params: YoutubeControllerUpdateArtistChannelParams}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof youtubeControllerUpdateArtistChannel>>, TError,{alias: string;data: YoutubeChannelUpdateDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof youtubeControllerUpdateArtistChannel>>,
         TError,
-        {alias: string;params: YoutubeControllerUpdateArtistChannelParams},
+        {alias: string;data: YoutubeChannelUpdateDto},
         TContext
       > => {
 

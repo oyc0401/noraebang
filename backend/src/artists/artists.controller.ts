@@ -21,7 +21,11 @@ export class ArtistsController {
   constructor(private readonly artistsService: ArtistsService) {}
 
   @Get()
-  @ApiOperation({ summary: "아티스트 목록 조회" })
+  @ApiOperation({
+    summary: "아티스트 목록 조회",
+    description:
+      "전체 아티스트를 반환합니다. includeYoutube=true 를 지정하면 관련 YouTube 채널 정보가 포함됩니다.",
+  })
   @ApiQuery({
     name: "includeYoutube",
     required: false,
@@ -89,7 +93,11 @@ export class ArtistsController {
   }
 
   @Get(":identifier")
-  @ApiOperation({ summary: "아티스트 상세 조회 (ID 또는 alias)" })
+  @ApiOperation({
+    summary: "아티스트 상세 조회 (ID 또는 alias)",
+    description:
+      "숫자는 ID로, 문자열은 alias 로 판단하여 해당 아티스트 정보를 반환합니다.",
+  })
   @ApiParam({
     name: "identifier",
     description: "아티스트 ID 또는 alias",
