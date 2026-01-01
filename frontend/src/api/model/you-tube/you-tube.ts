@@ -44,7 +44,7 @@ export const youtubeControllerGetOembedData = (
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<unknown>(
       {url: `/youtube`, method: 'GET',
         params, signal
     },
@@ -137,7 +137,7 @@ export const youtubeControllerSearchChannels = (
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<unknown>(
       {url: `/youtube/search-channels`, method: 'GET',
         params, signal
     },
@@ -231,7 +231,7 @@ export const youtubeControllerUpdateArtistChannel = (
 ) => {
       
       
-      return customFetch<void | void>(
+      return customFetch<unknown | void>(
       {url: `/youtube/update-artist-channel/${alias}`, method: 'POST',
         params, signal
     },

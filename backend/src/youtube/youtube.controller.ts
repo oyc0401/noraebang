@@ -24,7 +24,20 @@ export class YoutubeController {
   @Get()
   @ApiOperation({ summary: "YouTube 동영상 OEmbed 데이터 조회" })
   @ApiQuery({ name: "url", description: "YouTube 동영상 URL" })
-  @SwaggerApiResponse({ status: 200, description: "OEmbed 데이터" })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "OEmbed 데이터",
+    schema: {
+      example: {
+        data: {
+          title: "YOASOBI - 夜に駆ける",
+          author_name: "YOASOBI",
+          provider_name: "YouTube",
+          thumbnail_url: "https://img.youtube.com/vi/xyz/default.jpg",
+        },
+      },
+    },
+  })
   @SwaggerApiResponse({ status: 400, description: "URL 파라미터 필요" })
   async getOembedData(@Query("url") url: string) {
     if (!url) {
@@ -38,7 +51,22 @@ export class YoutubeController {
   @Get("search-channels")
   @ApiOperation({ summary: "YouTube 채널 검색" })
   @ApiQuery({ name: "name", description: "아티스트 이름" })
-  @SwaggerApiResponse({ status: 200, description: "검색 결과" })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "검색 결과",
+    schema: {
+      example: {
+        data: [
+          {
+            channelId: "UCvpredjG93ifbCP1Y77JyFA",
+            title: "Ayase / YOASOBI",
+            subscriberCount: 1000000,
+            thumbnail: "https://yt3.googleusercontent.com/yoasobi.jpg",
+          },
+        ],
+      },
+    },
+  })
   @SwaggerApiResponse({ status: 400, description: "아티스트 이름 필요" })
   async searchChannels(@Query("name") name: string) {
     if (!name) {
@@ -53,7 +81,19 @@ export class YoutubeController {
   @ApiOperation({ summary: "아티스트 YouTube 채널 정보 업데이트" })
   @ApiParam({ name: "alias", description: "아티스트 alias" })
   @ApiQuery({ name: "channelId", description: "YouTube 채널 ID" })
-  @SwaggerApiResponse({ status: 200, description: "업데이트 성공" })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "업데이트 성공",
+    schema: {
+      example: {
+        data: {
+          channelId: "UCvpredjG93ifbCP1Y77JyFA",
+          channelTitle: "Ayase / YOASOBI",
+        },
+        message: "YouTube channel updated successfully",
+      },
+    },
+  })
   @SwaggerApiResponse({ status: 400, description: "channelId 필요" })
   async updateArtistChannel(
     @Param("alias") alias: string,

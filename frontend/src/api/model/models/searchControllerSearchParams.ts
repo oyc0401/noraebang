@@ -7,7 +7,16 @@
  */
 
 export type SearchControllerSearchParams = {
+/**
+ * 검색어
+ */
 q: string;
-provider: string;
-limit: string;
+/**
+ * 노래방 기기 (예: TJ, KY)
+ */
+provider?: string;
+/**
+ * 최대 반환 개수
+ */
+limit?: string;
 };

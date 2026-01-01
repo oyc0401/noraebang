@@ -32,13 +32,16 @@ import { customFetch } from '../../client';
 
 
 
+/**
+ * @summary 통합 검색 (제목, 가수, 노래방 번호)
+ */
 export const searchControllerSearch = (
     params: SearchControllerSearchParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<unknown>(
       {url: `/search`, method: 'GET',
         params, signal
     },
@@ -101,6 +104,9 @@ export function useSearchControllerSearch<TData = Awaited<ReturnType<typeof sear
  params: SearchControllerSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearch>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 통합 검색 (제목, 가수, 노래방 번호)
+ */
 
 export function useSearchControllerSearch<TData = Awaited<ReturnType<typeof searchControllerSearch>>, TError = unknown>(
  params: SearchControllerSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearch>>, TError, TData>>, }
@@ -119,13 +125,16 @@ export function useSearchControllerSearch<TData = Awaited<ReturnType<typeof sear
 
 
 
+/**
+ * @summary 노래방 곡 번호 검색
+ */
 export const searchControllerSearchByKaraokeNo = (
     params: SearchControllerSearchByKaraokeNoParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<unknown>(
       {url: `/search/karaoke`, method: 'GET',
         params, signal
     },
@@ -188,6 +197,9 @@ export function useSearchControllerSearchByKaraokeNo<TData = Awaited<ReturnType<
  params: SearchControllerSearchByKaraokeNoParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchByKaraokeNo>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 노래방 곡 번호 검색
+ */
 
 export function useSearchControllerSearchByKaraokeNo<TData = Awaited<ReturnType<typeof searchControllerSearchByKaraokeNo>>, TError = unknown>(
  params: SearchControllerSearchByKaraokeNoParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchByKaraokeNo>>, TError, TData>>, }
@@ -206,13 +218,16 @@ export function useSearchControllerSearchByKaraokeNo<TData = Awaited<ReturnType<
 
 
 
+/**
+ * @summary 아티스트 이름으로 검색
+ */
 export const searchControllerSearchByArtist = (
     params: SearchControllerSearchByArtistParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<unknown>(
       {url: `/search/artist`, method: 'GET',
         params, signal
     },
@@ -275,6 +290,9 @@ export function useSearchControllerSearchByArtist<TData = Awaited<ReturnType<typ
  params: SearchControllerSearchByArtistParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchByArtist>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 아티스트 이름으로 검색
+ */
 
 export function useSearchControllerSearchByArtist<TData = Awaited<ReturnType<typeof searchControllerSearchByArtist>>, TError = unknown>(
  params: SearchControllerSearchByArtistParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchByArtist>>, TError, TData>>, }
@@ -293,13 +311,16 @@ export function useSearchControllerSearchByArtist<TData = Awaited<ReturnType<typ
 
 
 
+/**
+ * @summary 곡 제목으로 검색
+ */
 export const searchControllerSearchByTitle = (
     params: SearchControllerSearchByTitleParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<unknown>(
       {url: `/search/title`, method: 'GET',
         params, signal
     },
@@ -362,6 +383,9 @@ export function useSearchControllerSearchByTitle<TData = Awaited<ReturnType<type
  params: SearchControllerSearchByTitleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchByTitle>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 곡 제목으로 검색
+ */
 
 export function useSearchControllerSearchByTitle<TData = Awaited<ReturnType<typeof searchControllerSearchByTitle>>, TError = unknown>(
  params: SearchControllerSearchByTitleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchByTitle>>, TError, TData>>, }

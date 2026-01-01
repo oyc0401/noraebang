@@ -34,7 +34,26 @@ export class SongsController {
     required: false,
     description: "아티스트 ID로 필터링",
   })
-  @SwaggerApiResponse({ status: 200, description: "곡 목록" })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "곡 목록",
+    schema: {
+      example: {
+        data: [
+          {
+            id: 101,
+            title: "夜に駆ける",
+            titleKo: "밤을 달리다",
+            karaokeSongs: [
+              { provider: "TJ", karaokeNo: "12345" },
+              { provider: "KY", karaokeNo: "67890" },
+            ],
+          },
+        ],
+        message: null,
+      },
+    },
+  })
   async findAll(
     @Query("q") query?: string,
     @Query("artistId") artistId?: string,
@@ -66,7 +85,21 @@ export class SongsController {
   @Get(":id")
   @ApiOperation({ summary: "곡 상세 조회" })
   @ApiParam({ name: "id", description: "곡 ID" })
-  @SwaggerApiResponse({ status: 200, description: "곡 상세 정보" })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "곡 상세 정보",
+    schema: {
+      example: {
+        data: {
+          id: 101,
+          title: "夜に駆ける",
+          titleKo: "밤을 달리다",
+          karaokeSongs: [{ provider: "TJ", karaokeNo: "12345" }],
+        },
+        message: null,
+      },
+    },
+  })
   @SwaggerApiResponse({ status: 404, description: "곡을 찾을 수 없음" })
   async findOne(@Param("id", ParseIntPipe) id: number) {
     const song = await this.songsService.findById(id);

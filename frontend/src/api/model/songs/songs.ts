@@ -38,7 +38,7 @@ export const songsControllerFindAll = (
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<unknown>(
       {url: `/songs`, method: 'GET',
         params, signal
     },
@@ -131,7 +131,7 @@ export const songsControllerFindOne = (
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<unknown>(
       {url: `/songs/${id}`, method: 'GET', signal
     },
       );
