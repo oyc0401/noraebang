@@ -12,5 +12,6 @@ export interface SongDto {
   title: string;
   /** @nullable */
   titleKo?: string | null;
+  artistIds: number[];
   karaokeSongs?: KaraokeSongDto[];
 }

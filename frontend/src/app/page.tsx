@@ -4,25 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useArtistsControllerFindAll } from "@/api/model/artists/artists";
+import { useArtistsControllerFindAllWithYoutube } from "@/api/model/artists/artists";
 import { searchControllerGetYoutubeOembed } from "@/api/model/search/search";
 import { songsControllerFindAll } from "@/api/model/songs/songs";
-import { mapResponseData } from "@/api/utils";
-import type { ArtistWithYoutube } from "@/types/models";
 
 export default function Home() {
   const {
-    data: artists = [],
+    data,
     isLoading,
     error,
-  } = useArtistsControllerFindAll<ArtistWithYoutube[]>(
-    { includeYoutube: "true" },
-    {
-      query: {
-        select: mapResponseData<ArtistWithYoutube[]>([]),
-      },
-    },
-  );
+  } = useArtistsControllerFindAllWithYoutube();
+  const artists = data?.data ?? [];
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchLog, setSearchLog] = useState<string[]>([]);
@@ -41,14 +33,13 @@ export default function Home() {
       const youtubeResponse = await searchControllerGetYoutubeOembed({
         url: youtubeUrl,
       });
-      const youtubeData = mapResponseData()(youtubeResponse);
-      const title = youtubeData.title;
+      const title = youtubeResponse.data.title;
       setSearchLog((prev) => [...prev, `✓ 제목: ${title}`]);
 
       // Search for song
       setSearchLog((prev) => [...prev, `곡 검색 중...`]);
       const songsResponse = await songsControllerFindAll();
-      const songs = mapResponseData([])(songsResponse);
+      const songs = songsResponse.data ?? [];
 
       const foundSong = songs.find(
         (song) =>
@@ -65,7 +56,7 @@ export default function Home() {
         ]);
 
         // Get artist from already loaded data
-        const artist = artists.find((a) => a.id === foundSong.artistId);
+        const artist = artists.find((a) => a.id === foundSong.artistIds[0]);
 
         if (artist) {
           setSearchLog((prev) => [

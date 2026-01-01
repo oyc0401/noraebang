@@ -36,3 +36,5 @@ SELECT s.id, s.title, a.name as artist_name, s.created_at
 ## orval 생성
 pnpm --filter frontend codegen
 
+## api-spec.json 생성
+pnpm ts-node download-api-json.ts
