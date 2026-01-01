@@ -1,18 +1,54 @@
-import { Body, Controller, Param, Post } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+} from "@nestjs/common";
 import {
   ApiOperation,
   ApiParam,
-  ApiTags,
+  ApiQuery,
   ApiResponse as SwaggerApiResponse,
+  ApiTags,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../common/dto/api-response.dto";
-import { YoutubeChannelUpdateDto } from "./dto/youtube-channel-update.dto";
 import { YoutubeService } from "./youtube.service";
+import { YoutubeChannelUpdateDto } from "./dto/youtube-channel-update.dto";
 
 @ApiTags("YouTube")
 @Controller("youtube")
 export class YoutubeController {
   constructor(private readonly youtubeService: YoutubeService) {}
+
+  @Get()
+  @ApiOperation({ summary: "YouTube 동영상 OEmbed 데이터 조회" })
+  @ApiQuery({ name: "url", description: "YouTube 동영상 URL" })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "OEmbed 데이터",
+    schema: {
+      example: {
+        data: {
+          title: "YOASOBI - 夜に駆ける",
+          author_name: "YOASOBI",
+          provider_name: "YouTube",
+          thumbnail_url: "https://img.youtube.com/vi/xyz/default.jpg",
+        },
+      },
+    },
+  })
+  @SwaggerApiResponse({ status: 400, description: "URL 파라미터 필요" })
+  async getOembedData(@Query("url") url: string) {
+    if (!url) {
+      throw new BadRequestException("URL parameter is required");
+    }
+
+    const data = await this.youtubeService.getOembedData(url);
+    return ApiResponse.success(data);
+  }
 
   @Post("update-artist-channel/:alias")
   @ApiOperation({
