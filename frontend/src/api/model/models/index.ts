@@ -19,6 +19,8 @@ export * from './artistListResponseDto';
 export * from './artistWithYoutubeDto';
 export * from './artistWithYoutubeDtoYoutube';
 export * from './artistWithYoutubeListResponseDto';
+export * from './artistsControllerFindAllParams';
+export * from './artistsControllerFindAllSort';
 export * from './karaokeSongDto';
 export * from './searchControllerGetSongByYoutubeUrlParams';
 export * from './songDetailResponseDto';

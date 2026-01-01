@@ -5,10 +5,33 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { searchSongByYoutubeUrl } from "@/api/custom/searchSongByYoutubeUrl";
-import { useArtistsControllerFindAllWithYoutube } from "@/api/model/artists/artists";
+import { useArtistsControllerFindAll } from "@/api/model/artists/artists";
+import { ArtistsControllerFindAllSort } from "@/api/model/models";
+
+const SORT_OPTIONS = [
+  { value: ArtistsControllerFindAllSort.id_desc, label: "최신 등록순" },
+  { value: ArtistsControllerFindAllSort.name_asc, label: "이름 오름차순" },
+  { value: ArtistsControllerFindAllSort.name_desc, label: "이름 내림차순" },
+  {
+    value: ArtistsControllerFindAllSort.subscriber_desc,
+    label: "구독자 많은 순",
+  },
+  {
+    value: ArtistsControllerFindAllSort.subscriber_asc,
+    label: "구독자 적은 순",
+  },
+  { value: ArtistsControllerFindAllSort.song_count_desc, label: "곡 많은 순" },
+  { value: ArtistsControllerFindAllSort.song_count_asc, label: "곡 적은 순" },
+] as const;
+
+type SortOption = (typeof SORT_OPTIONS)[number]["value"];
+const DEFAULT_SORT: SortOption = ArtistsControllerFindAllSort.subscriber_desc;
 
 export default function Home() {
-  const { data, isLoading, error } = useArtistsControllerFindAllWithYoutube();
+  const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
+  const { data, isLoading, error } = useArtistsControllerFindAll({
+    sort,
+  });
   const artists = data?.data ?? [];
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [searching, setSearching] = useState(false);
@@ -68,7 +91,28 @@ export default function Home() {
           </p>
         </header>
 
-        <div className="mb-12">
+        <div className="mb-12 space-y-6">
+          <div>
+            <label
+              htmlFor="artist-sort"
+              className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
+              정렬
+            </label>
+            <select
+              id="artist-sort"
+              value={sort}
+              onChange={(event) => setSort(event.target.value as SortOption)}
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-zinc-400 sm:w-64"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="mb-4">
             <label
               htmlFor="youtube-search-input"
@@ -149,12 +193,6 @@ export default function Home() {
                     <p className="mb-2 text-sm text-zinc-500 dark:text-zinc-500">
                       {artist.name}
                     </p>
-                    {artist.youtube?.subscriberCount && (
-                      <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                        구독자 {artist.youtube.subscriberCount.toLocaleString()}
-                        명
-                      </p>
-                    )}
                   </div>
                 </Link>
               );
