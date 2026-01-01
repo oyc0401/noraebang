@@ -1,8 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { AdminModule } from "./admin/admin.module";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
 import { ArtistsModule } from "./artists/artists.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { SearchModule } from "./search/search.module";
@@ -23,7 +21,7 @@ import { YoutubeModule } from "./youtube/youtube.module";
     YoutubeModule,
     AdminModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
