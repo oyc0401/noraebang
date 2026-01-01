@@ -7,7 +7,7 @@ import {
   useAdminControllerGetArtists,
 } from "@/api/model/admin/admin";
 import {
-  useArtistsControllerFindAllWithYoutube,
+  useArtistsControllerFindAllDetails,
   useArtistsControllerUpdateYoutubeChannel,
 } from "@/api/model/artists/artists";
 import type { AdminArtistDto } from "@/api/model/models";
@@ -18,7 +18,7 @@ export default function AdminArtistsPage() {
   const artists = artistsData?.data ?? [];
 
   const { data: artistsWithYoutubeData, refetch: refetchYoutube } =
-    useArtistsControllerFindAllWithYoutube();
+    useArtistsControllerFindAllDetails();
   const artistsWithYoutube = artistsWithYoutubeData?.data ?? [];
 
   const [selectedArtist, setSelectedArtist] = useState<AdminArtistDto | null>(

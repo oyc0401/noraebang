@@ -64,19 +64,19 @@ export class ArtistsController {
     return ApiResponse.success(artists);
   }
 
-  @Get("with-youtube")
+  @Get("details")
   @ApiOperation({
-    summary: "아티스트 목록 조회 (YouTube 정보 포함)",
+    summary: "아티스트 목록 조회 (상세 정보 포함)",
     description:
-      "전체 아티스트를 YouTube 채널 정보와 함께 반환합니다. 구독자 수 기준으로 정렬됩니다.",
+      "전체 아티스트를 YouTube 채널, 썸네일 등 상세 정보와 함께 반환합니다. 구독자 수 기준으로 정렬됩니다.",
   })
   @SwaggerApiResponse({
     status: 200,
-    description: "아티스트 목록 (YouTube 정보 포함)",
+    description: "아티스트 목록 (상세 정보 포함)",
     type: ArtistWithYoutubeListResponseDto,
   })
-  async findAllWithYoutube(): Promise<ArtistWithYoutubeListResponseDto> {
-    const artists = await this.artistsService.findAllWithYoutube();
+  async findAllDetails(): Promise<ArtistWithYoutubeListResponseDto> {
+    const artists = await this.artistsService.findAllDetails();
 
     // 응답 포맷: 구독자 수와 미디엄 썸네일 포함
     const formatted = artists.map((artist) => ({

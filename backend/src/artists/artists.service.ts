@@ -48,7 +48,7 @@ export class ArtistsService {
     });
   }
 
-  async findAllWithYoutube(): Promise<ArtistWithYoutube[]> {
+  async findAllDetails(): Promise<ArtistWithYoutube[]> {
     return this.prisma.artist.findMany({
       include: {
         youtubeChannel: true,
