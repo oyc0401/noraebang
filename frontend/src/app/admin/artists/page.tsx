@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useAdminArtistSongs, useAdminArtists } from "@/hooks/use-admin";
 import { useArtistsWithYoutube } from "@/hooks/use-artists";
@@ -77,7 +78,7 @@ export default function AdminArtistsPage() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artists]);
+  }, [mergedArtists, selectedArtist]);
 
   // 아티스트 선택시 URL 해시 업데이트
   useEffect(() => {
@@ -282,6 +283,7 @@ export default function AdminArtistsPage() {
 
             {filteredArtists?.map((artist: any) => (
               <button
+                type="button"
                 key={artist.id}
                 id={`artist-${artist.id}`}
                 onClick={() => setSelectedArtist(artist)}
@@ -293,15 +295,19 @@ export default function AdminArtistsPage() {
               >
                 <div className="flex items-center gap-3">
                   {artist.youtube?.thumbnail ? (
-                    <img
+                    <Image
                       src={artist.youtube.thumbnail}
                       alt={artist.nameKo}
+                      width={40}
+                      height={40}
                       className="h-10 w-10 rounded-full object-cover"
                     />
                   ) : artist.imageUrl ? (
-                    <img
+                    <Image
                       src={artist.imageUrl}
                       alt={artist.nameKo}
+                      width={40}
+                      height={40}
                       className="h-10 w-10 rounded-full object-cover"
                     />
                   ) : (
@@ -338,15 +344,19 @@ export default function AdminArtistsPage() {
               <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4">
                 <div className="flex items-center gap-3">
                   {(selectedArtist as any).youtube?.thumbnail ? (
-                    <img
+                    <Image
                       src={(selectedArtist as any).youtube.thumbnail}
                       alt={selectedArtist.nameKo}
+                      width={48}
+                      height={48}
                       className="h-12 w-12 rounded-full object-cover"
                     />
                   ) : selectedArtist.imageUrl ? (
-                    <img
+                    <Image
                       src={selectedArtist.imageUrl}
                       alt={selectedArtist.nameKo}
+                      width={48}
+                      height={48}
                       className="h-12 w-12 rounded-full object-cover"
                     />
                   ) : (
@@ -397,6 +407,7 @@ export default function AdminArtistsPage() {
                   <div className="flex items-center gap-3">
                     {selectedArtist.alias && (
                       <button
+                        type="button"
                         onClick={() =>
                           setShowYoutubeSection(!showYoutubeSection)
                         }
@@ -407,6 +418,8 @@ export default function AdminArtistsPage() {
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 159 110"
                           className="h-6 w-9"
+                          role="img"
+                          aria-label="YouTube"
                         >
                           <path
                             fill="#FF0000"
@@ -488,10 +501,14 @@ export default function AdminArtistsPage() {
                   {/* Update Channel Form */}
                   <div className="space-y-3">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                      <label
+                        htmlFor="channel-url-input"
+                        className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                      >
                         YouTube 채널 URL
                       </label>
                       <input
+                        id="channel-url-input"
                         type="text"
                         value={channelUrl}
                         onChange={(e) => setChannelUrl(e.target.value)}
@@ -506,6 +523,7 @@ export default function AdminArtistsPage() {
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={handleUpdateChannel}
                       disabled={updating || !channelUrl.trim()}
                       className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
@@ -548,9 +566,9 @@ export default function AdminArtistsPage() {
                           )}
                           {song.karaokeNumbers.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
-                              {song.karaokeNumbers.map((kn, idx) => (
+                              {song.karaokeNumbers.map((kn) => (
                                 <span
-                                  key={idx}
+                                  key={`${kn.provider}-${kn.karaokeNo}`}
                                   className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                                 >
                                   {kn.provider} {kn.karaokeNo}
@@ -580,6 +598,8 @@ export default function AdminArtistsPage() {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  role="img"
+                  aria-label="No artist selected"
                 >
                   <path
                     strokeLinecap="round"

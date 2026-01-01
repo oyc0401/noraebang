@@ -83,6 +83,8 @@ export default function ArtistPageClient({
                   viewBox="0 0 24 24"
                   fill="currentColor"
                   className="h-4 w-4"
+                  role="img"
+                  aria-label="YouTube"
                 >
                   <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                 </svg>
@@ -94,6 +96,8 @@ export default function ArtistPageClient({
                   strokeWidth={2}
                   stroke="currentColor"
                   className="h-3.5 w-3.5 opacity-50 transition-opacity group-hover:opacity-100"
+                  role="img"
+                  aria-label="External link"
                 >
                   <path
                     strokeLinecap="round"
@@ -117,6 +121,8 @@ export default function ArtistPageClient({
                   strokeWidth={2.5}
                   stroke="currentColor"
                   className="h-4 w-4 transition-transform group-hover:rotate-90"
+                  role="img"
+                  aria-label="Plus"
                 >
                   <path
                     strokeLinecap="round"
@@ -132,6 +138,8 @@ export default function ArtistPageClient({
                   strokeWidth={2}
                   stroke="currentColor"
                   className="h-3.5 w-3.5 opacity-50 transition-opacity group-hover:opacity-100"
+                  role="img"
+                  aria-label="External link"
                 >
                   <path
                     strokeLinecap="round"
@@ -154,7 +162,8 @@ export default function ArtistPageClient({
               const isSelected = selectedSongId === song.id.toString();
 
               return (
-                <div
+                <button
+                  type="button"
                   key={song.id}
                   id={song.id.toString()}
                   onClick={(e) => {
@@ -163,7 +172,7 @@ export default function ArtistPageClient({
                     window.history.replaceState(null, "", newHash);
                     setSelectedSongId(song.id.toString());
                   }}
-                  className={`rounded-lg border p-6 shadow-sm transition-all scroll-mt-8 cursor-pointer ${
+                  className={`w-full text-left rounded-lg border p-6 shadow-sm transition-all scroll-mt-8 cursor-pointer ${
                     isSelected
                       ? "border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-500 ring-opacity-50 dark:border-blue-400 dark:bg-blue-950 dark:ring-blue-400"
                       : "border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
@@ -203,7 +212,7 @@ export default function ArtistPageClient({
                       </div>
                     ))}
                   </div>
-                </div>
+                </button>
               );
             })
           )}

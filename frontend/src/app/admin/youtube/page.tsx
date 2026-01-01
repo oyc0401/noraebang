@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useArtistsWithYoutube } from "@/hooks/use-artists";
 import { API_BASE_URL } from "@/lib/api";
@@ -198,9 +199,11 @@ export default function AdminPage() {
                   >
                     <td className="px-4 py-3">
                       {artist.youtube?.thumbnail ? (
-                        <img
+                        <Image
                           src={artist.youtube.thumbnail}
                           alt={artist.nameKo}
+                          width={80}
+                          height={48}
                           className="h-12 w-20 rounded object-cover"
                         />
                       ) : (
@@ -281,6 +284,7 @@ export default function AdminPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
+                        type="button"
                         onClick={() =>
                           handleOpenChannelModal(artist.alias, artist.nameKo)
                         }
@@ -319,17 +323,20 @@ export default function AdminPage() {
 
             <div className="p-6">
               <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                <label
+                  htmlFor="youtube-channel-url"
+                  className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
                   YouTube 채널 URL
                 </label>
                 <input
+                  id="youtube-channel-url"
                   type="text"
                   value={channelUrl}
                   onChange={(e) => setChannelUrl(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleUpdateChannel()}
                   placeholder="https://www.youtube.com/channel/UCxxx 또는 https://www.youtube.com/@channelname"
                   className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
-                  autoFocus
                 />
                 <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
                   채널 페이지 URL을 복사해서 붙여넣기 하세요
@@ -346,6 +353,7 @@ export default function AdminPage() {
 
             <div className="border-t border-zinc-200 px-6 py-4 dark:border-zinc-800 flex gap-3 justify-end">
               <button
+                type="button"
                 onClick={() => {
                   setShowChannelModal(false);
                   setChannelUrl("");
@@ -357,6 +365,7 @@ export default function AdminPage() {
                 취소
               </button>
               <button
+                type="button"
                 onClick={handleUpdateChannel}
                 disabled={updating || !channelUrl.trim()}
                 className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"

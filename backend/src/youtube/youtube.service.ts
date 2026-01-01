@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import type { Artist } from "@prisma/client";
 import type { ArtistsService } from "../artists/artists.service";
 import type { PrismaService } from "../prisma/prisma.service";
 
@@ -152,10 +153,10 @@ export class YoutubeService {
           channel.snippet.thumbnails.medium?.url ||
           channel.snippet.thumbnails.default?.url,
         subscriberCount: channel.statistics.subscriberCount
-          ? parseInt(channel.statistics.subscriberCount)
+          ? parseInt(channel.statistics.subscriberCount, 10)
           : null,
         videoCount: channel.statistics.videoCount
-          ? parseInt(channel.statistics.videoCount)
+          ? parseInt(channel.statistics.videoCount, 10)
           : null,
         country: channel.snippet.country || null,
       }));
@@ -232,10 +233,10 @@ export class YoutubeService {
         thumbnailMedium: thumbnails.medium?.url || null,
         thumbnailHigh: thumbnails.high?.url || null,
         subscriberCount: statistics.subscriberCount
-          ? parseInt(statistics.subscriberCount)
+          ? parseInt(statistics.subscriberCount, 10)
           : null,
         videoCount: statistics.videoCount
-          ? parseInt(statistics.videoCount)
+          ? parseInt(statistics.videoCount, 10)
           : null,
         viewCount: statistics.viewCount ? BigInt(statistics.viewCount) : null,
         hiddenSubscriberCount: statistics.hiddenSubscriberCount || false,
@@ -260,7 +261,7 @@ export class YoutubeService {
   async updateArtistChannel(identifier: string | number, channelId: string) {
     try {
       // 1. 아티스트 찾기 (ID 또는 alias)
-      let artist;
+      let artist: Artist | null = null;
       if (typeof identifier === "number") {
         artist = await this.prisma.artist.findUnique({
           where: { id: identifier },
@@ -268,7 +269,7 @@ export class YoutubeService {
       } else {
         // 숫자 문자열이면 ID로 조회
         const parsedId = parseInt(identifier, 10);
-        if (!isNaN(parsedId) && parsedId.toString() === identifier) {
+        if (!Number.isNaN(parsedId) && parsedId.toString() === identifier) {
           artist = await this.prisma.artist.findUnique({
             where: { id: parsedId },
           });

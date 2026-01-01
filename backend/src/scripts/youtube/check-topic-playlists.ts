@@ -33,7 +33,7 @@ async function checkTopicChannelPlaylists() {
     }
 
     console.log(`📊 Found ${artists.length} Topic channels to check\n`);
-    console.log("=".repeat(80) + "\n");
+    console.log(`${"=".repeat(80)}\n`);
 
     let checkedCount = 0;
     let foundOriginalCount = 0;
@@ -51,7 +51,7 @@ async function checkTopicChannelPlaylists() {
 
       if (!artist.youtubeChannel?.channelId) {
         console.log(`   ⚠️  No channel ID\n`);
-        console.log("=".repeat(80) + "\n");
+        console.log(`${"=".repeat(80)}\n`);
         continue;
       }
 
@@ -64,7 +64,7 @@ async function checkTopicChannelPlaylists() {
 
         if (playlists.length === 0) {
           console.log(`   ⚠️  No playlists found\n`);
-          console.log("=".repeat(80) + "\n");
+          console.log(`${"=".repeat(80)}\n`);
           continue;
         }
 
@@ -77,7 +77,7 @@ async function checkTopicChannelPlaylists() {
 
         if (videos.length === 0) {
           console.log(`   ⚠️  No videos found in playlist\n`);
-          console.log("=".repeat(80) + "\n");
+          console.log(`${"=".repeat(80)}\n`);
           continue;
         }
 
@@ -149,7 +149,7 @@ async function checkTopicChannelPlaylists() {
         }
 
         console.log("");
-        console.log("=".repeat(80) + "\n");
+        console.log(`${"=".repeat(80)}\n`);
       } catch (error: any) {
         // 403 에러 (쿼터 초과)가 발생하면 중단
         if (
@@ -165,7 +165,7 @@ async function checkTopicChannelPlaylists() {
           return;
         }
         console.error(`   ❌ Error: ${error.message}\n`);
-        console.log("=".repeat(80) + "\n");
+        console.log(`${"=".repeat(80)}\n`);
       }
     }
 

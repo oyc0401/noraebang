@@ -61,7 +61,7 @@ async function fetchAllTJSongs(fromYearMonth: string, force: boolean) {
         } else if (result === "skipped") {
           totalSkipped++;
         }
-      } catch (error) {
+      } catch (_error) {
         totalErrors++;
       }
 

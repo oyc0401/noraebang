@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -101,11 +102,15 @@ export default function Home() {
 
         <div className="mb-12">
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <label
+              htmlFor="youtube-search-input"
+              className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
               유튜브 링크로 검색
             </label>
             <div className="flex gap-2">
               <input
+                id="youtube-search-input"
                 type="text"
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
@@ -115,6 +120,7 @@ export default function Home() {
                 disabled={searching}
               />
               <button
+                type="button"
                 onClick={handleYoutubeSearch}
                 disabled={searching || !youtubeUrl.trim()}
                 className="rounded-lg bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
@@ -127,8 +133,8 @@ export default function Home() {
           {searchLog.length > 0 && (
             <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
               <div className="space-y-1 font-mono text-sm">
-                {searchLog.map((log, index) => (
-                  <div key={index} className="text-zinc-700 dark:text-zinc-300">
+                {searchLog.map((log) => (
+                  <div key={log} className="text-zinc-700 dark:text-zinc-300">
                     {log}
                   </div>
                 ))}
@@ -159,9 +165,11 @@ export default function Home() {
               >
                 {artist.youtube?.thumbnail && (
                   <div className="aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-                    <img
+                    <Image
                       src={artist.youtube.thumbnail}
                       alt={artist.nameKo}
+                      width={320}
+                      height={180}
                       className="h-full w-full object-cover transition-transform group-hover:scale-105"
                     />
                   </div>
