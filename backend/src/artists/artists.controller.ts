@@ -1,5 +1,6 @@
 import { Controller, Get, Param, NotFoundException, Query } from '@nestjs/common';
 import { ArtistsService } from './artists.service';
+import { ApiResponse } from '../common/dto/api-response.dto';
 
 @Controller('artists')
 export class ArtistsController {
@@ -28,15 +29,12 @@ export class ArtistsController {
         } : null,
       }));
 
-      return {
-        data: formatted,
-        cached: true, // 캐시 사용 여부는 서비스에서 관리
-      };
+      return ApiResponse.success(formatted);
     }
 
     // 기본: YouTube 정보 없이 반환
     const artists = await this.artistsService.findAll();
-    return { data: artists };
+    return ApiResponse.success(artists);
   }
 
   @Get(':identifier')
@@ -45,6 +43,6 @@ export class ArtistsController {
     if (!artist) {
       throw new NotFoundException('Artist not found');
     }
-    return { data: artist };
+    return ApiResponse.success(artist);
   }
 }

@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Query, BadRequestException, Param } from '@nestjs/common';
 import { YoutubeService } from './youtube.service';
+import { ApiResponse } from '../common/dto/api-response.dto';
 
 @Controller('youtube')
 export class YoutubeController {
@@ -12,7 +13,7 @@ export class YoutubeController {
     }
 
     const data = await this.youtubeService.getOembedData(url);
-    return { data };
+    return ApiResponse.success(data);
   }
 
   @Get('search-channels')
@@ -22,7 +23,7 @@ export class YoutubeController {
     }
 
     const data = await this.youtubeService.searchChannels(name);
-    return { success: true, data };
+    return ApiResponse.success(data);
   }
 
   @Post('update-artist-channel/:alias')
@@ -35,10 +36,6 @@ export class YoutubeController {
     }
 
     const data = await this.youtubeService.updateArtistChannel(alias, channelId);
-    return {
-      success: true,
-      data,
-      message: 'YouTube channel updated successfully'
-    };
+    return ApiResponse.success(data, 'YouTube channel updated successfully');
   }
 }

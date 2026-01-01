@@ -6,7 +6,9 @@ import {
   NotFoundException,
   ParseIntPipe,
 } from '@nestjs/common';
+import { Song } from '@prisma/client';
 import { SongsService } from './songs.service';
+import { ApiResponse } from '../common/dto/api-response.dto';
 
 @Controller('songs')
 export class SongsController {
@@ -14,7 +16,7 @@ export class SongsController {
 
   @Get()
   async findAll(@Query('q') query?: string, @Query('artistId') artistId?: string) {
-    let songs;
+    let songs: Song[];
 
     if (artistId && query) {
       // Both artistId and query: filter by artist first, then search within
@@ -33,7 +35,7 @@ export class SongsController {
       songs = await this.songsService.findAll();
     }
 
-    return { data: songs };
+    return ApiResponse.success(songs);
   }
 
   @Get(':id')
@@ -42,6 +44,6 @@ export class SongsController {
     if (!song) {
       throw new NotFoundException('Song not found');
     }
-    return { data: song };
+    return ApiResponse.success(song);
   }
 }
