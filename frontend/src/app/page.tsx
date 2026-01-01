@@ -25,7 +25,7 @@ const SORT_OPTIONS = [
 ] as const;
 
 type SortOption = (typeof SORT_OPTIONS)[number]["value"];
-const DEFAULT_SORT: SortOption = ArtistsControllerFindAllSort.id_desc;
+const DEFAULT_SORT: SortOption = ArtistsControllerFindAllSort.subscriber_desc;
 
 export default function Home() {
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
