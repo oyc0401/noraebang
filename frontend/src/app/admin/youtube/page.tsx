@@ -2,13 +2,24 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useArtistsWithYoutube } from "@/hooks/use-artists";
-import { API_BASE_URL } from "@/lib/api";
+import { useArtistsControllerFindAll } from "@/api/model/artists/artists";
+import { useYoutubeControllerUpdateArtistChannel } from "@/api/model/you-tube/you-tube";
+import { getResponseMessage, mapResponseData } from "@/api/utils";
+import type { ArtistWithYoutube } from "@/types/models";
 
 export default function AdminPage() {
-  const { data: artists, isLoading, refetch } = useArtistsWithYoutube();
+  const { data: artists = [], isLoading, refetch } =
+    useArtistsControllerFindAll<ArtistWithYoutube[]>(
+      { includeYoutube: "true" },
+      {
+        query: {
+          select: mapResponseData<ArtistWithYoutube[]>([]),
+        },
+      },
+    );
   const [searchQuery, setSearchQuery] = useState("");
-  const [updating, setUpdating] = useState(false);
+  const youtubeMutation = useYoutubeControllerUpdateArtistChannel();
+  const updating = youtubeMutation.isPending;
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -75,51 +86,35 @@ export default function AdminPage() {
       return;
     }
 
-    setUpdating(true);
     setMessage(null);
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/youtube/update-artist-channel/${selectedArtist.alias}?channelId=${encodeURIComponent(channelId)}`,
-        { method: "POST" },
-      );
+      const response = await youtubeMutation.mutateAsync({
+        alias: selectedArtist.alias,
+        params: { channelId },
+      });
 
-      const result = await response.json();
+      const updatedChannel = mapResponseData<{ channelTitle?: string } | null>(
+        null,
+      )(response);
 
-      // 에러 응답 처리
-      if (!response.ok) {
-        // 백엔드에서 보낸 상세 에러 메시지 표시
-        const errorMessage =
-          result.message ||
-          result.error?.message ||
-          `오류 (${response.status})`;
-        setMessage({
-          type: "error",
-          text: `❌ ${selectedArtist.name}: ${errorMessage}`,
-        });
-        return;
-      }
-
-      // 성공 응답 처리
-      if (result.success) {
-        setMessage({
-          type: "success",
-          text: `✅ ${selectedArtist.name}: ${result.data.channelTitle}로 업데이트 완료!`,
-        });
-        // 모달 닫기
-        setShowChannelModal(false);
-        setChannelUrl("");
-        setSelectedArtist(null);
-        // 목록 새로고침
-        refetch();
-      }
+      setMessage({
+        type: "success",
+        text: `✅ ${selectedArtist.name}: ${
+          updatedChannel?.channelTitle ??
+          getResponseMessage(response) ??
+          "업데이트 완료!"
+        }`,
+      });
+      setShowChannelModal(false);
+      setChannelUrl("");
+      setSelectedArtist(null);
+      refetch();
     } catch (error: any) {
       setMessage({
         type: "error",
         text: `❌ 오류 발생: ${error.message}`,
       });
-    } finally {
-      setUpdating(false);
     }
   };
 

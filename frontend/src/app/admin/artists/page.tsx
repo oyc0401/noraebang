@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useAdminArtistSongs, useAdminArtists } from "@/hooks/use-admin";
-import { useArtistsWithYoutube } from "@/hooks/use-artists";
-import { API_BASE_URL } from "@/lib/api";
+import { useAdminControllerGetArtistSongs, useAdminControllerGetArtists } from "@/api/model/admin/admin";
+import { useArtistsControllerFindAll } from "@/api/model/artists/artists";
+import { useYoutubeControllerUpdateArtistChannel } from "@/api/model/you-tube/you-tube";
+import { getResponseMessage, mapResponseData } from "@/api/utils";
+import type { ArtistWithYoutube } from "@/types/models";
 
 interface Artist {
   id: number;
@@ -31,19 +33,39 @@ interface Song {
 }
 
 export default function AdminArtistsPage() {
-  const { data: artists, isLoading: artistsLoading } = useAdminArtists();
-  const { data: artistsWithYoutube, refetch: refetchYoutube } =
-    useArtistsWithYoutube();
-  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
-  const { data: songs, isLoading: songsLoading } = useAdminArtistSongs(
-    selectedArtist?.id || null,
+  const { data: artists = [], isLoading: artistsLoading } =
+    useAdminControllerGetArtists<Artist[]>({
+      query: {
+        select: mapResponseData<Artist[]>([]),
+      },
+    });
+
+  const {
+    data: artistsWithYoutube = [],
+    refetch: refetchYoutube,
+  } = useArtistsControllerFindAll<ArtistWithYoutube[]>(
+    { includeYoutube: "true" },
+    {
+      query: {
+        select: mapResponseData<ArtistWithYoutube[]>([]),
+      },
+    },
   );
+  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const selectedArtistId = selectedArtist?.id ?? 0;
+  const { data: songs = [], isLoading: songsLoading } =
+    useAdminControllerGetArtistSongs<Song[]>(selectedArtistId, {
+      query: {
+        select: mapResponseData<Song[]>([]),
+      },
+    });
   const [searchQuery, setSearchQuery] = useState("");
 
   // YouTube 채널 관리
   const [showYoutubeSection, setShowYoutubeSection] = useState(false);
   const [channelUrl, setChannelUrl] = useState("");
-  const [updating, setUpdating] = useState(false);
+  const youtubeMutation = useYoutubeControllerUpdateArtistChannel();
+  const updating = youtubeMutation.isPending;
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -157,44 +179,41 @@ export default function AdminArtistsPage() {
       return;
     }
 
-    setUpdating(true);
     setMessage(null);
 
+    if (!selectedArtist.alias) {
+      setMessage({
+        type: "error",
+        text: "선택된 아티스트에 alias가 없습니다.",
+      });
+      return;
+    }
+
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/youtube/update-artist-channel/${selectedArtist.alias}?channelId=${encodeURIComponent(channelId)}`,
-        { method: "POST" },
-      );
+      const response = await youtubeMutation.mutateAsync({
+        alias: selectedArtist.alias,
+        params: { channelId },
+      });
 
-      const result = await response.json();
+      const updatedChannel = mapResponseData<{ channelTitle?: string } | null>(
+        null,
+      )(response);
+      const responseMessage =
+        getResponseMessage(response) ?? "YouTube channel updated.";
 
-      if (!response.ok) {
-        const errorMessage =
-          result.message ||
-          result.error?.message ||
-          `오류 (${response.status})`;
-        setMessage({
-          type: "error",
-          text: `❌ ${selectedArtist.nameKo}: ${errorMessage}`,
-        });
-        return;
-      }
-
-      if (result.success) {
-        setMessage({
-          type: "success",
-          text: `✅ ${selectedArtist.nameKo}: ${result.data.channelTitle}로 업데이트 완료!`,
-        });
-        setChannelUrl("");
-        refetchYoutube();
-      }
+      setMessage({
+        type: "success",
+        text: `✅ ${selectedArtist.nameKo}: ${
+          updatedChannel?.channelTitle ?? responseMessage
+        }`,
+      });
+      setChannelUrl("");
+      refetchYoutube();
     } catch (error: any) {
       setMessage({
         type: "error",
         text: `❌ 오류 발생: ${error.message}`,
       });
-    } finally {
-      setUpdating(false);
     }
   };
 

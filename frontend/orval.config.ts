@@ -10,16 +10,16 @@ export default defineConfig({
     },
     output: {
       mode: "tags-split",
-      target: "./src/api/endpoints.ts",
-      schemas: "./src/api/models",
-      clean: ["./src/api"],
+      target: "./src/api/model/endpoints.ts",
+      schemas: "./src/api/model/models",
+      clean: ["./src/api/model"],
       client: "react-query",
       override: {
         query: {
           version: 5,
         },
         mutator: {
-          path: "./src/lib/api-client.ts",
+          path: "./src/api/client.ts",
           name: "customFetch",
         },
       },
