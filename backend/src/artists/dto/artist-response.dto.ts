@@ -80,7 +80,7 @@ export class ArtistAliasGroupDto {
   aliases: string[];
 }
 
-export class ArtistDatailsDto {
+export class ArtistDetailsDto {
   @ApiProperty({ example: 1 })
   id: number;
 
@@ -130,8 +130,8 @@ export class ArtistListResponseDto {
 }
 
 export class ArtistDetailsListResponseDto {
-  @ApiProperty({ type: [ArtistDatailsDto] })
-  data: ArtistDatailsDto[];
+  @ApiProperty({ type: [ArtistDetailsDto] })
+  data: ArtistDetailsDto[];
 
   @ApiProperty({ example: null, required: false })
   message?: string | null;

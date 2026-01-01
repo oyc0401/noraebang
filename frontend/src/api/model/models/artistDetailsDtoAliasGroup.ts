@@ -10,4 +10,4 @@ import type { ArtistAliasGroupDto } from './artistAliasGroupDto';
 /**
  * @nullable
  */
-export type ArtistDatailsDtoAliasGroup = ArtistAliasGroupDto | null;
+export type ArtistDetailsDtoAliasGroup = ArtistAliasGroupDto | null;

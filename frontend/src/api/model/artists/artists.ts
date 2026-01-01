@@ -28,6 +28,7 @@ import type {
   ArtistDetailResponseDto,
   ArtistDetailsListResponseDto,
   ArtistListResponseDto,
+  ArtistsControllerFindAllDetailsParams,
   ArtistsControllerFindAllParams,
   YoutubeChannelUpdateDto,
   YoutubeChannelUpdateResponseDto
@@ -137,13 +138,14 @@ export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof ar
  * @summary 아티스트 목록 조회 (상세 정보 포함)
  */
 export const artistsControllerFindAllDetails = (
-    
+    params?: ArtistsControllerFindAllDetailsParams,
  signal?: AbortSignal
 ) => {
       
       
       return customFetch<ArtistDetailsListResponseDto>(
-      {url: `/artists/details`, method: 'GET', signal
+      {url: `/artists/details`, method: 'GET',
+        params, signal
     },
       );
     }
@@ -151,23 +153,23 @@ export const artistsControllerFindAllDetails = (
 
 
 
-export const getArtistsControllerFindAllDetailsQueryKey = () => {
+export const getArtistsControllerFindAllDetailsQueryKey = (params?: ArtistsControllerFindAllDetailsParams,) => {
     return [
-    `/artists/details`
+    `/artists/details`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getArtistsControllerFindAllDetailsQueryOptions = <TData = Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError, TData>>, }
+export const getArtistsControllerFindAllDetailsQueryOptions = <TData = Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError = unknown>(params?: ArtistsControllerFindAllDetailsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getArtistsControllerFindAllDetailsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getArtistsControllerFindAllDetailsQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>> = ({ signal }) => artistsControllerFindAllDetails(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>> = ({ signal }) => artistsControllerFindAllDetails(params, signal);
 
       
 
@@ -181,7 +183,7 @@ export type ArtistsControllerFindAllDetailsQueryError = unknown
 
 
 export function useArtistsControllerFindAllDetails<TData = Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError, TData>> & Pick<
+ params: undefined |  ArtistsControllerFindAllDetailsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof artistsControllerFindAllDetails>>,
           TError,
@@ -191,7 +193,7 @@ export function useArtistsControllerFindAllDetails<TData = Awaited<ReturnType<ty
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useArtistsControllerFindAllDetails<TData = Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError, TData>> & Pick<
+ params?: ArtistsControllerFindAllDetailsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof artistsControllerFindAllDetails>>,
           TError,
@@ -201,7 +203,7 @@ export function useArtistsControllerFindAllDetails<TData = Awaited<ReturnType<ty
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useArtistsControllerFindAllDetails<TData = Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError, TData>>, }
+ params?: ArtistsControllerFindAllDetailsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -209,11 +211,11 @@ export function useArtistsControllerFindAllDetails<TData = Awaited<ReturnType<ty
  */
 
 export function useArtistsControllerFindAllDetails<TData = Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError, TData>>, }
+ params?: ArtistsControllerFindAllDetailsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getArtistsControllerFindAllDetailsQueryOptions(options)
+  const queryOptions = getArtistsControllerFindAllDetailsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
