@@ -1,23 +1,40 @@
+import { ApiProperty } from "@nestjs/swagger";
+
+interface ApiResponseMeta {
+  total?: number; // 전체 개수
+  page?: number; // 현재 페이지
+  limit?: number; // 페이지 크기
+  hasMore?: boolean; // 더 있는지
+}
+
 export class ApiResponse<T> {
-  success: boolean;
+  @ApiProperty({ description: "응답 데이터" })
   data: T;
+
+  @ApiProperty({ description: "메시지", required: false })
   message?: string;
 
-  constructor(data: T, message?: string) {
-    this.success = true;
+  @ApiProperty({
+    description: "메타데이터 (페이지네이션 등)",
+    required: false,
+  })
+  meta?: ApiResponseMeta;
+
+  constructor(data: T, message?: string, meta?: ApiResponseMeta) {
     this.data = data;
     this.message = message;
+    this.meta = meta;
   }
 
-  static success<T>(data: T, message?: string): ApiResponse<T> {
-    return new ApiResponse(data, message);
+  static success<T>(
+    data: T,
+    message?: string,
+    meta?: ApiResponseMeta,
+  ): ApiResponse<T> {
+    return new ApiResponse(data, message, meta);
   }
 
   static error(message: string): ApiResponse<null> {
-    return {
-      success: false,
-      data: null,
-      message,
-    };
+    return new ApiResponse(null, message);
   }
 }
