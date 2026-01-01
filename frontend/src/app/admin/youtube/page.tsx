@@ -6,7 +6,6 @@ import {
   useArtistsControllerFindAllWithYoutube,
   useArtistsControllerUpdateYoutubeChannel,
 } from "@/api/model/artists/artists";
-import type { ArtistWithYoutubeDto } from "@/api/model/models";
 
 export default function AdminPage() {
   const {
