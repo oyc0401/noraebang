@@ -33,7 +33,6 @@ export default function AdminArtistsPage() {
     selectedArtist?.id || null,
   );
   const [searchQuery, setSearchQuery] = useState('');
-  const artistListRef = useRef<HTMLDivElement>(null);
 
   // YouTube 채널 관리
   const [showYoutubeSection, setShowYoutubeSection] = useState(false);
@@ -59,7 +58,7 @@ export default function AdminArtistsPage() {
 
   // 초기 로드시 URL 해시로부터 아티스트 선택
   useEffect(() => {
-    if (!mergedArtists || mergedArtists.length === 0) return;
+    if (!mergedArtists || mergedArtists.length === 0 || selectedArtist) return;
 
     const hash = window.location.hash;
     if (hash) {
@@ -69,7 +68,8 @@ export default function AdminArtistsPage() {
         setSelectedArtist(artist);
       }
     }
-  }, [mergedArtists]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [artists]);
 
   // 아티스트 선택시 URL 해시 업데이트
   useEffect(() => {
