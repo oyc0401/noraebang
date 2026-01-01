@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { SearchController } from './search.controller';
-import { SearchService } from './search.service';
-import { TypesenseModule } from '../typesense/typesense.module';
+import { Module } from "@nestjs/common";
+import { TypesenseModule } from "../typesense/typesense.module";
+import { SearchController } from "./search.controller";
+import { SearchService } from "./search.service";
 
 @Module({
   imports: [TypesenseModule],

@@ -1,8 +1,12 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
-import { TJSongData } from '../../tj/tj.service';
-import { parseTJArtist, parseLyricist, parseComposer } from '../../lib/artist-parser';
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import pg from "pg";
+import {
+  parseComposer,
+  parseLyricist,
+  parseTJArtist,
+} from "../../lib/artist-parser";
+import type { TJSongData } from "../../tj/tj.service";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -15,7 +19,7 @@ export async function saveSongToDatabase(
   song: TJSongData,
   force: boolean,
   releasedYearMonth: string,
-): Promise<'created' | 'updated' | 'skipped'> {
+): Promise<"created" | "updated" | "skipped"> {
   try {
     const parsed = parseTJArtist(song.artist);
     const lyricistList = parseLyricist(song.lyricist);
@@ -26,7 +30,7 @@ export async function saveSongToDatabase(
     });
 
     if (existing && !force) {
-      return 'skipped';
+      return "skipped";
     }
 
     if (existing && force) {
@@ -46,7 +50,7 @@ export async function saveSongToDatabase(
           releasedYearMonth,
         },
       });
-      return 'updated';
+      return "updated";
     }
 
     await prisma.tjSong.create({
@@ -65,7 +69,7 @@ export async function saveSongToDatabase(
         releasedYearMonth,
       },
     });
-    return 'created';
+    return "created";
   } catch (error) {
     console.error(`  ❌ Error saving TjSong ${song.karaokeNo}:`, error);
     throw error;

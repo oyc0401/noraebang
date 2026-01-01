@@ -1,4 +1,4 @@
-import type { Song } from '@prisma/client';
+import type { Song } from "@prisma/client";
 
 export interface SongRepository {
   findAll(): Promise<Song[]>;

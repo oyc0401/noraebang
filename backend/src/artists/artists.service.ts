@@ -1,6 +1,9 @@
-import { Injectable, Inject } from '@nestjs/common';
-import type { ArtistRepository, ArtistWithYoutube } from '../repositories/artist.repository';
-import { ARTIST_REPOSITORY } from '../repositories/tokens';
+import { Inject, Injectable } from "@nestjs/common";
+import type {
+  ArtistRepository,
+  ArtistWithYoutube,
+} from "../repositories/artist.repository";
+import { ARTIST_REPOSITORY } from "../repositories/tokens";
 
 @Injectable()
 export class ArtistsService {
@@ -16,7 +19,7 @@ export class ArtistsService {
   }
 
   async findAllWithYoutube(): Promise<ArtistWithYoutube[]> {
-    const cacheKey = 'artists_with_youtube';
+    const cacheKey = "artists_with_youtube";
     const cached = this.cache.get(cacheKey);
 
     // 캐시가 있고 유효하면 반환

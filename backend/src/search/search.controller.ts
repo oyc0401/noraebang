@@ -1,15 +1,15 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { SearchService } from './search.service';
+import { Controller, Get, Query } from "@nestjs/common";
+import type { SearchService } from "./search.service";
 
-@Controller('search')
+@Controller("search")
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @Get()
   async search(
-    @Query('q') query: string,
-    @Query('provider') provider?: string,
-    @Query('limit') limit?: string,
+    @Query("q") query: string,
+    @Query("provider") provider?: string,
+    @Query("limit") limit?: string,
   ) {
     if (!query) {
       return { data: [] };
@@ -23,10 +23,10 @@ export class SearchController {
     return { data: results };
   }
 
-  @Get('karaoke')
+  @Get("karaoke")
   async searchByKaraokeNo(
-    @Query('no') karaokeNo: string,
-    @Query('provider') provider?: string,
+    @Query("no") karaokeNo: string,
+    @Query("provider") provider?: string,
   ) {
     if (!karaokeNo) {
       return { data: [] };
@@ -40,8 +40,8 @@ export class SearchController {
     return { data: results };
   }
 
-  @Get('artist')
-  async searchByArtist(@Query('name') artistName: string) {
+  @Get("artist")
+  async searchByArtist(@Query("name") artistName: string) {
     if (!artistName) {
       return { data: [] };
     }
@@ -50,8 +50,8 @@ export class SearchController {
     return { data: results };
   }
 
-  @Get('title')
-  async searchByTitle(@Query('q') title: string) {
+  @Get("title")
+  async searchByTitle(@Query("q") title: string) {
     if (!title) {
       return { data: [] };
     }

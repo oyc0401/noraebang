@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
 export interface SpotifyArtist {
   id: string;
@@ -46,17 +46,17 @@ export class SpotifyService {
 
     if (!clientId || !clientSecret) {
       throw new Error(
-        'SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET must be set',
+        "SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET must be set",
       );
     }
 
-    const response = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
       },
-      body: 'grant_type=client_credentials',
+      body: "grant_type=client_credentials",
     });
 
     if (!response.ok) {
@@ -104,9 +104,9 @@ export class SpotifyService {
     const data: SpotifySearchResponse = await response.json();
 
     // Raw 데이터 출력 (임시)
-    console.log('\n🔍 RAW SPOTIFY API RESPONSE:');
+    console.log("\n🔍 RAW SPOTIFY API RESPONSE:");
     console.log(response);
-    console.log('\n');
+    console.log("\n");
 
     return data.artists.items;
   }

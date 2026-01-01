@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { Artist, ArtistWithYoutube } from '@/types/models';
-import { API_BASE_URL } from '@/lib/api';
+import { useQuery } from "@tanstack/react-query";
+import { API_BASE_URL } from "@/lib/api";
+import type { Artist, ArtistWithYoutube } from "@/types/models";
 
 interface ArtistsResponse {
   data: Artist[];
@@ -17,10 +17,10 @@ interface ArtistResponse {
 
 export function useArtists() {
   return useQuery({
-    queryKey: ['artists'],
+    queryKey: ["artists"],
     queryFn: async (): Promise<Artist[]> => {
       const response = await fetch(`${API_BASE_URL}/artists`);
-      if (!response.ok) throw new Error('Failed to fetch artists');
+      if (!response.ok) throw new Error("Failed to fetch artists");
       const result: ArtistsResponse = await response.json();
       return result.data;
     },
@@ -29,10 +29,12 @@ export function useArtists() {
 
 export function useArtistsWithYoutube() {
   return useQuery({
-    queryKey: ['artists', 'youtube'],
+    queryKey: ["artists", "youtube"],
     queryFn: async (): Promise<ArtistWithYoutube[]> => {
-      const response = await fetch(`${API_BASE_URL}/artists?includeYoutube=true`);
-      if (!response.ok) throw new Error('Failed to fetch artists');
+      const response = await fetch(
+        `${API_BASE_URL}/artists?includeYoutube=true`,
+      );
+      if (!response.ok) throw new Error("Failed to fetch artists");
       const result: ArtistsWithYoutubeResponse = await response.json();
       return result.data;
     },
@@ -42,10 +44,10 @@ export function useArtistsWithYoutube() {
 
 export function useArtist(alias: string) {
   return useQuery({
-    queryKey: ['artist', alias],
+    queryKey: ["artist", alias],
     queryFn: async (): Promise<Artist> => {
       const response = await fetch(`${API_BASE_URL}/artists/${alias}`);
-      if (!response.ok) throw new Error('Failed to fetch artist');
+      if (!response.ok) throw new Error("Failed to fetch artist");
       const result: ArtistResponse = await response.json();
       return result.data;
     },

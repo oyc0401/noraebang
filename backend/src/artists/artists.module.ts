@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { ArtistsController } from './artists.controller';
-import { ArtistsService } from './artists.service';
-import { ArtistPrismaRepository } from '../repositories/prisma/artist-prisma.repository';
-import { ARTIST_REPOSITORY } from '../repositories/tokens';
+import { Module } from "@nestjs/common";
+import { ArtistPrismaRepository } from "../repositories/prisma/artist-prisma.repository";
+import { ARTIST_REPOSITORY } from "../repositories/tokens";
+import { ArtistsController } from "./artists.controller";
+import { ArtistsService } from "./artists.service";
 
 @Module({
   controllers: [ArtistsController],

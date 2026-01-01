@@ -1,4 +1,4 @@
-import type { Artist, YoutubeChannel } from '@prisma/client';
+import type { Artist, YoutubeChannel } from "@prisma/client";
 
 export type ArtistWithYoutube = Artist & {
   youtubeChannel: YoutubeChannel | null;

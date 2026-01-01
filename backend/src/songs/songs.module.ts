@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { SongsController } from './songs.controller';
-import { SongsService } from './songs.service';
-import { SongPrismaRepository } from '../repositories/prisma/song-prisma.repository';
-import { SONG_REPOSITORY } from '../repositories/tokens';
-import { ArtistsModule } from '../artists/artists.module';
+import { Module } from "@nestjs/common";
+import { ArtistsModule } from "../artists/artists.module";
+import { SongPrismaRepository } from "../repositories/prisma/song-prisma.repository";
+import { SONG_REPOSITORY } from "../repositories/tokens";
+import { SongsController } from "./songs.controller";
+import { SongsService } from "./songs.service";
 
 @Module({
   imports: [ArtistsModule],

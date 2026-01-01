@@ -1,5 +1,5 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import * as cheerio from 'cheerio';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import * as cheerio from "cheerio";
 
 export interface ScrapedSong {
   title: string;
@@ -17,7 +17,7 @@ export class BlogScrapeService {
       if (!response.ok) {
         throw new HttpException(
           `Failed to fetch URL: ${response.statusText}`,
-          response.status
+          response.status,
         );
       }
 
@@ -31,21 +31,21 @@ export class BlogScrapeService {
         const $table = $(table);
 
         // Skip the header row and process data rows
-        $table.find('tbody tr').each((_, row) => {
+        $table.find("tbody tr").each((_, row) => {
           const $row = $(row);
 
           // Skip header row (first row with "곡명", "TJ", "KY", "JOYSOUND")
-          const firstCell = $row.find('td').first().text().trim();
-          if (firstCell === '곡명') {
+          const firstCell = $row.find("td").first().text().trim();
+          if (firstCell === "곡명") {
             return; // continue to next iteration
           }
 
           // Skip rows with ads or colspan
-          if ($row.find('td[colspan]').length > 0) {
+          if ($row.find("td[colspan]").length > 0) {
             return; // continue to next iteration
           }
 
-          const cells = $row.find('td');
+          const cells = $row.find("td");
           if (cells.length < 4) {
             return; // continue to next iteration
           }
@@ -57,17 +57,17 @@ export class BlogScrapeService {
           const joysoundCell = $(cells[3]);
 
           // Extract title and Korean title
-          const htmlContent = titleCell.html() || '';
-          const parts = htmlContent.split('<br>');
+          const htmlContent = titleCell.html() || "";
+          const parts = htmlContent.split("<br>");
 
-          let title = '';
-          let titleKo = '';
+          let title = "";
+          let titleKo = "";
 
           // Get first line (title)
           if (parts.length > 0) {
             const $firstPart = cheerio.load(parts[0]);
             // Get the innermost span text to avoid duplication
-            const spans = $firstPart('span');
+            const spans = $firstPart("span");
             if (spans.length > 0) {
               title = spans.last().text().trim();
             }
@@ -76,7 +76,7 @@ export class BlogScrapeService {
           // Get second line (Korean title)
           if (parts.length > 1) {
             const $secondPart = cheerio.load(parts[1]);
-            const spans = $secondPart('span');
+            const spans = $secondPart("span");
             if (spans.length > 0) {
               titleKo = spans.last().text().trim();
             }
@@ -91,9 +91,9 @@ export class BlogScrapeService {
           const song: ScrapedSong = {
             title,
             ...(titleKo && { titleKo }),
-            ...(tj && tj !== '-' && { tj }),
-            ...(ky && ky !== '-' && { ky }),
-            ...(joysound && joysound !== '-' && { joysound }),
+            ...(tj && tj !== "-" && { tj }),
+            ...(ky && ky !== "-" && { ky }),
+            ...(joysound && joysound !== "-" && { joysound }),
           };
 
           // Only add if we have a valid title
@@ -109,8 +109,8 @@ export class BlogScrapeService {
         throw error;
       }
       throw new HttpException(
-        'Failed to scrape data',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "Failed to scrape data",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

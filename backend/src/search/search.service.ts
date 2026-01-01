@@ -1,21 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { TypesenseService } from '../typesense/typesense.service';
+import { Injectable } from "@nestjs/common";
+import type { TypesenseService } from "../typesense/typesense.service";
 
 @Injectable()
 export class SearchService {
-  private readonly collectionName = 'songs';
+  private readonly collectionName = "songs";
 
   constructor(private readonly typesenseService: TypesenseService) {}
 
-  async search(query: string, options?: {
-    provider?: string;
-    limit?: number;
-  }) {
+  async search(
+    query: string,
+    options?: {
+      provider?: string;
+      limit?: number;
+    },
+  ) {
     const client = this.typesenseService.getClient();
 
     const searchParameters = {
       q: query,
-      query_by: 'title,titleKo,titleNorm,artistName,artistNameKo,karaokeNo',
+      query_by: "title,titleKo,titleNorm,artistName,artistNameKo,karaokeNo",
       limit: options?.limit || 20,
       ...(options?.provider && {
         filter_by: `provider:=${options.provider}`,
@@ -30,7 +33,7 @@ export class SearchService {
 
       return searchResults.hits?.map((hit) => hit.document) || [];
     } catch (error) {
-      console.error('Search error:', error);
+      console.error("Search error:", error);
       return [];
     }
   }

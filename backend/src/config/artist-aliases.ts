@@ -16,8 +16,8 @@ export interface ArtistAliasGroup {
 // 아티스트 별칭 그룹 목록
 export const ARTIST_ALIAS_GROUPS: ArtistAliasGroup[] = [
   {
-    groupId: 'tayori-islet',
-    aliases: ['tayori', 'islet'],
+    groupId: "tayori-islet",
+    aliases: ["tayori", "islet"],
   },
   // 필요시 여기에 다른 별칭 그룹 추가
   // {
@@ -52,8 +52,8 @@ export function getAliasArtistIds(
   }
 
   // 별칭 그룹에 속하는지 확인
-  const aliasGroup = ARTIST_ALIAS_GROUPS.find(group =>
-    group.aliases.includes(artistAlias)
+  const aliasGroup = ARTIST_ALIAS_GROUPS.find((group) =>
+    group.aliases.includes(artistAlias),
   );
 
   // 그룹에 속하지 않으면 자기 자신만 반환

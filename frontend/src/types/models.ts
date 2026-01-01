@@ -1,7 +1,7 @@
 export enum Provider {
-  TJ = 'TJ',
-  KY = 'KY',
-  JOYSOUND = 'JOYSOUND',
+  TJ = "TJ",
+  KY = "KY",
+  JOYSOUND = "JOYSOUND",
 }
 
 export interface YoutubeChannel {

@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useArtistsWithYoutube } from '@/hooks/use-artists';
-import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useArtistsWithYoutube } from "@/hooks/use-artists";
 
 export default function Home() {
   const { data: artists, isLoading, error } = useArtistsWithYoutube();
-  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchLog, setSearchLog] = useState<string[]>([]);
   const router = useRouter();
@@ -20,50 +20,68 @@ export default function Home() {
 
     try {
       // Fetch YouTube title
-      setSearchLog(prev => [...prev, `유튜브 정보 가져오는 중...`]);
-      const response = await fetch(`/api/youtube?url=${encodeURIComponent(youtubeUrl)}`);
+      setSearchLog((prev) => [...prev, `유튜브 정보 가져오는 중...`]);
+      const response = await fetch(
+        `/api/youtube?url=${encodeURIComponent(youtubeUrl)}`,
+      );
 
       if (!response.ok) {
-        setSearchLog(prev => [...prev, `❌ 유튜브 정보를 가져올 수 없습니다.`]);
+        setSearchLog((prev) => [
+          ...prev,
+          `❌ 유튜브 정보를 가져올 수 없습니다.`,
+        ]);
         return;
       }
 
       const { data } = await response.json();
       const title = data.title;
-      setSearchLog(prev => [...prev, `✓ 제목: ${title}`]);
+      setSearchLog((prev) => [...prev, `✓ 제목: ${title}`]);
 
       // Search for song
-      setSearchLog(prev => [...prev, `곡 검색 중...`]);
+      setSearchLog((prev) => [...prev, `곡 검색 중...`]);
       const songsResponse = await fetch(`/api/songs`);
       const { data: songs } = await songsResponse.json();
 
-      const foundSong = songs.find((song: any) =>
-        song.title.toLowerCase().includes(title.toLowerCase()) ||
-        title.toLowerCase().includes(song.title.toLowerCase()) ||
-        (song.titleKo && title.toLowerCase().includes(song.titleKo.toLowerCase()))
+      const foundSong = songs.find(
+        (song: any) =>
+          song.title.toLowerCase().includes(title.toLowerCase()) ||
+          title.toLowerCase().includes(song.title.toLowerCase()) ||
+          (song.titleKo &&
+            title.toLowerCase().includes(song.titleKo.toLowerCase())),
       );
 
       if (foundSong) {
-        setSearchLog(prev => [...prev, `✓ 곡을 찾았습니다: ${foundSong.title}`]);
+        setSearchLog((prev) => [
+          ...prev,
+          `✓ 곡을 찾았습니다: ${foundSong.title}`,
+        ]);
 
         // Get artist alias
         const artistResponse = await fetch(`/api/artists`);
         const { data: artistsList } = await artistResponse.json();
-        const artist = artistsList.find((a: any) => a.id === foundSong.artistId);
+        const artist = artistsList.find(
+          (a: any) => a.id === foundSong.artistId,
+        );
 
         if (artist) {
-          setSearchLog(prev => [...prev, `✓ ${artist.nameKo} 페이지로 이동합니다...`]);
+          setSearchLog((prev) => [
+            ...prev,
+            `✓ ${artist.nameKo} 페이지로 이동합니다...`,
+          ]);
           setTimeout(() => {
             router.push(`/channel/${artist.alias}#${foundSong.id}`);
           }, 500);
         } else {
-          setSearchLog(prev => [...prev, `❌ 아티스트 정보를 찾을 수 없습니다.`]);
+          setSearchLog((prev) => [
+            ...prev,
+            `❌ 아티스트 정보를 찾을 수 없습니다.`,
+          ]);
         }
       } else {
-        setSearchLog(prev => [...prev, `❌ 해당 곡을 찾을 수 없습니다.`]);
+        setSearchLog((prev) => [...prev, `❌ 해당 곡을 찾을 수 없습니다.`]);
       }
     } catch (error) {
-      setSearchLog(prev => [...prev, `❌ 오류가 발생했습니다: ${error}`]);
+      setSearchLog((prev) => [...prev, `❌ 오류가 발생했습니다: ${error}`]);
     } finally {
       setSearching(false);
     }
@@ -91,7 +109,7 @@ export default function Home() {
                 type="text"
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleYoutubeSearch()}
+                onKeyDown={(e) => e.key === "Enter" && handleYoutubeSearch()}
                 placeholder="https://music.youtube.com/watch?v=..."
                 className="flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:border-zinc-400"
                 disabled={searching}
@@ -101,7 +119,7 @@ export default function Home() {
                 disabled={searching || !youtubeUrl.trim()}
                 className="rounded-lg bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
               >
-                {searching ? '검색 중...' : '검색'}
+                {searching ? "검색 중..." : "검색"}
               </button>
             </div>
           </div>

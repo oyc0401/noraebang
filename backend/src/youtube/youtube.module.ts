@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { YoutubeController } from './youtube.controller';
-import { YoutubeService } from './youtube.service';
-import { ArtistsModule } from '../artists/artists.module';
+import { Module } from "@nestjs/common";
+import { ArtistsModule } from "../artists/artists.module";
+import { YoutubeController } from "./youtube.controller";
+import { YoutubeService } from "./youtube.service";
 
 @Module({
   imports: [ArtistsModule],

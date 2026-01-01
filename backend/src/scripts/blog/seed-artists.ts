@@ -1,8 +1,8 @@
-import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
-import { blogArtist } from '../../data/artist';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import pg from "pg";
+import { blogArtist } from "../../data/artist";
 
 // pnpm ts-node src/scripts/blog/seed-artists.ts
 
@@ -12,7 +12,7 @@ const prisma = new PrismaClient({ adapter });
 
 async function seedArtists() {
   try {
-    console.log('🎵 Starting to seed artists...\n');
+    console.log("🎵 Starting to seed artists...\n");
 
     let created = 0;
     let updated = 0;
@@ -50,13 +50,13 @@ async function seedArtists() {
       }
     }
 
-    console.log('\n📊 Summary:');
+    console.log("\n📊 Summary:");
     console.log(`   Created: ${created}`);
     console.log(`   Updated: ${updated}`);
     console.log(`   Total: ${blogArtist.length}`);
-    console.log('\n✅ Seeding completed!');
+    console.log("\n✅ Seeding completed!");
   } catch (error: any) {
-    console.error('❌ Fatal error:', error);
+    console.error("❌ Fatal error:", error);
     throw error;
   } finally {
     await prisma.$disconnect();
