@@ -1,9 +1,16 @@
 import { Injectable } from "@nestjs/common";
-import type { Artist, Prisma, YoutubeChannel } from "@prisma/client";
+import type {
+  Artist,
+  Prisma,
+  YoutubeChannel,
+} from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
 export type ArtistWithYoutube = Artist & {
   youtubeChannel: YoutubeChannel | null;
+  _count: {
+    artistSongs: number;
+  };
 };
 
 export const ARTIST_SORT_OPTIONS = [
@@ -52,6 +59,11 @@ export class ArtistsService {
     return this.prisma.artist.findMany({
       include: {
         youtubeChannel: true,
+        _count: {
+          select: {
+            artistSongs: true,
+          },
+        },
       },
       orderBy: {
         youtubeChannel: {

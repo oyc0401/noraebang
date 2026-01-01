@@ -5,9 +5,9 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-import type { YoutubeInfoDto } from './youtubeInfoDto';
+import type { ArtistAliasGroupDto } from './artistAliasGroupDto';
 
 /**
  * @nullable
  */
-export type ArtistWithYoutubeDtoYoutube = YoutubeInfoDto | null;
+export type ArtistDatailsDtoAliasGroup = ArtistAliasGroupDto | null;
