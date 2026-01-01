@@ -13,9 +13,6 @@ export class ArtistDto {
   @ApiProperty({ example: "yoasobi", required: false })
   alias?: string | null;
 
-  @ApiProperty({ example: null, required: false })
-  imageUrl?: string | null;
-
   @ApiProperty({
     example: "https://yt3.googleusercontent.com/default.jpg",
     required: false,
@@ -87,6 +84,24 @@ export class ArtistWithYoutubeDto {
 
   @ApiProperty({ example: "yoasobi", required: false })
   alias?: string | null;
+
+  @ApiProperty({
+    example: "https://yt3.googleusercontent.com/default.jpg",
+    required: false,
+  })
+  thumbnailDefault?: string | null;
+
+  @ApiProperty({
+    example: "https://yt3.googleusercontent.com/medium.jpg",
+    required: false,
+  })
+  thumbnailMedium?: string | null;
+
+  @ApiProperty({
+    example: "https://yt3.googleusercontent.com/high.jpg",
+    required: false,
+  })
+  thumbnailHigh?: string | null;
 
   @ApiProperty({ type: YoutubeInfoDto, required: false })
   youtube?: YoutubeInfoDto | null;

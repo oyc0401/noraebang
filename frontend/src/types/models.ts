@@ -19,6 +19,9 @@ export interface Artist {
   name: string;
   nameKo: string;
   alias: string;
+  thumbnailDefault?: string | null;
+  thumbnailMedium?: string | null;
+  thumbnailHigh?: string | null;
   youtubeChannelId?: string;
   tjSongRequestUrl?: string;
   createdAt?: Date;
