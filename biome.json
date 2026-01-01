@@ -42,6 +42,23 @@
       "react": "recommended"
     }
   },
+  "overrides": [
+    {
+      "includes": [
+        "backend/src/**/*.controller.ts",
+        "backend/src/**/*.service.ts",
+        "backend/src/**/*.module.ts",
+        "backend/src/**/*.repository.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "useImportType": "off"
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "actions": {
       "source": {
