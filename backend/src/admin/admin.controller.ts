@@ -2,8 +2,8 @@ import { Controller, Get, Param, ParseIntPipe } from "@nestjs/common";
 import {
   ApiOperation,
   ApiParam,
-  ApiResponse as SwaggerApiResponse,
   ApiTags,
+  ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../common/dto/api-response.dto";
 import { AdminService } from "./admin.service";

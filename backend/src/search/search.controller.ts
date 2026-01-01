@@ -2,8 +2,8 @@ import { Controller, Get, Query } from "@nestjs/common";
 import {
   ApiOperation,
   ApiQuery,
-  ApiResponse as SwaggerApiResponse,
   ApiTags,
+  ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
 import { SearchService } from "./search.service";
 
@@ -142,7 +142,8 @@ export class SearchController {
   @Get("title")
   @ApiOperation({
     summary: "곡 제목으로 검색",
-    description: "곡 제목 또는 한글 제목이 검색어를 포함하는 항목을 반환합니다.",
+    description:
+      "곡 제목 또는 한글 제목이 검색어를 포함하는 항목을 반환합니다.",
   })
   @ApiQuery({ name: "q", required: true, description: "곡 제목" })
   @SwaggerApiResponse({
