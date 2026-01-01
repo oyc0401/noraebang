@@ -20,7 +20,7 @@ foo: string | null; 보다는 foo?: string 이 좋아요
 
 
 # 아키텍쳐 규칙 (필수)
-단순 npx로 실행 가능한 스크립트코드에서는 prisma 생성이 가능하지만 그 이외의 서비스, Nest 프로젝트에서는 무조건 Repository를 사용하세요.
+단순 npx로 실행 가능한 스크립트 코드에서는 prisma 생성이 가능하지만 그 이외의 서비스, Nest 프로젝트에서는 무조건 Repository를 사용하세요.
 
 # 규칙
 절대로 개발 서버를 실행하지 마세요
@@ -98,12 +98,17 @@ foo: string | null; 보다는 foo?: string 이 좋아요
 nest.js
 
 ### 프론트
-next.js
-orval + tanstackquery
-tailwind + cn()
+- next.js
+- Tanstack Query + Orval (OpenAPI 기반으로 hook 생성)
+- tailwind + cn()
+- Zustand
+  - 상태 관리는 Zustand로 해 주세요. 다만 상태가 너무 복잡해지지 않도록 주의해 주세요.
+- React-hook-form + Zod
+  - 폼은 react-hook-form zod를 사용해서 컨트롤하고, zod 를 이용해서 유효성을 검증해요. 다만 필요할 경우 커스텀 로직으로 대체해도 괜찮아요.
+
 
 ### 포맷팅&문서
-biome
-apidoc
-lineart
+- biome
+- apidoc
+- lineart
 

@@ -20,7 +20,7 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
-import { customFetch } from '../../lib/api-client';
+import { customFetch } from '../../client';
 
 
 

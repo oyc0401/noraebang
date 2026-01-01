@@ -4,14 +4,30 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useArtistsWithYoutube } from "@/hooks/use-artists";
+import { useArtistsControllerFindAll } from "@/api/model/artists/artists";
+import { mapResponseData } from "@/api/utils";
+import type { ArtistWithYoutube } from "@/types/models";
 
 export default function Home() {
-  const { data: artists, isLoading, error } = useArtistsWithYoutube();
+  const {
+    data: artists = [],
+    isLoading,
+    error,
+  } = useArtistsControllerFindAll<
+    ArtistWithYoutube[]
+  >(
+    { includeYoutube: "true" },
+    {
+      query: {
+        select: mapResponseData<ArtistWithYoutube[]>([]),
+      },
+    },
+  );
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchLog, setSearchLog] = useState<string[]>([]);
   const router = useRouter();
+  const queryError = error instanceof Error ? error : null;
 
   const handleYoutubeSearch = async () => {
     if (!youtubeUrl.trim()) return;
@@ -149,13 +165,13 @@ export default function Home() {
           </div>
         )}
 
-        {error && (
+        {queryError && (
           <div className="rounded-lg bg-red-50 p-4 text-red-600 dark:bg-red-900/20 dark:text-red-400">
-            에러가 발생했습니다: {error.message}
+            에러가 발생했습니다: {queryError.message}
           </div>
         )}
 
-        {artists && (
+        {artists.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {artists.map((artist) => (
               <Link
