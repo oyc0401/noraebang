@@ -77,7 +77,10 @@ export class SongsController {
       title: song.title,
       titleKo: song.titleKo,
       artistIds: song.artistSongs.map((as) => as.artistId),
-      karaokeSongs: song.karaokeSongs,
+      karaokeSongs: song.karaokeSongs.map(({ provider, karaokeNo }) => ({
+        provider,
+        karaokeNo,
+      })),
     }));
 
     return ApiResponse.success(mapped);
@@ -95,7 +98,9 @@ export class SongsController {
     type: SongDetailResponseDto,
   })
   @SwaggerApiResponse({ status: 404, description: "곡을 찾을 수 없음" })
-  async findOne(@Param("id", ParseIntPipe) id: number): Promise<SongDetailResponseDto> {
+  async findOne(
+    @Param("id", ParseIntPipe) id: number,
+  ): Promise<SongDetailResponseDto> {
     const song = await this.songsService.findById(id);
     if (!song) {
       throw new NotFoundException("Song not found");
@@ -106,7 +111,10 @@ export class SongsController {
       title: song.title,
       titleKo: song.titleKo,
       artistIds: song.artistSongs.map((as) => as.artistId),
-      karaokeSongs: song.karaokeSongs,
+      karaokeSongs: song.karaokeSongs.map(({ provider, karaokeNo }) => ({
+        provider,
+        karaokeNo,
+      })),
     };
 
     return ApiResponse.success(mapped);
