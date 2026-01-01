@@ -1,22 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import type { Artist } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
-
-export interface OembedData {
-  title: string;
-  author_name: string;
-  author_url: string;
-  type: string;
-  height?: number;
-  width?: number;
-  version: string;
-  provider_name: string;
-  provider_url: string;
-  thumbnail_height?: number;
-  thumbnail_width?: number;
-  thumbnail_url?: string;
-  html?: string;
-}
+import { OembedDataDto } from "./dto/oembed-data.dto";
 
 export interface ChannelSearchResult {
   channelId: string;
@@ -66,7 +51,7 @@ export class YoutubeService {
 
   constructor(private prisma: PrismaService) {}
 
-  async getOembedData(url: string): Promise<OembedData> {
+  async getOembedData(url: string): Promise<OembedDataDto> {
     try {
       const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
       const response = await fetch(oembedUrl);
@@ -78,7 +63,7 @@ export class YoutubeService {
         );
       }
 
-      return (await response.json()) as OembedData;
+      return (await response.json()) as OembedDataDto;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;

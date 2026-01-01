@@ -5,9 +5,10 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
-import { SearchService } from "./search.service";
-import { YoutubeService } from "../youtube/youtube.service";
 import { ApiResponse } from "../dto/api-response.dto";
+import { YoutubeService } from "../youtube/youtube.service";
+import { YoutubeOembedResponseDto } from "./dto/youtube-oembed-response.dto";
+import { SearchService } from "./search.service";
 
 @ApiTags("Search")
 @Controller("search")
@@ -181,16 +182,7 @@ export class SearchController {
   @SwaggerApiResponse({
     status: 200,
     description: "OEmbed 데이터",
-    schema: {
-      example: {
-        data: {
-          title: "YOASOBI - 夜に駆ける",
-          author_name: "YOASOBI",
-          provider_name: "YouTube",
-          thumbnail_url: "https://img.youtube.com/vi/xyz/default.jpg",
-        },
-      },
-    },
+    type: YoutubeOembedResponseDto,
   })
   @SwaggerApiResponse({ status: 400, description: "URL 파라미터 필요" })
   async getYoutubeOembed(@Query("url") url: string) {

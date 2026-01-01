@@ -6,22 +6,27 @@
  * OpenAPI spec version: 1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
-  ArtistsControllerFindAllParams
+  ArtistsControllerFindAllParams,
+  YoutubeChannelUpdateDto
 } from '.././models';
 
 import { customFetch } from '../../client';
@@ -216,3 +221,70 @@ export function useArtistsControllerFindByIdOrAlias<TData = Awaited<ReturnType<t
 
 
 
+/**
+ * 선택한 아티스트에 YouTube 채널 ID 또는 @handle 을 연결합니다.
+ * @summary 아티스트 YouTube 채널 정보 업데이트
+ */
+export const artistsControllerUpdateYoutubeChannel = (
+    alias: string,
+    youtubeChannelUpdateDto: YoutubeChannelUpdateDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customFetch<unknown | void>(
+      {url: `/artists/${alias}/youtube-channel`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: youtubeChannelUpdateDto, signal
+    },
+      );
+    }
+  
+
+
+export const getArtistsControllerUpdateYoutubeChannelMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, TError,{alias: string;data: YoutubeChannelUpdateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, TError,{alias: string;data: YoutubeChannelUpdateDto}, TContext> => {
+
+const mutationKey = ['artistsControllerUpdateYoutubeChannel'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, {alias: string;data: YoutubeChannelUpdateDto}> = (props) => {
+          const {alias,data} = props ?? {};
+
+          return  artistsControllerUpdateYoutubeChannel(alias,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArtistsControllerUpdateYoutubeChannelMutationResult = NonNullable<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>>
+    export type ArtistsControllerUpdateYoutubeChannelMutationBody = YoutubeChannelUpdateDto
+    export type ArtistsControllerUpdateYoutubeChannelMutationError = void
+
+    /**
+ * @summary 아티스트 YouTube 채널 정보 업데이트
+ */
+export const useArtistsControllerUpdateYoutubeChannel = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, TError,{alias: string;data: YoutubeChannelUpdateDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>,
+        TError,
+        {alias: string;data: YoutubeChannelUpdateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getArtistsControllerUpdateYoutubeChannelMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    

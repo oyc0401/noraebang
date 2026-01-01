@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useArtistsControllerFindAll } from "@/api/model/artists/artists";
+import { searchControllerGetYoutubeOembed } from "@/api/model/search/search";
+import { songsControllerFindAll } from "@/api/model/songs/songs";
 import { mapResponseData } from "@/api/utils";
 import type { ArtistWithYoutube } from "@/types/models";
 
@@ -36,29 +38,20 @@ export default function Home() {
     try {
       // Fetch YouTube title
       setSearchLog((prev) => [...prev, `유튜브 정보 가져오는 중...`]);
-      const response = await fetch(
-        `/api/youtube?url=${encodeURIComponent(youtubeUrl)}`,
-      );
-
-      if (!response.ok) {
-        setSearchLog((prev) => [
-          ...prev,
-          `❌ 유튜브 정보를 가져올 수 없습니다.`,
-        ]);
-        return;
-      }
-
-      const { data } = await response.json();
-      const title = data.title;
+      const youtubeResponse = await searchControllerGetYoutubeOembed({
+        url: youtubeUrl,
+      });
+      const youtubeData = mapResponseData()(youtubeResponse);
+      const title = youtubeData.title;
       setSearchLog((prev) => [...prev, `✓ 제목: ${title}`]);
 
       // Search for song
       setSearchLog((prev) => [...prev, `곡 검색 중...`]);
-      const songsResponse = await fetch(`/api/songs`);
-      const { data: songs } = await songsResponse.json();
+      const songsResponse = await songsControllerFindAll();
+      const songs = mapResponseData([])(songsResponse);
 
       const foundSong = songs.find(
-        (song: any) =>
+        (song) =>
           song.title.toLowerCase().includes(title.toLowerCase()) ||
           title.toLowerCase().includes(song.title.toLowerCase()) ||
           (song.titleKo &&
@@ -71,12 +64,8 @@ export default function Home() {
           `✓ 곡을 찾았습니다: ${foundSong.title}`,
         ]);
 
-        // Get artist alias
-        const artistResponse = await fetch(`/api/artists`);
-        const { data: artistsList } = await artistResponse.json();
-        const artist = artistsList.find(
-          (a: any) => a.id === foundSong.artistId,
-        );
+        // Get artist from already loaded data
+        const artist = artists.find((a) => a.id === foundSong.artistId);
 
         if (artist) {
           setSearchLog((prev) => [

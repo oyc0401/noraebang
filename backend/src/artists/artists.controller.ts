@@ -15,9 +15,9 @@ import {
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../dto/api-response.dto";
-import { ArtistsService } from "./artists.service";
-import { YoutubeService } from "../youtube/youtube.service";
 import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
+import { YoutubeService } from "../youtube/youtube.service";
+import { ArtistsService } from "./artists.service";
 
 @ApiTags("Artists")
 @Controller("artists")
