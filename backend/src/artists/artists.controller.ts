@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   Get,
   NotFoundException,
   Param,
+  Post,
   Query,
 } from "@nestjs/common";
 import {
@@ -12,13 +14,18 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
-import { ApiResponse } from "../common/dto/api-response.dto";
+import { ApiResponse } from "../dto/api-response.dto";
 import { ArtistsService } from "./artists.service";
+import { YoutubeService } from "../youtube/youtube.service";
+import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
 
 @ApiTags("Artists")
 @Controller("artists")
 export class ArtistsController {
-  constructor(private readonly artistsService: ArtistsService) {}
+  constructor(
+    private readonly artistsService: ArtistsService,
+    private readonly youtubeService: YoutubeService,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -125,5 +132,37 @@ export class ArtistsController {
       throw new NotFoundException("Artist not found");
     }
     return ApiResponse.success(artist);
+  }
+
+  @Post(":alias/youtube-channel")
+  @ApiOperation({
+    summary: "아티스트 YouTube 채널 정보 업데이트",
+    description:
+      "선택한 아티스트에 YouTube 채널 ID 또는 @handle 을 연결합니다.",
+  })
+  @ApiParam({ name: "alias", description: "아티스트 alias" })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "업데이트 성공",
+    schema: {
+      example: {
+        data: {
+          channelId: "UCvpredjG93ifbCP1Y77JyFA",
+          channelTitle: "Ayase / YOASOBI",
+        },
+        message: "YouTube channel updated successfully",
+      },
+    },
+  })
+  @SwaggerApiResponse({ status: 400, description: "channelId 필요" })
+  async updateYoutubeChannel(
+    @Param("alias") alias: string,
+    @Body() body: YoutubeChannelUpdateDto,
+  ) {
+    const data = await this.youtubeService.updateArtistChannel(
+      alias,
+      body.channelId,
+    );
+    return ApiResponse.success(data, "YouTube channel updated successfully");
   }
 }

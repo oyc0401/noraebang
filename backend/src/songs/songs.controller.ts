@@ -14,7 +14,7 @@ import {
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
 import type { Song } from "@prisma/client";
-import { ApiResponse } from "../common/dto/api-response.dto";
+import { ApiResponse } from "../dto/api-response.dto";
 import { SongsService } from "./songs.service";
 
 @ApiTags("Songs")

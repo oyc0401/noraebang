@@ -2,7 +2,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
-import { blogArtist } from "../src/data/artist";
+import { blogArtist } from "./data/artist";
 
 // pnpm ts-node scripts/blog/seed-artists.ts
 
