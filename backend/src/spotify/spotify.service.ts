@@ -66,10 +66,11 @@ export class SpotifyService {
     }
 
     const data = await response.json();
-    this.accessToken = data.access_token;
+    const token = data.access_token as string;
+    this.accessToken = token;
     this.tokenExpiresAt = Date.now() + data.expires_in * 1000 - 60000; // 1분 여유
 
-    return this.accessToken;
+    return token;
   }
 
   /**

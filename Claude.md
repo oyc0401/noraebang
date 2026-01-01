@@ -1,5 +1,10 @@
 # Claude 작업 지침
 
+이 프로젝트는 2년이상 유지보수해야하므로 대충 코드짜지 마세요
+any 금지.
+null인데 ! 되도록 금지.
+as 사용 되도록 자제.
+
 ## 개발 서버 실행 금지
 
 - **절대로 개발 서버를 실행하지 마세요** (`pnpm dev`, `npm run dev`, `pnpm start:dev` 등)
@@ -14,7 +19,6 @@
   - `src/hooks/`: React Query hooks
 - `backend/`: NestJS 백엔드 (포트 3001)
   - Repository Pattern 사용
-  - 현재 메모리 DB 사용
 
 ## 패키지 관리자
 
@@ -112,11 +116,6 @@
 
 ### 데이터 소스
 
-현재는 **메모리 레포지토리**를 사용합니다:
-- `backend/src/repositories/memory/data/` - 아티스트 및 곡 데이터
-- Prisma 타입 사용 (`@prisma/client`)
-- DB 마이그레이션 없이 즉시 사용 가능
-
 ## 환경 변수
 
 ### Frontend (`frontend/.env.local`)
@@ -134,3 +133,6 @@ PORT=3001
 
 - 노래방 번호가 `-`인 경우 해당 필드는 포함되지 않습니다
 - 광고나 불필요한 행은 자동으로 필터링됩니다
+
+
+ㅇ
