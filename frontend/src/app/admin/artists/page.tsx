@@ -6,17 +6,39 @@ import {
   useArtistsControllerFindAllDetails,
   useArtistsControllerUpdateYoutubeChannel,
 } from "@/api/model/artists/artists";
-import type { ArtistDetailsDto } from "@/api/model/models";
+import {
+  ArtistsControllerFindAllDetailsSort,
+  type ArtistDetailsDto,
+} from "@/api/model/models";
 import { useSongsControllerFindByArtistId } from "@/api/model/songs/songs";
 
-export default function AdminArtistsPage() {
-  const { data: artistsData, isLoading: artistsLoading } =
-    useArtistsControllerFindAllDetails();
-  const artists = artistsData?.data ?? [];
+const SORT_OPTIONS = [
+  { value: ArtistsControllerFindAllDetailsSort.id_desc, label: "최신" },
+  { value: ArtistsControllerFindAllDetailsSort.name_asc, label: "이름 ↑" },
+  { value: ArtistsControllerFindAllDetailsSort.name_desc, label: "이름 ↓" },
+  {
+    value: ArtistsControllerFindAllDetailsSort.subscriber_desc,
+    label: "구독자 ↑",
+  },
+  {
+    value: ArtistsControllerFindAllDetailsSort.subscriber_asc,
+    label: "구독자 ↓",
+  },
+  { value: ArtistsControllerFindAllDetailsSort.song_count_desc, label: "곡 ↑" },
+  { value: ArtistsControllerFindAllDetailsSort.song_count_asc, label: "곡 ↓" },
+] as const;
 
-  const { data: artistsWithYoutubeData, refetch: refetchYoutube } =
-    useArtistsControllerFindAllDetails();
-  const artistsWithYoutube = artistsWithYoutubeData?.data ?? [];
+type SortOption = (typeof SORT_OPTIONS)[number]["value"];
+const DEFAULT_SORT: SortOption = ArtistsControllerFindAllDetailsSort.name_asc;
+
+export default function AdminArtistsPage() {
+  const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
+  const {
+    data: artistsData,
+    isLoading: artistsLoading,
+    refetch: refetchArtists,
+  } = useArtistsControllerFindAllDetails({ sort });
+  const artists = artistsData?.data ?? [];
 
   const [selectedArtist, setSelectedArtist] = useState<ArtistDetailsDto | null>(
     null,
@@ -37,16 +59,7 @@ export default function AdminArtistsPage() {
     text: string;
   } | null>(null);
 
-  // Merge artists with YouTube info
-  const mergedArtists = artists?.map((artist) => {
-    const youtubeInfo = artistsWithYoutube?.find((yt) => yt.id === artist.id);
-    return {
-      ...artist,
-      youtube: youtubeInfo?.youtube,
-    };
-  });
-
-  const filteredArtists = mergedArtists?.filter(
+  const filteredArtists = artists?.filter(
     (artist) =>
       artist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       artist.nameKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -55,18 +68,19 @@ export default function AdminArtistsPage() {
 
   // 초기 로드시 URL 해시로부터 아티스트 선택
   useEffect(() => {
-    if (!mergedArtists || mergedArtists.length === 0 || selectedArtist) return;
+    if (!filteredArtists || filteredArtists.length === 0 || selectedArtist)
+      return;
 
     const hash = window.location.hash;
     if (hash) {
       const artistId = parseInt(hash.replace("#", ""), 10);
-      const artist = mergedArtists.find((a) => a.id === artistId);
+      const artist = filteredArtists.find((a) => a.id === artistId);
       if (artist) {
         setSelectedArtist(artist);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mergedArtists, selectedArtist]);
+  }, [filteredArtists, selectedArtist]);
 
   // 아티스트 선택시 URL 해시 업데이트
   useEffect(() => {
@@ -163,7 +177,7 @@ export default function AdminArtistsPage() {
         }`,
       });
       setChannelUrl("");
-      refetchYoutube();
+      refetchArtists();
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -241,9 +255,26 @@ export default function AdminArtistsPage() {
         {/* Left: Artist List */}
         <div className="w-80 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col">
           {/* Artist List Header */}
-          <div className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-2">
+          <div className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-2 flex items-center justify-between gap-2">
             <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase">
               Artists ({filteredArtists?.length || 0})
+            </div>
+            <div className="flex items-center gap-1 text-[10px] text-zinc-500 dark:text-zinc-400">
+              <label htmlFor="artists-sort" className="sr-only">
+                정렬
+              </label>
+              <select
+                id="artists-sort"
+                value={sort}
+                onChange={(event) => setSort(event.target.value as SortOption)}
+                className="rounded border border-zinc-200 bg-white px-1.5 py-0.5 text-[10px] text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
