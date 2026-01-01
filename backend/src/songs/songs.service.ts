@@ -1,8 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common';
-import type { SongRepository } from '../repositories/song.repository';
-import type { ArtistRepository } from '../repositories/artist.repository';
-import { SONG_REPOSITORY, ARTIST_REPOSITORY } from '../repositories/tokens';
-import { getArtistAliases } from '../config/artist-aliases';
+import { Inject, Injectable } from "@nestjs/common";
+import { getArtistAliases } from "../config/artist-aliases";
+import type { ArtistRepository } from "../repositories/artist.repository";
+import type { SongRepository } from "../repositories/song.repository";
+import { ARTIST_REPOSITORY, SONG_REPOSITORY } from "../repositories/tokens";
 
 @Injectable()
 export class SongsService {
@@ -41,7 +41,7 @@ export class SongsService {
 
     // 4. 모든 별칭의 아티스트 조회
     const aliasArtists = await this.artistRepository.findByAliases(allAliases);
-    const artistIds = aliasArtists.map(a => a.id);
+    const artistIds = aliasArtists.map((a) => a.id);
 
     // 5. 모든 아티스트의 곡 조회
     return this.songRepository.findByArtistIds(artistIds);

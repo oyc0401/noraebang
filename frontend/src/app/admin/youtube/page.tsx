@@ -1,29 +1,36 @@
-'use client';
+"use client";
 
-import { useArtistsWithYoutube } from '@/hooks/use-artists';
-import { useState } from 'react';
-import { API_BASE_URL } from '@/lib/api';
+import { useState } from "react";
+import { useArtistsWithYoutube } from "@/hooks/use-artists";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function AdminPage() {
   const { data: artists, isLoading, refetch } = useArtistsWithYoutube();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [updating, setUpdating] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // 채널 입력 모달
   const [showChannelModal, setShowChannelModal] = useState(false);
-  const [channelUrl, setChannelUrl] = useState('');
-  const [selectedArtist, setSelectedArtist] = useState<{ alias: string; name: string } | null>(null);
+  const [channelUrl, setChannelUrl] = useState("");
+  const [selectedArtist, setSelectedArtist] = useState<{
+    alias: string;
+    name: string;
+  } | null>(null);
 
-  const filteredArtists = artists?.filter(artist =>
-    artist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    artist.nameKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    artist.alias.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredArtists = artists?.filter(
+    (artist) =>
+      artist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      artist.nameKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      artist.alias.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleOpenChannelModal = (alias: string, artistName: string) => {
     setSelectedArtist({ alias, name: artistName });
-    setChannelUrl('');
+    setChannelUrl("");
     setShowChannelModal(true);
     setMessage(null);
   };
@@ -42,7 +49,7 @@ export default function AdminPage() {
     if (customMatch) return customMatch[1];
 
     // 그냥 채널 ID만 입력한 경우
-    if (url.startsWith('UC') || url.startsWith('@')) {
+    if (url.startsWith("UC") || url.startsWith("@")) {
       return url;
     }
 
@@ -52,8 +59,8 @@ export default function AdminPage() {
   const handleUpdateChannel = async () => {
     if (!selectedArtist || !channelUrl.trim()) {
       setMessage({
-        type: 'error',
-        text: '채널 URL을 입력해주세요.',
+        type: "error",
+        text: "채널 URL을 입력해주세요.",
       });
       return;
     }
@@ -61,8 +68,8 @@ export default function AdminPage() {
     const channelId = extractChannelId(channelUrl);
     if (!channelId) {
       setMessage({
-        type: 'error',
-        text: '올바른 YouTube 채널 URL을 입력해주세요.',
+        type: "error",
+        text: "올바른 YouTube 채널 URL을 입력해주세요.",
       });
       return;
     }
@@ -73,7 +80,7 @@ export default function AdminPage() {
     try {
       const response = await fetch(
         `${API_BASE_URL}/youtube/update-artist-channel/${selectedArtist.alias}?channelId=${encodeURIComponent(channelId)}`,
-        { method: 'POST' }
+        { method: "POST" },
       );
 
       const result = await response.json();
@@ -81,9 +88,12 @@ export default function AdminPage() {
       // 에러 응답 처리
       if (!response.ok) {
         // 백엔드에서 보낸 상세 에러 메시지 표시
-        const errorMessage = result.message || result.error?.message || `오류 (${response.status})`;
+        const errorMessage =
+          result.message ||
+          result.error?.message ||
+          `오류 (${response.status})`;
         setMessage({
-          type: 'error',
+          type: "error",
           text: `❌ ${selectedArtist.name}: ${errorMessage}`,
         });
         return;
@@ -92,19 +102,19 @@ export default function AdminPage() {
       // 성공 응답 처리
       if (result.success) {
         setMessage({
-          type: 'success',
+          type: "success",
           text: `✅ ${selectedArtist.name}: ${result.data.channelTitle}로 업데이트 완료!`,
         });
         // 모달 닫기
         setShowChannelModal(false);
-        setChannelUrl('');
+        setChannelUrl("");
         setSelectedArtist(null);
         // 목록 새로고침
         refetch();
       }
     } catch (error: any) {
       setMessage({
-        type: 'error',
+        type: "error",
         text: `❌ 오류 발생: ${error.message}`,
       });
     } finally {
@@ -139,9 +149,9 @@ export default function AdminPage() {
         {message && (
           <div
             className={`mb-6 rounded-lg p-4 ${
-              message.type === 'success'
-                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+              message.type === "success"
+                ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
             }`}
           >
             {message.text}
@@ -182,7 +192,10 @@ export default function AdminPage() {
               </thead>
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                 {filteredArtists.map((artist) => (
-                  <tr key={artist.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                  <tr
+                    key={artist.id}
+                    className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                  >
                     <td className="px-4 py-3">
                       {artist.youtube?.thumbnail ? (
                         <img
@@ -224,7 +237,8 @@ export default function AdminPage() {
                             rel="noopener noreferrer"
                             className="block text-xs text-blue-600 hover:underline dark:text-blue-400"
                           >
-                            {artist.youtube.customUrl || artist.youtube.channelId}
+                            {artist.youtube.customUrl ||
+                              artist.youtube.channelId}
                           </a>
                         </div>
                       ) : (
@@ -239,7 +253,9 @@ export default function AdminPage() {
                           {artist.youtube.subscriberCount.toLocaleString()}
                         </span>
                       ) : (
-                        <span className="text-sm text-zinc-400 dark:text-zinc-500">-</span>
+                        <span className="text-sm text-zinc-400 dark:text-zinc-500">
+                          -
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -247,7 +263,8 @@ export default function AdminPage() {
                         <div className="max-w-xs space-y-1">
                           {artist.youtube.videoCount && (
                             <div className="text-xs text-zinc-600 dark:text-zinc-400">
-                              동영상 {artist.youtube.videoCount.toLocaleString()}개
+                              동영상{" "}
+                              {artist.youtube.videoCount.toLocaleString()}개
                             </div>
                           )}
                           {artist.youtube.description && (
@@ -257,12 +274,16 @@ export default function AdminPage() {
                           )}
                         </div>
                       ) : (
-                        <span className="text-sm text-zinc-400 dark:text-zinc-500">-</span>
+                        <span className="text-sm text-zinc-400 dark:text-zinc-500">
+                          -
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => handleOpenChannelModal(artist.alias, artist.nameKo)}
+                        onClick={() =>
+                          handleOpenChannelModal(artist.alias, artist.nameKo)
+                        }
                         disabled={updating}
                         className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
                       >
@@ -305,7 +326,7 @@ export default function AdminPage() {
                   type="text"
                   value={channelUrl}
                   onChange={(e) => setChannelUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleUpdateChannel()}
+                  onKeyDown={(e) => e.key === "Enter" && handleUpdateChannel()}
                   placeholder="https://www.youtube.com/channel/UCxxx 또는 https://www.youtube.com/@channelname"
                   className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
                   autoFocus
@@ -316,7 +337,7 @@ export default function AdminPage() {
               </div>
 
               {/* 에러 메시지 표시 */}
-              {message && message.type === 'error' && (
+              {message && message.type === "error" && (
                 <div className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:bg-red-900/20 dark:text-red-400">
                   {message.text}
                 </div>
@@ -327,7 +348,7 @@ export default function AdminPage() {
               <button
                 onClick={() => {
                   setShowChannelModal(false);
-                  setChannelUrl('');
+                  setChannelUrl("");
                   setSelectedArtist(null);
                 }}
                 disabled={updating}
@@ -340,7 +361,7 @@ export default function AdminPage() {
                 disabled={updating || !channelUrl.trim()}
                 className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
               >
-                {updating ? '처리 중...' : '적용'}
+                {updating ? "처리 중..." : "적용"}
               </button>
             </div>
           </div>

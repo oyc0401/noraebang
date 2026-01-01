@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useAdminArtists, useAdminArtistSongs } from '@/hooks/use-admin';
-import { useArtistsWithYoutube } from '@/hooks/use-artists';
-import { useState, useEffect } from 'react';
-import { API_BASE_URL } from '@/lib/api';
+import { useEffect, useState } from "react";
+import { useAdminArtistSongs, useAdminArtists } from "@/hooks/use-admin";
+import { useArtistsWithYoutube } from "@/hooks/use-artists";
+import { API_BASE_URL } from "@/lib/api";
 
 interface Artist {
   id: number;
@@ -31,22 +31,26 @@ interface Song {
 
 export default function AdminArtistsPage() {
   const { data: artists, isLoading: artistsLoading } = useAdminArtists();
-  const { data: artistsWithYoutube, refetch: refetchYoutube } = useArtistsWithYoutube();
+  const { data: artistsWithYoutube, refetch: refetchYoutube } =
+    useArtistsWithYoutube();
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const { data: songs, isLoading: songsLoading } = useAdminArtistSongs(
     selectedArtist?.id || null,
   );
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // YouTube 채널 관리
   const [showYoutubeSection, setShowYoutubeSection] = useState(false);
-  const [channelUrl, setChannelUrl] = useState('');
+  const [channelUrl, setChannelUrl] = useState("");
   const [updating, setUpdating] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // Merge artists with YouTube info
   const mergedArtists = artists?.map((artist: Artist) => {
-    const youtubeInfo = artistsWithYoutube?.find(yt => yt.id === artist.id);
+    const youtubeInfo = artistsWithYoutube?.find((yt) => yt.id === artist.id);
     return {
       ...artist,
       youtube: youtubeInfo?.youtube,
@@ -66,7 +70,7 @@ export default function AdminArtistsPage() {
 
     const hash = window.location.hash;
     if (hash) {
-      const artistId = parseInt(hash.replace('#', ''), 10);
+      const artistId = parseInt(hash.replace("#", ""), 10);
       const artist = mergedArtists.find((a: Artist) => a.id === artistId);
       if (artist) {
         setSelectedArtist(artist);
@@ -78,12 +82,12 @@ export default function AdminArtistsPage() {
   // 아티스트 선택시 URL 해시 업데이트
   useEffect(() => {
     if (selectedArtist) {
-      window.history.replaceState(null, '', `#${selectedArtist.id}`);
+      window.history.replaceState(null, "", `#${selectedArtist.id}`);
 
       // 선택된 아티스트로 스크롤
       const element = document.getElementById(`artist-${selectedArtist.id}`);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        element.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     }
   }, [selectedArtist]);
@@ -93,7 +97,7 @@ export default function AdminArtistsPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!filteredArtists || filteredArtists.length === 0) return;
 
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
 
         const currentIndex = selectedArtist
@@ -101,18 +105,20 @@ export default function AdminArtistsPage() {
           : -1;
 
         let nextIndex: number;
-        if (e.key === 'ArrowDown') {
-          nextIndex = currentIndex < filteredArtists.length - 1 ? currentIndex + 1 : 0;
+        if (e.key === "ArrowDown") {
+          nextIndex =
+            currentIndex < filteredArtists.length - 1 ? currentIndex + 1 : 0;
         } else {
-          nextIndex = currentIndex > 0 ? currentIndex - 1 : filteredArtists.length - 1;
+          nextIndex =
+            currentIndex > 0 ? currentIndex - 1 : filteredArtists.length - 1;
         }
 
         setSelectedArtist(filteredArtists[nextIndex]);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [filteredArtists, selectedArtist]);
 
   const extractChannelId = (url: string): string | null => {
@@ -125,7 +131,7 @@ export default function AdminArtistsPage() {
     const customMatch = url.match(/youtube\.com\/c\/([a-zA-Z0-9_-]+)/);
     if (customMatch) return customMatch[1];
 
-    if (url.startsWith('UC') || url.startsWith('@')) {
+    if (url.startsWith("UC") || url.startsWith("@")) {
       return url;
     }
 
@@ -135,8 +141,8 @@ export default function AdminArtistsPage() {
   const handleUpdateChannel = async () => {
     if (!selectedArtist || !channelUrl.trim()) {
       setMessage({
-        type: 'error',
-        text: '채널 URL을 입력해주세요.',
+        type: "error",
+        text: "채널 URL을 입력해주세요.",
       });
       return;
     }
@@ -144,8 +150,8 @@ export default function AdminArtistsPage() {
     const channelId = extractChannelId(channelUrl);
     if (!channelId) {
       setMessage({
-        type: 'error',
-        text: '올바른 YouTube 채널 URL을 입력해주세요.',
+        type: "error",
+        text: "올바른 YouTube 채널 URL을 입력해주세요.",
       });
       return;
     }
@@ -156,15 +162,18 @@ export default function AdminArtistsPage() {
     try {
       const response = await fetch(
         `${API_BASE_URL}/youtube/update-artist-channel/${selectedArtist.alias}?channelId=${encodeURIComponent(channelId)}`,
-        { method: 'POST' }
+        { method: "POST" },
       );
 
       const result = await response.json();
 
       if (!response.ok) {
-        const errorMessage = result.message || result.error?.message || `오류 (${response.status})`;
+        const errorMessage =
+          result.message ||
+          result.error?.message ||
+          `오류 (${response.status})`;
         setMessage({
-          type: 'error',
+          type: "error",
           text: `❌ ${selectedArtist.nameKo}: ${errorMessage}`,
         });
         return;
@@ -172,15 +181,15 @@ export default function AdminArtistsPage() {
 
       if (result.success) {
         setMessage({
-          type: 'success',
+          type: "success",
           text: `✅ ${selectedArtist.nameKo}: ${result.data.channelTitle}로 업데이트 완료!`,
         });
-        setChannelUrl('');
+        setChannelUrl("");
         refetchYoutube();
       }
     } catch (error: any) {
       setMessage({
-        type: 'error',
+        type: "error",
         text: `❌ 오류 발생: ${error.message}`,
       });
     } finally {
@@ -190,27 +199,27 @@ export default function AdminArtistsPage() {
 
   const getRoleBadgeColor = (role: string | null) => {
     switch (role) {
-      case 'MAIN':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'FEATURING':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
-      case 'PRODUCER':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+      case "MAIN":
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+      case "FEATURING":
+        return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
+      case "PRODUCER":
+        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
       default:
-        return 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400';
+        return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400";
     }
   };
 
   const getRoleLabel = (role: string | null) => {
     switch (role) {
-      case 'MAIN':
-        return '메인';
-      case 'FEATURING':
-        return '피처링';
-      case 'PRODUCER':
-        return '프로듀서';
+      case "MAIN":
+        return "메인";
+      case "FEATURING":
+        return "피처링";
+      case "PRODUCER":
+        return "프로듀서";
       default:
-        return '-';
+        return "-";
     }
   };
 
@@ -242,9 +251,9 @@ export default function AdminArtistsPage() {
         <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-3">
           <div
             className={`rounded-lg p-3 text-sm ${
-              message.type === 'success'
-                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+              message.type === "success"
+                ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
             }`}
           >
             {message.text}
@@ -278,8 +287,8 @@ export default function AdminArtistsPage() {
                 onClick={() => setSelectedArtist(artist)}
                 className={`w-full px-4 py-3 text-left border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors ${
                   selectedArtist?.id === artist.id
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500'
-                    : ''
+                    ? "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500"
+                    : ""
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -351,7 +360,7 @@ export default function AdminArtistsPage() {
                       {selectedArtist.name}
                       {selectedArtist.alias && (
                         <>
-                          {' • '}
+                          {" • "}
                           <a
                             href={`/channel/${selectedArtist.alias}`}
                             target="_blank"
@@ -374,8 +383,8 @@ export default function AdminArtistsPage() {
                               key={alias}
                               className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                                 alias === selectedArtist.alias
-                                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                  : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                  : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
                               }`}
                             >
                               {alias}
@@ -388,7 +397,9 @@ export default function AdminArtistsPage() {
                   <div className="flex items-center gap-3">
                     {selectedArtist.alias && (
                       <button
-                        onClick={() => setShowYoutubeSection(!showYoutubeSection)}
+                        onClick={() =>
+                          setShowYoutubeSection(!showYoutubeSection)
+                        }
                         className="rounded-lg p-2 transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
                         title="YouTube 정보"
                       >
@@ -437,17 +448,26 @@ export default function AdminArtistsPage() {
                             rel="noopener noreferrer"
                             className="text-xs text-blue-600 hover:underline dark:text-blue-400"
                           >
-                            {(selectedArtist as any).youtube.customUrl || (selectedArtist as any).youtube.channelId}
+                            {(selectedArtist as any).youtube.customUrl ||
+                              (selectedArtist as any).youtube.channelId}
                           </a>
                         </div>
                         {(selectedArtist as any).youtube.subscriberCount && (
                           <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                            구독자 {(selectedArtist as any).youtube.subscriberCount.toLocaleString()}명
+                            구독자{" "}
+                            {(
+                              selectedArtist as any
+                            ).youtube.subscriberCount.toLocaleString()}
+                            명
                           </div>
                         )}
                         {(selectedArtist as any).youtube.videoCount && (
                           <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                            동영상 {(selectedArtist as any).youtube.videoCount.toLocaleString()}개
+                            동영상{" "}
+                            {(
+                              selectedArtist as any
+                            ).youtube.videoCount.toLocaleString()}
+                            개
                           </div>
                         )}
                         {(selectedArtist as any).youtube.description && (
@@ -475,7 +495,9 @@ export default function AdminArtistsPage() {
                         type="text"
                         value={channelUrl}
                         onChange={(e) => setChannelUrl(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleUpdateChannel()}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && handleUpdateChannel()
+                        }
                         placeholder="https://www.youtube.com/channel/UCxxx 또는 https://www.youtube.com/@channelname"
                         className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
                       />
@@ -488,7 +510,7 @@ export default function AdminArtistsPage() {
                       disabled={updating || !channelUrl.trim()}
                       className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
                     >
-                      {updating ? '처리 중...' : '채널 정보 업데이트'}
+                      {updating ? "처리 중..." : "채널 정보 업데이트"}
                     </button>
                   </div>
                 </div>

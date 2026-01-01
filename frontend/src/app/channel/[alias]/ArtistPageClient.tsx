@@ -1,16 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Artist, Song, Provider } from '@/types/models';
-import Link from 'next/link';
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { type Artist, Provider, type Song } from "@/types/models";
 
 interface ArtistPageClientProps {
   artist: Artist;
   initialSongs: Song[];
 }
 
-export default function ArtistPageClient({ artist, initialSongs }: ArtistPageClientProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+export default function ArtistPageClient({
+  artist,
+  initialSongs,
+}: ArtistPageClientProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [songs] = useState<Song[]>(initialSongs);
 
@@ -18,12 +21,12 @@ export default function ArtistPageClient({ artist, initialSongs }: ArtistPageCli
   useEffect(() => {
     const hash = window.location.hash;
     if (hash) {
-      const songId = hash.replace('#', '');
+      const songId = hash.replace("#", "");
       setSelectedSongId(songId);
       const element = document.getElementById(songId);
       if (element) {
         setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
         }, 100);
       }
     }
@@ -31,9 +34,10 @@ export default function ArtistPageClient({ artist, initialSongs }: ArtistPageCli
 
   // Filter songs based on search query
   const filteredSongs = searchQuery.trim()
-    ? songs.filter((song) =>
-        song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        song.titleKo?.toLowerCase().includes(searchQuery.toLowerCase())
+    ? songs.filter(
+        (song) =>
+          song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          song.titleKo?.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : songs;
 
@@ -80,7 +84,7 @@ export default function ArtistPageClient({ artist, initialSongs }: ArtistPageCli
                   fill="currentColor"
                   className="h-4 w-4"
                 >
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                 </svg>
                 유튜브 채널
                 <svg
@@ -156,13 +160,13 @@ export default function ArtistPageClient({ artist, initialSongs }: ArtistPageCli
                   onClick={(e) => {
                     e.preventDefault();
                     const newHash = `#${song.id}`;
-                    window.history.replaceState(null, '', newHash);
+                    window.history.replaceState(null, "", newHash);
                     setSelectedSongId(song.id.toString());
                   }}
                   className={`rounded-lg border p-6 shadow-sm transition-all scroll-mt-8 cursor-pointer ${
                     isSelected
-                      ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-500 ring-opacity-50 dark:border-blue-400 dark:bg-blue-950 dark:ring-blue-400'
-                      : 'border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700'
+                      ? "border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-500 ring-opacity-50 dark:border-blue-400 dark:bg-blue-950 dark:ring-blue-400"
+                      : "border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
                   }`}
                 >
                   <div className="mb-4">
@@ -185,10 +189,10 @@ export default function ArtistPageClient({ artist, initialSongs }: ArtistPageCli
                         <span
                           className={`font-semibold ${
                             karaoke.provider === Provider.TJ
-                              ? 'text-blue-600 dark:text-blue-400'
+                              ? "text-blue-600 dark:text-blue-400"
                               : karaoke.provider === Provider.KY
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-purple-600 dark:text-purple-400'
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-purple-600 dark:text-purple-400"
                           }`}
                         >
                           {karaoke.provider}

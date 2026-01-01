@@ -1,9 +1,9 @@
-import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
-import { TJService } from '../../tj/tj.service';
-import { saveSongToDatabase } from './saveSong';
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import pg from "pg";
+import { TJService } from "../../tj/tj.service";
+import { saveSongToDatabase } from "./saveSong";
 
 // 특정 월의 TJ 노래 크롤링 (YYYYMM 형식)
 // pnpm ts-node src/scripts/tj/fetch-month-songs.ts 202512
@@ -46,11 +46,11 @@ async function fetchMonthTJSongs(yearMonth: string, force: boolean) {
 
     try {
       const result = await saveSongToDatabase(song, force, yearMonth);
-      if (result === 'created') {
+      if (result === "created") {
         totalCreated++;
-      } else if (result === 'updated') {
+      } else if (result === "updated") {
         totalUpdated++;
-      } else if (result === 'skipped') {
+      } else if (result === "skipped") {
         totalSkipped++;
       }
     } catch (error) {
@@ -70,30 +70,34 @@ async function fetchMonthTJSongs(yearMonth: string, force: boolean) {
 
 // 커맨드 라인 인자에서 yearMonth와 --force 플래그 가져오기
 const args = process.argv.slice(2);
-const yearMonth = args.find((arg) => !arg.startsWith('--'));
-const force = args.includes('--force');
+const yearMonth = args.find((arg) => !arg.startsWith("--"));
+const force = args.includes("--force");
 
 if (!yearMonth) {
-  console.error('❌ Error: Please provide yearMonth (e.g., 202512)');
-  console.log('Usage: pnpm ts-node src/scripts/tj/fetch-month-songs.ts 202512 [--force]');
+  console.error("❌ Error: Please provide yearMonth (e.g., 202512)");
+  console.log(
+    "Usage: pnpm ts-node src/scripts/tj/fetch-month-songs.ts 202512 [--force]",
+  );
   process.exit(1);
 }
 
 // yearMonth 형식 검증 (YYYYMM)
 if (!/^\d{6}$/.test(yearMonth)) {
-  console.error('❌ Error: Invalid yearMonth format. Expected YYYYMM (e.g., 202512)');
+  console.error(
+    "❌ Error: Invalid yearMonth format. Expected YYYYMM (e.g., 202512)",
+  );
   process.exit(1);
 }
 
 // 스크립트 실행
 fetchMonthTJSongs(yearMonth, force)
   .then(async () => {
-    console.log('\n🎉 Done!');
+    console.log("\n🎉 Done!");
     await prisma.$disconnect();
     process.exit(0);
   })
   .catch(async (error) => {
-    console.error('\n💥 Fatal error:', error);
+    console.error("\n💥 Fatal error:", error);
     await prisma.$disconnect();
     process.exit(1);
   });

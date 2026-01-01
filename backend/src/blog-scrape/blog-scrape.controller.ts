@@ -1,14 +1,14 @@
-import { Controller, Get, Param, BadRequestException } from '@nestjs/common';
-import { BlogScrapeService } from './blog-scrape.service';
+import { BadRequestException, Controller, Get, Param } from "@nestjs/common";
+import type { BlogScrapeService } from "./blog-scrape.service";
 
-@Controller('scrape')
+@Controller("scrape")
 export class BlogScrapeController {
   constructor(private readonly blogScrapeService: BlogScrapeService) {}
 
-  @Get('blog/:id')
-  async scrapeBlog(@Param('id') id: string) {
+  @Get("blog/:id")
+  async scrapeBlog(@Param("id") id: string) {
     if (!id) {
-      throw new BadRequestException('id parameter is required');
+      throw new BadRequestException("id parameter is required");
     }
 
     const url = `https://j-pop-playlist.tistory.com/${id}`;

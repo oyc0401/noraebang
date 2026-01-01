@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import * as cheerio from 'cheerio';
+import { Injectable } from "@nestjs/common";
+import * as cheerio from "cheerio";
 
 export interface TJSongData {
   karaokeNo: string;
@@ -13,7 +13,7 @@ export interface TJSongData {
 @Injectable()
 export class TJService {
   private readonly BASE_URL =
-    'https://www.tjmedia.com/song/accompaniment_search';
+    "https://www.tjmedia.com/song/accompaniment_search";
 
   /**
    * 특정 년월의 곡 정보 가져오기
@@ -24,14 +24,14 @@ export class TJService {
       console.log(`📅 Fetching songs for ${yearMonth}`);
 
       const response = await fetch(
-        'https://www.tjmedia.com/legacy/api/newSongOfMonth',
+        "https://www.tjmedia.com/legacy/api/newSongOfMonth",
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Content-Type": "application/json",
+            Accept: "application/json",
           },
           body: JSON.stringify({
             searchYm: yearMonth,
@@ -46,32 +46,32 @@ export class TJService {
 
       const data = await response.json();
 
-      if (data.resultCode !== '99' || !data.resultData?.items) {
-        console.error('❌ Unexpected API response:', data);
+      if (data.resultCode !== "99" || !data.resultData?.items) {
+        console.error("❌ Unexpected API response:", data);
         return [];
       }
 
       const songs: TJSongData[] = data.resultData.items.map((item: any) => {
         // 국가 타입 추정
-        let nationType = 'KOR';
+        let nationType = "KOR";
         if (
           /[\u3040-\u309F\u30A0-\u30FF]/.test(item.indexTitle) ||
           /[\u3040-\u309F\u30A0-\u30FF]/.test(item.indexSong)
         ) {
-          nationType = 'JPN';
+          nationType = "JPN";
         } else if (
           /[a-zA-Z]/.test(item.indexTitle) &&
           !/[가-힣]/.test(item.indexTitle)
         ) {
-          nationType = 'ENG';
+          nationType = "ENG";
         }
 
         return {
           karaokeNo: item.pro.toString(),
           title: item.indexTitle,
           artist: item.indexSong,
-          lyricist: item.word || '',
-          composer: item.com || '',
+          lyricist: item.word || "",
+          composer: item.com || "",
           nationType,
         };
       });
@@ -88,7 +88,7 @@ export class TJService {
    * 특정 년월부터 현재까지 모든 월의 데이터를 가져오기
    * @param fromYearMonth - 시작 년월 (예: "202001"), 기본값은 "200101"
    */
-  async *fetchAllSongs(fromYearMonth: string = '200101'): AsyncGenerator<{
+  async *fetchAllSongs(fromYearMonth: string = "200101"): AsyncGenerator<{
     yearMonth: string;
     songs: TJSongData[];
   }> {
@@ -103,7 +103,7 @@ export class TJService {
       const monthEnd = year === endYear ? endMonth : 12;
 
       for (let month = monthStart; month <= monthEnd; month++) {
-        const yearMonth = `${year}${String(month).padStart(2, '0')}`;
+        const yearMonth = `${year}${String(month).padStart(2, "0")}`;
         const songs = await this.fetchSongsByMonth(yearMonth);
 
         yield { yearMonth, songs };
@@ -123,10 +123,10 @@ export class TJService {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
           Accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         },
       });
 
@@ -139,62 +139,62 @@ export class TJService {
       const $ = cheerio.load(html);
 
       // 곡번호 검색은 정확히 매칭되는 1곡만 반환
-      const row = $('ul.grid-container.list').first();
+      const row = $("ul.grid-container.list").first();
       if (row.length === 0) {
         return null;
       }
 
-      const items = row.find('li.grid-item');
+      const items = row.find("li.grid-item");
       if (items.length === 0) {
         return null;
       }
 
       // 곡번호 추출
-      const karaokeNo = $(items[0]).find('.num2').text().trim();
+      const karaokeNo = $(items[0]).find(".num2").text().trim();
       if (!karaokeNo || karaokeNo !== songNumber.toString()) {
         // 정확히 매칭되지 않으면 무시 (부분 매칭 방지)
         return null;
       }
 
       // 곡제목 추출
-      const title = $(items[1]).find('p span').first().text().trim();
+      const title = $(items[1]).find("p span").first().text().trim();
 
       // 가수 추출
-      let artist = $(items[2]).find('.highlight').text().trim();
+      let artist = $(items[2]).find(".highlight").text().trim();
       if (!artist) {
-        artist = $(items[2]).find('p > span > span').first().text().trim();
+        artist = $(items[2]).find("p > span > span").first().text().trim();
       }
       if (!artist) {
-        artist = $(items[2]).find('p').text().trim();
+        artist = $(items[2]).find("p").text().trim();
       }
 
       // 작사가 추출
-      const lyricist = $(items[3]).find('p span').text().trim();
+      const lyricist = $(items[3]).find("p span").text().trim();
 
       // 작곡가 추출
-      const composer = $(items[4]).find('p span').text().trim();
+      const composer = $(items[4]).find("p span").text().trim();
 
       if (!title || !artist) {
         return null;
       }
 
       // 국가 타입 추정 (간단한 휴리스틱)
-      let nationType = 'KOR'; // 기본값
+      let nationType = "KOR"; // 기본값
       if (
         /[\u3040-\u309F\u30A0-\u30FF]/.test(title) ||
         /[\u3040-\u309F\u30A0-\u30FF]/.test(artist)
       ) {
-        nationType = 'JPN';
+        nationType = "JPN";
       } else if (/[a-zA-Z]/.test(title) && !/[가-힣]/.test(title)) {
-        nationType = 'ENG';
+        nationType = "ENG";
       }
 
       return {
         karaokeNo,
         title,
         artist,
-        lyricist: lyricist || '',
-        composer: composer || '',
+        lyricist: lyricist || "",
+        composer: composer || "",
         nationType,
       };
     } catch (error) {

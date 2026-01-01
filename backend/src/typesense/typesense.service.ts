@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Client } from 'typesense';
+import { Injectable, type OnModuleInit } from "@nestjs/common";
+import type { ConfigService } from "@nestjs/config";
+import { Client } from "typesense";
 
 @Injectable()
 export class TypesenseService implements OnModuleInit {
@@ -10,12 +10,15 @@ export class TypesenseService implements OnModuleInit {
     this.client = new Client({
       nodes: [
         {
-          host: this.configService.get<string>('TYPESENSE_HOST', 'localhost'),
-          port: this.configService.get<number>('TYPESENSE_PORT', 8108),
-          protocol: this.configService.get<string>('TYPESENSE_PROTOCOL', 'http'),
+          host: this.configService.get<string>("TYPESENSE_HOST", "localhost"),
+          port: this.configService.get<number>("TYPESENSE_PORT", 8108),
+          protocol: this.configService.get<string>(
+            "TYPESENSE_PROTOCOL",
+            "http",
+          ),
         },
       ],
-      apiKey: this.configService.get<string>('TYPESENSE_API_KEY', ''),
+      apiKey: this.configService.get<string>("TYPESENSE_API_KEY", ""),
       connectionTimeoutSeconds: 2,
     });
   }
@@ -23,9 +26,9 @@ export class TypesenseService implements OnModuleInit {
   async onModuleInit() {
     try {
       const health = await this.client.health.retrieve();
-      console.log('Typesense connection successful:', health);
+      console.log("Typesense connection successful:", health);
     } catch (error) {
-      console.error('Typesense connection failed:', error);
+      console.error("Typesense connection failed:", error);
     }
   }
 

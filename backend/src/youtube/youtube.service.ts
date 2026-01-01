@@ -1,6 +1,6 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { ArtistsService } from '../artists/artists.service';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import type { ArtistsService } from "../artists/artists.service";
+import type { PrismaService } from "../prisma/prisma.service";
 
 export interface OembedData {
   title: string;
@@ -62,7 +62,7 @@ export interface OfficialChannelResult {
 @Injectable()
 export class YoutubeService {
   private readonly API_KEY = process.env.YOUTUBE_API_KEY;
-  private readonly API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
+  private readonly API_BASE_URL = "https://www.googleapis.com/youtube/v3";
 
   constructor(
     private prisma: PrismaService,
@@ -76,19 +76,19 @@ export class YoutubeService {
 
       if (!response.ok) {
         throw new HttpException(
-          'Failed to fetch YouTube data',
-          response.status
+          "Failed to fetch YouTube data",
+          response.status,
         );
       }
 
-      return await response.json() as OembedData;
+      return (await response.json()) as OembedData;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
       throw new HttpException(
-        'Failed to fetch YouTube data',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "Failed to fetch YouTube data",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -99,8 +99,8 @@ export class YoutubeService {
   async searchChannels(artistName: string): Promise<ChannelSearchResult[]> {
     if (!this.API_KEY) {
       throw new HttpException(
-        'YouTube API key not configured',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "YouTube API key not configured",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
@@ -111,8 +111,8 @@ export class YoutubeService {
 
       if (!searchResponse.ok) {
         throw new HttpException(
-          'Failed to search channels',
-          searchResponse.status
+          "Failed to search channels",
+          searchResponse.status,
         );
       }
 
@@ -126,13 +126,13 @@ export class YoutubeService {
       const channelIds = searchData.items.map((item: any) => item.id.channelId);
 
       // 3. Channels API로 상세 정보 가져오기
-      const channelsUrl = `${this.API_BASE_URL}/channels?part=snippet,statistics&id=${channelIds.join(',')}&key=${this.API_KEY}`;
+      const channelsUrl = `${this.API_BASE_URL}/channels?part=snippet,statistics&id=${channelIds.join(",")}&key=${this.API_KEY}`;
       const channelsResponse = await fetch(channelsUrl);
 
       if (!channelsResponse.ok) {
         throw new HttpException(
-          'Failed to fetch channel details',
-          channelsResponse.status
+          "Failed to fetch channel details",
+          channelsResponse.status,
         );
       }
 
@@ -146,11 +146,17 @@ export class YoutubeService {
       return channelsData.items.map((channel: any) => ({
         channelId: channel.id,
         title: channel.snippet.title,
-        description: channel.snippet.description || '',
+        description: channel.snippet.description || "",
         customUrl: channel.snippet.customUrl || null,
-        thumbnail: channel.snippet.thumbnails.medium?.url || channel.snippet.thumbnails.default?.url,
-        subscriberCount: channel.statistics.subscriberCount ? parseInt(channel.statistics.subscriberCount) : null,
-        videoCount: channel.statistics.videoCount ? parseInt(channel.statistics.videoCount) : null,
+        thumbnail:
+          channel.snippet.thumbnails.medium?.url ||
+          channel.snippet.thumbnails.default?.url,
+        subscriberCount: channel.statistics.subscriberCount
+          ? parseInt(channel.statistics.subscriberCount)
+          : null,
+        videoCount: channel.statistics.videoCount
+          ? parseInt(channel.statistics.videoCount)
+          : null,
         country: channel.snippet.country || null,
       }));
     } catch (error) {
@@ -158,8 +164,8 @@ export class YoutubeService {
         throw error;
       }
       throw new HttpException(
-        'Failed to search channels',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "Failed to search channels",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -170,15 +176,15 @@ export class YoutubeService {
   async getChannelDetails(channelId: string): Promise<ChannelDetails> {
     if (!this.API_KEY) {
       throw new HttpException(
-        'YouTube API key not configured',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "YouTube API key not configured",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
     try {
       // @handle 형식이면 forHandle 파라미터 사용, 아니면 id 파라미터 사용
       let url: string;
-      if (channelId.startsWith('@')) {
+      if (channelId.startsWith("@")) {
         const handle = channelId.substring(1); // @ 제거
         url = `${this.API_BASE_URL}/channels?part=snippet,statistics,contentDetails&forHandle=${handle}&key=${this.API_KEY}`;
       } else {
@@ -189,7 +195,8 @@ export class YoutubeService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error?.message || `YouTube API error: ${response.status}`;
+        const errorMessage =
+          errorData.error?.message || `YouTube API error: ${response.status}`;
 
         throw new HttpException(
           {
@@ -197,14 +204,14 @@ export class YoutubeService {
             message: errorMessage,
             details: errorData,
           },
-          response.status
+          response.status,
         );
       }
 
       const data = await response.json();
 
       if (!data.items || data.items.length === 0) {
-        throw new HttpException('Channel not found', HttpStatus.NOT_FOUND);
+        throw new HttpException("Channel not found", HttpStatus.NOT_FOUND);
       }
 
       const channel = data.items[0];
@@ -216,7 +223,7 @@ export class YoutubeService {
       return {
         channelId: channel.id,
         title: snippet.title,
-        description: snippet.description || '',
+        description: snippet.description || "",
         customUrl: snippet.customUrl || null,
         publishedAt: snippet.publishedAt,
         country: snippet.country || null,
@@ -224,8 +231,12 @@ export class YoutubeService {
         thumbnailDefault: thumbnails.default?.url || null,
         thumbnailMedium: thumbnails.medium?.url || null,
         thumbnailHigh: thumbnails.high?.url || null,
-        subscriberCount: statistics.subscriberCount ? parseInt(statistics.subscriberCount) : null,
-        videoCount: statistics.videoCount ? parseInt(statistics.videoCount) : null,
+        subscriberCount: statistics.subscriberCount
+          ? parseInt(statistics.subscriberCount)
+          : null,
+        videoCount: statistics.videoCount
+          ? parseInt(statistics.videoCount)
+          : null,
         viewCount: statistics.viewCount ? BigInt(statistics.viewCount) : null,
         hiddenSubscriberCount: statistics.hiddenSubscriberCount || false,
         uploadsPlaylistId: contentDetails.relatedPlaylists?.uploads || null,
@@ -235,8 +246,8 @@ export class YoutubeService {
         throw error;
       }
       throw new HttpException(
-        'Failed to fetch channel details',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "Failed to fetch channel details",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -250,7 +261,7 @@ export class YoutubeService {
     try {
       // 1. 아티스트 찾기 (ID 또는 alias)
       let artist;
-      if (typeof identifier === 'number') {
+      if (typeof identifier === "number") {
         artist = await this.prisma.artist.findUnique({
           where: { id: identifier },
         });
@@ -270,7 +281,7 @@ export class YoutubeService {
       }
 
       if (!artist) {
-        throw new HttpException('Artist not found', HttpStatus.NOT_FOUND);
+        throw new HttpException("Artist not found", HttpStatus.NOT_FOUND);
       }
 
       // 2. 채널 상세 정보 가져오기 (서비스 메서드 사용)
@@ -338,8 +349,8 @@ export class YoutubeService {
         throw error;
       }
       throw new HttpException(
-        'Failed to update artist channel',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "Failed to update artist channel",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -347,17 +358,22 @@ export class YoutubeService {
   /**
    * 채널의 재생목록들 가져오기 (모든 재생목록)
    */
-  async getPlaylistsFromChannel(channelId: string, maxResults: number = 100): Promise<{
-    playlistId: string;
-    title: string;
-    description: string;
-    itemCount: number;
-    publishedAt: string;
-  }[]> {
+  async getPlaylistsFromChannel(
+    channelId: string,
+    maxResults: number = 100,
+  ): Promise<
+    {
+      playlistId: string;
+      title: string;
+      description: string;
+      itemCount: number;
+      publishedAt: string;
+    }[]
+  > {
     if (!this.API_KEY) {
       throw new HttpException(
-        'YouTube API key not configured',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "YouTube API key not configured",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
@@ -367,7 +383,8 @@ export class YoutubeService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error?.message || `YouTube API error: ${response.status}`;
+        const errorMessage =
+          errorData.error?.message || `YouTube API error: ${response.status}`;
 
         throw new HttpException(
           {
@@ -375,7 +392,7 @@ export class YoutubeService {
             message: errorMessage,
             details: errorData,
           },
-          response.status
+          response.status,
         );
       }
 
@@ -388,7 +405,7 @@ export class YoutubeService {
       return data.items.map((item: any) => ({
         playlistId: item.id,
         title: item.snippet.title,
-        description: item.snippet.description || '',
+        description: item.snippet.description || "",
         itemCount: item.contentDetails.itemCount || 0,
         publishedAt: item.snippet.publishedAt,
       }));
@@ -397,8 +414,8 @@ export class YoutubeService {
         throw error;
       }
       throw new HttpException(
-        'Failed to fetch channel playlists',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "Failed to fetch channel playlists",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -406,17 +423,22 @@ export class YoutubeService {
   /**
    * 채널의 모든 동영상 가져오기 (uploads 재생목록 사용 - 쿼터 1)
    */
-  async getVideosFromChannel(channelId: string, maxResults: number = 50): Promise<{
-    videoId: string;
-    title: string;
-    description: string;
-    publishedAt: string;
-    thumbnailUrl: string | null;
-  }[]> {
+  async getVideosFromChannel(
+    channelId: string,
+    maxResults: number = 50,
+  ): Promise<
+    {
+      videoId: string;
+      title: string;
+      description: string;
+      publishedAt: string;
+      thumbnailUrl: string | null;
+    }[]
+  > {
     if (!this.API_KEY) {
       throw new HttpException(
-        'YouTube API key not configured',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "YouTube API key not configured",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
@@ -426,15 +448,15 @@ export class YoutubeService {
 
       if (!channelDetails.uploadsPlaylistId) {
         throw new HttpException(
-          'Uploads playlist not found',
-          HttpStatus.NOT_FOUND
+          "Uploads playlist not found",
+          HttpStatus.NOT_FOUND,
         );
       }
 
       // 2. uploads playlist에서 동영상 가져오기 (playlistItems API - 쿼터 1)
       const playlistVideos = await this.getVideosFromPlaylist(
         channelDetails.uploadsPlaylistId,
-        maxResults
+        maxResults,
       );
 
       // 3. 형식 변환
@@ -450,8 +472,8 @@ export class YoutubeService {
         throw error;
       }
       throw new HttpException(
-        'Failed to fetch channel videos',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "Failed to fetch channel videos",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -459,18 +481,23 @@ export class YoutubeService {
   /**
    * 재생목록의 동영상들 가져오기
    */
-  async getVideosFromPlaylist(playlistId: string, maxResults: number = 100): Promise<{
-    videoId: string;
-    title: string;
-    description: string;
-    publishedAt: string;
-    channelId: string;
-    channelTitle: string;
-  }[]> {
+  async getVideosFromPlaylist(
+    playlistId: string,
+    maxResults: number = 100,
+  ): Promise<
+    {
+      videoId: string;
+      title: string;
+      description: string;
+      publishedAt: string;
+      channelId: string;
+      channelTitle: string;
+    }[]
+  > {
     if (!this.API_KEY) {
       throw new HttpException(
-        'YouTube API key not configured',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "YouTube API key not configured",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
@@ -480,7 +507,8 @@ export class YoutubeService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error?.message || `YouTube API error: ${response.status}`;
+        const errorMessage =
+          errorData.error?.message || `YouTube API error: ${response.status}`;
 
         throw new HttpException(
           {
@@ -488,7 +516,7 @@ export class YoutubeService {
             message: errorMessage,
             details: errorData,
           },
-          response.status
+          response.status,
         );
       }
 
@@ -501,18 +529,19 @@ export class YoutubeService {
       return data.items.map((item: any) => ({
         videoId: item.snippet.resourceId.videoId,
         title: item.snippet.title,
-        description: item.snippet.description || '',
+        description: item.snippet.description || "",
         publishedAt: item.snippet.publishedAt,
         channelId: item.snippet.videoOwnerChannelId || item.snippet.channelId,
-        channelTitle: item.snippet.videoOwnerChannelTitle || item.snippet.channelTitle,
+        channelTitle:
+          item.snippet.videoOwnerChannelTitle || item.snippet.channelTitle,
       }));
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
       throw new HttpException(
-        'Failed to fetch playlist videos',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "Failed to fetch playlist videos",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

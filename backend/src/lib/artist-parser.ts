@@ -13,11 +13,11 @@ export interface ParsedArtists {
  */
 function extractWithBalancedParentheses(
   text: string,
-  pattern: 'Feat' | 'Prod',
+  pattern: "Feat" | "Prod",
 ): { matches: string[]; cleaned: string } {
   const matches: string[] = [];
   let cleaned = text;
-  const regex = new RegExp(`\\(${pattern}\\.`, 'gi');
+  const regex = new RegExp(`\\(${pattern}\\.`, "gi");
   let searchFrom = 0;
 
   while (true) {
@@ -32,9 +32,9 @@ function extractWithBalancedParentheses(
     let endIndex = contentStart;
 
     while (endIndex < cleaned.length && depth > 0) {
-      if (cleaned[endIndex] === '(') {
+      if (cleaned[endIndex] === "(") {
         depth++;
-      } else if (cleaned[endIndex] === ')') {
+      } else if (cleaned[endIndex] === ")") {
         depth--;
       }
       endIndex++;
@@ -46,7 +46,7 @@ function extractWithBalancedParentheses(
 
       // 쉼표로 분리하여 여러 아티스트 처리
       const items = content
-        .split(',')
+        .split(",")
         .map((item) => item.trim())
         .filter((item) => item.length > 0);
 
@@ -94,50 +94,50 @@ export function parseTJArtist(tjArtist: string): ParsedArtists {
     producer: [],
   };
 
-  if (!tjArtist || tjArtist.trim() === '') {
+  if (!tjArtist || tjArtist.trim() === "") {
     return result;
   }
 
   let remaining = tjArtist.trim();
 
   // 1. Feat. 괄호 추출 (중첩 괄호 지원)
-  const featResult = extractWithBalancedParentheses(remaining, 'Feat');
+  const featResult = extractWithBalancedParentheses(remaining, "Feat");
   result.feature.push(...featResult.matches);
   remaining = featResult.cleaned;
 
   // 2. Prod. 괄호 추출 (중첩 괄호 지원)
-  const prodResult = extractWithBalancedParentheses(remaining, 'Prod');
+  const prodResult = extractWithBalancedParentheses(remaining, "Prod");
   result.producer.push(...prodResult.matches);
   remaining = prodResult.cleaned;
 
   // 3. 괄호 depth를 고려하여 쉼표로 분리 (괄호 안의 쉼표는 무시)
   const artists: string[] = [];
-  let current = '';
+  let current = "";
   let depth = 0;
 
   for (let i = 0; i < remaining.length; i++) {
     const char = remaining[i];
 
-    if (char === '(') {
+    if (char === "(") {
       depth++;
       current += char;
-    } else if (char === ')') {
+    } else if (char === ")") {
       depth--;
       current += char;
-    } else if (char === ',' && depth === 0) {
+    } else if (char === "," && depth === 0) {
       // 괄호 밖의 쉼표만 구분자로 사용
-      const trimmed = current.trim().replace(/\s*외\s+\d+명\s*$/, '');
+      const trimmed = current.trim().replace(/\s*외\s+\d+명\s*$/, "");
       if (trimmed.length > 0) {
         artists.push(trimmed);
       }
-      current = '';
+      current = "";
     } else {
       current += char;
     }
   }
 
   // 마지막 아티스트 추가
-  const trimmed = current.trim().replace(/\s*외\s+\d+명\s*$/, '');
+  const trimmed = current.trim().replace(/\s*외\s+\d+명\s*$/, "");
   if (trimmed.length > 0) {
     artists.push(trimmed);
   }
@@ -153,12 +153,12 @@ export function parseTJArtist(tjArtist: string): ParsedArtists {
  * @returns 작사가 배열
  */
 export function parseLyricist(lyricist: string): string[] {
-  if (!lyricist || lyricist.trim() === '') {
+  if (!lyricist || lyricist.trim() === "") {
     return [];
   }
 
   return lyricist
-    .split(',')
+    .split(",")
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 }
@@ -169,12 +169,12 @@ export function parseLyricist(lyricist: string): string[] {
  * @returns 작곡가 배열
  */
 export function parseComposer(composer: string): string[] {
-  if (!composer || composer.trim() === '') {
+  if (!composer || composer.trim() === "") {
     return [];
   }
 
   return composer
-    .split(',')
+    .split(",")
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 }

@@ -1,9 +1,9 @@
-import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
-import { TJService } from '../../tj/tj.service';
-import { saveSongToDatabase } from './saveSong';
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import pg from "pg";
+import { TJService } from "../../tj/tj.service";
+import { saveSongToDatabase } from "./saveSong";
 
 // 현재 월의 TJ 노래 크롤링
 // pnpm ts-node src/scripts/tj/fetch-new-songs.ts
@@ -19,20 +19,20 @@ const tjService = new TJService();
  * 메인 함수
  */
 async function fetchNewTJSongs(force: boolean) {
-  console.log('🚀 Starting TJ Media NEW songs fetch...\n');
+  console.log("🚀 Starting TJ Media NEW songs fetch...\n");
   if (force) {
     console.log(`⚡ Force mode enabled - will update existing songs\n`);
   }
 
   // 현재 년월 계산
   const now = new Date();
-  const currentYearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const currentYearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
 
   // 1. 최신곡 페이지에서 곡 정보 통으로 가져오기
   const songs = await tjService.fetchSongsByMonth(currentYearMonth);
 
   if (songs.length === 0) {
-    console.log('⚠️  No recent songs found');
+    console.log("⚠️  No recent songs found");
     return;
   }
 
@@ -50,11 +50,11 @@ async function fetchNewTJSongs(force: boolean) {
 
     try {
       const result = await saveSongToDatabase(song, force, currentYearMonth);
-      if (result === 'created') {
+      if (result === "created") {
         totalCreated++;
-      } else if (result === 'updated') {
+      } else if (result === "updated") {
         totalUpdated++;
-      } else if (result === 'skipped') {
+      } else if (result === "skipped") {
         totalSkipped++;
       }
     } catch (error) {
@@ -74,17 +74,17 @@ async function fetchNewTJSongs(force: boolean) {
 
 // 커맨드 라인 인자에서 --force 플래그 가져오기
 const args = process.argv.slice(2);
-const force = args.includes('--force');
+const force = args.includes("--force");
 
 // 스크립트 실행
 fetchNewTJSongs(force)
   .then(async () => {
-    console.log('\n🎉 Done!');
+    console.log("\n🎉 Done!");
     await prisma.$disconnect();
     process.exit(0);
   })
   .catch(async (error) => {
-    console.error('\n💥 Fatal error:', error);
+    console.error("\n💥 Fatal error:", error);
     await prisma.$disconnect();
     process.exit(1);
   });

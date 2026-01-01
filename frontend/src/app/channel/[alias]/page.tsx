@@ -1,7 +1,7 @@
-import { notFound } from 'next/navigation';
-import { API_BASE_URL } from '@/lib/api';
-import { Artist, Song } from '@/types/models';
-import ArtistPageClient from './ArtistPageClient';
+import { notFound } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
+import type { Artist, Song } from "@/types/models";
+import ArtistPageClient from "./ArtistPageClient";
 
 interface ArtistResponse {
   data: Artist;
@@ -13,7 +13,7 @@ interface SongsResponse {
 
 async function getArtist(alias: string): Promise<Artist> {
   const res = await fetch(`${API_BASE_URL}/artists/${alias}`, {
-    cache: 'no-store', // SSR - 항상 최신 데이터
+    cache: "no-store", // SSR - 항상 최신 데이터
   });
 
   if (!res.ok) {
@@ -26,7 +26,7 @@ async function getArtist(alias: string): Promise<Artist> {
 
 async function getSongs(artistId: number): Promise<Song[]> {
   const res = await fetch(`${API_BASE_URL}/songs?artistId=${artistId}`, {
-    cache: 'no-store', // SSR - 항상 최신 데이터
+    cache: "no-store", // SSR - 항상 최신 데이터
   });
 
   if (!res.ok) {

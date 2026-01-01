@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { SongRepository } from '../song.repository';
-import type { Song } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
+import { Injectable } from "@nestjs/common";
+import type { Song } from "@prisma/client";
+import type { PrismaService } from "../../prisma/prisma.service";
+import type { SongRepository } from "../song.repository";
 
 @Injectable()
 export class SongPrismaRepository implements SongRepository {
@@ -10,7 +10,7 @@ export class SongPrismaRepository implements SongRepository {
   async findAll(): Promise<Song[]> {
     return this.prisma.song.findMany({
       include: { karaokeSongs: true },
-      orderBy: { id: 'asc' },
+      orderBy: { id: "asc" },
     });
   }
 
@@ -31,12 +31,12 @@ export class SongPrismaRepository implements SongRepository {
     return this.prisma.song.findMany({
       where: {
         OR: [
-          { title: { contains: lowerQuery, mode: 'insensitive' } },
-          { titleKo: { contains: lowerQuery, mode: 'insensitive' } },
+          { title: { contains: lowerQuery, mode: "insensitive" } },
+          { titleKo: { contains: lowerQuery, mode: "insensitive" } },
         ],
       },
       include: { karaokeSongs: true },
-      orderBy: { id: 'asc' },
+      orderBy: { id: "asc" },
     });
   }
 
@@ -50,7 +50,7 @@ export class SongPrismaRepository implements SongRepository {
         },
       },
       include: { karaokeSongs: true },
-      orderBy: { id: 'asc' },
+      orderBy: { id: "asc" },
     });
   }
 
@@ -64,7 +64,7 @@ export class SongPrismaRepository implements SongRepository {
         },
       },
       include: { karaokeSongs: true },
-      orderBy: { id: 'asc' },
+      orderBy: { id: "asc" },
     });
   }
 }

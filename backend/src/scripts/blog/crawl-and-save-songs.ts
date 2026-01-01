@@ -1,9 +1,8 @@
-import 'dotenv/config';
-import { PrismaClient, Provider } from '@prisma/client';
-import { BlogScrapeService } from '../../blog-scrape/blog-scrape.service';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
-
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient, Provider } from "@prisma/client";
+import pg from "pg";
+import { BlogScrapeService } from "../../blog-scrape/blog-scrape.service";
 
 // pnpm ts-node src/scripts/blog/crawl-and-save-songs.ts
 
@@ -15,7 +14,7 @@ async function crawlAndSaveSongs() {
   const scrapeService = new BlogScrapeService();
 
   try {
-    console.log('🎵 Starting to crawl and save songs...\n');
+    console.log("🎵 Starting to crawl and save songs...\n");
 
     // blogId가 있는 아티스트만 조회
     const artists = await prisma.artist.findMany({
@@ -25,7 +24,7 @@ async function crawlAndSaveSongs() {
         },
       },
       orderBy: {
-        name: 'asc',
+        name: "asc",
       },
     });
 
@@ -38,7 +37,9 @@ async function crawlAndSaveSongs() {
 
     for (const artist of artists) {
       console.log(`\n📌 Processing: ${artist.name} (${artist.nameKo})`);
-      console.log(`   Blog URL: https://j-pop-playlist.tistory.com/${artist.blogId}`);
+      console.log(
+        `   Blog URL: https://j-pop-playlist.tistory.com/${artist.blogId}`,
+      );
 
       try {
         const url = `https://j-pop-playlist.tistory.com/${artist.blogId}`;
@@ -89,7 +90,8 @@ async function crawlAndSaveSongs() {
               });
             }
 
-            const isNewSong = song.createdAt.getTime() === song.updatedAt.getTime();
+            const isNewSong =
+              song.createdAt.getTime() === song.updatedAt.getTime();
             if (isNewSong) {
               created++;
             } else {
@@ -132,7 +134,10 @@ async function crawlAndSaveSongs() {
               karaokeCreated++;
             }
           } catch (error: any) {
-            console.error(`      ❌ Error saving song "${scrapedSong.title}":`, error.message);
+            console.error(
+              `      ❌ Error saving song "${scrapedSong.title}":`,
+              error.message,
+            );
             totalErrors++;
           }
         }
@@ -143,22 +148,21 @@ async function crawlAndSaveSongs() {
         totalCreated += created;
         totalUpdated += updated;
         totalKaraokeCreated += karaokeCreated;
-
       } catch (error: any) {
         console.log(`   ❌ Error crawling ${artist.name}:`, error.message);
         totalErrors++;
       }
     }
 
-    console.log('\n📊 Overall Summary:');
+    console.log("\n📊 Overall Summary:");
     console.log(`   Artists processed: ${artists.length}`);
     console.log(`   Songs created: ${totalCreated}`);
     console.log(`   Songs updated: ${totalUpdated}`);
     console.log(`   Karaoke numbers: ${totalKaraokeCreated}`);
     console.log(`   Errors: ${totalErrors}`);
-    console.log('\n✅ Crawling and saving completed!');
+    console.log("\n✅ Crawling and saving completed!");
   } catch (error: any) {
-    console.error('❌ Fatal error:', error);
+    console.error("❌ Fatal error:", error);
     throw error;
   } finally {
     await prisma.$disconnect();

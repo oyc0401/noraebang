@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { getArtistAliases, ARTIST_ALIAS_GROUPS } from '../config/artist-aliases';
+import { Injectable } from "@nestjs/common";
+import {
+  ARTIST_ALIAS_GROUPS,
+  getArtistAliases,
+} from "../config/artist-aliases";
+import type { PrismaService } from "../prisma/prisma.service";
 
 export interface ArtistListItem {
   id: number;
@@ -37,18 +40,18 @@ export class AdminService {
           select: { artistSongs: true },
         },
       },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
 
     return artists.map((artist): ArtistListItem => {
       // 별칭 그룹 정보 추가
-      let aliasGroup: ArtistListItem['aliasGroup'];
+      let aliasGroup: ArtistListItem["aliasGroup"];
 
       if (artist.alias) {
         const aliases = getArtistAliases(artist.alias);
         if (aliases.length > 1) {
-          const group = ARTIST_ALIAS_GROUPS.find(g =>
-            g.aliases.includes(artist.alias)
+          const group = ARTIST_ALIAS_GROUPS.find((g) =>
+            g.aliases.includes(artist.alias),
           );
           if (group) {
             aliasGroup = {
@@ -86,18 +89,20 @@ export class AdminService {
           },
         },
       },
-      orderBy: { song: { title: 'asc' } },
+      orderBy: { song: { title: "asc" } },
     });
 
-    return artistSongs.map((as): ArtistSong => ({
-      id: as.song.id,
-      title: as.song.title,
-      titleKo: as.song.titleKo ?? undefined,
-      role: as.role ?? undefined,
-      karaokeNumbers: as.song.karaokeSongs.map(k => ({
-        provider: k.provider,
-        karaokeNo: k.karaokeNo,
-      })),
-    }));
+    return artistSongs.map(
+      (as): ArtistSong => ({
+        id: as.song.id,
+        title: as.song.title,
+        titleKo: as.song.titleKo ?? undefined,
+        role: as.role ?? undefined,
+        karaokeNumbers: as.song.karaokeSongs.map((k) => ({
+          provider: k.provider,
+          karaokeNo: k.karaokeNo,
+        })),
+      }),
+    );
   }
 }

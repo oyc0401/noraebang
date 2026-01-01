@@ -1,18 +1,21 @@
-import 'dotenv/config';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../../app.module';
-import { PrismaService } from '../../prisma/prisma.service';
-import { YoutubeService } from '../../youtube/youtube.service';
+import "dotenv/config";
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "../../app.module";
+import { PrismaService } from "../../prisma/prisma.service";
+import { YoutubeService } from "../../youtube/youtube.service";
 
 // pnpm ts-node src/scripts/youtube/fetch-channel-details.ts
 
-async function updateChannelDetails(batchSize: number = 10, skipExisting: boolean = true) {
+async function updateChannelDetails(
+  batchSize: number = 10,
+  skipExisting: boolean = true,
+) {
   const app = await NestFactory.createApplicationContext(AppModule);
   const prisma = app.get(PrismaService);
   const youtubeService = app.get(YoutubeService);
 
   try {
-    console.log('🎬 Starting YouTube channel details fetch...\n');
+    console.log("🎬 Starting YouTube channel details fetch...\n");
 
     // 우선순위 1: youtubeChannelId는 있지만 youtubeChannel 정보가 없는 경우
     const priority1Artists = await prisma.artist.findMany({
@@ -33,7 +36,7 @@ async function updateChannelDetails(batchSize: number = 10, skipExisting: boolea
           where: {
             youtubeChannelId: { not: null },
             youtubeChannel: {
-              title: { contains: ' - Topic' },
+              title: { contains: " - Topic" },
             },
           },
           include: {
@@ -47,10 +50,12 @@ async function updateChannelDetails(batchSize: number = 10, skipExisting: boolea
 
     console.log(`Found ${artists.length} artists to process`);
     console.log(`  - Priority 1 (No details): ${priority1Artists.length}`);
-    console.log(`  - Priority 2 (Topic channels): ${priority2Artists.length}\n`);
+    console.log(
+      `  - Priority 2 (Topic channels): ${priority2Artists.length}\n`,
+    );
 
     if (artists.length === 0) {
-      console.log('✅ All artists have proper channel details!');
+      console.log("✅ All artists have proper channel details!");
       return;
     }
 
@@ -59,31 +64,39 @@ async function updateChannelDetails(batchSize: number = 10, skipExisting: boolea
     let errors = 0;
 
     for (const artist of artists) {
-      const isTopic = artist.youtubeChannel?.title?.includes(' - Topic');
-      console.log(`📌 Processing: ${artist.name} (${artist.nameKo})${isTopic ? ' [Topic]' : ''}`);
+      const isTopic = artist.youtubeChannel?.title?.includes(" - Topic");
+      console.log(
+        `📌 Processing: ${artist.name} (${artist.nameKo})${isTopic ? " [Topic]" : ""}`,
+      );
 
       // 공식 채널이 이미 있으면 스킵
       if (skipExisting && artist.youtubeChannel && !isTopic) {
         console.log(`   ⏭️  Already has official channel, skipping...`);
         skipped++;
-        console.log('');
+        console.log("");
         continue;
       }
 
       if (!artist.youtubeChannelId) {
         console.log(`   ⚠️  No channel ID`);
         skipped++;
-        console.log('');
+        console.log("");
         continue;
       }
 
       try {
         // YouTube 채널 상세 정보 가져오기 (서비스 사용)
-        const channelData = await youtubeService.getChannelDetails(artist.youtubeChannelId);
+        const channelData = await youtubeService.getChannelDetails(
+          artist.youtubeChannelId,
+        );
 
         console.log(`   ✅ Found: ${channelData.title}`);
-        console.log(`   📊 Subscribers: ${channelData.subscriberCount?.toLocaleString() || 'Hidden'}`);
-        console.log(`   🎥 Videos: ${channelData.videoCount?.toLocaleString() || 'N/A'}`);
+        console.log(
+          `   📊 Subscribers: ${channelData.subscriberCount?.toLocaleString() || "Hidden"}`,
+        );
+        console.log(
+          `   🎥 Videos: ${channelData.videoCount?.toLocaleString() || "N/A"}`,
+        );
 
         // YoutubeChannel 레코드 생성 또는 업데이트
         await prisma.youtubeChannel.upsert({
@@ -131,23 +144,29 @@ async function updateChannelDetails(batchSize: number = 10, skipExisting: boolea
         created++;
 
         // YouTube API rate limit을 고려한 딜레이 (200ms)
-        await new Promise(resolve => setTimeout(resolve, 200));
-
+        await new Promise((resolve) => setTimeout(resolve, 200));
       } catch (error: any) {
         // 403 에러 (쿼터 초과)가 발생하면 중단
-        if (error.message?.includes('403') || error.message?.includes('quota')) {
-          console.error('\n❌ YouTube API quota exceeded. Please try again tomorrow.');
-          console.error('💡 Tip: You can continue from where you left off by running this script again.');
+        if (
+          error.message?.includes("403") ||
+          error.message?.includes("quota")
+        ) {
+          console.error(
+            "\n❌ YouTube API quota exceeded. Please try again tomorrow.",
+          );
+          console.error(
+            "💡 Tip: You can continue from where you left off by running this script again.",
+          );
           break;
         }
         console.error(`   ❌ Error processing ${artist.name}:`, error.message);
         errors++;
       }
 
-      console.log('');
+      console.log("");
     }
 
-    console.log('📊 Summary:');
+    console.log("📊 Summary:");
     console.log(`   Total processed: ${artists.length}`);
     console.log(`   Created/Updated: ${created}`);
     console.log(`   Skipped: ${skipped}`);
@@ -165,7 +184,7 @@ async function updateChannelDetails(batchSize: number = 10, skipExisting: boolea
       where: {
         youtubeChannelId: { not: null },
         youtubeChannel: {
-          title: { contains: ' - Topic' },
+          title: { contains: " - Topic" },
         },
       },
     });
@@ -174,13 +193,12 @@ async function updateChannelDetails(batchSize: number = 10, skipExisting: boolea
       console.log(`\n⚠️  Remaining artists:`);
       console.log(`   - No details: ${remainingNoDetails}`);
       console.log(`   - Topic channels: ${remainingTopicChannels}`);
-      console.log('💡 Run this script again to continue');
+      console.log("💡 Run this script again to continue");
     } else {
-      console.log('\n✅ All artists have proper channel details!');
+      console.log("\n✅ All artists have proper channel details!");
     }
-
   } catch (error: any) {
-    console.error('❌ Fatal error:', error);
+    console.error("❌ Fatal error:", error);
     throw error;
   } finally {
     await app.close();

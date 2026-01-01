@@ -1,13 +1,28 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState } from 'react';
+import Link from "next/link";
+import { useState } from "react";
 
 export default function AdminDashboard() {
   const [crawlingJobs] = useState([
-    { name: 'TJ 노래 크롤링', lastRun: '2024-01-15 14:23:11', status: '완료', implemented: false },
-    { name: 'YouTube 채널 정보 업데이트', lastRun: '2024-01-15 12:00:00', status: '완료', implemented: false },
-    { name: 'Spotify API 동기화', lastRun: '-', status: '대기중', implemented: false },
+    {
+      name: "TJ 노래 크롤링",
+      lastRun: "2024-01-15 14:23:11",
+      status: "완료",
+      implemented: false,
+    },
+    {
+      name: "YouTube 채널 정보 업데이트",
+      lastRun: "2024-01-15 12:00:00",
+      status: "완료",
+      implemented: false,
+    },
+    {
+      name: "Spotify API 동기화",
+      lastRun: "-",
+      status: "대기중",
+      implemented: false,
+    },
   ]);
 
   const [pendingReviews] = useState({
@@ -17,9 +32,24 @@ export default function AdminDashboard() {
   });
 
   const [recentSongs] = useState([
-    { title: 'マリーゴールド', artist: 'あいみょん', addedAt: '2시간 전', implemented: false },
-    { title: '君はロックを聴かない', artist: 'あいみょん', addedAt: '5시간 전', implemented: false },
-    { title: 'ハルノヒ', artist: 'あいみょん', addedAt: '1일 전', implemented: false },
+    {
+      title: "マリーゴールド",
+      artist: "あいみょん",
+      addedAt: "2시간 전",
+      implemented: false,
+    },
+    {
+      title: "君はロックを聴かない",
+      artist: "あいみょん",
+      addedAt: "5시간 전",
+      implemented: false,
+    },
+    {
+      title: "ハルノヒ",
+      artist: "あいみょん",
+      addedAt: "1일 전",
+      implemented: false,
+    },
   ]);
 
   return (
@@ -272,9 +302,9 @@ export default function AdminDashboard() {
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                            job.status === '완료'
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            job.status === "완료"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
                           }`}
                         >
                           {job.status}
