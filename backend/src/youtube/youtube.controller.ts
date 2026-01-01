@@ -6,14 +6,26 @@ import {
   Post,
   Query,
 } from "@nestjs/common";
+import {
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse as SwaggerApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { ApiResponse } from "../common/dto/api-response.dto";
 import type { YoutubeService } from "./youtube.service";
 
+@ApiTags("YouTube")
 @Controller("youtube")
 export class YoutubeController {
   constructor(private readonly youtubeService: YoutubeService) {}
 
   @Get()
+  @ApiOperation({ summary: "YouTube 동영상 OEmbed 데이터 조회" })
+  @ApiQuery({ name: "url", description: "YouTube 동영상 URL" })
+  @SwaggerApiResponse({ status: 200, description: "OEmbed 데이터" })
+  @SwaggerApiResponse({ status: 400, description: "URL 파라미터 필요" })
   async getOembedData(@Query("url") url: string) {
     if (!url) {
       throw new BadRequestException("URL parameter is required");
@@ -24,6 +36,10 @@ export class YoutubeController {
   }
 
   @Get("search-channels")
+  @ApiOperation({ summary: "YouTube 채널 검색" })
+  @ApiQuery({ name: "name", description: "아티스트 이름" })
+  @SwaggerApiResponse({ status: 200, description: "검색 결과" })
+  @SwaggerApiResponse({ status: 400, description: "아티스트 이름 필요" })
   async searchChannels(@Query("name") name: string) {
     if (!name) {
       throw new BadRequestException("Artist name is required");
@@ -34,6 +50,11 @@ export class YoutubeController {
   }
 
   @Post("update-artist-channel/:alias")
+  @ApiOperation({ summary: "아티스트 YouTube 채널 정보 업데이트" })
+  @ApiParam({ name: "alias", description: "아티스트 alias" })
+  @ApiQuery({ name: "channelId", description: "YouTube 채널 ID" })
+  @SwaggerApiResponse({ status: 200, description: "업데이트 성공" })
+  @SwaggerApiResponse({ status: 400, description: "channelId 필요" })
   async updateArtistChannel(
     @Param("alias") alias: string,
     @Query("channelId") channelId: string,

@@ -48,10 +48,11 @@ export class AdminService {
       let aliasGroup: ArtistListItem["aliasGroup"];
 
       if (artist.alias) {
-        const aliases = getArtistAliases(artist.alias);
+        const alias = artist.alias;
+        const aliases = getArtistAliases(alias);
         if (aliases.length > 1) {
           const group = ARTIST_ALIAS_GROUPS.find((g) =>
-            g.aliases.includes(artist.alias),
+            g.aliases.includes(alias),
           );
           if (group) {
             aliasGroup = {

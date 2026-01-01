@@ -1,10 +1,9 @@
 # Claude 작업 지침
 
 
-
-
 # 코드스타일 규칙 (필수)
 이 프로젝트는 2년이상 유지보수 해야하므로 대충 코드짜지 마세요
+귀찮다고 작성한 잘못된 코드 하나가 나중에 무조건 몇배가 되어 본인과 다른사람들을 고통스럽게 합니다.
 
 any타입 절대 금지.
 
@@ -20,48 +19,15 @@ foo: string | null; 보다는 foo?: string 이 좋아요
 함수뒤에 `foo() :Promise<UserData>` 처럼 타입선언을 해주는건 좋기는 한데, 어짜피 lint단에서 타입 추론이 가능하다면 되도록 타입선언 하지 말아주세요.
 
 
+# 아키텍쳐 규칙 (필수)
+단순 npx로 실행 가능한 스크립트코드에서는 prisma 생성이 가능하지만 그 이외의 서비스, Nest 프로젝트에서는 무조건 Repository를 사용하세요.
 
-## 개발 서버 실행 금지
+# 규칙
+절대로 개발 서버를 실행하지 마세요
+`pnpm dev` 등 금지
 
-- **절대로 개발 서버를 실행하지 마세요** (`pnpm dev`, `npm run dev`, `pnpm start:dev` 등)
-- 서버 실행은 사용자가 직접 처리합니다
-- API 테스트나 확인이 필요한 경우, 코드 작성만 하고 사용자에게 알려주세요
+이 프로젝트는 무조건 pnpm을 사용합니다.
 
-## 프로젝트 구조
-
-- `frontend/`: Next.js 프론트엔드 (포트 3000)
-  - API 호출은 모두 백엔드로 전달
-  - `src/lib/api-client.ts`: API 클라이언트 유틸리티
-  - `src/hooks/`: React Query hooks
-- `backend/`: NestJS 백엔드 (포트 3001)
-  - Repository Pattern 사용
-
-## 패키지 관리자
-
-- 이 프로젝트는 **pnpm**을 사용합니다
-- npm이나 yarn 대신 항상 pnpm 명령어를 사용하세요
-
-## PostgreSQL 데이터베이스
-
-### 연결 정보
-
-- **Host**: localhost
-- **Port**: 5432
-- **Database**: song_db
-- **User**: postgres
-- **Password**: postgres
-
-
-### 데이터베이스 스키마
-
-- **Artist**: 아티스트 정보
-- **Song**: 곡 정보
-- **ArtistSong**: 아티스트-곡 M:N 관계 (중간 테이블)
-- **KaraokeSong**: 노래방 번호 (TJ, KY, JOYSOUND)
-
-자세한 스키마는 `backend/prisma/schema.prisma` 참고
-
-### Prisma 마이그레이션 베스트 프랙티스
 
 **데이터 손실 가능성이 있는 스키마 변경 시 (컬럼 제거, 타입 변경, 테이블 구조 변경 등):**
 
@@ -120,30 +86,6 @@ foo: string | null; 보다는 foo?: string 이 좋아요
 ## NestJS Backend API
 
 백엔드는 NestJS로 구현되어 있으며, 모든 API는 `http://localhost:3001`에서 제공됩니다.
-
-### 아키텍처
-
-- **Controller**: HTTP 요청/응답 처리
-- **Service**: 비즈니스 로직
-- **Repository Pattern**: 데이터 액세스 추상화
-  - `ArtistRepository`, `SongRepository` 인터페이스
-  - `ArtistMemoryRepository`, `SongMemoryRepository` 구현체 (메모리 DB 사용)
-  - 나중에 실제 DB 레포지토리로 교체 가능
-
-### 데이터 소스
-
-## 환경 변수
-
-### Frontend (`frontend/.env.local`)
-```
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
-
-### Backend (`backend/.env`)
-```
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/song_db?schema=public"
-PORT=3001
-```
 
 #### 크롤링 참고사항
 

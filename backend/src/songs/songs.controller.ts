@@ -6,15 +6,35 @@ import {
   ParseIntPipe,
   Query,
 } from "@nestjs/common";
+import {
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse as SwaggerApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Song } from "@prisma/client";
 import { ApiResponse } from "../common/dto/api-response.dto";
 import type { SongsService } from "./songs.service";
 
+@ApiTags("Songs")
 @Controller("songs")
 export class SongsController {
   constructor(private readonly songsService: SongsService) {}
 
   @Get()
+  @ApiOperation({ summary: "곡 목록 조회 (검색 및 필터링)" })
+  @ApiQuery({
+    name: "q",
+    required: false,
+    description: "검색어 (제목으로 검색)",
+  })
+  @ApiQuery({
+    name: "artistId",
+    required: false,
+    description: "아티스트 ID로 필터링",
+  })
+  @SwaggerApiResponse({ status: 200, description: "곡 목록" })
   async findAll(
     @Query("q") query?: string,
     @Query("artistId") artistId?: string,
@@ -44,6 +64,10 @@ export class SongsController {
   }
 
   @Get(":id")
+  @ApiOperation({ summary: "곡 상세 조회" })
+  @ApiParam({ name: "id", description: "곡 ID" })
+  @SwaggerApiResponse({ status: 200, description: "곡 상세 정보" })
+  @SwaggerApiResponse({ status: 404, description: "곡을 찾을 수 없음" })
   async findOne(@Param("id", ParseIntPipe) id: number) {
     const song = await this.songsService.findById(id);
     if (!song) {
