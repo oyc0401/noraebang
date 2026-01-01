@@ -31,3 +31,8 @@ SELECT s.id, s.title, a.name as artist_name, s.created_at
   JOIN artist a ON s.artist_id = a.id
   ORDER BY s.created_at DESC
   LIMIT 30;
+
+
+## orval 생성
+pnpm --filter frontend codegen
+
