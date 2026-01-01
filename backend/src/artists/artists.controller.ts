@@ -10,25 +10,25 @@ import {
 import {
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
   ApiResponse as SwaggerApiResponse,
-  ApiQuery,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../dto/api-response.dto";
 import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
 import { YoutubeService } from "../youtube/youtube.service";
-import { ArtistsService } from "./artists.service";
+import {
+  ARTIST_SORT_OPTIONS,
+  ArtistSortOption,
+  ArtistsService,
+  DEFAULT_ARTIST_SORT,
+} from "./artists.service";
 import {
   ArtistDetailResponseDto,
   ArtistListResponseDto,
   ArtistWithYoutubeListResponseDto,
   YoutubeChannelUpdateResponseDto,
 } from "./dto/artist-response.dto";
-import {
-  ARTIST_SORT_OPTIONS,
-  ArtistSortOption,
-  DEFAULT_ARTIST_SORT,
-} from "./artists.service";
 
 const isArtistSortOption = (value?: string): value is ArtistSortOption =>
   !!value && ARTIST_SORT_OPTIONS.includes(value as ArtistSortOption);
@@ -58,9 +58,7 @@ export class ArtistsController {
     description: "아티스트 목록",
     type: ArtistListResponseDto,
   })
-  async findAll(
-    @Query("sort") sort?: string,
-  ): Promise<ArtistListResponseDto> {
+  async findAll(@Query("sort") sort?: string): Promise<ArtistListResponseDto> {
     const sortOption = isArtistSortOption(sort) ? sort : DEFAULT_ARTIST_SORT;
     const artists = await this.artistsService.findAll(sortOption);
     return ApiResponse.success(artists);
