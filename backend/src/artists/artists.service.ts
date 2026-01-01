@@ -55,7 +55,7 @@ export class ArtistsService {
   async findByIdOrAlias(identifier: string) {
     // 숫자인지 체크
     const parsedId = parseInt(identifier, 10);
-    if (!isNaN(parsedId) && parsedId.toString() === identifier) {
+    if (!Number.isNaN(parsedId) && parsedId.toString() === identifier) {
       return this.artistRepository.findById(parsedId);
     }
 

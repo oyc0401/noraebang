@@ -57,7 +57,7 @@ async function fetchNewTJSongs(force: boolean) {
       } else if (result === "skipped") {
         totalSkipped++;
       }
-    } catch (error) {
+    } catch (_error) {
       totalErrors++;
     }
 

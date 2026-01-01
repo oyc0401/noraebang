@@ -78,6 +78,8 @@ export default function AdminDashboard() {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  role="img"
+                  aria-label="Music"
                 >
                   <path
                     strokeLinecap="round"
@@ -108,6 +110,8 @@ export default function AdminDashboard() {
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 159 110"
                   className="h-6 w-9"
+                  role="img"
+                  aria-label="YouTube"
                 >
                   <path
                     fill="#FF0000"
@@ -135,6 +139,8 @@ export default function AdminDashboard() {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  role="img"
+                  aria-label="Statistics"
                 >
                   <path
                     strokeLinecap="round"
@@ -178,6 +184,8 @@ export default function AdminDashboard() {
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
+                      role="img"
+                      aria-label="Video"
                     >
                       <path
                         strokeLinecap="round"
@@ -203,6 +211,8 @@ export default function AdminDashboard() {
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
+                      role="img"
+                      aria-label="Music"
                     >
                       <path
                         strokeLinecap="round"
@@ -234,9 +244,9 @@ export default function AdminDashboard() {
               </span>
             </div>
             <div className="space-y-3">
-              {recentSongs.map((song, idx) => (
+              {recentSongs.map((song) => (
                 <div
-                  key={idx}
+                  key={`${song.title}-${song.artist}`}
                   className="flex items-center justify-between rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
                 >
                   <div>
@@ -284,9 +294,9 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                  {crawlingJobs.map((job, idx) => (
+                  {crawlingJobs.map((job) => (
                     <tr
-                      key={idx}
+                      key={job.name}
                       className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                     >
                       <td className="px-4 py-3">
@@ -312,6 +322,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
+                          type="button"
                           disabled
                           className="rounded-lg bg-zinc-300 px-3 py-1.5 text-sm font-semibold text-zinc-500 dark:bg-zinc-700 dark:text-zinc-500"
                         >

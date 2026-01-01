@@ -1,8 +1,8 @@
 import "dotenv/config";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import * as fs from "fs";
-import * as path from "path";
 import pg from "pg";
 
 // TJ 노래 데이터베이스에서 모든 아티스트(artistList, featureList, producerList)를 추출하여 CSV 파일로 저장

@@ -53,7 +53,7 @@ async function fetchMonthTJSongs(yearMonth: string, force: boolean) {
       } else if (result === "skipped") {
         totalSkipped++;
       }
-    } catch (error) {
+    } catch (_error) {
       totalErrors++;
     }
 

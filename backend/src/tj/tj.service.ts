@@ -92,8 +92,8 @@ export class TJService {
     yearMonth: string;
     songs: TJSongData[];
   }> {
-    const startYear = parseInt(fromYearMonth.substring(0, 4));
-    const startMonth = parseInt(fromYearMonth.substring(4, 6));
+    const startYear = parseInt(fromYearMonth.substring(0, 4), 10);
+    const startMonth = parseInt(fromYearMonth.substring(4, 6), 10);
     const now = new Date();
     const endYear = now.getFullYear();
     const endMonth = now.getMonth() + 1;

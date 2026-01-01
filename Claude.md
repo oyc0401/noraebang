@@ -13,6 +13,7 @@ null인데 ! 되도록 금지.
 as 사용 되도록 자제.
 
 foo: string | null; 보다는 foo?: string 이 좋아요
+물론 prisma를 사용하면 string | null 이 나오는건 아는데, 그래도 최대한 foo?: string으로 해주세요.
 
 외부 api를 가져와서 json을 파싱할때 as를 사용해서 타입 지정을 해주세요. (any가 나올 근원을 사전 제거)
 

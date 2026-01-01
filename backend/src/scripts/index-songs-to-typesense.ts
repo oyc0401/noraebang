@@ -48,7 +48,7 @@ async function main() {
   try {
     await typesenseClient.collections(COLLECTION_NAME).delete();
     console.log("Deleted existing collection");
-  } catch (error) {
+  } catch (_error) {
     console.log("No existing collection to delete");
   }
 
