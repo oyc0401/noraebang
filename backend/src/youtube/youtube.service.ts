@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import type { Artist } from "@prisma/client";
-import { ArtistsService } from "../artists/artists.service";
 import { PrismaService } from "../prisma/prisma.service";
 
 export interface OembedData {
@@ -65,10 +64,7 @@ export class YoutubeService {
   private readonly API_KEY = process.env.YOUTUBE_API_KEY;
   private readonly API_BASE_URL = "https://www.googleapis.com/youtube/v3";
 
-  constructor(
-    private prisma: PrismaService,
-    private artistsService: ArtistsService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async getOembedData(url: string): Promise<OembedData> {
     try {
@@ -335,9 +331,6 @@ export class YoutubeService {
           fetchedAt: new Date(),
         },
       });
-
-      // 캐시 초기화 (아티스트 목록 새로고침을 위해)
-      this.artistsService.clearCache();
 
       return {
         artist: artist.name,

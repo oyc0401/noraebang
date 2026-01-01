@@ -1,20 +1,12 @@
 import { Module } from "@nestjs/common";
-import { ArtistsModule } from "../artists/artists.module";
-import { SongPrismaRepository } from "../repositories/prisma/song-prisma.repository";
-import { SONG_REPOSITORY } from "../repositories/tokens";
+import { PrismaModule } from "../prisma/prisma.module";
 import { SongsController } from "./songs.controller";
 import { SongsService } from "./songs.service";
 
 @Module({
-  imports: [ArtistsModule],
+  imports: [PrismaModule],
   controllers: [SongsController],
-  providers: [
-    SongsService,
-    {
-      provide: SONG_REPOSITORY,
-      useClass: SongPrismaRepository,
-    },
-  ],
+  providers: [SongsService],
   exports: [SongsService],
 })
 export class SongsModule {}
