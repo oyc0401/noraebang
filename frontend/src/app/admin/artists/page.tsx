@@ -2,7 +2,7 @@
 
 import { useAdminArtists, useAdminArtistSongs } from '@/hooks/use-admin';
 import { useArtistsWithYoutube } from '@/hooks/use-artists';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/api';
 
 interface Artist {
@@ -12,6 +12,10 @@ interface Artist {
   alias: string | null;
   imageUrl: string | null;
   songCount: number;
+  aliasGroup?: {
+    groupId: string;
+    aliases: string[];
+  } | null;
 }
 
 interface Song {
@@ -359,6 +363,27 @@ export default function AdminArtistsPage() {
                         </>
                       )}
                     </p>
+                    {selectedArtist.aliasGroup && (
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                          별칭 그룹:
+                        </span>
+                        <div className="flex gap-1">
+                          {selectedArtist.aliasGroup.aliases.map((alias) => (
+                            <span
+                              key={alias}
+                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                alias === selectedArtist.alias
+                                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                  : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                              }`}
+                            >
+                              {alias}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     {selectedArtist.alias && (
