@@ -7,9 +7,12 @@
  */
 
 export * from './artistsControllerFindAllParams';
+export * from './oembedDataDto';
+export * from './searchControllerGetYoutubeOembedParams';
 export * from './searchControllerSearchByArtistParams';
 export * from './searchControllerSearchByKaraokeNoParams';
 export * from './searchControllerSearchByTitleParams';
 export * from './searchControllerSearchParams';
 export * from './songsControllerFindAllParams';
 export * from './youtubeChannelUpdateDto';
+export * from './youtubeOembedResponseDto';

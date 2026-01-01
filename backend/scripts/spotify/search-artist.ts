@@ -88,12 +88,8 @@ if (args.length === 0) {
   console.error("");
   console.error("Examples:");
   console.error("  pnpm ts-node scripts/spotify/search-artist.ts 아이유");
-  console.error(
-    '  pnpm ts-node scripts/spotify/search-artist.ts "방탄소년단"',
-  );
-  console.error(
-    '  pnpm ts-node scripts/spotify/search-artist.ts "영재(4MEN)"',
-  );
+  console.error('  pnpm ts-node scripts/spotify/search-artist.ts "방탄소년단"');
+  console.error('  pnpm ts-node scripts/spotify/search-artist.ts "영재(4MEN)"');
   process.exit(1);
 }
 
