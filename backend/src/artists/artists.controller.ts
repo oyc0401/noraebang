@@ -29,12 +29,16 @@ const mapArtistToDto = (artist: {
   name: string;
   nameKo: string;
   alias: string | null;
+  youtubeChannelId: string | null;
+  tjSongRequestUrl: string | null;
 }): ArtistDto => ({
   id: artist.id,
   name: artist.name,
   nameKo: artist.nameKo,
   alias: artist.alias,
   imageUrl: null,
+  youtubeChannelId: artist.youtubeChannelId,
+  tjSongRequestUrl: artist.tjSongRequestUrl,
 });
 
 @ApiTags("Artists")

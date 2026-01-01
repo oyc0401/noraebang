@@ -14,4 +14,14 @@ export interface ArtistDto {
   alias?: string | null;
   /** @nullable */
   imageUrl?: string | null;
+  /**
+   * 연결된 YouTube 채널 ID
+   * @nullable
+   */
+  youtubeChannelId?: string | null;
+  /**
+   * TJ 노래방 곡 추가 요청 URL
+   * @nullable
+   */
+  tjSongRequestUrl?: string | null;
 }

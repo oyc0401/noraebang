@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { type Artist, Provider, type Song } from "@/types/models";
+import type { ArtistDto, SongDto } from "@/api/model/models";
+import { Provider } from "@/types/models";
 
 interface ArtistPageClientProps {
-  artist: Artist;
-  initialSongs: Song[];
+  artist: ArtistDto;
+  initialSongs: SongDto[];
 }
 
 export default function ArtistPageClient({
@@ -15,7 +16,7 @@ export default function ArtistPageClient({
 }: ArtistPageClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
-  const [songs] = useState<Song[]>(initialSongs);
+  const [songs] = useState<SongDto[]>(initialSongs);
 
   // Handle hash navigation on mount
   useEffect(() => {
@@ -37,7 +38,9 @@ export default function ArtistPageClient({
     ? songs.filter(
         (song) =>
           song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          song.titleKo?.toLowerCase().includes(searchQuery.toLowerCase()),
+          (song.titleKo ?? "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()),
       )
     : songs;
 
@@ -192,7 +195,7 @@ export default function ArtistPageClient({
                   <div className="flex flex-wrap gap-2">
                     {song.karaokeSongs?.map((karaoke) => (
                       <div
-                        key={karaoke.id}
+                        key={`${karaoke.provider}-${karaoke.karaokeNo}`}
                         className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-sm dark:bg-zinc-800"
                       >
                         <span
