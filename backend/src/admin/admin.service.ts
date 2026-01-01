@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { getArtistAliases, ARTIST_ALIAS_GROUPS } from '../config/artist-aliases';
 
 @Injectable()
 export class AdminService {
@@ -15,14 +16,35 @@ export class AdminService {
       orderBy: { name: 'asc' },
     });
 
-    return artists.map((artist) => ({
-      id: artist.id,
-      name: artist.name,
-      nameKo: artist.nameKo,
-      alias: artist.alias,
-      imageUrl: null, // TODO: Add imageUrl to Artist schema
-      songCount: artist._count.artistSongs,
-    }));
+    return artists.map((artist) => {
+      // 별칭 그룹 정보 추가
+      let aliasGroup: { groupId: string; aliases: string[] } | null = null;
+      if (artist.alias) {
+        const aliases = getArtistAliases(artist.alias);
+        if (aliases.length > 1) {
+          // 그룹에 속해있음
+          const group = ARTIST_ALIAS_GROUPS.find(g =>
+            g.aliases.includes(artist.alias!)
+          );
+          if (group) {
+            aliasGroup = {
+              groupId: group.groupId,
+              aliases: aliases,
+            };
+          }
+        }
+      }
+
+      return {
+        id: artist.id,
+        name: artist.name,
+        nameKo: artist.nameKo,
+        alias: artist.alias,
+        imageUrl: null, // TODO: Add imageUrl to Artist schema
+        songCount: artist._count.artistSongs,
+        aliasGroup,
+      };
+    });
   }
 
   async getArtistSongs(artistId: number) {
