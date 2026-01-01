@@ -17,6 +17,24 @@ export class ArtistDto {
   imageUrl?: string | null;
 
   @ApiProperty({
+    example: "https://yt3.googleusercontent.com/default.jpg",
+    required: false,
+  })
+  thumbnailDefault?: string | null;
+
+  @ApiProperty({
+    example: "https://yt3.googleusercontent.com/medium.jpg",
+    required: false,
+  })
+  thumbnailMedium?: string | null;
+
+  @ApiProperty({
+    example: "https://yt3.googleusercontent.com/high.jpg",
+    required: false,
+  })
+  thumbnailHigh?: string | null;
+
+  @ApiProperty({
     example: "UCvpredjG93ifbCP1Y77JyFA",
     required: false,
     description: "연결된 YouTube 채널 ID",

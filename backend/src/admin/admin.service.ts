@@ -41,13 +41,6 @@ export class AdminService {
         _count: {
           select: { artistSongs: true },
         },
-        youtubeChannel: {
-          select: {
-            thumbnailDefault: true,
-            thumbnailMedium: true,
-            thumbnailHigh: true,
-          },
-        },
       },
       orderBy: { name: "asc" },
     });
@@ -77,9 +70,9 @@ export class AdminService {
         name: artist.name,
         nameKo: artist.nameKo,
         alias: artist.alias ?? undefined,
-        thumbnailDefault: artist.youtubeChannel?.thumbnailDefault ?? undefined,
-        thumbnailMedium: artist.youtubeChannel?.thumbnailMedium ?? undefined,
-        thumbnailHigh: artist.youtubeChannel?.thumbnailHigh ?? undefined,
+        thumbnailDefault: artist.thumbnailDefault ?? undefined,
+        thumbnailMedium: artist.thumbnailMedium ?? undefined,
+        thumbnailHigh: artist.thumbnailHigh ?? undefined,
         songCount: artist._count.artistSongs,
         aliasGroup,
       };
