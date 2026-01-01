@@ -2,26 +2,24 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useArtistsControllerFindAll } from "@/api/model/artists/artists";
-import { useYoutubeControllerUpdateArtistChannel } from "@/api/model/you-tube/you-tube";
-import { getResponseMessage, mapResponseData } from "@/api/utils";
-import type { ArtistWithYoutube } from "@/types/models";
+import {
+  useArtistsControllerFindAllWithYoutube,
+  useArtistsControllerUpdateYoutubeChannel,
+} from "@/api/model/artists/artists";
+import type { ArtistWithYoutubeDto } from "@/api/model/models";
 
 export default function AdminPage() {
   const {
     data: artists = [],
     isLoading,
     refetch,
-  } = useArtistsControllerFindAll<ArtistWithYoutube[]>(
-    { includeYoutube: "true" },
-    {
-      query: {
-        select: mapResponseData<ArtistWithYoutube[]>([]),
-      },
+  } = useArtistsControllerFindAllWithYoutube({
+    query: {
+      select: (response) => response.data,
     },
-  );
+  });
   const [searchQuery, setSearchQuery] = useState("");
-  const youtubeMutation = useYoutubeControllerUpdateArtistChannel();
+  const youtubeMutation = useArtistsControllerUpdateYoutubeChannel();
   const updating = youtubeMutation.isPending;
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -40,7 +38,7 @@ export default function AdminPage() {
     (artist) =>
       artist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       artist.nameKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      artist.alias.toLowerCase().includes(searchQuery.toLowerCase()),
+      artist.alias?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleOpenChannelModal = (alias: string, artistName: string) => {
@@ -97,16 +95,10 @@ export default function AdminPage() {
         data: { channelId },
       });
 
-      const updatedChannel = mapResponseData<{ channelTitle?: string } | null>(
-        null,
-      )(response);
-
       setMessage({
         type: "success",
         text: `✅ ${selectedArtist.name}: ${
-          updatedChannel?.channelTitle ??
-          getResponseMessage(response) ??
-          "업데이트 완료!"
+          response.data.channelTitle ?? response.message ?? "업데이트 완료!"
         }`,
       });
       setShowChannelModal(false);
@@ -215,12 +207,14 @@ export default function AdminPage() {
                       <div className="text-sm text-zinc-500 dark:text-zinc-400">
                         {artist.name}
                       </div>
-                      <a
-                        href={`/channel/${artist.alias}`}
-                        className="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
-                      >
-                        @{artist.alias}
-                      </a>
+                      {artist.alias && (
+                        <a
+                          href={`/channel/${artist.alias}`}
+                          className="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
+                        >
+                          @{artist.alias}
+                        </a>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {artist.youtube ? (
@@ -284,9 +278,10 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() =>
+                          artist.alias &&
                           handleOpenChannelModal(artist.alias, artist.nameKo)
                         }
-                        disabled={updating}
+                        disabled={updating || !artist.alias}
                         className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
                       >
                         채널 설정
