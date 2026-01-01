@@ -1,5 +1,12 @@
 import { parseTJArtist } from './artist-parser';
 
+//    pnpm test artist-parser.spec.ts
+
+// 괄호제거하면 안되는 이유:
+//   영재(4MEN) - 포맨 영재
+//   영재(B.A.P) - 비에이피 영재
+//   영재(GOT7) - 갓세븐 영재
+
 describe('parseTJArtist', () => {
   describe('기본 케이스', () => {
     it('빈 문자열은 빈 배열을 반환해야 함', () => {
@@ -64,6 +71,24 @@ describe('parseTJArtist', () => {
       const result = parseTJArtist('DK(디셈버),BE\'O(비오)');
       expect(result).toEqual({
         artist: ['DK(디셈버)', 'BE\'O(비오)'],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it('괄호 안에 쉼표가 있는 경우 정상적으로 파싱되어야 함', () => {
+      const result = parseTJArtist('허용별(허각,신용재,임한별)');
+      expect(result).toEqual({
+        artist: ['허용별(허각,신용재,임한별)'],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it('괄호 안에 쉼표가 있는 여러 아티스트', () => {
+      const result = parseTJArtist('허용별(허각,신용재,임한별),아이유,빅나티(서동현)');
+      expect(result).toEqual({
+        artist: ['허용별(허각,신용재,임한별)', '아이유', '빅나티(서동현)'],
         feature: [],
         producer: [],
       });

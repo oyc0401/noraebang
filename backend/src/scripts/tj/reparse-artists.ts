@@ -40,6 +40,7 @@ async function main() {
       select: {
         id: true,
         artist: true,
+        artistList: true,
         featureList: true,
         producerList: true,
       },
@@ -59,8 +60,12 @@ async function main() {
         // 아티스트 재파싱
         const parsed = parseTJArtist(song.artist);
 
-        // feature나 producer가 있는 경우만 업데이트
-        if (parsed.feature.length === 0 && parsed.producer.length === 0) {
+        // 기존 값과 비교하여 변경이 있는지 확인
+        const artistChanged = JSON.stringify(song.artistList) !== JSON.stringify(parsed.artist);
+        const featureChanged = JSON.stringify(song.featureList) !== JSON.stringify(parsed.feature);
+        const producerChanged = JSON.stringify(song.producerList) !== JSON.stringify(parsed.producer);
+
+        if (!artistChanged && !featureChanged && !producerChanged) {
           skipped++;
           continue;
         }
@@ -68,11 +73,14 @@ async function main() {
         // 샘플 출력 (처음 10개)
         if (updated < 10) {
           console.log(`  ✅ ${song.id}: ${song.artist}`);
-          if (parsed.feature.length > 0) {
-            console.log(`     Feat: ${parsed.feature.join(', ')}`);
+          if (artistChanged) {
+            console.log(`     Artist: [${song.artistList.join(', ')}] → [${parsed.artist.join(', ')}]`);
           }
-          if (parsed.producer.length > 0) {
-            console.log(`     Prod: ${parsed.producer.join(', ')}`);
+          if (featureChanged) {
+            console.log(`     Feat: [${song.featureList.join(', ')}] → [${parsed.feature.join(', ')}]`);
+          }
+          if (producerChanged) {
+            console.log(`     Prod: [${song.producerList.join(', ')}] → [${parsed.producer.join(', ')}]`);
           }
         }
 
@@ -81,6 +89,7 @@ async function main() {
           await prisma.tjSong.update({
             where: { id: song.id },
             data: {
+              artistList: parsed.artist,
               featureList: parsed.feature,
               producerList: parsed.producer,
             },

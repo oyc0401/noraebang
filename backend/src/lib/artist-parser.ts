@@ -110,12 +110,37 @@ export function parseTJArtist(tjArtist: string): ParsedArtists {
   result.producer.push(...prodResult.matches);
   remaining = prodResult.cleaned;
 
-  // 3. 쉼표로 분리하여 아티스트 추출 (일반 괄호는 아티스트명에 포함)
-  const artists = remaining
-    .split(',')
-    .map((a) => a.trim())
-    .map((a) => a.replace(/\s*외\s+\d+명\s*$/, '')) // "외 X명" 패턴 제거
-    .filter((a) => a.length > 0);
+  // 3. 괄호 depth를 고려하여 쉼표로 분리 (괄호 안의 쉼표는 무시)
+  const artists: string[] = [];
+  let current = '';
+  let depth = 0;
+
+  for (let i = 0; i < remaining.length; i++) {
+    const char = remaining[i];
+
+    if (char === '(') {
+      depth++;
+      current += char;
+    } else if (char === ')') {
+      depth--;
+      current += char;
+    } else if (char === ',' && depth === 0) {
+      // 괄호 밖의 쉼표만 구분자로 사용
+      const trimmed = current.trim().replace(/\s*외\s+\d+명\s*$/, '');
+      if (trimmed.length > 0) {
+        artists.push(trimmed);
+      }
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  // 마지막 아티스트 추가
+  const trimmed = current.trim().replace(/\s*외\s+\d+명\s*$/, '');
+  if (trimmed.length > 0) {
+    artists.push(trimmed);
+  }
 
   result.artist.push(...artists);
 
