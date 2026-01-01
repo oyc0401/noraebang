@@ -41,7 +41,7 @@ export const searchControllerGetSongByYoutubeUrl = (
       
       
       return customFetch<YoutubeSongSearchResponseDto>(
-      {url: `/search/youtube-song`, method: 'GET',
+      {url: `/search/youtube`, method: 'GET',
         params, signal
     },
       );
@@ -52,7 +52,7 @@ export const searchControllerGetSongByYoutubeUrl = (
 
 export const getSearchControllerGetSongByYoutubeUrlQueryKey = (params?: SearchControllerGetSongByYoutubeUrlParams,) => {
     return [
-    `/search/youtube-song`, ...(params ? [params]: [])
+    `/search/youtube`, ...(params ? [params]: [])
     ] as const;
     }
 
