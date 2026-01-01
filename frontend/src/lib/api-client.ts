@@ -7,8 +7,9 @@ export const customFetch = <T>(config: {
   params?: Record<string, unknown>;
   data?: unknown;
   headers?: Record<string, string>;
+  signal?: AbortSignal;
 }): Promise<T> => {
-  const { url, method, params, data, headers } = config;
+  const { url, method, params, data, headers, signal } = config;
 
   // Build query string
   const queryString = params
@@ -17,6 +18,7 @@ export const customFetch = <T>(config: {
 
   return fetch(`${API_BASE_URL}${url}${queryString}`, {
     method,
+    signal,
     headers: {
       "Content-Type": "application/json",
       ...headers,

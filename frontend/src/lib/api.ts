@@ -5,11 +5,13 @@ export const API_BASE_URL =
 export async function getAdminArtists() {
   const res = await fetch(`${API_BASE_URL}/admin/artists`);
   if (!res.ok) throw new Error("Failed to fetch artists");
-  return res.json();
+  const result = await res.json();
+  return result.data;
 }
 
 export async function getAdminArtistSongs(artistId: number) {
   const res = await fetch(`${API_BASE_URL}/admin/artists/${artistId}/songs`);
   if (!res.ok) throw new Error("Failed to fetch artist songs");
-  return res.json();
+  const result = await res.json();
+  return result.data;
 }

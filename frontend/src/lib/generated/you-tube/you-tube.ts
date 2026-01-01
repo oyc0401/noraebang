@@ -231,7 +231,7 @@ export const youtubeControllerUpdateArtistChannel = (
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<void | void>(
       {url: `/youtube/update-artist-channel/${alias}`, method: 'POST',
         params, signal
     },

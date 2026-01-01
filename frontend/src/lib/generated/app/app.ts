@@ -31,7 +31,7 @@ export const appControllerGetHello = (
 ) => {
       
       
-      return customFetch<void>(
+      return customFetch<string>(
       {url: `/`, method: 'GET', signal
     },
       );
