@@ -12,7 +12,6 @@ export class SongsService {
         karaokeSongs: true,
         artistSongs: {
           orderBy: { order: "asc" },
-          take: 1,
         },
       },
       orderBy: { id: "asc" },
@@ -26,7 +25,6 @@ export class SongsService {
         karaokeSongs: true,
         artistSongs: {
           orderBy: { order: "asc" },
-          take: 1,
         },
       },
     });
@@ -50,7 +48,6 @@ export class SongsService {
         karaokeSongs: true,
         artistSongs: {
           orderBy: { order: "asc" },
-          take: 1,
         },
       },
       orderBy: { id: "asc" },
@@ -77,7 +74,6 @@ export class SongsService {
           karaokeSongs: true,
           artistSongs: {
             orderBy: { order: "asc" },
-            take: 1,
           },
         },
         orderBy: { id: "asc" },
@@ -101,7 +97,6 @@ export class SongsService {
           karaokeSongs: true,
           artistSongs: {
             orderBy: { order: "asc" },
-            take: 1,
           },
         },
         orderBy: { id: "asc" },
@@ -128,7 +123,6 @@ export class SongsService {
         karaokeSongs: true,
         artistSongs: {
           orderBy: { order: "asc" },
-          take: 1,
         },
       },
       orderBy: { id: "asc" },

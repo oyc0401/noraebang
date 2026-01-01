@@ -21,7 +21,9 @@ export default function AdminArtistsPage() {
     useArtistsControllerFindAllWithYoutube();
   const artistsWithYoutube = artistsWithYoutubeData?.data ?? [];
 
-  const [selectedArtist, setSelectedArtist] = useState<AdminArtistDto | null>(null);
+  const [selectedArtist, setSelectedArtist] = useState<AdminArtistDto | null>(
+    null,
+  );
   const selectedArtistId = selectedArtist?.id ?? 0;
   const { data: songsData, isLoading: songsLoading } =
     useAdminControllerGetArtistSongs(selectedArtistId);
@@ -547,18 +549,24 @@ export default function AdminArtistsPage() {
                               {song.titleKo}
                             </div>
                           )}
-                          {song.karaokeNumbers && song.karaokeNumbers.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {song.karaokeNumbers.map((kn: { provider: string; karaokeNo: string }) => (
-                                <span
-                                  key={`${kn.provider}-${kn.karaokeNo}`}
-                                  className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                                >
-                                  {kn.provider} {kn.karaokeNo}
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                          {song.karaokeNumbers &&
+                            song.karaokeNumbers.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {song.karaokeNumbers.map(
+                                  (kn: {
+                                    provider: string;
+                                    karaokeNo: string;
+                                  }) => (
+                                    <span
+                                      key={`${kn.provider}-${kn.karaokeNo}`}
+                                      className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                                    >
+                                      {kn.provider} {kn.karaokeNo}
+                                    </span>
+                                  ),
+                                )}
+                              </div>
+                            )}
                         </div>
                         {song.role && (
                           <span

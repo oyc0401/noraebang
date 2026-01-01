@@ -9,11 +9,7 @@ import { searchControllerGetYoutubeOembed } from "@/api/model/search/search";
 import { songsControllerFindAll } from "@/api/model/songs/songs";
 
 export default function Home() {
-  const {
-    data,
-    isLoading,
-    error,
-  } = useArtistsControllerFindAllWithYoutube();
+  const { data, isLoading, error } = useArtistsControllerFindAllWithYoutube();
   const artists = data?.data ?? [];
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [searching, setSearching] = useState(false);

@@ -15,13 +15,27 @@ import {
 import { ApiResponse } from "../dto/api-response.dto";
 import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
 import { YoutubeService } from "../youtube/youtube.service";
+import { ArtistsService } from "./artists.service";
 import {
   ArtistDetailResponseDto,
+  ArtistDto,
   ArtistListResponseDto,
   ArtistWithYoutubeListResponseDto,
   YoutubeChannelUpdateResponseDto,
 } from "./dto/artist-response.dto";
-import { ArtistsService } from "./artists.service";
+
+const mapArtistToDto = (artist: {
+  id: number;
+  name: string;
+  nameKo: string;
+  alias: string | null;
+}): ArtistDto => ({
+  id: artist.id,
+  name: artist.name,
+  nameKo: artist.nameKo,
+  alias: artist.alias,
+  imageUrl: null,
+});
 
 @ApiTags("Artists")
 @Controller("artists")
@@ -43,7 +57,8 @@ export class ArtistsController {
   })
   async findAll(): Promise<ArtistListResponseDto> {
     const artists = await this.artistsService.findAll();
-    return ApiResponse.success(artists);
+    const formatted = artists.map(mapArtistToDto);
+    return ApiResponse.success(formatted);
   }
 
   @Get("with-youtube")
@@ -107,7 +122,7 @@ export class ArtistsController {
     if (!artist) {
       throw new NotFoundException("Artist not found");
     }
-    return ApiResponse.success(artist);
+    return ApiResponse.success(mapArtistToDto(artist));
   }
 
   @Post(":alias/youtube-channel")
