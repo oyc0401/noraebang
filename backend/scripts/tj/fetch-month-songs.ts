@@ -2,12 +2,12 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
-import { TJService } from "../../tj/tj.service";
+import { TJService } from "../src/tj/tj.service";
 import { saveSongToDatabase } from "./saveSong";
 
-// 현재 월의 TJ 노래 크롤링
-// pnpm ts-node src/scripts/tj/fetch-new-songs.ts
-// pnpm ts-node src/scripts/tj/fetch-new-songs.ts --force
+// 특정 월의 TJ 노래 크롤링 (YYYYMM 형식)
+// pnpm ts-node scripts/tj/fetch-month-songs.ts 202512
+// pnpm ts-node scripts/tj/fetch-month-songs.ts 202512 --force
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -18,25 +18,21 @@ const tjService = new TJService();
 /**
  * 메인 함수
  */
-async function fetchNewTJSongs(force: boolean) {
-  console.log("🚀 Starting TJ Media NEW songs fetch...\n");
+async function fetchMonthTJSongs(yearMonth: string, force: boolean) {
+  console.log(`🚀 Starting TJ Media songs fetch for ${yearMonth}...\n`);
   if (force) {
     console.log(`⚡ Force mode enabled - will update existing songs\n`);
   }
 
-  // 현재 년월 계산
-  const now = new Date();
-  const currentYearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
-
-  // 1. 최신곡 페이지에서 곡 정보 통으로 가져오기
-  const songs = await tjService.fetchSongsByMonth(currentYearMonth);
+  // 1. 해당 월의 곡 정보 가져오기
+  const songs = await tjService.fetchSongsByMonth(yearMonth);
 
   if (songs.length === 0) {
-    console.log("⚠️  No recent songs found");
+    console.log(`⚠️  No songs found for ${yearMonth}`);
     return;
   }
 
-  console.log(`\n📋 Processing ${songs.length} recent songs\n`);
+  console.log(`\n📋 Processing ${songs.length} songs from ${yearMonth}\n`);
 
   let totalCreated = 0;
   let totalUpdated = 0;
@@ -49,7 +45,7 @@ async function fetchNewTJSongs(force: boolean) {
     console.log(`[${i + 1}/${songs.length}] ${song.karaokeNo} - ${song.title}`);
 
     try {
-      const result = await saveSongToDatabase(song, force, currentYearMonth);
+      const result = await saveSongToDatabase(song, force, yearMonth);
       if (result === "created") {
         totalCreated++;
       } else if (result === "updated") {
@@ -72,12 +68,29 @@ async function fetchNewTJSongs(force: boolean) {
   console.log(`   Errors: ${totalErrors}`);
 }
 
-// 커맨드 라인 인자에서 --force 플래그 가져오기
+// 커맨드 라인 인자에서 yearMonth와 --force 플래그 가져오기
 const args = process.argv.slice(2);
+const yearMonth = args.find((arg) => !arg.startsWith("--"));
 const force = args.includes("--force");
 
+if (!yearMonth) {
+  console.error("❌ Error: Please provide yearMonth (e.g., 202512)");
+  console.log(
+    "Usage: pnpm ts-node scripts/tj/fetch-month-songs.ts 202512 [--force]",
+  );
+  process.exit(1);
+}
+
+// yearMonth 형식 검증 (YYYYMM)
+if (!/^\d{6}$/.test(yearMonth)) {
+  console.error(
+    "❌ Error: Invalid yearMonth format. Expected YYYYMM (e.g., 202512)",
+  );
+  process.exit(1);
+}
+
 // 스크립트 실행
-fetchNewTJSongs(force)
+fetchMonthTJSongs(yearMonth, force)
   .then(async () => {
     console.log("\n🎉 Done!");
     await prisma.$disconnect();

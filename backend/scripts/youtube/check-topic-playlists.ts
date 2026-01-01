@@ -1,10 +1,10 @@
 import "dotenv/config";
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "../../app.module";
-import { PrismaService } from "../../prisma/prisma.service";
-import { YoutubeService } from "../../youtube/youtube.service";
+import { AppModule } from "../src/app.module";
+import { PrismaService } from "../src/prisma/prisma.service";
+import { YoutubeService } from "../src/youtube/youtube.service";
 
-// pnpm ts-node src/scripts/youtube/check-topic-playlists.ts
+// pnpm ts-node scripts/youtube/check-topic-playlists.ts
 
 async function checkTopicChannelPlaylists() {
   const app = await NestFactory.createApplicationContext(AppModule);

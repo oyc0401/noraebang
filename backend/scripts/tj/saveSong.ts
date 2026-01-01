@@ -5,8 +5,8 @@ import {
   parseComposer,
   parseLyricist,
   parseTJArtist,
-} from "../../lib/artist-parser";
-import type { TJSongData } from "../../tj/tj.service";
+} from "../src/lib/artist-parser";
+import type { TJSongData } from "../src/tj/tj.service";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
