@@ -325,14 +325,14 @@ export function useArtistsControllerFindByIdOrAlias<TData = Awaited<ReturnType<t
  * @summary 아티스트 YouTube 채널 정보 업데이트
  */
 export const artistsControllerUpdateYoutubeChannel = (
-    alias: string,
+    artistId: number,
     youtubeChannelUpdateDto: YoutubeChannelUpdateDto,
  signal?: AbortSignal
 ) => {
       
       
       return customFetch<YoutubeChannelUpdateResponseDto | YoutubeChannelUpdateResponseDto>(
-      {url: `/artists/${alias}/youtube-channel`, method: 'POST',
+      {url: `/artists/${artistId}/youtube-channel`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: youtubeChannelUpdateDto, signal
     },
@@ -342,8 +342,8 @@ export const artistsControllerUpdateYoutubeChannel = (
 
 
 export const getArtistsControllerUpdateYoutubeChannelMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, TError,{alias: string;data: YoutubeChannelUpdateDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, TError,{alias: string;data: YoutubeChannelUpdateDto}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, TError,{artistId: number;data: YoutubeChannelUpdateDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, TError,{artistId: number;data: YoutubeChannelUpdateDto}, TContext> => {
 
 const mutationKey = ['artistsControllerUpdateYoutubeChannel'];
 const {mutation: mutationOptions} = options ?
@@ -355,10 +355,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, {alias: string;data: YoutubeChannelUpdateDto}> = (props) => {
-          const {alias,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, {artistId: number;data: YoutubeChannelUpdateDto}> = (props) => {
+          const {artistId,data} = props ?? {};
 
-          return  artistsControllerUpdateYoutubeChannel(alias,data,)
+          return  artistsControllerUpdateYoutubeChannel(artistId,data,)
         }
 
         
@@ -374,11 +374,11 @@ const {mutation: mutationOptions} = options ?
  * @summary 아티스트 YouTube 채널 정보 업데이트
  */
 export const useArtistsControllerUpdateYoutubeChannel = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, TError,{alias: string;data: YoutubeChannelUpdateDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>, TError,{artistId: number;data: YoutubeChannelUpdateDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof artistsControllerUpdateYoutubeChannel>>,
         TError,
-        {alias: string;data: YoutubeChannelUpdateDto},
+        {artistId: number;data: YoutubeChannelUpdateDto},
         TContext
       > => {
 
