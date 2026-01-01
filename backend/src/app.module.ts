@@ -9,6 +9,7 @@ import { YoutubeModule } from './youtube/youtube.module';
 import { BlogScrapeModule } from './blog-scrape/blog-scrape.module';
 import { TypesenseModule } from './typesense/typesense.module';
 import { SearchModule } from './search/search.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SearchModule } from './search/search.module';
     SongsModule,
     YoutubeModule,
     BlogScrapeModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
