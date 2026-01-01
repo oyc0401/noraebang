@@ -21,7 +21,7 @@ export class SearchController {
     private readonly songsService: SongsService,
   ) {}
 
-  @Get("youtube-song")
+  @Get("youtube")
   @ApiOperation({
     summary: "YouTube URL로 곡 정보 조회",
     description:
