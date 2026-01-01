@@ -179,6 +179,9 @@ async function searchArtistChannels(
           where: { id: artist.id },
           data: {
             youtubeChannelId: detailedChannelData.channelId,
+            thumbnailDefault: detailedChannelData.thumbnailDefault,
+            thumbnailMedium: detailedChannelData.thumbnailMedium,
+            thumbnailHigh: detailedChannelData.thumbnailHigh,
           },
         });
 

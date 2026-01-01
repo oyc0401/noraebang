@@ -140,6 +140,17 @@ async function updateChannelDetails(
           },
         });
 
+        // Artist 썸네일 동기화
+        await prisma.artist.update({
+          where: { id: artist.id },
+          data: {
+            youtubeChannelId: channelData.channelId,
+            thumbnailDefault: channelData.thumbnailDefault,
+            thumbnailMedium: channelData.thumbnailMedium,
+            thumbnailHigh: channelData.thumbnailHigh,
+          },
+        });
+
         console.log(`   💾 Saved successfully`);
         created++;
 
