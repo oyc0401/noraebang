@@ -85,14 +85,15 @@ export class TJService {
   }
 
   /**
-   * 2001년 1월부터 현재까지 모든 월의 데이터를 가져오기
+   * 특정 년월부터 현재까지 모든 월의 데이터를 가져오기
+   * @param fromYearMonth - 시작 년월 (예: "202001"), 기본값은 "200101"
    */
-  async *fetchAllSongs(): AsyncGenerator<{
+  async *fetchAllSongs(fromYearMonth: string = '200101'): AsyncGenerator<{
     yearMonth: string;
     songs: TJSongData[];
   }> {
-    const startYear = 2001;
-    const startMonth = 1;
+    const startYear = parseInt(fromYearMonth.substring(0, 4));
+    const startMonth = parseInt(fromYearMonth.substring(4, 6));
     const now = new Date();
     const endYear = now.getFullYear();
     const endMonth = now.getMonth() + 1;
