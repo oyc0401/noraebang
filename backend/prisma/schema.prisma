@@ -73,6 +73,8 @@ model TjSong {
   title     String
   artist    String?
   artistList String[] @map("artist_list")
+  featureList String[] @map("feature_list")
+  producerList String[] @map("producer_list")
   lyricist  String?
   lyricistList  String[] @map("lyricist_list")
   composer  String?
