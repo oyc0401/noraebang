@@ -202,7 +202,7 @@ export default function AdminPage() {
                         {artist.name}
                       </div>
                       <a
-                        href={`/${artist.alias}`}
+                        href={`/channel/${artist.alias}`}
                         className="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
                       >
                         @{artist.alias}
