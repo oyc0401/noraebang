@@ -26,8 +26,8 @@ import type {
 
 import type {
   ArtistDetailResponseDto,
+  ArtistDetailsListResponseDto,
   ArtistListResponseDto,
-  ArtistWithYoutubeListResponseDto,
   ArtistsControllerFindAllParams,
   YoutubeChannelUpdateDto,
   YoutubeChannelUpdateResponseDto
@@ -142,7 +142,7 @@ export const artistsControllerFindAllDetails = (
 ) => {
       
       
-      return customFetch<ArtistWithYoutubeListResponseDto>(
+      return customFetch<ArtistDetailsListResponseDto>(
       {url: `/artists/details`, method: 'GET', signal
     },
       );

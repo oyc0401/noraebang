@@ -5,9 +5,10 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-import type { ArtistWithYoutubeDtoYoutube } from './artistWithYoutubeDtoYoutube';
+import type { ArtistDatailsDtoAliasGroup } from './artistDatailsDtoAliasGroup';
+import type { ArtistDatailsDtoYoutube } from './artistDatailsDtoYoutube';
 
-export interface ArtistWithYoutubeDto {
+export interface ArtistDatailsDto {
   id: number;
   name: string;
   nameKo: string;
@@ -19,6 +20,9 @@ export interface ArtistWithYoutubeDto {
   thumbnailMedium?: string | null;
   /** @nullable */
   thumbnailHigh?: string | null;
+  songCount: number;
   /** @nullable */
-  youtube?: ArtistWithYoutubeDtoYoutube;
+  aliasGroup?: ArtistDatailsDtoAliasGroup;
+  /** @nullable */
+  youtube?: ArtistDatailsDtoYoutube;
 }

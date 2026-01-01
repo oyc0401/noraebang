@@ -72,7 +72,15 @@ export class YoutubeInfoDto {
   thumbnail?: string | null;
 }
 
-export class ArtistWithYoutubeDto {
+export class ArtistAliasGroupDto {
+  @ApiProperty({ example: "yoasobi" })
+  groupId: string;
+
+  @ApiProperty({ example: ["yoasobi", "아야세"], type: [String] })
+  aliases: string[];
+}
+
+export class ArtistDatailsDto {
   @ApiProperty({ example: 1 })
   id: number;
 
@@ -103,6 +111,12 @@ export class ArtistWithYoutubeDto {
   })
   thumbnailHigh?: string | null;
 
+  @ApiProperty({ example: 25 })
+  songCount: number;
+
+  @ApiProperty({ type: ArtistAliasGroupDto, required: false })
+  aliasGroup?: ArtistAliasGroupDto | null;
+
   @ApiProperty({ type: YoutubeInfoDto, required: false })
   youtube?: YoutubeInfoDto | null;
 }
@@ -115,9 +129,9 @@ export class ArtistListResponseDto {
   message?: string | null;
 }
 
-export class ArtistWithYoutubeListResponseDto {
-  @ApiProperty({ type: [ArtistWithYoutubeDto] })
-  data: ArtistWithYoutubeDto[];
+export class ArtistDetailsListResponseDto {
+  @ApiProperty({ type: [ArtistDatailsDto] })
+  data: ArtistDatailsDto[];
 
   @ApiProperty({ example: null, required: false })
   message?: string | null;
