@@ -21,8 +21,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  SearchControllerGetYoutubeOembedParams,
-  YoutubeOembedResponseDto
+  SearchControllerGetSongByYoutubeUrlParams,
+  YoutubeSongSearchResponseDto
 } from '.././models';
 
 import { customFetch } from '../../client';
@@ -31,16 +31,17 @@ import { customFetch } from '../../client';
 
 
 /**
- * @summary YouTube 동영상 OEmbed 데이터 조회
+ * YouTube 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다.
+ * @summary YouTube URL로 곡 정보 조회
  */
-export const searchControllerGetYoutubeOembed = (
-    params: SearchControllerGetYoutubeOembedParams,
+export const searchControllerGetSongByYoutubeUrl = (
+    params: SearchControllerGetSongByYoutubeUrlParams,
  signal?: AbortSignal
 ) => {
       
       
-      return customFetch<YoutubeOembedResponseDto>(
-      {url: `/search/youtube-oembed`, method: 'GET',
+      return customFetch<YoutubeSongSearchResponseDto>(
+      {url: `/search/youtube-song`, method: 'GET',
         params, signal
     },
       );
@@ -49,69 +50,69 @@ export const searchControllerGetYoutubeOembed = (
 
 
 
-export const getSearchControllerGetYoutubeOembedQueryKey = (params?: SearchControllerGetYoutubeOembedParams,) => {
+export const getSearchControllerGetSongByYoutubeUrlQueryKey = (params?: SearchControllerGetSongByYoutubeUrlParams,) => {
     return [
-    `/search/youtube-oembed`, ...(params ? [params]: [])
+    `/search/youtube-song`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getSearchControllerGetYoutubeOembedQueryOptions = <TData = Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError = void>(params: SearchControllerGetYoutubeOembedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError, TData>>, }
+export const getSearchControllerGetSongByYoutubeUrlQueryOptions = <TData = Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError = void>(params: SearchControllerGetSongByYoutubeUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSearchControllerGetYoutubeOembedQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getSearchControllerGetSongByYoutubeUrlQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>> = ({ signal }) => searchControllerGetYoutubeOembed(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>> = ({ signal }) => searchControllerGetSongByYoutubeUrl(params, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type SearchControllerGetYoutubeOembedQueryResult = NonNullable<Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>>
-export type SearchControllerGetYoutubeOembedQueryError = void
+export type SearchControllerGetSongByYoutubeUrlQueryResult = NonNullable<Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>>
+export type SearchControllerGetSongByYoutubeUrlQueryError = void
 
 
-export function useSearchControllerGetYoutubeOembed<TData = Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError = void>(
- params: SearchControllerGetYoutubeOembedParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError, TData>> & Pick<
+export function useSearchControllerGetSongByYoutubeUrl<TData = Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError = void>(
+ params: SearchControllerGetSongByYoutubeUrlParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>,
+          Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>,
           TError,
-          Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>
+          Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchControllerGetYoutubeOembed<TData = Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError = void>(
- params: SearchControllerGetYoutubeOembedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError, TData>> & Pick<
+export function useSearchControllerGetSongByYoutubeUrl<TData = Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError = void>(
+ params: SearchControllerGetSongByYoutubeUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>,
+          Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>,
           TError,
-          Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>
+          Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchControllerGetYoutubeOembed<TData = Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError = void>(
- params: SearchControllerGetYoutubeOembedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError, TData>>, }
+export function useSearchControllerGetSongByYoutubeUrl<TData = Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError = void>(
+ params: SearchControllerGetSongByYoutubeUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary YouTube 동영상 OEmbed 데이터 조회
+ * @summary YouTube URL로 곡 정보 조회
  */
 
-export function useSearchControllerGetYoutubeOembed<TData = Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError = void>(
- params: SearchControllerGetYoutubeOembedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetYoutubeOembed>>, TError, TData>>, }
+export function useSearchControllerGetSongByYoutubeUrl<TData = Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError = void>(
+ params: SearchControllerGetSongByYoutubeUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSearchControllerGetYoutubeOembedQueryOptions(params,options)
+  const queryOptions = getSearchControllerGetSongByYoutubeUrlQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

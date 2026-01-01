@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export type SearchControllerGetYoutubeOembedParams = {
+export type SearchControllerGetSongByYoutubeUrlParams = {
 /**
  * YouTube 동영상 URL
  */
