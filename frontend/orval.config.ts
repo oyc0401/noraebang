@@ -11,6 +11,9 @@ export default defineConfig({
       schemas: "./src/lib/generated/models",
       client: "react-query",
       override: {
+        query: {
+          version: 5,
+        },
         mutator: {
           path: "./src/lib/api-client.ts",
           name: "customFetch",

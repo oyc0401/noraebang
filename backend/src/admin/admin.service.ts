@@ -3,7 +3,7 @@ import {
   ARTIST_ALIAS_GROUPS,
   getArtistAliases,
 } from "../config/artist-aliases";
-import type { PrismaService } from "../prisma/prisma.service";
+import { PrismaService } from "../prisma/prisma.service";
 
 export interface ArtistListItem {
   id: number;

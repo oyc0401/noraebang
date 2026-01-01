@@ -22,7 +22,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "typesense:index": "ts-node src/scripts/index-songs-to-typesense.ts"
+    "typesense:index": "ts-node src/scripts/index-songs-to-typesense.ts",
+    "swagger:generate": "ts-node src/scripts/generate-swagger.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

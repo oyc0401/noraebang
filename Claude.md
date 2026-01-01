@@ -92,5 +92,18 @@ foo: string | null; 보다는 foo?: string 이 좋아요
 - 노래방 번호가 `-`인 경우 해당 필드는 포함되지 않습니다
 - 광고나 불필요한 행은 자동으로 필터링됩니다
 
+# 기술스택
 
-ㅇ
+### 서버
+nest.js
+
+### 프론트
+next.js
+orval + tanstackquery
+tailwind + cn()
+
+### 포맷팅&문서
+biome
+apidoc
+lineart
+

@@ -6,7 +6,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../common/dto/api-response.dto";
-import type { AdminService } from "./admin.service";
+import { AdminService } from "./admin.service";
 
 @ApiTags("Admin")
 @Controller("admin")

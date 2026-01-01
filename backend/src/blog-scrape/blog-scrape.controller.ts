@@ -1,5 +1,5 @@
 import { BadRequestException, Controller, Get, Param } from "@nestjs/common";
-import type { BlogScrapeService } from "./blog-scrape.service";
+import { BlogScrapeService } from "./blog-scrape.service";
 
 @Controller("scrape")
 export class BlogScrapeController {

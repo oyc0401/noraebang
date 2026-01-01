@@ -14,7 +14,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../common/dto/api-response.dto";
-import type { YoutubeService } from "./youtube.service";
+import { YoutubeService } from "./youtube.service";
 
 @ApiTags("YouTube")
 @Controller("youtube")

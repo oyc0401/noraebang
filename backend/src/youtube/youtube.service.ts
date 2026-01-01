@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import type { Artist } from "@prisma/client";
-import type { ArtistsService } from "../artists/artists.service";
-import type { PrismaService } from "../prisma/prisma.service";
+import { ArtistsService } from "../artists/artists.service";
+import { PrismaService } from "../prisma/prisma.service";
 
 export interface OembedData {
   title: string;
