@@ -121,3 +121,35 @@ export function parseTJArtist(tjArtist: string): ParsedArtists {
 
   return result;
 }
+
+/**
+ * 작사가 문자열을 파싱하여 배열로 반환
+ * @param lyricist - 작사가 문자열 (쉼표로 구분)
+ * @returns 작사가 배열
+ */
+export function parseLyricist(lyricist: string): string[] {
+  if (!lyricist || lyricist.trim() === '') {
+    return [];
+  }
+
+  return lyricist
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+/**
+ * 작곡가 문자열을 파싱하여 배열로 반환
+ * @param composer - 작곡가 문자열 (쉼표로 구분)
+ * @returns 작곡가 배열
+ */
+export function parseComposer(composer: string): string[] {
+  if (!composer || composer.trim() === '') {
+    return [];
+  }
+
+  return composer
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}

@@ -2,9 +2,12 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
-import { TJService, type TJSongData } from  '../../tj/tj.service';
+import { TJService } from '../../tj/tj.service';
+import { saveSongToDatabase } from './saveSong';
 
+// 2001년 1월부터 현재까지 모든 TJ 노래 크롤링
 // pnpm ts-node src/scripts/tj/fetch-all-songs.ts
+// pnpm ts-node src/scripts/tj/fetch-all-songs.ts --force
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -13,161 +16,77 @@ const prisma = new PrismaClient({ adapter });
 const tjService = new TJService();
 
 /**
- * 곡 데이터를 DB에 저장
+ * 메인 함수 (2001년 1월 ~ 현재까지 모든 월)
  */
-async function saveSongToDatabase(song: TJSongData): Promise<boolean> {
-  try {
-    // 아티스트 찾기 또는 생성
-    let artist = await prisma.artist.findFirst({
-      where: {
-        name: song.artist,
-      },
-    });
-
-    if (!artist) {
-      // alias 없이 아티스트 생성
-      artist = await prisma.artist.create({
-        data: {
-          name: song.artist,
-          nameKo: song.artist,
-        },
-      });
-      console.log(`✅ 새 아티스트 생성: "${song.artist}"`);
-    }
-
-    // 기존 곡이 있는지 확인
-    const existingSong = await prisma.karaokeSong.findUnique({
-      where: {
-        provider_karaokeNo: {
-          provider: 'TJ',
-          karaokeNo: song.karaokeNo,
-        },
-      },
-    });
-
-    if (existingSong) {
-      return false; // 이미 존재
-    }
-
-    // 곡 찾기 또는 생성 (ArtistSong 관계를 통해)
-    let songRecord = await prisma.song.findFirst({
-      where: {
-        title: song.title,
-        artistSongs: {
-          some: {
-            artistId: artist.id,
-          },
-        },
-      },
-    });
-
-    if (!songRecord) {
-      songRecord = await prisma.song.create({
-        data: {
-          title: song.title,
-          artistSongs: {
-            create: {
-              artistId: artist.id,
-              order: 0,
-            },
-          },
-        },
-      });
-    }
-
-    // KaraokeSong 생성
-    await prisma.karaokeSong.create({
-      data: {
-        songId: songRecord.id,
-        provider: 'TJ',
-        karaokeNo: song.karaokeNo,
-        lastSeenAt: new Date(),
-        ingestedAt: new Date(),
-        ingestedFrom: `TJ_ALL_CRAWL`,
-      },
-    });
-
-    return true;
-  } catch (error) {
-    console.error(`❌ Error saving song ${song.karaokeNo}:`, error);
-    return false;
+async function fetchAllTJSongs(force: boolean) {
+  console.log('🚀 Starting TJ Media ALL songs fetch (2001.01 ~ now)...\n');
+  if (force) {
+    console.log(`⚡ Force mode enabled - will update existing songs\n`);
   }
-}
 
-/**
- * 메인 크롤링 함수 - 2001년 1월부터 현재까지 모든 월 크롤링
- */
-async function crawlAllTJSongs() {
-  console.log('🚀 Starting TJ Media ALL songs crawl (2001-01 ~ now)...\n');
-
-  let totalFound = 0;
-  let totalSaved = 0;
+  let totalCreated = 0;
+  let totalUpdated = 0;
   let totalSkipped = 0;
   let totalErrors = 0;
-  let monthsProcessed = 0;
+  let totalMonths = 0;
 
   const startTime = Date.now();
 
-  // AsyncGenerator를 사용해서 월별 데이터 가져오기
+  // fetchAllSongs는 제너레이터이므로 for await...of 사용
   for await (const { yearMonth, songs } of tjService.fetchAllSongs()) {
-    monthsProcessed++;
-
-    console.log(`\n📅 [Month ${monthsProcessed}] Processing ${yearMonth}...`);
+    totalMonths++;
 
     if (songs.length === 0) {
-      console.log(`   ⚠️  No songs found`);
+      console.log(`⚠️  [${yearMonth}] No songs found`);
       continue;
     }
 
-    console.log(`   📋 Found ${songs.length} songs`);
-    totalFound += songs.length;
+    console.log(`\n📋 [${yearMonth}] Processing ${songs.length} songs`);
 
-    // 각 곡 저장
-    let monthSaved = 0;
-    let monthSkipped = 0;
-    let monthErrors = 0;
+    for (let i = 0; i < songs.length; i++) {
+      const song = songs[i];
+      console.log(`  [${i + 1}/${songs.length}] ${song.karaokeNo} - ${song.title}`);
 
-    for (const song of songs) {
       try {
-        const saved = await saveSongToDatabase(song);
-        if (saved) {
-          monthSaved++;
-          totalSaved++;
-        } else {
-          monthSkipped++;
+        const result = await saveSongToDatabase(song, force);
+        if (result === 'created') {
+          totalCreated++;
+        } else if (result === 'updated') {
+          totalUpdated++;
+        } else if (result === 'skipped') {
           totalSkipped++;
         }
       } catch (error) {
-        monthErrors++;
         totalErrors++;
-        console.error(`   ❌ Error saving ${song.karaokeNo}:`, error);
       }
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
-    console.log(
-      `   ✅ Month result: Saved ${monthSaved}, Skipped ${monthSkipped}, Errors ${monthErrors}`,
-    );
-
-    // 전체 진행 상황
     const elapsed = Date.now() - startTime;
     const elapsedHours = (elapsed / (1000 * 60 * 60)).toFixed(2);
 
-    console.log(`   📊 Total: Found ${totalFound}, Saved ${totalSaved}, Skipped ${totalSkipped}, Errors ${totalErrors}`);
-    console.log(`   ⏱️  Elapsed: ${elapsedHours} hours`);
+    console.log(`  ✅ [${yearMonth}] Completed`);
+    console.log(`  📊 Progress: Months ${totalMonths} | Created ${totalCreated} | Updated ${totalUpdated} | Skipped ${totalSkipped} | Errors ${totalErrors}`);
+    console.log(`  ⏱️  Elapsed: ${elapsedHours} hours`);
   }
 
   const totalTime = ((Date.now() - startTime) / (1000 * 60 * 60)).toFixed(2);
-  console.log(`\n✅ Crawl completed!`);
-  console.log(`   Months processed: ${monthsProcessed}`);
-  console.log(`   Total found: ${totalFound}`);
-  console.log(`   Total saved: ${totalSaved}`);
-  console.log(`   Total skipped: ${totalSkipped}`);
-  console.log(`   Total errors: ${totalErrors}`);
+  console.log(`\n✅ Fetch completed!`);
+  console.log(`   Total months: ${totalMonths}`);
+  console.log(`   Created: ${totalCreated}`);
+  console.log(`   Updated: ${totalUpdated}`);
+  console.log(`   Skipped: ${totalSkipped}`);
+  console.log(`   Errors: ${totalErrors}`);
   console.log(`   Total time: ${totalTime} hours`);
 }
 
+// 커맨드 라인 인자에서 --force 플래그 가져오기
+const args = process.argv.slice(2);
+const force = args.includes('--force');
+
 // 스크립트 실행
-crawlAllTJSongs()
+fetchAllTJSongs(force)
   .then(async () => {
     console.log('\n🎉 Done!');
     await prisma.$disconnect();

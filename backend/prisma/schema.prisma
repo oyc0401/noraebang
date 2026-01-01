@@ -68,6 +68,22 @@ model KaraokeSong {
   @@map("karaoke_song")
 }
 
+model TjSong {
+  id String   @id
+  title     String
+  artist    String
+  artistList String[] @map("artist_list")
+  lyricist  String 
+  lyricistList  String[] @map("lyricist_list")
+  composer  String
+  composerList  String[] @map("composer_list")
+  nationType String  @map("nation_type")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("tj_song")
+}
+
 model YoutubeChannel {
   id                    Int       @id @default(autoincrement())
   artistId              Int       @unique @map("artist_id")
@@ -94,6 +110,7 @@ model YoutubeChannel {
   @@index([subscriberCount(sort: Desc)])
   @@map("youtube_channel")
 }
+
 
 enum ArtistRole {
   MAIN
