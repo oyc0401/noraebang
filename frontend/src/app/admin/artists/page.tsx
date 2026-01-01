@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useAdminControllerGetArtistSongs } from "@/api/model/admin/admin";
 import {
   useArtistsControllerFindAllDetails,
   useArtistsControllerUpdateYoutubeChannel,
 } from "@/api/model/artists/artists";
 import type { ArtistDetailsDto } from "@/api/model/models";
+import { useSongsControllerFindByArtistId } from "@/api/model/songs/songs";
 
 export default function AdminArtistsPage() {
   const { data: artistsData, isLoading: artistsLoading } =
@@ -23,7 +23,7 @@ export default function AdminArtistsPage() {
   );
   const selectedArtistId = selectedArtist?.id ?? 0;
   const { data: songsData, isLoading: songsLoading } =
-    useAdminControllerGetArtistSongs(selectedArtistId);
+    useSongsControllerFindByArtistId(selectedArtistId);
   const songs = songsData?.data ?? [];
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -546,10 +546,11 @@ export default function AdminArtistsPage() {
                               {song.titleKo}
                             </div>
                           )}
-                          {song.karaokeNumbers &&
-                            song.karaokeNumbers.length > 0 && (
+
+                          {song.karaokeSongs &&
+                            song.karaokeSongs.length > 0 && (
                               <div className="flex flex-wrap gap-2 mt-2">
-                                {song.karaokeNumbers.map(
+                                {song.karaokeSongs.map(
                                   (kn: {
                                     provider: string;
                                     karaokeNo: string;

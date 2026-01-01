@@ -14,11 +14,11 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
-import { ApiResponse } from "../dto/api-response.dto";
 import {
   ARTIST_ALIAS_GROUPS,
   getArtistAliases,
 } from "../config/artist-aliases";
+import { ApiResponse } from "../dto/api-response.dto";
 import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
 import { YoutubeService } from "../youtube/youtube.service";
 import {
@@ -29,8 +29,8 @@ import {
 } from "./artists.service";
 import {
   ArtistDetailResponseDto,
-  ArtistListResponseDto,
   ArtistDetailsListResponseDto,
+  ArtistListResponseDto,
   YoutubeChannelUpdateResponseDto,
 } from "./dto/artist-response.dto";
 

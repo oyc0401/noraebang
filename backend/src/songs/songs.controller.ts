@@ -4,12 +4,10 @@ import {
   NotFoundException,
   Param,
   ParseIntPipe,
-  Query,
 } from "@nestjs/common";
 import {
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
@@ -26,52 +24,21 @@ import { SongsService } from "./songs.service";
 export class SongsController {
   constructor(private readonly songsService: SongsService) {}
 
-  @Get()
+  @Get("artist/:artistId")
   @ApiOperation({
-    summary: "곡 목록 조회 (검색 및 필터링)",
-    description:
-      "검색어(q) 또는 artistId를 이용해 곡을 조회합니다. 둘 다 없으면 전체 곡을 반환합니다.",
+    summary: "특정 아티스트의 곡 목록 조회",
+    description: "아티스트 ID로 해당 아티스트의 곡 목록을 조회합니다.",
   })
-  @ApiQuery({
-    name: "q",
-    required: false,
-    description: "검색어 (제목으로 검색)",
-  })
-  @ApiQuery({
-    name: "artistId",
-    required: false,
-    description: "아티스트 ID로 필터링",
-  })
+  @ApiParam({ name: "artistId", description: "아티스트 ID" })
   @SwaggerApiResponse({
     status: 200,
     description: "곡 목록",
     type: SongListResponseDto,
   })
-  async findAll(
-    @Query("q") query?: string,
-    @Query("artistId") artistId?: string,
+  async findByArtistId(
+    @Param("artistId", ParseIntPipe) artistId: number,
   ): Promise<SongListResponseDto> {
-    let songs: Awaited<ReturnType<typeof this.songsService.findAll>>;
-
-    if (artistId && query) {
-      // Both artistId and query: filter by artist first, then search within
-      const artistSongs = await this.songsService.findByArtistId(
-        Number(artistId),
-      );
-      const lowerQuery = query.toLowerCase();
-      songs = artistSongs.filter(
-        (song) =>
-          song.title.toLowerCase().includes(lowerQuery) ||
-          song.titleKo?.toLowerCase().includes(lowerQuery),
-      );
-    } else if (artistId) {
-      songs = await this.songsService.findByArtistId(Number(artistId));
-    } else if (query) {
-      songs = await this.songsService.searchByTitle(query);
-    } else {
-      songs = await this.songsService.findAll();
-    }
-
+    const songs = await this.songsService.findByArtistId(artistId);
     const mapped: SongDto[] = songs.map((song) => ({
       id: song.id,
       title: song.title,
