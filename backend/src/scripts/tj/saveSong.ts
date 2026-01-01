@@ -14,6 +14,7 @@ const prisma = new PrismaClient({ adapter });
 export async function saveSongToDatabase(
   song: TJSongData,
   force: boolean,
+  releasedYearMonth: string,
 ): Promise<'created' | 'updated' | 'skipped'> {
   try {
     const parsed = parseTJArtist(song.artist);
@@ -40,6 +41,7 @@ export async function saveSongToDatabase(
           composer: song.composer,
           composerList,
           nationType: song.nationType,
+          releasedYearMonth,
         },
       });
       return 'updated';
@@ -56,6 +58,7 @@ export async function saveSongToDatabase(
         composer: song.composer,
         composerList,
         nationType: song.nationType,
+        releasedYearMonth,
       },
     });
     return 'created';

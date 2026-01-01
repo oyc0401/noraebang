@@ -71,13 +71,14 @@ model KaraokeSong {
 model TjSong {
   id String   @id
   title     String
-  artist    String
+  artist    String?
   artistList String[] @map("artist_list")
-  lyricist  String 
+  lyricist  String?
   lyricistList  String[] @map("lyricist_list")
-  composer  String
+  composer  String?
   composerList  String[] @map("composer_list")
   nationType String  @map("nation_type")
+  releasedYearMonth String @map("released_year_month")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
