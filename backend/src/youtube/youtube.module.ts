@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
-import { ArtistsModule } from "../artists/artists.module";
+import { PrismaModule } from "../prisma/prisma.module";
 import { YoutubeService } from "./youtube.service";
 
 @Module({
-  imports: [ArtistsModule],
+  imports: [PrismaModule],
   providers: [YoutubeService],
   exports: [YoutubeService],
 })
