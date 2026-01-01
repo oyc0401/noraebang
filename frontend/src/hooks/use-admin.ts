@@ -11,8 +11,12 @@ export function useAdminArtists() {
 export function useAdminArtistSongs(artistId: number | null) {
   return useQuery({
     queryKey: ["admin", "artists", artistId, "songs"],
-    queryFn:
-      artistId !== null ? () => getAdminArtistSongs(artistId) : undefined,
+    queryFn: async () => {
+      if (artistId === null) {
+        throw new Error("artistId is required");
+      }
+      return getAdminArtistSongs(artistId);
+    },
     enabled: artistId !== null,
   });
 }

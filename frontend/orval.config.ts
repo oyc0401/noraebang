@@ -1,9 +1,12 @@
 import { defineConfig } from "orval";
 
+const swaggerSchemaUrl =
+  process.env.NEXT_PUBLIC_SWAGGER_URL ?? "http://localhost:3001/api-json";
+
 export default defineConfig({
   api: {
     input: {
-      target: "../backend/swagger.json",
+      target: swaggerSchemaUrl,
     },
     output: {
       mode: "tags-split",
