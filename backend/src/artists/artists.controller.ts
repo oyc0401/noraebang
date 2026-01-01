@@ -79,8 +79,18 @@ export class ArtistsController {
     description: "아티스트 목록 (상세 정보 포함)",
     type: ArtistDetailsListResponseDto,
   })
-  async findAllDetails(): Promise<ArtistDetailsListResponseDto> {
-    const artists = await this.artistsService.findAllDetails();
+  @ApiQuery({
+    name: "sort",
+    required: false,
+    enum: ARTIST_SORT_OPTIONS,
+    description:
+      "정렬 기준 (id_desc, name_asc, name_desc, subscriber_desc, subscriber_asc, song_count_asc, song_count_desc)",
+  })
+  async findAllDetails(
+    @Query("sort") sort?: string,
+  ): Promise<ArtistDetailsListResponseDto> {
+    const sortOption = isArtistSortOption(sort) ? sort : DEFAULT_ARTIST_SORT;
+    const artists = await this.artistsService.findAllDetails(sortOption);
 
     // 응답 포맷: 구독자 수와 미디엄 썸네일 포함
     const formatted = artists.map((artist) => {

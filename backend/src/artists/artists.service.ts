@@ -51,7 +51,9 @@ export class ArtistsService {
     });
   }
 
-  async findAllDetails(): Promise<ArtistDetails[]> {
+  async findAllDetails(
+    sort: ArtistSortOption = DEFAULT_ARTIST_SORT,
+  ): Promise<ArtistDetails[]> {
     return this.prisma.artist.findMany({
       include: {
         youtubeChannel: true,
@@ -61,11 +63,7 @@ export class ArtistsService {
           },
         },
       },
-      orderBy: {
-        youtubeChannel: {
-          subscriberCount: "desc",
-        },
-      },
+      orderBy: ARTIST_SORT_ORDER_MAP[sort],
     });
   }
 

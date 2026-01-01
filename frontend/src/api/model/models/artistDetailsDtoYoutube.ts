@@ -10,4 +10,4 @@ import type { YoutubeInfoDto } from './youtubeInfoDto';
 /**
  * @nullable
  */
-export type ArtistDatailsDtoYoutube = YoutubeInfoDto | null;
+export type ArtistDetailsDtoYoutube = YoutubeInfoDto | null;

@@ -12,7 +12,7 @@ export default function AdminPage() {
     data: artists = [],
     isLoading,
     refetch,
-  } = useArtistsControllerFindAllDetails({
+  } = useArtistsControllerFindAllDetails(undefined, {
     query: {
       select: (response) => response.data,
     },

@@ -7,7 +7,7 @@ import {
   useArtistsControllerFindAllDetails,
   useArtistsControllerUpdateYoutubeChannel,
 } from "@/api/model/artists/artists";
-import type { ArtistDatailsDto } from "@/api/model/models";
+import type { ArtistDetailsDto } from "@/api/model/models";
 
 export default function AdminArtistsPage() {
   const { data: artistsData, isLoading: artistsLoading } =
@@ -18,7 +18,7 @@ export default function AdminArtistsPage() {
     useArtistsControllerFindAllDetails();
   const artistsWithYoutube = artistsWithYoutubeData?.data ?? [];
 
-  const [selectedArtist, setSelectedArtist] = useState<ArtistDatailsDto | null>(
+  const [selectedArtist, setSelectedArtist] = useState<ArtistDetailsDto | null>(
     null,
   );
   const selectedArtistId = selectedArtist?.id ?? 0;
