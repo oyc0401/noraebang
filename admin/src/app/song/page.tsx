@@ -98,6 +98,7 @@ export default function AdminSongPage() {
     useState<PresenceFilter>("any");
   const [titleKoPresenceFilter, setTitleKoPresenceFilter] =
     useState<PresenceFilter>("any");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [selectedSongId, setSelectedSongId] = useState<number | null>(null);
   const selectedSongIdRef = useRef<number | null>(null);
@@ -132,6 +133,7 @@ export default function AdminSongPage() {
     null,
   );
   const [songDeleting, setSongDeleting] = useState(false);
+  const filtersRef = useRef<HTMLDivElement | null>(null);
   const [showThumbnailDialog, setShowThumbnailDialog] = useState(false);
   const [thumbnailDefaultInput, setThumbnailDefaultInput] = useState("");
   const [thumbnailMediumInput, setThumbnailMediumInput] = useState("");
@@ -161,6 +163,22 @@ export default function AdminSongPage() {
     return () => window.removeEventListener("hashchange", applyHashSelection);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const handleClick = (event: MouseEvent) => {
+      if (
+        filtersRef.current &&
+        !filtersRef.current.contains(event.target as Node)
+      ) {
+        setFiltersOpen(false);
+      }
+    };
+    if (filtersOpen) {
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }
+    return undefined;
+  }, [filtersOpen]);
 
   const fetchSongs = useCallback(
     async ({
@@ -757,94 +775,133 @@ export default function AdminSongPage() {
               />
             </div>
 
-            <div className="mb-4 space-y-3">
-              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                <input
-                  type="checkbox"
-                  checked={withoutArtistOnly}
-                  onChange={(event) =>
-                    setWithoutArtistOnly(event.target.checked)
-                  }
-                  className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500"
-                />
-                아티스트가 없는 곡만 보기
-              </label>
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">
-                  노래방 번호 필터
-                </p>
-                {PROVIDERS.map((provider) => (
-                  <div
-                    key={provider}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                      {PROVIDER_LABELS[provider]}
-                    </span>
-                    <select
-                      value={providerPresence[provider]}
-                      onChange={(event) =>
-                        handleProviderFilterChange(
-                          provider,
-                          event.target.value as ProviderPresence,
-                        )
-                      }
-                      className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-                    >
-                      {PRESENCE_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+            <div className="relative mb-4" ref={filtersRef}>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((prev) => !prev)}
+                className="flex w-full items-center justify-between rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              >
+                필터
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className={`h-4 w-4 text-zinc-500 transition-transform ${
+                    filtersOpen ? "rotate-180" : ""
+                  }`}
+                >
+                  <path
+                    d="M6 9l6 6 6-6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+
+              {filtersOpen && (
+                <div className="absolute left-0 right-0 z-30 mt-2 rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
+                  <div className="space-y-4 text-sm">
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">
+                        기본 필터
+                      </p>
+                      <label className="mt-2 flex cursor-pointer items-center gap-2 font-medium text-zinc-700 dark:text-zinc-200">
+                        <input
+                          type="checkbox"
+                          checked={withoutArtistOnly}
+                          onChange={(event) =>
+                            setWithoutArtistOnly(event.target.checked)
+                          }
+                          className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500"
+                        />
+                        아티스트가 없는 곡만 보기
+                      </label>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">
+                        노래방 번호
+                      </p>
+                      <div className="mt-2 space-y-2">
+                        {PROVIDERS.map((provider) => (
+                          <div
+                            key={provider}
+                            className="flex items-center justify-between gap-3"
+                          >
+                            <span className="font-medium text-zinc-600 dark:text-zinc-300">
+                              {PROVIDER_LABELS[provider]}
+                            </span>
+                            <select
+                              value={providerPresence[provider]}
+                              onChange={(event) =>
+                                handleProviderFilterChange(
+                                  provider,
+                                  event.target.value as ProviderPresence,
+                                )
+                              }
+                              className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                            >
+                              {PRESENCE_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">
+                        추가 필터
+                      </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-medium text-zinc-600 dark:text-zinc-300">
+                          썸네일
+                        </span>
+                        <select
+                          value={thumbnailPresenceFilter}
+                          onChange={(event) =>
+                            setThumbnailPresenceFilter(
+                              event.target.value as PresenceFilter,
+                            )
+                          }
+                          className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                        >
+                          {PRESENCE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-medium text-zinc-600 dark:text-zinc-300">
+                          한글 제목
+                        </span>
+                        <select
+                          value={titleKoPresenceFilter}
+                          onChange={(event) =>
+                            setTitleKoPresenceFilter(
+                              event.target.value as PresenceFilter,
+                            )
+                          }
+                          className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                        >
+                          {PRESENCE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">
-                  추가 필터
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                    썸네일
-                  </span>
-                  <select
-                    value={thumbnailPresenceFilter}
-                    onChange={(event) =>
-                      setThumbnailPresenceFilter(
-                        event.target.value as PresenceFilter,
-                      )
-                    }
-                    className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-                  >
-                    {PRESENCE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                    한글 제목
-                  </span>
-                  <select
-                    value={titleKoPresenceFilter}
-                    onChange={(event) =>
-                      setTitleKoPresenceFilter(
-                        event.target.value as PresenceFilter,
-                      )
-                    }
-                    className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-                  >
-                    {PRESENCE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              )}
             </div>
 
             <div className="mb-3 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
@@ -1163,7 +1220,7 @@ export default function AdminSongPage() {
                 </div>
 
                 <div className="rounded-2xl border border-zinc-200 bg-white/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/80">
-                  <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                         노래방 번호
@@ -1172,47 +1229,31 @@ export default function AdminSongPage() {
                         TJ / KY / JOYSOUND 관리
                       </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowKaraokeDialog(true);
+                        setKaraokeProvider(null);
+                        setKaraokeError(null);
+                      }}
+                      className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                    >
+                      번호 관리
+                    </button>
                   </div>
-                  <div className="space-y-3">
-                    {PROVIDERS.map((provider) => {
-                      const number = providerNumbers[provider];
-                      return (
-                        <div
-                          key={provider}
-                          className="flex flex-wrap items-center justify-between rounded-xl border border-zinc-100 bg-white/60 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
-                        >
-                          <div>
-                            <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-100">
-                              {PROVIDER_LABELS[provider]}
-                            </p>
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                              {number ? `번호 ${number}` : "번호 미등록"}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openKaraokeDialog(provider)}
-                              className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                            >
-                              {number ? "수정" : "추가"}
-                            </button>
-                            {number && (
-                              <button
-                                type="button"
-                                onClick={() => handleKaraokeDelete(provider)}
-                                disabled={deletingProvider === provider}
-                                className="rounded-full border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
-                              >
-                                {deletingProvider === provider
-                                  ? "삭제 중..."
-                                  : "삭제"}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="mt-3 space-y-2 text-sm text-zinc-500 dark:text-zinc-400">
+                    {PROVIDERS.map((provider) => (
+                      <div key={provider} className="flex justify-between">
+                        <span className="font-medium text-zinc-600 dark:text-zinc-300">
+                          {PROVIDER_LABELS[provider]}
+                        </span>
+                        <span className="text-zinc-500 dark:text-zinc-400">
+                          {providerNumbers[provider]
+                            ? `번호 ${providerNumbers[provider]}`
+                            : "번호 미등록"}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1519,35 +1560,57 @@ export default function AdminSongPage() {
         </div>
       )}
 
-      {showKaraokeDialog && karaokeProvider && (
+      {showKaraokeDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-100">
-            <h3 className="text-lg font-semibold">
-              {PROVIDER_LABELS[karaokeProvider]} 번호{" "}
-              {providerNumbers[karaokeProvider] ? "수정" : "추가"}
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              노래방 번호 관리
             </h3>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              번호를 입력해 저장하세요.
+              TJ / KY / JOYSOUND 번호를 한 번에 관리하세요.
             </p>
-            <div className="mt-4">
-              <label
-                htmlFor="karaoke-number-input"
-                className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-200"
-              >
-                노래방 번호
-              </label>
-              <input
-                id="karaoke-number-input"
-                type="text"
-                value={karaokeInput}
-                onChange={(event) => {
-                  setKaraokeInput(event.target.value);
-                  if (karaokeError) setKaraokeError(null);
-                }}
-                className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-              />
+            <div className="mt-4 space-y-4">
+              {PROVIDERS.map((provider) => (
+                <div key={provider} className="space-y-2 rounded-xl border border-zinc-200 bg-white/70 p-4 dark:border-zinc-700 dark:bg-zinc-800/70">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-100">
+                      {PROVIDER_LABELS[provider]}
+                    </p>
+                    {providerNumbers[provider] && (
+                      <button
+                        type="button"
+                        onClick={() => handleKaraokeDelete(provider)}
+                        disabled={deletingProvider === provider}
+                        className="rounded-full border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
+                      >
+                        {deletingProvider === provider ? "삭제 중..." : "삭제"}
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={
+                      karaokeProvider === provider
+                        ? karaokeInput
+                        : providerNumbers[provider] ?? ""
+                    }
+                    onFocus={() => {
+                      setKaraokeProvider(provider);
+                      setKaraokeInput(providerNumbers[provider] ?? "");
+                      if (karaokeError) setKaraokeError(null);
+                    }}
+                    onChange={(event) => {
+                      setKaraokeProvider(provider);
+                      setKaraokeInput(event.target.value);
+                      if (karaokeError) setKaraokeError(null);
+                    }}
+                    placeholder="노래방 번호를 입력하세요"
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+                  />
+                </div>
+              ))}
               {karaokeError && (
-                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                <p className="text-sm text-red-600 dark:text-red-400">
                   {karaokeError}
                 </p>
               )}
@@ -1563,7 +1626,7 @@ export default function AdminSongPage() {
               <button
                 type="button"
                 onClick={handleKaraokeSave}
-                disabled={karaokeSaving}
+                disabled={karaokeSaving || !karaokeProvider}
                 className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
               >
                 {karaokeSaving ? "저장 중..." : "저장"}
