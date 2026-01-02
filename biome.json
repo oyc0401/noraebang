@@ -65,6 +65,22 @@
           }
         }
       }
+    },
+    {
+      "includes": [
+        "admin/**/*"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useKeyWithClickEvents": "off",
+            "noSvgWithoutTitle": "off"
+          },
+          "correctness": {
+            "noUnsafeFinally": "off"
+          }
+        }
+      }
     }
   ],
   "assist": {
