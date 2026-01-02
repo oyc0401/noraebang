@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+/** biome-ignore-all lint/correctness/noUnsafeFinally: <explanation> */
 /** biome-ignore-all lint/a11y/noSvgWithoutTitle: <explanation> */
 "use client";
 
@@ -1571,7 +1572,10 @@ export default function AdminSongPage() {
             </p>
             <div className="mt-4 space-y-4">
               {PROVIDERS.map((provider) => (
-                <div key={provider} className="space-y-2 rounded-xl border border-zinc-200 bg-white/70 p-4 dark:border-zinc-700 dark:bg-zinc-800/70">
+                <div
+                  key={provider}
+                  className="space-y-2 rounded-xl border border-zinc-200 bg-white/70 p-4 dark:border-zinc-700 dark:bg-zinc-800/70"
+                >
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-100">
                       {PROVIDER_LABELS[provider]}
@@ -1592,7 +1596,7 @@ export default function AdminSongPage() {
                     value={
                       karaokeProvider === provider
                         ? karaokeInput
-                        : providerNumbers[provider] ?? ""
+                        : (providerNumbers[provider] ?? "")
                     }
                     onFocus={() => {
                       setKaraokeProvider(provider);

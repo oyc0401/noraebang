@@ -217,7 +217,7 @@ export class OembedDataDto {
 # 아키텍쳐 규칙 (필수)
 
 **스크립트:**
-- `backend/scripts/` 내 npx로 실행 가능한 스크립트에서는 Prisma Client를 직접 생성 가능합니다
+- `admin/scripts/` 내 npx로 실행 가능한 스크립트에서는 Prisma Client를 직접 생성 가능합니다
 
 절대로 개발 서버를 실행하지 마세요
 `pnpm dev` 등 금지
