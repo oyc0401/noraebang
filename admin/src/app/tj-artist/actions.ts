@@ -1,6 +1,9 @@
 'use server'
 
+import { ChannelType } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
+import { buildYoutubeChannelData, fetchChannelFromYoutube, parseChannelIdentifier } from '@/lib/youtube'
 
 export type TjArtistSummary = Awaited<ReturnType<typeof getTjArtists>>[number]
 export type SongSavedFilter = 'all' | 'saved' | 'unsaved'
@@ -182,6 +185,8 @@ export async function createArtist(input: {
   thumbnailDefault?: string
   thumbnailMedium?: string
   thumbnailHigh?: string
+  youtubeMainUrl?: string
+  youtubeTopicUrl?: string
 }) {
   const name = input.name.trim()
   const nameKo = input.nameKo.trim()
@@ -206,23 +211,54 @@ export async function createArtist(input: {
     throw new Error('이미 존재하는 별칭입니다.')
   }
 
-  const created = await prisma.artist.create({
-    data: {
-      name,
-      nameKo,
-      alias: alias || undefined,
-      tjSongRequestUrl: input.tjSongRequestUrl?.trim() || undefined,
-      thumbnailDefault: input.thumbnailDefault?.trim() || undefined,
-      thumbnailMedium: input.thumbnailMedium?.trim() || undefined,
-      thumbnailHigh: input.thumbnailHigh?.trim() || undefined
+  const youtubeInputs: { type: ChannelType; url: string; channel: any }[] = []
+
+  const trimmedMain = input.youtubeMainUrl?.trim()
+  if (trimmedMain) {
+    const identifier = parseChannelIdentifier(trimmedMain)
+    const channel = await fetchChannelFromYoutube(identifier)
+    youtubeInputs.push({ type: ChannelType.MAIN, url: trimmedMain, channel })
+  }
+
+  const trimmedTopic = input.youtubeTopicUrl?.trim()
+  if (trimmedTopic) {
+    const identifier = parseChannelIdentifier(trimmedTopic)
+    const channel = await fetchChannelFromYoutube(identifier)
+    youtubeInputs.push({ type: ChannelType.TOPIC, url: trimmedTopic, channel })
+  }
+
+  const result = await prisma.$transaction(async tx => {
+    const created = await tx.artist.create({
+      data: {
+        name,
+        nameKo,
+        alias: alias || undefined,
+        tjSongRequestUrl: input.tjSongRequestUrl?.trim() || undefined,
+        thumbnailDefault: input.thumbnailDefault?.trim() || undefined,
+        thumbnailMedium: input.thumbnailMedium?.trim() || undefined,
+        thumbnailHigh: input.thumbnailHigh?.trim() || undefined
+      }
+    })
+
+    for (const entry of youtubeInputs) {
+      const commonData = buildYoutubeChannelData(entry.channel)
+      await tx.youtubeChannel.create({
+        data: {
+          artistId: created.id,
+          type: entry.type,
+          ...commonData
+        }
+      })
     }
+
+    return created
   })
 
   return {
-    id: created.id,
-    name: created.name,
-    nameKo: created.nameKo,
-    alias: created.alias ?? undefined
+    id: result.id,
+    name: result.name,
+    nameKo: result.nameKo,
+    alias: result.alias ?? undefined
   }
 }
 
