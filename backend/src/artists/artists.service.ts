@@ -27,14 +27,8 @@ const ARTIST_SORT_ORDER_MAP: Record<
   id_desc: [{ id: "desc" }],
   name_asc: [{ name: "asc" }, { id: "desc" }],
   name_desc: [{ name: "desc" }, { id: "desc" }],
-  subscriber_desc: [
-    { youtubeChannel: { subscriberCount: "desc" } },
-    { id: "desc" },
-  ],
-  subscriber_asc: [
-    { youtubeChannel: { subscriberCount: "asc" } },
-    { id: "desc" },
-  ],
+  subscriber_desc: [{ id: "desc" }], // 애플리케이션 레벨에서 정렬
+  subscriber_asc: [{ id: "desc" }], // 애플리케이션 레벨에서 정렬
   song_count_asc: [{ artistSongs: { _count: "asc" } }, { id: "desc" }],
   song_count_desc: [{ artistSongs: { _count: "desc" } }, { id: "desc" }],
 };
@@ -56,11 +50,23 @@ export class ArtistsService {
         thumbnailMedium: true,
         thumbnailHigh: true,
         tjSongRequestUrl: true,
+        youtubeChannels: {
+          where: {
+            type: "MAIN",
+          },
+          select: {
+            subscriberCount: true,
+          },
+          orderBy: {
+            subscriberCount: "desc",
+          },
+          take: 1,
+        },
       },
       orderBy: ARTIST_SORT_ORDER_MAP[sort],
     });
 
-    return artists.map((artist) => ({
+    const mappedArtists = artists.map((artist) => ({
       id: artist.id,
       name: artist.name,
       nameKo: artist.nameKo,
@@ -69,7 +75,43 @@ export class ArtistsService {
       thumbnailMedium: artist.thumbnailMedium ?? undefined,
       thumbnailHigh: artist.thumbnailHigh ?? undefined,
       tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
+      _subscriberCount: artist.youtubeChannels[0]?.subscriberCount,
     }));
+
+    // 구독자 수로 정렬하는 경우 애플리케이션 레벨에서 정렬
+    if (sort === "subscriber_desc") {
+      return mappedArtists.sort((a, b) => {
+        const aCount = a._subscriberCount ?? null;
+        const bCount = b._subscriberCount ?? null;
+
+        if (aCount === null && bCount === null) {
+          return b.id - a.id;
+        }
+        if (aCount === null) return 1;
+        if (bCount === null) return -1;
+
+        if (bCount !== aCount) return bCount - aCount;
+        return b.id - a.id;
+      }).map(({ _subscriberCount, ...artist }) => artist);
+    }
+
+    if (sort === "subscriber_asc") {
+      return mappedArtists.sort((a, b) => {
+        const aCount = a._subscriberCount ?? null;
+        const bCount = b._subscriberCount ?? null;
+
+        if (aCount === null && bCount === null) {
+          return b.id - a.id;
+        }
+        if (aCount === null) return 1;
+        if (bCount === null) return -1;
+
+        if (aCount !== bCount) return aCount - bCount;
+        return b.id - a.id;
+      }).map(({ _subscriberCount, ...artist }) => artist);
+    }
+
+    return mappedArtists.map(({ _subscriberCount, ...artist }) => artist);
   }
 
   async findAllDetails(
@@ -84,7 +126,10 @@ export class ArtistsService {
         thumbnailDefault: true,
         thumbnailMedium: true,
         thumbnailHigh: true,
-        youtubeChannel: {
+        youtubeChannels: {
+          where: {
+            type: "MAIN",
+          },
           select: {
             channelId: true,
             title: true,
@@ -96,6 +141,7 @@ export class ArtistsService {
             thumbnailMedium: true,
             thumbnailHigh: true,
           },
+          take: 1,
         },
         _count: {
           select: {
@@ -106,7 +152,7 @@ export class ArtistsService {
       orderBy: ARTIST_SORT_ORDER_MAP[sort],
     });
 
-    return artists.map((artist) => {
+    const mappedArtists = artists.map((artist) => {
       let aliasGroup: { groupId: string; aliases: string[] } | undefined;
 
       const artistAlias = artist.alias;
@@ -125,6 +171,8 @@ export class ArtistsService {
         }
       }
 
+      const mainChannel = artist.youtubeChannels[0];
+
       return {
         id: artist.id,
         name: artist.name,
@@ -135,24 +183,56 @@ export class ArtistsService {
         thumbnailHigh: artist.thumbnailHigh ?? undefined,
         songCount: artist._count.artistSongs,
         aliasGroup,
-        youtube: artist.youtubeChannel
+        youtube: mainChannel
           ? {
-              channelId: artist.youtubeChannel.channelId,
-              title: artist.youtubeChannel.title ?? undefined,
-              description: artist.youtubeChannel.description ?? undefined,
-              customUrl: artist.youtubeChannel.customUrl ?? undefined,
-              subscriberCount:
-                artist.youtubeChannel.subscriberCount ?? undefined,
-              videoCount: artist.youtubeChannel.videoCount ?? undefined,
-              thumbnailDefault:
-                artist.youtubeChannel.thumbnailDefault ?? undefined,
-              thumbnailMedium:
-                artist.youtubeChannel.thumbnailMedium ?? undefined,
-              thumbnailHigh: artist.youtubeChannel.thumbnailHigh ?? undefined,
+              channelId: mainChannel.channelId,
+              title: mainChannel.title ?? undefined,
+              description: mainChannel.description ?? undefined,
+              customUrl: mainChannel.customUrl ?? undefined,
+              subscriberCount: mainChannel.subscriberCount ?? undefined,
+              videoCount: mainChannel.videoCount ?? undefined,
+              thumbnailDefault: mainChannel.thumbnailDefault ?? undefined,
+              thumbnailMedium: mainChannel.thumbnailMedium ?? undefined,
+              thumbnailHigh: mainChannel.thumbnailHigh ?? undefined,
             }
           : undefined,
       };
     });
+
+    // 구독자 수로 정렬하는 경우 애플리케이션 레벨에서 정렬
+    if (sort === "subscriber_desc") {
+      return mappedArtists.sort((a, b) => {
+        const aCount = a.youtube?.subscriberCount ?? null;
+        const bCount = b.youtube?.subscriberCount ?? null;
+
+        if (aCount === null && bCount === null) {
+          return b.id - a.id;
+        }
+        if (aCount === null) return 1;
+        if (bCount === null) return -1;
+
+        if (bCount !== aCount) return bCount - aCount;
+        return b.id - a.id;
+      });
+    }
+
+    if (sort === "subscriber_asc") {
+      return mappedArtists.sort((a, b) => {
+        const aCount = a.youtube?.subscriberCount ?? null;
+        const bCount = b.youtube?.subscriberCount ?? null;
+
+        if (aCount === null && bCount === null) {
+          return b.id - a.id;
+        }
+        if (aCount === null) return 1;
+        if (bCount === null) return -1;
+
+        if (aCount !== bCount) return aCount - bCount;
+        return b.id - a.id;
+      });
+    }
+
+    return mappedArtists;
   }
 
   async findById(id: number): Promise<ArtistDto | null> {
@@ -241,7 +321,23 @@ export class ArtistsService {
         thumbnailMedium: true,
         thumbnailHigh: true,
         tjSongRequestUrl: true,
-        youtubeChannel: true,
+        youtubeChannels: {
+          where: {
+            type: "MAIN",
+          },
+          select: {
+            channelId: true,
+            title: true,
+            description: true,
+            customUrl: true,
+            subscriberCount: true,
+            videoCount: true,
+            thumbnailDefault: true,
+            thumbnailMedium: true,
+            thumbnailHigh: true,
+          },
+          take: 1,
+        },
         _count: {
           select: { artistSongs: true },
         },
@@ -249,6 +345,8 @@ export class ArtistsService {
     });
 
     if (!artist) return null;
+
+    const mainChannel = artist.youtubeChannels[0];
 
     return {
       id: artist.id,
@@ -260,18 +358,17 @@ export class ArtistsService {
       thumbnailHigh: artist.thumbnailHigh ?? undefined,
       songCount: artist._count.artistSongs,
       tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
-      youtube: artist.youtubeChannel
+      youtube: mainChannel
         ? {
-            channelId: artist.youtubeChannel.channelId,
-            title: artist.youtubeChannel.title ?? undefined,
-            description: artist.youtubeChannel.description ?? undefined,
-            customUrl: artist.youtubeChannel.customUrl ?? undefined,
-            subscriberCount: artist.youtubeChannel.subscriberCount ?? undefined,
-            videoCount: artist.youtubeChannel.videoCount ?? undefined,
-            thumbnailDefault:
-              artist.youtubeChannel.thumbnailDefault ?? undefined,
-            thumbnailMedium: artist.youtubeChannel.thumbnailMedium ?? undefined,
-            thumbnailHigh: artist.youtubeChannel.thumbnailHigh ?? undefined,
+            channelId: mainChannel.channelId,
+            title: mainChannel.title ?? undefined,
+            description: mainChannel.description ?? undefined,
+            customUrl: mainChannel.customUrl ?? undefined,
+            subscriberCount: mainChannel.subscriberCount ?? undefined,
+            videoCount: mainChannel.videoCount ?? undefined,
+            thumbnailDefault: mainChannel.thumbnailDefault ?? undefined,
+            thumbnailMedium: mainChannel.thumbnailMedium ?? undefined,
+            thumbnailHigh: mainChannel.thumbnailHigh ?? undefined,
           }
         : undefined,
     };
