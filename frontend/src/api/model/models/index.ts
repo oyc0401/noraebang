@@ -29,4 +29,3 @@ export * from './youtubeChannelUpdateResponseDataDto';
 export * from './youtubeChannelUpdateResponseDto';
 export * from './youtubeInfoDto';
 export * from './youtubeSongSearchResponseDto';
-export * from './youtubeSongSearchResponseDtoData';

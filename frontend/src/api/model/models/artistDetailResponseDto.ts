@@ -5,9 +5,9 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-import type { ArtistDto } from './artistDto';
+import type { ArtistDetailsDto } from './artistDetailsDto';
 
 export interface ArtistDetailResponseDto {
-  data: ArtistDto;
+  data: ArtistDetailsDto;
   message?: string;
 }

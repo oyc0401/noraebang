@@ -89,6 +89,13 @@ export class ArtistDetailsDto {
   @ApiProperty({ example: 25 })
   songCount: number;
 
+  @ApiProperty({
+    example: "https://www.tjmedia.com/tjsong/song_add.asp",
+    required: false,
+    description: "TJ 노래방 곡 추가 요청 URL",
+  })
+  tjSongRequestUrl?: string;
+
   @ApiProperty({ type: ArtistAliasGroupDto, required: false })
   aliasGroup?: ArtistAliasGroupDto;
 

@@ -18,8 +18,8 @@ export class ArtistDetailsListResponseDto {
 }
 
 export class ArtistDetailResponseDto {
-  @ApiProperty({ type: ArtistDto })
-  data: ArtistDto;
+  @ApiProperty({ type: ArtistDetailsDto })
+  data: ArtistDetailsDto;
 
   @ApiProperty({ example: null, required: false })
   message?: string;
