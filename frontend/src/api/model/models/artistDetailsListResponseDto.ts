@@ -9,6 +9,5 @@ import type { ArtistDetailsDto } from './artistDetailsDto';
 
 export interface ArtistDetailsListResponseDto {
   data: ArtistDetailsDto[];
-  /** @nullable */
-  message?: string | null;
+  message?: string;
 }

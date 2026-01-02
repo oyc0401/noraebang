@@ -9,6 +9,5 @@ import type { ArtistSongDtoRole } from './artistSongDtoRole';
 
 export interface ArtistSongDto {
   artistId: number;
-  /** @nullable */
   role?: ArtistSongDtoRole;
 }

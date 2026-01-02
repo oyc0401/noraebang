@@ -8,16 +8,12 @@
 
 export interface YoutubeInfoDto {
   channelId: string;
-  /** @nullable */
-  title?: string | null;
-  /** @nullable */
-  description?: string | null;
-  /** @nullable */
-  customUrl?: string | null;
-  /** @nullable */
-  subscriberCount?: number | null;
-  /** @nullable */
-  videoCount?: number | null;
-  /** @nullable */
-  thumbnail?: string | null;
+  title?: string;
+  description?: string;
+  customUrl?: string;
+  subscriberCount?: number;
+  videoCount?: number;
+  thumbnailDefault?: string;
+  thumbnailMedium?: string;
+  thumbnailHigh?: string;
 }

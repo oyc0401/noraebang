@@ -5,24 +5,18 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-import type { ArtistDetailsDtoAliasGroup } from './artistDetailsDtoAliasGroup';
-import type { ArtistDetailsDtoYoutube } from './artistDetailsDtoYoutube';
+import type { ArtistAliasGroupDto } from './artistAliasGroupDto';
+import type { YoutubeInfoDto } from './youtubeInfoDto';
 
 export interface ArtistDetailsDto {
   id: number;
   name: string;
   nameKo: string;
-  /** @nullable */
-  alias?: string | null;
-  /** @nullable */
-  thumbnailDefault?: string | null;
-  /** @nullable */
-  thumbnailMedium?: string | null;
-  /** @nullable */
-  thumbnailHigh?: string | null;
+  alias?: string;
+  thumbnailDefault?: string;
+  thumbnailMedium?: string;
+  thumbnailHigh?: string;
   songCount: number;
-  /** @nullable */
-  aliasGroup?: ArtistDetailsDtoAliasGroup;
-  /** @nullable */
-  youtube?: ArtistDetailsDtoYoutube;
+  aliasGroup?: ArtistAliasGroupDto;
+  youtube?: YoutubeInfoDto;
 }

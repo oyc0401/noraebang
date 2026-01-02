@@ -10,22 +10,12 @@ export interface ArtistDto {
   id: number;
   name: string;
   nameKo: string;
-  /** @nullable */
-  alias?: string | null;
-  /** @nullable */
-  thumbnailDefault?: string | null;
-  /** @nullable */
-  thumbnailMedium?: string | null;
-  /** @nullable */
-  thumbnailHigh?: string | null;
-  /**
-   * 연결된 YouTube 채널 ID
-   * @nullable
-   */
-  youtubeChannelId?: string | null;
-  /**
-   * TJ 노래방 곡 추가 요청 URL
-   * @nullable
-   */
-  tjSongRequestUrl?: string | null;
+  alias?: string;
+  thumbnailDefault?: string;
+  thumbnailMedium?: string;
+  thumbnailHigh?: string;
+  /** 연결된 YouTube 채널 ID */
+  youtubeChannelId?: string;
+  /** TJ 노래방 곡 추가 요청 URL */
+  tjSongRequestUrl?: string;
 }

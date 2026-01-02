@@ -9,8 +9,6 @@
 export * from './artistAliasGroupDto';
 export * from './artistDetailResponseDto';
 export * from './artistDetailsDto';
-export * from './artistDetailsDtoAliasGroup';
-export * from './artistDetailsDtoYoutube';
 export * from './artistDetailsListResponseDto';
 export * from './artistDto';
 export * from './artistListResponseDto';
@@ -20,6 +18,7 @@ export * from './artistsControllerFindAllDetailsParams';
 export * from './artistsControllerFindAllDetailsSort';
 export * from './artistsControllerFindAllParams';
 export * from './artistsControllerFindAllSort';
+export * from './errorResponseDto';
 export * from './karaokeSongDto';
 export * from './searchControllerGetSongByYoutubeUrlParams';
 export * from './songDetailResponseDto';
