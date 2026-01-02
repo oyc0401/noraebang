@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ArtistDetailsDto, SongDto } from "@/api/model/models";
-import { Provider } from "@/types/models";
 
 interface ArtistPageClientProps {
   artist: ArtistDetailsDto;
@@ -204,9 +203,9 @@ export default function ArtistPageClient({
                       >
                         <span
                           className={`font-semibold ${
-                            karaoke.provider === Provider.TJ
+                            karaoke.provider === "TJ"
                               ? "text-blue-600 dark:text-blue-400"
-                              : karaoke.provider === Provider.KY
+                              : karaoke.provider === "KY"
                                 ? "text-green-600 dark:text-green-400"
                                 : "text-purple-600 dark:text-purple-400"
                           }`}
