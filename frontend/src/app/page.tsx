@@ -60,7 +60,7 @@ export default function Home() {
         return;
       }
 
-      const artist = artists.find((a) => a.id === song.artistIds[0]);
+      const artist = artists.find((a) => a.id === song.artists[0].artistId);
 
       if (!artist) {
         setSearchError(`❌ 아티스트 정보를 찾을 수 없습니다.`);

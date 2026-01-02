@@ -14,6 +14,8 @@ export * from './artistDetailsDtoYoutube';
 export * from './artistDetailsListResponseDto';
 export * from './artistDto';
 export * from './artistListResponseDto';
+export * from './artistSongDto';
+export * from './artistSongDtoRole';
 export * from './artistsControllerFindAllDetailsParams';
 export * from './artistsControllerFindAllDetailsSort';
 export * from './artistsControllerFindAllParams';
