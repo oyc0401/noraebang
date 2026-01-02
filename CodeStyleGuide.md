@@ -120,13 +120,37 @@ async getYoutubeOembed(@Query("url") url: string) {
 
 ## 5. NestJS 응답/DTO/Swagger 규칙
 
-### 5.1 모든 API 응답은 DTO **클래스** 사용 (interface 금지)
+### 5.1 Controller 응답은 DTO **클래스** 사용 (API spec 생성 목적)
 
-* ✅ `@ApiProperty()`로 문서화 가능해야 함
+* ✅ **Controller에서 외부로 노출되는 응답**은 반드시 class DTO 사용
+* ✅ `@ApiProperty()`로 무조건 Swagger 문서화 가능해야 함
 * ✅ `Promise<XxxResponseDto>`로 반환 타입 명시
-* ✅ Service에서 반환하는 타입도 DTO(class)로 통일
+* ✅ Service 내부에서만 사용하는 타입은 **interface 사용** (API spec에 노출 안 됨)
 
-### 5.2 제네릭 응답 래퍼는 Swagger에서 약하므로 “구체 DTO” 생성
+**예시: Controller 응답 (class 필수)**
+```ts
+export class SongListResponseDto {
+  @ApiProperty({ type: [SongDto] })
+  data: SongDto[];
+}
+
+@Get()
+async findAll(): Promise<SongListResponseDto> {
+  return this.songsService.findAll();
+}
+```
+
+### Controller에 노출되지 않는 타입은 무조건 DTO 사용하지 마세요. (interface 사용)
+**Service 내부 타입 (interface 사용)**
+```ts
+// youtube.service.ts - 내부에서만 사용, API 응답 아님
+export interface ChannelSearchResult {
+  channelId: string;
+  title: string;
+}
+```
+
+### 5.2 제네릭 응답 래퍼는 Swagger에서 약하므로 "구체 DTO" 생성
 
 * ✅ `ApiResponse<T>`를 그대로 노출하지 말고 `XxxResponseDto`를 만든다.
 

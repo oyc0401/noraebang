@@ -17,18 +17,18 @@ export interface ChannelDetails {
   channelId: string;
   title: string;
   description: string;
-  customUrl: string | null;
+  customUrl?: string;
   publishedAt: string;
-  country: string | null;
-  defaultLanguage: string | null;
-  thumbnailDefault: string | null;
-  thumbnailMedium: string | null;
-  thumbnailHigh: string | null;
-  subscriberCount: number | null;
-  videoCount: number | null;
-  viewCount: bigint | null;
+  country?: string;
+  defaultLanguage?: string;
+  thumbnailDefault?: string;
+  thumbnailMedium?: string;
+  thumbnailHigh?: string;
+  subscriberCount?: number;
+  videoCount?: number;
+  viewCount?: bigint;
   hiddenSubscriberCount: boolean;
-  uploadsPlaylistId: string | null;
+  uploadsPlaylistId?: string;
 }
 
 export interface OfficialChannelResult {
