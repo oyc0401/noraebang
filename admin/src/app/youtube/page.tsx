@@ -57,13 +57,16 @@ export default function YoutubeAdminPage() {
   const [artistsLoading, setArtistsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [selectedArtistId, setSelectedArtistId] = useState<number | null>(() => {
-    if (typeof window === "undefined") return null;
-    const hash = window.location.hash.replace("#", "");
-    const hashId = Number(hash);
-    return !Number.isNaN(hashId) && hashId > 0 ? hashId : null;
-  });
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const [selectedArtistId, setSelectedArtistId] = useState<number | null>(
+    () => {
+      if (typeof window === "undefined") return null;
+      const hash = window.location.hash.replace("#", "");
+      const hashId = Number(hash);
+      return !Number.isNaN(hashId) && hashId > 0 ? hashId : null;
+    },
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<ChannelType>("MAIN");
   const [channelUrlInput, setChannelUrlInput] = useState("");
@@ -245,7 +248,11 @@ export default function YoutubeAdminPage() {
     setDialogError(null);
 
     try {
-      await upsertYoutubeChannel(selectedArtist.id, dialogType, channelUrlInput);
+      await upsertYoutubeChannel(
+        selectedArtist.id,
+        dialogType,
+        channelUrlInput,
+      );
       await loadArtists({ background: true });
       setBanner({
         type: "success",
@@ -307,15 +314,158 @@ export default function YoutubeAdminPage() {
 
         <div className="flex flex-col gap-6 lg:flex-row">
           <aside className="w-full flex-shrink-0 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm lg:flex lg:h-[calc(100vh-8rem)] lg:w-[360px] lg:flex-col">
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 relative">
               <button
+                ref={filterButtonRef}
                 type="button"
-                onClick={() => setFilterDialogOpen(true)}
+                onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
                 className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-left text-sm font-medium text-zinc-700 hover:bg-zinc-50"
                 style={{ cursor: "pointer" }}
               >
-                필터 설정
+                필터
               </button>
+
+              {filterDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setFilterDropdownOpen(false)}
+                  />
+                  <div className="absolute left-0 top-full mt-2 w-full rounded-lg border border-zinc-200 bg-white p-4 shadow-lg z-20">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="mb-2 text-xs font-semibold text-zinc-700">
+                          메인
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({ ...prev, main: "all" }))
+                            }
+                            className={`rounded px-3 py-1 text-xs ${filters.main === "all" ? "bg-red-100 text-red-700 font-semibold" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            전체
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({ ...prev, main: "has" }))
+                            }
+                            className={`rounded px-3 py-1 text-xs ${filters.main === "has" ? "bg-red-100 text-red-700 font-semibold" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            있음
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({
+                                ...prev,
+                                main: "missing",
+                              }))
+                            }
+                            className={`rounded px-3 py-1 text-xs ${filters.main === "missing" ? "bg-red-100 text-red-700 font-semibold" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            없음
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="mb-2 text-xs font-semibold text-zinc-700">
+                          토픽
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({ ...prev, topic: "all" }))
+                            }
+                            className={`rounded px-3 py-1 text-xs ${filters.topic === "all" ? "bg-red-100 text-red-700 font-semibold" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            전체
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({ ...prev, topic: "has" }))
+                            }
+                            className={`rounded px-3 py-1 text-xs ${filters.topic === "has" ? "bg-red-100 text-red-700 font-semibold" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            있음
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({
+                                ...prev,
+                                topic: "missing",
+                              }))
+                            }
+                            className={`rounded px-3 py-1 text-xs ${filters.topic === "missing" ? "bg-red-100 text-red-700 font-semibold" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            없음
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="mb-2 text-xs font-semibold text-zinc-700">
+                          채널 개수
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({ ...prev, count: "all" }))
+                            }
+                            className={`rounded px-3 py-1 text-xs ${filters.count === "all" ? "bg-red-100 text-red-700 font-semibold" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            전체
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({ ...prev, count: "0" }))
+                            }
+                            className={`rounded px-3 py-1 text-xs ${filters.count === "0" ? "bg-red-100 text-red-700 font-semibold" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            0개
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({ ...prev, count: "1" }))
+                            }
+                            className={`rounded px-3 py-1 text-xs ${filters.count === "1" ? "bg-red-100 text-red-700 font-semibold" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            1개
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({ ...prev, count: "2" }))
+                            }
+                            className={`rounded px-3 py-1 text-xs ${filters.count === "2" ? "bg-red-100 text-red-700 font-semibold" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"}`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            2개
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="mt-4 flex-shrink-0">
@@ -468,7 +618,7 @@ export default function YoutubeAdminPage() {
                       onClick={() => openDialog("MAIN")}
                       className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-700"
                     >
-                      유튜브채널 설정하기
+                      유튜브채널 추가하기
                     </button>
                     {refreshing && (
                       <span className="text-xs text-zinc-400">
@@ -682,7 +832,8 @@ export default function YoutubeAdminPage() {
                   className="mt-2 w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
                 />
                 <p className="mt-1 text-xs text-zinc-500">
-                  채널 페이지의 주소를 붙여넣거나 채널 ID(UC로 시작)를 입력하세요.
+                  채널 페이지의 주소를 붙여넣거나 채널 ID(UC로 시작)를
+                  입력하세요.
                 </p>
               </div>
 
@@ -709,100 +860,6 @@ export default function YoutubeAdminPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {filterDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-zinc-900">필터 설정</h2>
-                <p className="text-sm text-zinc-500">
-                  원하는 조건으로 아티스트를 필터링하세요.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="rounded-full p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
-                onClick={() => setFilterDialogOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              <div>
-                <label htmlFor="filter-main" className="mb-2 block text-sm font-semibold text-zinc-900">
-                  메인 유튜브
-                </label>
-                <select
-                  id="filter-main"
-                  value={filters.main}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, main: e.target.value as FilterState["main"] }))}
-                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-                  style={{ cursor: "pointer" }}
-                >
-                  <option value="all">전체</option>
-                  <option value="has">있음</option>
-                  <option value="missing">없음</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="filter-topic" className="mb-2 block text-sm font-semibold text-zinc-900">
-                  토픽 유튜브
-                </label>
-                <select
-                  id="filter-topic"
-                  value={filters.topic}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, topic: e.target.value as FilterState["topic"] }))}
-                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-                  style={{ cursor: "pointer" }}
-                >
-                  <option value="all">전체</option>
-                  <option value="has">있음</option>
-                  <option value="missing">없음</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="filter-count" className="mb-2 block text-sm font-semibold text-zinc-900">
-                  채널 개수
-                </label>
-                <select
-                  id="filter-count"
-                  value={filters.count}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, count: e.target.value as FilterState["count"] }))}
-                  className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-                  style={{ cursor: "pointer" }}
-                >
-                  <option value="all">전체</option>
-                  <option value="0">0개</option>
-                  <option value="1">1개</option>
-                  <option value="2">2개</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setFilters(DEFAULT_FILTERS);
-                  setFilterDialogOpen(false);
-                }}
-                className="rounded-full px-4 py-2 text-sm font-semibold text-zinc-500 hover:text-zinc-900"
-              >
-                초기화
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterDialogOpen(false)}
-                className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-700"
-              >
-                적용
-              </button>
-            </div>
           </div>
         </div>
       )}
