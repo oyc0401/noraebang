@@ -25,7 +25,7 @@ catch (error) {
 
 * ❌ `foo!.bar` 금지
 
-### 1.3 금지: `| null`
+### 1.3 interface, dto에는 금지: `| null`
 
 * ❌ `foo: string | null` 금지
 * ✅ `foo?: string` 사용
@@ -46,6 +46,17 @@ async findAll(): Promise<SongDto[]> {
   }));
 }
 ```
+
+(error:any) 는 부분적으로 가능.
+
+const data = res.json();
+
+은 가능.
+
+findAll(): UserData | null 상황에서는 undefinded 금지.
+
+알잘딱으로 합시다??
+
 
 ### 1.4 `as` 사용 최소화
 

@@ -626,9 +626,13 @@ export class YoutubeService {
         description: item.snippet.description ?? "",
         publishedAt: item.snippet.publishedAt,
         channelId:
-          item.snippet.videoOwnerChannelId || item.snippet.channelId || "",
+          item.snippet.videoOwnerChannelId ??
+          item.snippet.channelId ??
+          "unknown",
         channelTitle:
-          item.snippet.videoOwnerChannelTitle || item.snippet.channelTitle,
+          item.snippet.videoOwnerChannelTitle ??
+          item.snippet.channelTitle ??
+          "Unknown Channel",
       }));
     } catch (error) {
       if (error instanceof HttpException) {
