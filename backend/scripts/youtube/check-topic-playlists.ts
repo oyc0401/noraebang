@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "../src/app.module";
-import { PrismaService } from "../src/prisma/prisma.service";
-import { YoutubeService } from "../src/youtube/youtube.service";
+import { AppModule } from "../../src/app.module";
+import { PrismaService } from "../../src/prisma/prisma.service";
+import { YoutubeService } from "../../src/youtube/youtube.service";
 
 // pnpm ts-node scripts/youtube/check-topic-playlists.ts
 

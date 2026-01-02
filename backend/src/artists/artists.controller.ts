@@ -26,6 +26,7 @@ import {
 import {
   ArtistDetailResponseDto,
   ArtistDetailsListResponseDto,
+  ArtistDto,
   ArtistListResponseDto,
   YoutubeChannelUpdateResponseDto,
 } from "./dto/artist-response.dto";
@@ -109,7 +110,8 @@ export class ArtistsController {
   async findByIdOrAlias(
     @Param("identifier") identifier: string,
   ): Promise<ArtistDetailResponseDto> {
-    const artist = await this.artistsService.findByIdOrAlias(identifier);
+    const artist: ArtistDto | null =
+      await this.artistsService.findByIdOrAlias(identifier);
     if (!artist) {
       throw new NotFoundException("Artist not found");
     }
