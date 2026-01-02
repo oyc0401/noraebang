@@ -180,3 +180,39 @@ export async function updateArtistAlias(artistId: number, alias: string) {
     throw error
   }
 }
+
+export async function updateArtistName(artistId: number, name: string) {
+  const trimmedName = name.trim()
+
+  if (!trimmedName) {
+    throw new Error('이름을 입력해주세요.')
+  }
+
+  const updated = await prisma.artist.update({
+    where: { id: artistId },
+    data: { name: trimmedName },
+    select: { id: true, name: true }
+  })
+
+  return {
+    name: updated.name
+  }
+}
+
+export async function updateArtistNameKo(artistId: number, nameKo: string) {
+  const trimmedNameKo = nameKo.trim()
+
+  if (!trimmedNameKo) {
+    throw new Error('한국어 이름을 입력해주세요.')
+  }
+
+  const updated = await prisma.artist.update({
+    where: { id: artistId },
+    data: { nameKo: trimmedNameKo },
+    select: { id: true, nameKo: true }
+  })
+
+  return {
+    nameKo: updated.nameKo
+  }
+}
