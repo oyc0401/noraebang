@@ -2,65 +2,65 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import {
-  useArtistsControllerFindAllDetails,
-  useArtistsControllerUpdateYoutubeChannel,
-} from "@/api/model/artists/artists";
-import {
-  type ArtistDetailsDto,
-  ArtistsControllerFindAllDetailsSort,
-} from "@/api/model/models";
-import { useSongsControllerFindByArtistId } from "@/api/model/songs/songs";
+import { getArtists, getSongsByArtist, updateYoutubeChannel } from "./actions";
 
 const SORT_OPTIONS = [
-  { value: ArtistsControllerFindAllDetailsSort.id_desc, label: "최신" },
-  { value: ArtistsControllerFindAllDetailsSort.name_asc, label: "이름 ↑" },
-  { value: ArtistsControllerFindAllDetailsSort.name_desc, label: "이름 ↓" },
-  {
-    value: ArtistsControllerFindAllDetailsSort.subscriber_desc,
-    label: "구독자 ↑",
-  },
-  {
-    value: ArtistsControllerFindAllDetailsSort.subscriber_asc,
-    label: "구독자 ↓",
-  },
-  { value: ArtistsControllerFindAllDetailsSort.song_count_desc, label: "곡 ↑" },
-  { value: ArtistsControllerFindAllDetailsSort.song_count_asc, label: "곡 ↓" },
+  { value: "id_desc", label: "최신" },
+  { value: "name_asc", label: "이름 ↑" },
+  { value: "name_desc", label: "이름 ↓" },
+  { value: "subscriber_desc", label: "구독자 ↑" },
+  { value: "subscriber_asc", label: "구독자 ↓" },
+  { value: "song_count_desc", label: "곡 ↑" },
+  { value: "song_count_asc", label: "곡 ↓" },
 ] as const;
 
-type SortOption = (typeof SORT_OPTIONS)[number]["value"];
-const DEFAULT_SORT: SortOption = ArtistsControllerFindAllDetailsSort.name_asc;
+type SortOption = typeof SORT_OPTIONS[number]["value"];
+const DEFAULT_SORT: SortOption = "name_asc";
+
+type Artist = Awaited<ReturnType<typeof getArtists>>[number];
+type Song = Awaited<ReturnType<typeof getSongsByArtist>>[number];
 
 export default function AdminArtistsPage() {
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
-  const {
-    data: artistsData,
-    isLoading: artistsLoading,
-    refetch: refetchArtists,
-  } = useArtistsControllerFindAllDetails({ sort });
-  const artists = artistsData?.data ?? [];
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [artistsLoading, setArtistsLoading] = useState(true);
 
-  const [selectedArtist, setSelectedArtist] = useState<ArtistDetailsDto | null>(
-    null,
-  );
-  const selectedArtistId = selectedArtist?.id ?? 0;
-  const { data: songsData, isLoading: songsLoading } =
-    useSongsControllerFindByArtistId(selectedArtistId);
-  const songs = songsData?.data ?? [];
-  const youtubeInfo = selectedArtist?.youtube ?? undefined;
+  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [songsLoading, setSongsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   // YouTube 채널 관리
   const [showYoutubeSection, setShowYoutubeSection] = useState(false);
   const [channelUrl, setChannelUrl] = useState("");
-  const youtubeMutation = useArtistsControllerUpdateYoutubeChannel();
-  const updating = youtubeMutation.isPending;
+  const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
-  const filteredArtists = artists?.filter(
+  // 아티스트 목록 로드
+  useEffect(() => {
+    setArtistsLoading(true);
+    getArtists(sort)
+      .then(setArtists)
+      .finally(() => setArtistsLoading(false));
+  }, [sort]);
+
+  // 선택된 아티스트의 곡 목록 로드
+  useEffect(() => {
+    if (!selectedArtist) {
+      setSongs([]);
+      return;
+    }
+
+    setSongsLoading(true);
+    getSongsByArtist(selectedArtist.id)
+      .then(setSongs)
+      .finally(() => setSongsLoading(false));
+  }, [selectedArtist]);
+
+  const filteredArtists = artists.filter(
     (artist) =>
       artist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       artist.nameKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -161,31 +161,39 @@ export default function AdminArtistsPage() {
     }
 
     setMessage(null);
+    setUpdating(true);
 
     try {
-      const response = await youtubeMutation.mutateAsync({
-        artistId: selectedArtist.id,
-        data: { channelId },
-      });
-
-      const updatedChannel = response.data;
-      const responseMessage = response.message ?? "YouTube channel updated.";
+      const response = await updateYoutubeChannel(selectedArtist.id, channelId);
 
       setMessage({
         type: "success",
         text: `✅ ${selectedArtist.nameKo}: ${
-          updatedChannel?.channelTitle ?? responseMessage
+          response.channelTitle ?? response.message
         }`,
       });
       setChannelUrl("");
-      refetchArtists();
+
+      // 아티스트 목록 새로고침
+      const updatedArtists = await getArtists(sort);
+      setArtists(updatedArtists);
+
+      // 선택된 아티스트 업데이트
+      const updatedArtist = updatedArtists.find(a => a.id === selectedArtist.id);
+      if (updatedArtist) {
+        setSelectedArtist(updatedArtist);
+      }
     } catch (error: any) {
       setMessage({
         type: "error",
         text: `❌ 오류 발생: ${error.message}`,
       });
+    } finally {
+      setUpdating(false);
     }
   };
+
+  const youtubeInfo = selectedArtist?.youtube;
 
   return (
     <div className="h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
@@ -232,7 +240,7 @@ export default function AdminArtistsPage() {
           {/* Artist List Header */}
           <div className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-2 flex items-center justify-between gap-2">
             <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase">
-              Artists ({filteredArtists?.length || 0})
+              Artists ({filteredArtists.length})
             </div>
             <div className="flex items-center gap-1 text-[10px] text-zinc-500 dark:text-zinc-400">
               <label htmlFor="artists-sort" className="sr-only">
@@ -261,7 +269,7 @@ export default function AdminArtistsPage() {
               </div>
             )}
 
-            {filteredArtists?.map((artist) => (
+            {filteredArtists.map((artist) => (
               <button
                 type="button"
                 key={artist.id}
@@ -307,7 +315,7 @@ export default function AdminArtistsPage() {
               </button>
             ))}
 
-            {filteredArtists?.length === 0 && !artistsLoading && (
+            {filteredArtists.length === 0 && !artistsLoading && (
               <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
                 검색 결과가 없습니다
               </div>
@@ -360,27 +368,6 @@ export default function AdminArtistsPage() {
                         </>
                       )}
                     </p>
-                    {selectedArtist.aliasGroup && (
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                          별칭 그룹:
-                        </span>
-                        <div className="flex gap-1">
-                          {selectedArtist.aliasGroup.aliases.map((alias) => (
-                            <span
-                              key={alias}
-                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                alias === selectedArtist.alias
-                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                  : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-                              }`}
-                            >
-                              {alias}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     {selectedArtist.alias && (
@@ -519,7 +506,7 @@ export default function AdminArtistsPage() {
                 )}
 
                 <div className="space-y-2">
-                  {songs?.map((song) => (
+                  {songs.map((song) => (
                     <div
                       key={song.id}
                       className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 hover:shadow-md transition-shadow"
@@ -538,19 +525,14 @@ export default function AdminArtistsPage() {
                           {song.karaokeSongs &&
                             song.karaokeSongs.length > 0 && (
                               <div className="flex flex-wrap gap-2 mt-2">
-                                {song.karaokeSongs.map(
-                                  (kn: {
-                                    provider: string;
-                                    karaokeNo: string;
-                                  }) => (
-                                    <span
-                                      key={`${kn.provider}-${kn.karaokeNo}`}
-                                      className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                                    >
-                                      {kn.provider} {kn.karaokeNo}
-                                    </span>
-                                  ),
-                                )}
+                                {song.karaokeSongs.map((kn) => (
+                                  <span
+                                    key={`${kn.provider}-${kn.karaokeNo}`}
+                                    className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                                  >
+                                    {kn.provider} {kn.karaokeNo}
+                                  </span>
+                                ))}
                               </div>
                             )}
                         </div>

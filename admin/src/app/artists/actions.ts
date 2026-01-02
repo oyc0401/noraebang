@@ -2,12 +2,18 @@
 
 import { prisma } from '@/lib/prisma'
 
-export async function getArtists(sort?: string) {
-  const orderBy: any = {}
+type SortOption = 'id_desc' | 'name_asc' | 'name_desc' | 'subscriber_desc' | 'subscriber_asc' | 'song_count_desc' | 'song_count_asc'
+
+export async function getArtists(sort?: SortOption) {
+  let orderBy: any = {}
 
   if (sort === 'id_desc') orderBy.id = 'desc'
   else if (sort === 'name_asc') orderBy.nameKo = 'asc'
   else if (sort === 'name_desc') orderBy.nameKo = 'desc'
+  else if (sort === 'subscriber_desc') orderBy = { youtubeChannel: { subscriberCount: 'desc' } }
+  else if (sort === 'subscriber_asc') orderBy = { youtubeChannel: { subscriberCount: 'asc' } }
+  else if (sort === 'song_count_desc') orderBy = { artistSongs: { _count: 'desc' } }
+  else if (sort === 'song_count_asc') orderBy = { artistSongs: { _count: 'asc' } }
   else orderBy.nameKo = 'asc'
 
   const artists = await prisma.artist.findMany({
@@ -39,7 +45,8 @@ export async function getArtists(sort?: string) {
       thumbnailDefault: a.youtubeChannel.thumbnailDefault ?? undefined,
       thumbnailMedium: a.youtubeChannel.thumbnailMedium ?? undefined,
       thumbnailHigh: a.youtubeChannel.thumbnailHigh ?? undefined,
-    } : undefined
+    } : undefined,
+    aliasGroup: undefined
   }))
 }
 
