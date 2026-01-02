@@ -145,33 +145,29 @@ export async function getArtistsByExactName(name: string): Promise<NamedArtistSu
   return artists
 }
 
-export async function checkArtistConflicts(input: { name?: string; nameKo?: string; alias?: string }) {
+export async function checkArtistConflicts(input: { name?: string; nameKo?: string }) {
   const name = input.name?.trim()
   const nameKo = input.nameKo?.trim()
-  const alias = input.alias?.trim()
 
   const result = {
     name: false,
-    nameKo: false,
-    alias: false
+    nameKo: false
   }
 
   const conditions = []
   if (name) conditions.push({ name: { equals: name, mode: 'insensitive' } })
   if (nameKo) conditions.push({ nameKo: { equals: nameKo, mode: 'insensitive' } })
-  if (alias) conditions.push({ alias: { equals: alias, mode: 'insensitive' } })
 
   if (conditions.length === 0) return result
 
   const duplicates = await prisma.artist.findMany({
     where: { OR: conditions },
-    select: { name: true, nameKo: true, alias: true }
+    select: { name: true, nameKo: true }
   })
 
   duplicates.forEach(artist => {
     if (name && artist.name.toLowerCase() === name.toLowerCase()) result.name = true
     if (nameKo && artist.nameKo.toLowerCase() === nameKo.toLowerCase()) result.nameKo = true
-    if (alias && artist.alias && artist.alias.toLowerCase() === alias.toLowerCase()) result.alias = true
   })
 
   return result
@@ -179,36 +175,24 @@ export async function checkArtistConflicts(input: { name?: string; nameKo?: stri
 
 export async function createArtist(input: {
   name: string
-  nameKo: string
-  alias?: string
+  nameKo?: string
   tjSongRequestUrl?: string
-  thumbnailDefault?: string
-  thumbnailMedium?: string
-  thumbnailHigh?: string
   youtubeMainUrl?: string
   youtubeTopicUrl?: string
 }) {
   const name = input.name.trim()
-  const nameKo = input.nameKo.trim()
-  const alias = input.alias?.trim()
+  const nameKoInput = input.nameKo?.trim()
 
-  if (!name || !nameKo) {
+  if (!name) {
     throw new Error('이름과 한국어 이름을 모두 입력해주세요.')
   }
 
-  if (alias?.startsWith('@')) {
-    throw new Error('별칭에서 @는 제외해주세요.')
-  }
-
-  const conflicts = await checkArtistConflicts({ name, nameKo, alias })
+  const conflicts = await checkArtistConflicts({ name, nameKo: nameKoInput })
   if (conflicts.name) {
     throw new Error('이미 존재하는 영문명이 있습니다.')
   }
-  if (conflicts.nameKo) {
+  if (nameKoInput && conflicts.nameKo) {
     throw new Error('이미 존재하는 한글명이 있습니다.')
-  }
-  if (conflicts.alias) {
-    throw new Error('이미 존재하는 별칭입니다.')
   }
 
   const youtubeInputs: { type: ChannelType; url: string; channel: any }[] = []
@@ -228,15 +212,13 @@ export async function createArtist(input: {
   }
 
   const result = await prisma.$transaction(async tx => {
+    const targetNameKo = nameKoInput || name
+
     const created = await tx.artist.create({
       data: {
         name,
-        nameKo,
-        alias: alias || undefined,
+        nameKo: targetNameKo,
         tjSongRequestUrl: input.tjSongRequestUrl?.trim() || undefined,
-        thumbnailDefault: input.thumbnailDefault?.trim() || undefined,
-        thumbnailMedium: input.thumbnailMedium?.trim() || undefined,
-        thumbnailHigh: input.thumbnailHigh?.trim() || undefined
       }
     })
 
@@ -257,20 +239,110 @@ export async function createArtist(input: {
   return {
     id: result.id,
     name: result.name,
-    nameKo: result.nameKo,
-    alias: result.alias ?? undefined
+    nameKo: result.nameKo
   }
 }
 
-export async function updateTjSongSavedStatus(songIds: string[], saved: boolean) {
-  if (!songIds.length) {
-    return { count: 0 }
+async function mapTjSongsToArtist(artistId: number, tjSongIds: string[]) {
+  if (!tjSongIds?.length) {
+    return { mappedSongs: 0, createdSongs: 0 }
   }
 
-  const result = await prisma.tjSong.updateMany({
-    where: { id: { in: songIds } },
-    data: { saved }
+  const uniqueIds = [...new Set(tjSongIds.filter(Boolean))]
+  let createdSongs = 0
+  let mappedSongs = 0
+
+  for (const tjSongId of uniqueIds) {
+    const existingKaraoke = await prisma.karaokeSong.findUnique({
+      where: {
+        provider_karaokeNo: {
+          provider: 'TJ',
+          karaokeNo: tjSongId
+        }
+      },
+      select: {
+        songId: true
+      }
+    })
+
+    let songId: number | null = existingKaraoke?.songId ?? null
+
+    if (!songId) {
+      const tjSong = await prisma.tjSong.findUnique({
+        where: { id: tjSongId }
+      })
+      if (!tjSong) continue
+
+      const createdSong = await prisma.song.create({
+        data: {
+          title: tjSong.title,
+          titleKo: tjSong.title
+        }
+      })
+
+      await prisma.karaokeSong.create({
+        data: {
+          songId: createdSong.id,
+          provider: 'TJ',
+          karaokeNo: tjSongId
+        }
+      })
+
+      songId = createdSong.id
+      createdSongs += 1
+    }
+
+    if (!songId) continue
+
+    await prisma.artistSong.upsert({
+      where: {
+        artistId_songId: {
+          artistId,
+          songId
+        }
+      },
+      update: {},
+      create: {
+        artistId,
+        songId
+      }
+    })
+
+    mappedSongs += 1
+  }
+
+  await prisma.tjSong.updateMany({
+    where: { id: { in: uniqueIds } },
+    data: { saved: true }
   })
 
-  return { count: result.count }
+  return { mappedSongs, createdSongs }
+}
+
+export async function createArtistAndMapSongs(input: {
+  name: string
+  nameKo?: string
+  tjSongRequestUrl?: string
+  youtubeMainUrl?: string
+  youtubeTopicUrl?: string
+  tjSongIds: string[]
+}) {
+  const artist = await createArtist({
+    name: input.name,
+    nameKo: input.nameKo,
+    tjSongRequestUrl: input.tjSongRequestUrl,
+    youtubeMainUrl: input.youtubeMainUrl,
+    youtubeTopicUrl: input.youtubeTopicUrl
+  })
+
+  const stats = await mapTjSongsToArtist(artist.id, input.tjSongIds ?? [])
+
+  return {
+    artist,
+    ...stats
+  }
+}
+
+export async function mapSongsToArtist(artistId: number, tjSongIds: string[]) {
+  return mapTjSongsToArtist(artistId, tjSongIds)
 }

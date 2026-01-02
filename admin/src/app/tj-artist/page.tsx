@@ -2,24 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import * as transliteration from "transliteration";
-
-const rawSlugify =
-  (transliteration as any).slugify ??
-  (transliteration as any).default?.slugify ??
-  ((value: string) => value);
-const slugify = (value: string, options?: unknown) =>
-  rawSlugify(value, options);
 
 import {
   checkArtistConflicts,
-  createArtist,
-  getArtistsByExactName,
+  createArtistAndMapSongs,
   getRealArtists,
   getTjArtists,
   getTjSongsByArtist,
-  updateTjSongSavedStatus,
-  type NamedArtistSummary,
+  mapSongsToArtist,
   type RealArtistSummary,
   type SongSavedFilter,
   type TjArtistSummary,
@@ -56,7 +46,7 @@ export default function TjArtistPage() {
   const [songsLoading, setSongsLoading] = useState(false);
   const [songsError, setSongsError] = useState<string | null>(null);
   const [songSavedFilter, setSongSavedFilter] =
-    useState<SongSavedFilter>("unsaved");
+    useState<SongSavedFilter>("all");
   const [selectedSongIds, setSelectedSongIds] = useState<string[]>([]);
   const [savingSelectedSongs, setSavingSelectedSongs] = useState(false);
   const [songSelectionError, setSongSelectionError] = useState<string | null>(
@@ -68,17 +58,13 @@ export default function TjArtistPage() {
   const [realArtists, setRealArtists] = useState<RealArtistSummary[]>([]);
   const [realArtistsLoading, setRealArtistsLoading] = useState(true);
   const [realArtistsError, setRealArtistsError] = useState<string | null>(null);
-  const [selectedRealArtistId, setSelectedRealArtistId] = useState<number | null>(
-    null,
-  );
+  const [selectedRealArtistId, setSelectedRealArtistId] = useState<
+    number | null
+  >(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createNameKo, setCreateNameKo] = useState("");
-  const [createAlias, setCreateAlias] = useState("");
   const [createRequestUrl, setCreateRequestUrl] = useState("");
-  const [createThumbnailDefault, setCreateThumbnailDefault] = useState("");
-  const [createThumbnailMedium, setCreateThumbnailMedium] = useState("");
-  const [createThumbnailHigh, setCreateThumbnailHigh] = useState("");
   const [createYoutubeMain, setCreateYoutubeMain] = useState("");
   const [createYoutubeTopic, setCreateYoutubeTopic] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
@@ -87,14 +73,9 @@ export default function TjArtistPage() {
   const [conflicts, setConflicts] = useState({
     name: false,
     nameKo: false,
-    alias: false,
   });
-  const [aliasManuallyEdited, setAliasManuallyEdited] = useState(false);
-  const [sameNameArtists, setSameNameArtists] = useState<NamedArtistSummary[]>(
-    [],
-  );
-  const [sameNameLoading, setSameNameLoading] = useState(false);
-  const [sameNameError, setSameNameError] = useState<string | null>(null);
+  const [quickCreateLoading, setQuickCreateLoading] = useState(false);
+  const [quickCreateError, setQuickCreateError] = useState<string | null>(null);
 
   const fetchArtists = useCallback(async () => {
     setArtistsLoading(true);
@@ -229,7 +210,8 @@ export default function TjArtistPage() {
   const selectedRealArtist = useMemo(
     () =>
       selectedRealArtistId
-        ? realArtists.find((artist) => artist.id === selectedRealArtistId) ?? null
+        ? (realArtists.find((artist) => artist.id === selectedRealArtistId) ??
+          null)
         : null,
     [realArtists, selectedRealArtistId],
   );
@@ -241,40 +223,9 @@ export default function TjArtistPage() {
   }, [songs]);
 
   useEffect(() => {
-    if (!selectedArtistSummary) {
-      setSameNameArtists([]);
-      setSameNameError(null);
-      setSameNameLoading(false);
-      return;
-    }
-
-    const targets = [selectedArtistSummary.name].filter(
-      (value): value is string => Boolean(value?.trim()),
-    );
-
-    if (targets.length === 0) {
-      setSameNameArtists([]);
-      setSameNameError(null);
-      setSameNameLoading(false);
-      return;
-    }
-
-    setSameNameLoading(true);
-    setSameNameError(null);
-    Promise.all(targets.map((name) => getArtistsByExactName(name)))
-      .then((results) => {
-        const flat = results.flat();
-        const dedupedMap = new Map<number, NamedArtistSummary>();
-        flat.forEach((artist) => {
-          dedupedMap.set(artist.id, artist);
-        });
-        setSameNameArtists(Array.from(dedupedMap.values()));
-      })
-      .catch(() =>
-        setSameNameError("동명이인 정보를 불러오지 못했습니다."),
-      )
-      .finally(() => setSameNameLoading(false));
-  }, [selectedArtistSummary]);
+    if (!selectedArtistSummary?.name) return;
+    setRealArtistSearchInput(selectedArtistSummary.name);
+  }, [selectedArtistSummary?.name]);
 
   useEffect(() => {
     if (!createDialogOpen) return;
@@ -282,53 +233,24 @@ export default function TjArtistPage() {
     setCreateError(null);
     const handler = setTimeout(() => {
       checkArtistConflicts({
-        name: createName,
-        nameKo: createNameKo,
-        alias: createAlias,
+        name: createName.trim(),
+        nameKo: createNameKo.trim() || undefined,
       })
-        .then((res) => setConflicts(res))
-        .catch(() =>
-          setCreateError("중복 확인 중 오류가 발생했습니다."),
-        )
+        .then((res) => setConflicts({ name: res.name, nameKo: res.nameKo }))
+        .catch(() => setCreateError("중복 확인 중 오류가 발생했습니다."))
         .finally(() => setConflictChecking(false));
     }, 300);
     return () => clearTimeout(handler);
-  }, [createDialogOpen, createName, createNameKo, createAlias]);
-
-  useEffect(() => {
-    if (!createDialogOpen || aliasManuallyEdited) return;
-    const source =
-      createName.trim() ||
-      createNameKo.trim() ||
-      selectedArtistSummary?.name?.trim() ||
-      "";
-    if (!source) return;
-    const suggested = slugify(source, { lowercase: true, separator: "-" });
-    if (suggested && suggested !== createAlias) {
-      setCreateAlias(suggested);
-    }
-  }, [
-    createDialogOpen,
-    aliasManuallyEdited,
-    createName,
-    createNameKo,
-    selectedArtistSummary?.name,
-    createAlias,
-  ]);
+  }, [createDialogOpen, createName, createNameKo]);
 
   const handleOpenCreateDialog = () => {
     const baseName = selectedArtistSummary?.name ?? "";
     setCreateName(baseName);
-    setCreateNameKo(baseName);
-    setCreateAlias("");
+    setCreateNameKo("");
     setCreateRequestUrl("");
-    setCreateThumbnailDefault("");
-    setCreateThumbnailMedium("");
-    setCreateThumbnailHigh("");
     setCreateYoutubeMain("");
     setCreateYoutubeTopic("");
-    setConflicts({ name: false, nameKo: false, alias: false });
-    setAliasManuallyEdited(false);
+    setConflicts({ name: false, nameKo: false });
     setCreateError(null);
     setCreateDialogOpen(true);
   };
@@ -339,12 +261,23 @@ export default function TjArtistPage() {
   };
 
   const handleCreateArtistSubmit = async () => {
-    if (!createName.trim() || !createNameKo.trim()) {
-      setCreateError("이름과 한국어 이름을 모두 입력해주세요.");
+    const trimmedName = createName.trim();
+    const trimmedNameKo = createNameKo.trim();
+    if (!trimmedName) {
+      setCreateError("이름을 입력해주세요.");
       return;
     }
-    if (conflicts.name || conflicts.nameKo || conflicts.alias) {
+    if (conflicts.name || conflicts.nameKo) {
+      if (typeof window !== "undefined") {
+        window.alert("이미 존재하는 아티스트 이름이 있습니다.");
+      }
       setCreateError("중복된 정보가 있습니다. 수정 후 다시 시도해주세요.");
+      return;
+    }
+    if (selectedSongIds.length === 0) {
+      if (typeof window !== "undefined") {
+        window.alert("매핑할 곡을 최소 1곡 이상 선택해주세요.");
+      }
       return;
     }
     if (conflictChecking) return;
@@ -352,19 +285,17 @@ export default function TjArtistPage() {
     setCreateLoading(true);
     setCreateError(null);
     try {
-      const created = await createArtist({
-        name: createName,
-        nameKo: createNameKo,
-        alias: createAlias,
+      const result = await createArtistAndMapSongs({
+        name: trimmedName,
+        nameKo: trimmedNameKo || undefined,
         tjSongRequestUrl: createRequestUrl,
-        thumbnailDefault: createThumbnailDefault,
-        thumbnailMedium: createThumbnailMedium,
-        thumbnailHigh: createThumbnailHigh,
         youtubeMainUrl: createYoutubeMain,
         youtubeTopicUrl: createYoutubeTopic,
+        tjSongIds: selectedSongIds,
       });
-      await fetchRealArtists();
-      setSelectedRealArtistId(created.id);
+      await Promise.all([fetchRealArtists(), fetchSongs(), fetchArtists()]);
+      setSelectedRealArtistId(result.artist.id);
+      setSelectedSongIds([]);
       setCreateDialogOpen(false);
     } catch (error) {
       setCreateError(
@@ -377,12 +308,67 @@ export default function TjArtistPage() {
     }
   };
 
+  const handleQuickArtistSongCreate = async () => {
+    if (!selectedArtistSummary) {
+      if (typeof window !== "undefined") {
+        window.alert("TJ 아티스트를 먼저 선택해주세요.");
+      }
+      return;
+    }
+    if (selectedSongIds.length === 0) {
+      if (typeof window !== "undefined") {
+        window.alert("매핑할 곡을 선택해주세요.");
+      }
+      return;
+    }
+
+    const trimmedName = selectedArtistSummary.name.trim();
+    if (!trimmedName) {
+      if (typeof window !== "undefined") {
+        window.alert("선택된 아티스트 이름을 확인할 수 없습니다.");
+      }
+      return;
+    }
+
+    setQuickCreateLoading(true);
+    setQuickCreateError(null);
+
+    try {
+      const conflicts = await checkArtistConflicts({ name: trimmedName });
+      if (conflicts.name || conflicts.nameKo) {
+        if (typeof window !== "undefined") {
+          window.alert("이미 존재하는 아티스트 이름이 있습니다.");
+        }
+        setQuickCreateError("중복된 이름으로 생성할 수 없습니다.");
+        return;
+      }
+
+      const result = await createArtistAndMapSongs({
+        name: trimmedName,
+        tjSongIds: selectedSongIds,
+      });
+      await Promise.all([fetchRealArtists(), fetchSongs(), fetchArtists()]);
+      setSelectedRealArtistId(result.artist.id);
+      setSelectedSongIds([]);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "아티스트 & 곡 제작 중 오류가 발생했습니다.";
+      setQuickCreateError(message);
+      if (typeof window !== "undefined") {
+        window.alert(message);
+      }
+    } finally {
+      setQuickCreateLoading(false);
+    }
+  };
+
   const disableCreateSubmit =
     !createName.trim() ||
-    !createNameKo.trim() ||
     conflicts.name ||
     conflicts.nameKo ||
-    conflicts.alias ||
+    selectedSongIds.length === 0 ||
     conflictChecking ||
     createLoading;
 
@@ -416,7 +402,7 @@ export default function TjArtistPage() {
     setSavingSelectedSongs(true);
     setSongSelectionError(null);
     try {
-      await updateTjSongSavedStatus(selectedSongIds, true);
+      await mapSongsToArtist(selectedRealArtistId, selectedSongIds);
       setSelectedSongIds([]);
       await Promise.all([fetchSongs(), fetchArtists()]);
     } catch (error) {
@@ -444,14 +430,6 @@ export default function TjArtistPage() {
         youtubeSearchQueryName,
       )}`
     : null;
-  const englishSearchName =
-    createNameKo.trim() || selectedArtistSummary?.nameKo?.trim() || "";
-  const googleEnglishSearchUrl = englishSearchName
-    ? `https://www.google.com/search?q=${encodeURIComponent(
-        englishSearchName,
-      )}+${encodeURIComponent("영어로")}`
-    : null;
-
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 p-6 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
       <div className="mb-6">
@@ -565,28 +543,59 @@ export default function TjArtistPage() {
                     </div>
                     <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                       실매핑:{" "}
-                      {selectedRealArtistLabel ?? "실제 Artist를 오른쪽에서 선택"}
+                      {selectedRealArtistLabel ??
+                        "실제 Artist를 오른쪽에서 선택"}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleOpenCreateDialog}
-                    className="inline-flex items-center gap-2 rounded-full border border-sky-500 px-4 py-2 text-sm font-medium text-sky-600 transition hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-500/10"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={handleOpenCreateDialog}
+                      className="inline-flex items-center gap-2 rounded-full border border-sky-500 px-4 py-2 text-sm font-medium text-sky-600 transition hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-500/10"
                     >
-                      <path d="M12 5v14M5 12h14" />
-                    </svg>
-                    아티스트 만들기
-                  </button>
-              </div>
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                      아티스트 만들기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleQuickArtistSongCreate}
+                      disabled={
+                        quickCreateLoading || selectedSongIds.length === 0
+                      }
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white transition ${
+                        quickCreateLoading || selectedSongIds.length === 0
+                          ? "cursor-not-allowed bg-indigo-300 dark:bg-indigo-900/40"
+                          : "bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                      }`}
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                      {quickCreateLoading ? "제작 중..." : "아티스트 & 곡 제작"}
+                    </button>
+                  </div>
+                  {quickCreateError && (
+                    <p className="text-xs text-red-500">{quickCreateError}</p>
+                  )}
+                </div>
 
                 <div className="flex flex-wrap gap-2 text-sm">
                   {SONG_SAVED_FILTERS.map((filter) => {
@@ -604,73 +613,49 @@ export default function TjArtistPage() {
                       >
                         {filter.label}
                       </button>
-                  );
-                })}
-              </div>
-              <div className="min-h-[22px] text-xs text-zinc-500 dark:text-zinc-400">
-                {sameNameLoading ? (
-                  "동명이인 확인 중..."
-                ) : sameNameError ? (
-                  <span className="text-red-500">{sameNameError}</span>
-                ) : sameNameArtists.length > 0 ? (
-                  <span className="flex flex-wrap gap-2">
-                    <span className="font-semibold text-zinc-600 dark:text-zinc-300">
-                      동명이인:
-                    </span>
-                    {sameNameArtists.map((artist) => (
-                      <span
-                        key={artist.id}
-                        className="rounded-full border border-zinc-300 px-2 py-0.5 dark:border-zinc-700"
-                      >
-                        {(artist.nameKo || artist.name) ?? artist.name} -{" "}
-                        {artist.id}
-                      </span>
-                    ))}
+                    );
+                  })}
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-sm">
+                  <label className="flex items-center gap-2 text-zinc-600 dark:text-zinc-300">
+                    <input
+                      type="checkbox"
+                      checked={allSongsSelected}
+                      onChange={handleToggleSelectAllSongs}
+                      className="h-4 w-4 rounded border-zinc-300 text-sky-600 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-900"
+                    />
+                    전체 선택
+                  </label>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                    선택 {selectedSongIds.length}곡
                   </span>
-                ) : (
-                  "동명이인 없음"
+                  <button
+                    type="button"
+                    disabled={disableSaveSelected}
+                    onClick={handleSaveSelectedSongs}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      disableSaveSelected
+                        ? "cursor-not-allowed bg-sky-200 text-white dark:bg-sky-900/30"
+                        : "bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
+                    }`}
+                  >
+                    {savingSelectedSongs ? "저장 중..." : "선택 곡 저장"}
+                  </button>
+                </div>
+                {selectedRealArtistLabel && (
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    선택 곡 저장 시 {selectedRealArtistLabel} 기준으로
+                    매핑됩니다.
+                  </p>
+                )}
+                {songSelectionError && (
+                  <p className="text-xs text-red-500">{songSelectionError}</p>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 text-sm">
-                <label className="flex items-center gap-2 text-zinc-600 dark:text-zinc-300">
-                  <input
-                    type="checkbox"
-                    checked={allSongsSelected}
-                    onChange={handleToggleSelectAllSongs}
-                    className="h-4 w-4 rounded border-zinc-300 text-sky-600 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-900"
-                  />
-                  전체 선택
-                </label>
-                <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                  선택 {selectedSongIds.length}곡
-                </span>
-                <button
-                  type="button"
-                  disabled={disableSaveSelected}
-                  onClick={handleSaveSelectedSongs}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    disableSaveSelected
-                      ? "cursor-not-allowed bg-sky-200 text-white dark:bg-sky-900/30"
-                      : "bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
-                  }`}
-                >
-                  {savingSelectedSongs ? "저장 중..." : "선택 곡 저장"}
-                </button>
-              </div>
-              {selectedRealArtistLabel && (
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  선택 곡 저장 시 {selectedRealArtistLabel} 기준으로 매핑됩니다.
-                </p>
-              )}
-              {songSelectionError && (
-                <p className="text-xs text-red-500">{songSelectionError}</p>
-              )}
-            </div>
-
-            <div className="mt-4 flex-1 overflow-y-auto">
-              {songsLoading ? (
-                <p className="text-sm text-zinc-500">곡을 불러오는 중...</p>
+              <div className="mt-4 flex-1 overflow-y-auto">
+                {songsLoading ? (
+                  <p className="text-sm text-zinc-500">곡을 불러오는 중...</p>
                 ) : songsError ? (
                   <p className="text-sm text-red-500">{songsError}</p>
                 ) : songs.length === 0 ? (
@@ -815,7 +800,9 @@ export default function TjArtistPage() {
                 <p>영문명: {selectedRealArtist.name}</p>
                 <p>ID: {selectedRealArtist.id}</p>
                 <p>곡 수: {selectedRealArtist.songCount}</p>
-                {selectedRealArtist.alias && <p>별칭: @{selectedRealArtist.alias}</p>}
+                {selectedRealArtist.alias && (
+                  <p>별칭: @{selectedRealArtist.alias}</p>
+                )}
               </div>
             </div>
           )}
@@ -828,7 +815,7 @@ export default function TjArtistPage() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-                  새 아티스트 만들기
+                  아티스트 & 곡 제작
                 </h3>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   선택된 TJ 아티스트 정보를 기반으로 기본 값이 채워졌습니다.
@@ -878,7 +865,7 @@ export default function TjArtistPage() {
 
               <div className="sm:col-span-1">
                 <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  한글명 *
+                  한글명 (선택)
                 </label>
                 <input
                   value={createNameKo}
@@ -898,49 +885,6 @@ export default function TjArtistPage() {
               </div>
 
               <div className="sm:col-span-1">
-                <div className="flex items-center justify-between gap-2">
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    별칭 (선택)
-                  </label>
-                  <a
-                    href={googleEnglishSearchUrl ?? "#"}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`text-xs font-semibold ${
-                      googleEnglishSearchUrl
-                        ? "text-sky-600 hover:underline dark:text-sky-400"
-                        : "cursor-not-allowed text-zinc-400 dark:text-zinc-600"
-                    }`}
-                    onClick={(event) => {
-                      if (!googleEnglishSearchUrl) {
-                        event.preventDefault();
-                      }
-                    }}
-                  >
-                    영어 검색
-                  </a>
-                </div>
-                <input
-                  value={createAlias}
-                  onChange={(event) => {
-                    setAliasManuallyEdited(true);
-                    setCreateAlias(event.target.value);
-                  }}
-                  className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-900 ${
-                    conflicts.alias
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500/30"
-                      : "border-zinc-300 focus:border-sky-500 focus:ring-sky-500/30 dark:border-zinc-700"
-                  }`}
-                  placeholder="공유링크용 별칭"
-                />
-                {conflicts.alias && (
-                  <p className="mt-1 text-xs text-red-500">
-                    이미 사용 중인 별칭입니다.
-                  </p>
-                )}
-              </div>
-
-              <div className="sm:col-span-1">
                 <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                   TJ 곡 요청 URL (선택)
                 </label>
@@ -950,48 +894,6 @@ export default function TjArtistPage() {
                   className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:ring-sky-500/30 dark:border-zinc-700 dark:bg-zinc-900"
                   placeholder="https://..."
                 />
-              </div>
-
-              <div className="sm:col-span-2 grid gap-4 sm:grid-cols-3">
-                <div>
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    썸네일 (기본)
-                  </label>
-                  <input
-                    value={createThumbnailDefault}
-                    onChange={(event) =>
-                      setCreateThumbnailDefault(event.target.value)
-                    }
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:ring-sky-500/30 dark:border-zinc-700 dark:bg-zinc-900"
-                    placeholder="https://..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    썸네일 (중간)
-                  </label>
-                  <input
-                    value={createThumbnailMedium}
-                    onChange={(event) =>
-                      setCreateThumbnailMedium(event.target.value)
-                    }
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:ring-sky-500/30 dark:border-zinc-700 dark:bg-zinc-900"
-                    placeholder="https://..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    썸네일 (고해상도)
-                  </label>
-                  <input
-                    value={createThumbnailHigh}
-                    onChange={(event) =>
-                      setCreateThumbnailHigh(event.target.value)
-                    }
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:ring-sky-500/30 dark:border-zinc-700 dark:bg-zinc-900"
-                    placeholder="https://..."
-                  />
-                </div>
               </div>
 
               <div className="sm:col-span-2">
@@ -1034,7 +936,9 @@ export default function TjArtistPage() {
                 </label>
                 <input
                   value={createYoutubeTopic}
-                  onChange={(event) => setCreateYoutubeTopic(event.target.value)}
+                  onChange={(event) =>
+                    setCreateYoutubeTopic(event.target.value)
+                  }
                   className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:ring-sky-500/30 dark:border-zinc-700 dark:bg-zinc-900"
                   placeholder="https://www.youtube.com/@artist-topic"
                 />

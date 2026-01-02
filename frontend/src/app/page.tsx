@@ -68,7 +68,7 @@ export default function Home() {
       }
 
       setTimeout(() => {
-        router.push(`/channel/${artist.alias}#${song.id}`);
+        router.push(`/channel/${artist.alias ?? artist.id}#${song.id}`);
       }, 200);
     } catch (error) {
       const message =
@@ -172,7 +172,7 @@ export default function Home() {
               return (
                 <Link
                   key={artist.id}
-                  href={`/channel/${artist.alias}`}
+                  href={`/channel/${artist.alias ?? artist.id}`}
                   className="group rounded-lg border border-zinc-200 bg-white shadow-sm transition-all hover:shadow-md hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 overflow-hidden"
                 >
                   {displayThumbnail && (
