@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { getArtistsForYoutube, updateYoutubeChannelForYoutubePage } from "./actions";
@@ -117,13 +118,35 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <header className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-            채널 관리
-          </h1>
-          <p className="text-zinc-600 dark:text-zinc-400">
-            아티스트의 YouTube 채널 정보를 관리합니다
-          </p>
+        <header className="mb-8 flex items-center gap-4">
+          <Link
+            href="/"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+            aria-label="관리자 대시보드로 돌아가기"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-5 w-5"
+            >
+              <path
+                d="M15 19l-7-7 7-7"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+          <div>
+            <h1 className="mb-2 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+              채널 관리
+            </h1>
+            <p className="text-zinc-600 dark:text-zinc-400">
+              아티스트의 YouTube 채널 정보를 관리합니다
+            </p>
+          </div>
         </header>
 
         {/* 검색 */}

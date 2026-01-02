@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -568,13 +570,35 @@ export default function AdminArtistsPage() {
   return (
     <div className="h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
       {/* Header */}
-      <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-          Artist & Songs 관리
-        </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-          아티스트와 곡을 관리합니다
-        </p>
+      <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4 flex items-center gap-3">
+        <Link
+          href="/"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+          aria-label="관리자 대시보드로 돌아가기"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="h-5 w-5"
+          >
+            <path
+              d="M15 19l-7-7 7-7"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+            Artist & Songs 관리
+          </h1>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+            아티스트와 곡을 관리합니다
+          </p>
+        </div>
       </div>
 
       {/* Search */}
