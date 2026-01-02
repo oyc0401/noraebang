@@ -1,10 +1,8 @@
 import {
-  Body,
   Controller,
   Get,
   NotFoundException,
   Param,
-  Post,
   Query,
 } from "@nestjs/common";
 import {
@@ -16,7 +14,6 @@ import {
 } from "@nestjs/swagger";
 import { ArtistDetailsDto, ErrorResponseDto } from "../dto";
 import { ApiResponse } from "../dto/api-response.dto";
-import { YoutubeService } from "../youtube/youtube.service";
 import {
   ARTIST_SORT_OPTIONS,
   ArtistSortOption,
@@ -39,8 +36,8 @@ export class ArtistsController {
 
   @Get()
   @ApiOperation({
-    summary: "아티스트 목록 조회",
-    description: "전체 아티스트를 반환합니다.",
+    summary: "전체 아티스트 조회",
+    description: "모든 아티스트 목록을 반환합니다.",
   })
   @ApiQuery({
     name: "sort",
@@ -62,14 +59,14 @@ export class ArtistsController {
   async findAll(@Query("sort") sort?: string): Promise<ArtistListResponseDto> {
     const sortOption = isArtistSortOption(sort) ? sort : DEFAULT_ARTIST_SORT;
     const artists = await this.artistsService.findAll(sortOption);
-    return ApiResponse.success(artists);
+    return ApiResponse.success(artists, "아티스트 목록 조회 성공");
   }
 
   @Get("details")
   @ApiOperation({
-    summary: "아티스트 목록 조회 (상세 정보 포함)",
+    summary: "전체 아티스트 상세 조회",
     description:
-      "전체 아티스트를 YouTube 채널, 썸네일 등 상세 정보와 함께 반환합니다. 구독자 수 기준으로 정렬됩니다.",
+      "전체 아티스트를 YouTube 채널, 썸네일 등 상세 정보와 함께 반환합니다.",
   })
   @SwaggerApiResponse({
     status: 200,
@@ -93,7 +90,7 @@ export class ArtistsController {
   ): Promise<ArtistDetailsListResponseDto> {
     const sortOption = isArtistSortOption(sort) ? sort : DEFAULT_ARTIST_SORT;
     const artists = await this.artistsService.findAllDetails(sortOption);
-    return ApiResponse.success(artists);
+    return ApiResponse.success(artists, "아티스트 상세 목록 조회 성공");
   }
 
   @Get(":identifier")
@@ -129,6 +126,6 @@ export class ArtistsController {
     if (!artist) {
       throw new NotFoundException("Artist not found");
     }
-    return ApiResponse.success(artist);
+    return ApiResponse.success(artist, "아티스트 정보 조회 성공");
   }
 }

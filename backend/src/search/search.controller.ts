@@ -1,4 +1,10 @@
-import { BadRequestException, Controller, Get, Query } from "@nestjs/common";
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  NotFoundException,
+  Query,
+} from "@nestjs/common";
 import {
   ApiOperation,
   ApiQuery,
@@ -21,7 +27,7 @@ export class SearchController {
 
   @Get("youtube")
   @ApiOperation({
-    summary: "YouTube URL로 곡 정보 조회",
+    summary: "유튜브 URL로 단일곡 검색",
     description:
       "YouTube 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다.",
   })
@@ -34,6 +40,11 @@ export class SearchController {
   @SwaggerApiResponse({
     status: 400,
     description: "URL 파라미터 필요",
+    type: ErrorResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 404,
+    description: "곡을 찾을 수 없음",
     type: ErrorResponseDto,
   })
   @SwaggerApiResponse({
@@ -67,6 +78,12 @@ export class SearchController {
       return matchesTitle || matchesTitleKo;
     });
 
-    return ApiResponse.success(matchedSong ?? undefined, youtube.title);
+    if (!matchedSong) {
+      throw new NotFoundException(
+        `No song found matching YouTube title: ${youtube.title}`,
+      );
+    }
+
+    return ApiResponse.success(matchedSong, youtube.title);
   }
 }

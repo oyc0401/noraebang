@@ -41,10 +41,10 @@ export class ArtistDto {
 }
 
 export class ArtistAliasGroupDto {
-  @ApiProperty({ example: "yoasobi" })
+  @ApiProperty({ example: "tayori-islet" })
   groupId: string;
 
-  @ApiProperty({ example: ["yoasobi", "아야세"], type: [String] })
+  @ApiProperty({ example: ["tayori", "islet"], type: [String] })
   aliases: string[];
 }
 
@@ -52,13 +52,13 @@ export class ArtistDetailsDto {
   @ApiProperty({ example: 1 })
   id: number;
 
-  @ApiProperty({ example: "YOASOBI" })
+  @ApiProperty({ example: "tayori" })
   name: string;
 
-  @ApiProperty({ example: "요아소비" })
+  @ApiProperty({ example: "타요리" })
   nameKo: string;
 
-  @ApiProperty({ example: "yoasobi", required: false })
+  @ApiProperty({ example: "tayori", required: false })
   alias?: string;
 
   @ApiProperty({

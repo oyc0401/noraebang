@@ -49,7 +49,7 @@ export class TJService {
         return [];
       }
 
-      const songs: TJSongData[] = data.resultData.items.map((item) => {
+      const songs: TJSongData[] = data.resultData.items.map((item: any) => {
         // 국가 타입 추정
         let nationType = "KOR";
         if (
