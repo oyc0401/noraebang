@@ -7,8 +7,8 @@ import {
   useArtistsControllerUpdateYoutubeChannel,
 } from "@/api/model/artists/artists";
 import {
-  ArtistsControllerFindAllDetailsSort,
   type ArtistDetailsDto,
+  ArtistsControllerFindAllDetailsSort,
 } from "@/api/model/models";
 import { useSongsControllerFindByArtistId } from "@/api/model/songs/songs";
 
@@ -47,6 +47,7 @@ export default function AdminArtistsPage() {
   const { data: songsData, isLoading: songsLoading } =
     useSongsControllerFindByArtistId(selectedArtistId);
   const songs = songsData?.data ?? [];
+  const youtubeInfo = selectedArtist?.youtube ?? undefined;
   const [searchQuery, setSearchQuery] = useState("");
 
   // YouTube 채널 관리
@@ -186,32 +187,6 @@ export default function AdminArtistsPage() {
     }
   };
 
-  const getRoleBadgeColor = (role: string | null) => {
-    switch (role) {
-      case "MAIN":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-      case "FEATURING":
-        return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
-      case "PRODUCER":
-        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-      default:
-        return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400";
-    }
-  };
-
-  const getRoleLabel = (role: string | null) => {
-    switch (role) {
-      case "MAIN":
-        return "메인";
-      case "FEATURING":
-        return "피처링";
-      case "PRODUCER":
-        return "프로듀서";
-      default:
-        return "-";
-    }
-  };
-
   return (
     <div className="h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
       {/* Header */}
@@ -286,7 +261,7 @@ export default function AdminArtistsPage() {
               </div>
             )}
 
-            {filteredArtists?.map((artist: any) => (
+            {filteredArtists?.map((artist) => (
               <button
                 type="button"
                 key={artist.id}
@@ -299,13 +274,11 @@ export default function AdminArtistsPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  {artist.youtube?.thumbnail ||
-                  artist.thumbnailHigh ||
+                  {artist.thumbnailHigh ||
                   artist.thumbnailMedium ||
                   artist.thumbnailDefault ? (
                     <Image
                       src={
-                        artist.youtube?.thumbnail ||
                         artist.thumbnailHigh ||
                         artist.thumbnailMedium ||
                         artist.thumbnailDefault ||
@@ -449,48 +422,40 @@ export default function AdminArtistsPage() {
                   </h3>
 
                   {/* Current YouTube Info */}
-                  {(selectedArtist as any).youtube ? (
+                  {youtubeInfo ? (
                     <div className="mb-4 p-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
                       <div className="space-y-2">
                         <div>
                           <div className="font-medium text-zinc-900 dark:text-zinc-50">
-                            {(selectedArtist as any).youtube.title}
+                            {youtubeInfo.title}
                           </div>
                           <a
                             href={
-                              (selectedArtist as any).youtube.customUrl
-                                ? `https://youtube.com/${(selectedArtist as any).youtube.customUrl}`
-                                : `https://youtube.com/channel/${(selectedArtist as any).youtube.channelId}`
+                              youtubeInfo.customUrl
+                                ? `https://youtube.com/${youtubeInfo.customUrl}`
+                                : `https://youtube.com/channel/${youtubeInfo.channelId}`
                             }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-blue-600 hover:underline dark:text-blue-400"
                           >
-                            {(selectedArtist as any).youtube.customUrl ||
-                              (selectedArtist as any).youtube.channelId}
+                            {youtubeInfo.customUrl || youtubeInfo.channelId}
                           </a>
                         </div>
-                        {(selectedArtist as any).youtube.subscriberCount && (
+                        {youtubeInfo.subscriberCount && (
                           <div className="text-sm text-zinc-600 dark:text-zinc-400">
                             구독자{" "}
-                            {(
-                              selectedArtist as any
-                            ).youtube.subscriberCount.toLocaleString()}
-                            명
+                            {youtubeInfo.subscriberCount.toLocaleString()}명
                           </div>
                         )}
-                        {(selectedArtist as any).youtube.videoCount && (
+                        {youtubeInfo.videoCount && (
                           <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                            동영상{" "}
-                            {(
-                              selectedArtist as any
-                            ).youtube.videoCount.toLocaleString()}
-                            개
+                            동영상 {youtubeInfo.videoCount.toLocaleString()}개
                           </div>
                         )}
-                        {(selectedArtist as any).youtube.description && (
+                        {youtubeInfo.description && (
                           <div className="text-xs text-zinc-500 dark:text-zinc-500 mt-2">
-                            {(selectedArtist as any).youtube.description}
+                            {youtubeInfo.description}
                           </div>
                         )}
                       </div>

@@ -141,8 +141,8 @@ async function checkTopicChannelPlaylists() {
               originalChannel.channelId,
             );
             console.log(`   ✅ DB updated successfully!`);
-          } catch (error: any) {
-            console.log(`   ⚠️  Could not update channel: ${error.message}`);
+          } catch (error) {
+            console.log(`   ⚠️  Could not update channel:`, error);
           }
         } else {
           console.log(`   ℹ️  No original channel found (all from Topic)`);
@@ -164,7 +164,7 @@ async function checkTopicChannelPlaylists() {
           );
           return;
         }
-        console.error(`   ❌ Error: ${error.message}\n`);
+        console.error(`   ❌ Error:`, error, "\n");
         console.log(`${"=".repeat(80)}\n`);
       }
     }
@@ -173,7 +173,7 @@ async function checkTopicChannelPlaylists() {
     console.log(
       `\n📊 Summary: Checked ${checkedCount}/${artists.length} channels, found ${foundOriginalCount} original channels\n`,
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Fatal error:", error);
     throw error;
   } finally {

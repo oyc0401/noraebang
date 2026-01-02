@@ -44,7 +44,7 @@ export function getArtistAliases(alias: string): string[] {
  */
 export function getAliasArtistIds(
   artistId: number,
-  artistAlias: string | null,
+  artistAlias?: string,
 ): number[] {
   // alias가 없으면 자기 자신만 반환
   if (!artistAlias) {

@@ -133,10 +133,10 @@ async function crawlAndSaveSongs() {
 
               karaokeCreated++;
             }
-          } catch (error: any) {
+          } catch (error) {
             console.error(
               `      ❌ Error saving song "${scrapedSong.title}":`,
-              error.message,
+              error,
             );
             totalErrors++;
           }
@@ -148,8 +148,8 @@ async function crawlAndSaveSongs() {
         totalCreated += created;
         totalUpdated += updated;
         totalKaraokeCreated += karaokeCreated;
-      } catch (error: any) {
-        console.log(`   ❌ Error crawling ${artist.name}:`, error.message);
+      } catch (error) {
+        console.log(`   ❌ Error crawling ${artist.name}:`, error);
         totalErrors++;
       }
     }
@@ -161,7 +161,7 @@ async function crawlAndSaveSongs() {
     console.log(`   Karaoke numbers: ${totalKaraokeCreated}`);
     console.log(`   Errors: ${totalErrors}`);
     console.log("\n✅ Crawling and saving completed!");
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Fatal error:", error);
     throw error;
   } finally {
