@@ -24,11 +24,17 @@ export class TypesenseService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    const enabled = this.configService.get<string>("TYPESENSE_ENABLED", "true");
+    if (enabled === "false") {
+      console.log("Typesense is disabled (TYPESENSE_ENABLED=false)");
+      return;
+    }
+
     try {
       const health = await this.client.health.retrieve();
       console.log("Typesense connection successful:", health);
     } catch (error) {
-      console.error("Typesense connection failed:", error);
+      console.warn("Typesense connection failed (continuing anyway):", error);
     }
   }
 
