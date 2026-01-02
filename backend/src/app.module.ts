@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { AdminModule } from "./admin/admin.module";
 import { ArtistsModule } from "./artists/artists.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { SearchModule } from "./search/search.module";
@@ -19,7 +18,6 @@ import { YoutubeModule } from "./youtube/youtube.module";
     ArtistsModule,
     SongsModule,
     YoutubeModule,
-    AdminModule,
   ],
   controllers: [],
   providers: [],
