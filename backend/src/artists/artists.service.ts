@@ -4,8 +4,8 @@ import {
   ARTIST_ALIAS_GROUPS,
   getArtistAliases,
 } from "../config/artist-aliases";
+import { ArtistDetailsDto, ArtistDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
-import { ArtistDetailsDto } from "../dto";
 
 export type ArtistDetails = Artist & {
   youtubeChannel: YoutubeChannel | null;
@@ -50,10 +50,33 @@ const ARTIST_SORT_ORDER_MAP: Record<
 export class ArtistsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(sort: ArtistSortOption = DEFAULT_ARTIST_SORT) {
-    return this.prisma.artist.findMany({
+  async findAll(sort: ArtistSortOption = DEFAULT_ARTIST_SORT): Promise<ArtistDto[]> {
+    const artists = await this.prisma.artist.findMany({
+      select: {
+        id: true,
+        name: true,
+        nameKo: true,
+        alias: true,
+        thumbnailDefault: true,
+        thumbnailMedium: true,
+        thumbnailHigh: true,
+        youtubeChannelId: true,
+        tjSongRequestUrl: true,
+      },
       orderBy: ARTIST_SORT_ORDER_MAP[sort],
     });
+
+    return artists.map((artist) => ({
+      id: artist.id,
+      name: artist.name,
+      nameKo: artist.nameKo,
+      alias: artist.alias ?? undefined,
+      thumbnailDefault: artist.thumbnailDefault ?? undefined,
+      thumbnailMedium: artist.thumbnailMedium ?? undefined,
+      thumbnailHigh: artist.thumbnailHigh ?? undefined,
+      youtubeChannelId: artist.youtubeChannelId ?? undefined,
+      tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
+    }));
   }
 
   async findAllDetails(
@@ -78,6 +101,7 @@ export class ArtistsService {
             videoCount: true,
             thumbnailDefault: true,
             thumbnailMedium: true,
+            thumbnailHigh: true,
           },
         },
         _count: {
@@ -112,39 +136,89 @@ export class ArtistsService {
         id: artist.id,
         name: artist.name,
         nameKo: artist.nameKo,
-        alias: artist.alias,
-        thumbnailDefault: artist.thumbnailDefault,
-        thumbnailMedium: artist.thumbnailMedium,
-        thumbnailHigh: artist.thumbnailHigh,
+        alias: artist.alias ?? undefined,
+        thumbnailDefault: artist.thumbnailDefault ?? undefined,
+        thumbnailMedium: artist.thumbnailMedium ?? undefined,
+        thumbnailHigh: artist.thumbnailHigh ?? undefined,
         songCount: artist._count.artistSongs,
-        aliasGroup,
+        aliasGroup: aliasGroup ?? undefined,
         youtube: artist.youtubeChannel
           ? {
               channelId: artist.youtubeChannel.channelId,
-              title: artist.youtubeChannel.title,
-              description: artist.youtubeChannel.description,
-              customUrl: artist.youtubeChannel.customUrl,
-              subscriberCount: artist.youtubeChannel.subscriberCount,
-              videoCount: artist.youtubeChannel.videoCount,
-              thumbnail:
-                artist.youtubeChannel.thumbnailMedium ||
-                artist.youtubeChannel.thumbnailDefault,
+              title: artist.youtubeChannel.title ?? undefined,
+              description: artist.youtubeChannel.description ?? undefined,
+              customUrl: artist.youtubeChannel.customUrl ?? undefined,
+              subscriberCount: artist.youtubeChannel.subscriberCount ?? undefined,
+              videoCount: artist.youtubeChannel.videoCount ?? undefined,
+              thumbnailDefault: artist.youtubeChannel.thumbnailDefault ?? undefined,
+              thumbnailMedium: artist.youtubeChannel.thumbnailMedium ?? undefined,
+              thumbnailHigh: artist.youtubeChannel.thumbnailHigh ?? undefined,
             }
-          : null,
+          : undefined,
       };
     });
   }
 
-  async findById(id: number) {
-    return this.prisma.artist.findUnique({
+  async findById(id: number): Promise<ArtistDto | null> {
+    const artist = await this.prisma.artist.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        nameKo: true,
+        alias: true,
+        thumbnailDefault: true,
+        thumbnailMedium: true,
+        thumbnailHigh: true,
+        youtubeChannelId: true,
+        tjSongRequestUrl: true,
+      },
     });
+
+    if (!artist) return null;
+
+    return {
+      id: artist.id,
+      name: artist.name,
+      nameKo: artist.nameKo,
+      alias: artist.alias ?? undefined,
+      thumbnailDefault: artist.thumbnailDefault ?? undefined,
+      thumbnailMedium: artist.thumbnailMedium ?? undefined,
+      thumbnailHigh: artist.thumbnailHigh ?? undefined,
+      youtubeChannelId: artist.youtubeChannelId ?? undefined,
+      tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
+    };
   }
 
-  async findByAlias(alias: string) {
-    return this.prisma.artist.findUnique({
+  async findByAlias(alias: string): Promise<ArtistDto | null> {
+    const artist = await this.prisma.artist.findUnique({
       where: { alias },
+      select: {
+        id: true,
+        name: true,
+        nameKo: true,
+        alias: true,
+        thumbnailDefault: true,
+        thumbnailMedium: true,
+        thumbnailHigh: true,
+        youtubeChannelId: true,
+        tjSongRequestUrl: true,
+      },
     });
+
+    if (!artist) return null;
+
+    return {
+      id: artist.id,
+      name: artist.name,
+      nameKo: artist.nameKo,
+      alias: artist.alias ?? undefined,
+      thumbnailDefault: artist.thumbnailDefault ?? undefined,
+      thumbnailMedium: artist.thumbnailMedium ?? undefined,
+      thumbnailHigh: artist.thumbnailHigh ?? undefined,
+      youtubeChannelId: artist.youtubeChannelId ?? undefined,
+      tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
+    };
   }
 
   async findByAliases(aliases: string[]) {

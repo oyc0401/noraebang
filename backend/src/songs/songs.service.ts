@@ -35,10 +35,10 @@ export class SongsService {
     return {
       id: song.id,
       title: song.title,
-      titleKo: song.titleKo,
+      titleKo: song.titleKo ?? undefined,
       artists: song.artistSongs.map((as) => ({
         artistId: as.artistId,
-        role: as.role,
+        role: as.role ?? undefined,
       })),
       karaokeSongs: song.karaokeSongs,
     };

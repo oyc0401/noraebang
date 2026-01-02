@@ -6,7 +6,7 @@ export class ArtistListResponseDto {
   data: ArtistDto[];
 
   @ApiProperty({ example: null, required: false })
-  message?: string | null;
+  message?: string;
 }
 
 export class ArtistDetailsListResponseDto {
@@ -14,7 +14,7 @@ export class ArtistDetailsListResponseDto {
   data: ArtistDetailsDto[];
 
   @ApiProperty({ example: null, required: false })
-  message?: string | null;
+  message?: string;
 }
 
 export class ArtistDetailResponseDto {
@@ -22,7 +22,7 @@ export class ArtistDetailResponseDto {
   data: ArtistDto;
 
   @ApiProperty({ example: null, required: false })
-  message?: string | null;
+  message?: string;
 }
 
 export class YoutubeChannelUpdateResponseDataDto {
@@ -36,7 +36,7 @@ export class YoutubeChannelUpdateResponseDataDto {
   channelTitle: string;
 
   @ApiProperty({ example: 1000000, required: false })
-  subscriberCount?: number | null;
+  subscriberCount?: number;
 }
 
 export class YoutubeChannelUpdateResponseDto {

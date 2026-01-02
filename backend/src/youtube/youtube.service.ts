@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import type { Artist } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { OembedDataDto } from "./dto/oembed-data.dto";
 
@@ -310,7 +309,7 @@ export class YoutubeService {
         artist: artist.name,
         channelId: channelData.channelId,
         channelTitle: channelData.title,
-        subscriberCount: channelData.subscriberCount,
+        subscriberCount: channelData.subscriberCount ?? undefined,
       };
     } catch (error) {
       if (error instanceof HttpException) {

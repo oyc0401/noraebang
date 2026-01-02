@@ -17,7 +17,7 @@ export class ArtistSongDto {
     required: false,
     enum: ["MAIN", "FEATURING", "PRODUCER"],
   })
-  role?: string | null;
+  role?: string;
 }
 
 export class SongDto {
@@ -28,7 +28,7 @@ export class SongDto {
   title: string;
 
   @ApiProperty({ example: "밤을 달리다", required: false })
-  titleKo?: string | null;
+  titleKo?: string;
 
   @ApiProperty({ type: [ArtistSongDto] })
   artists: ArtistSongDto[];

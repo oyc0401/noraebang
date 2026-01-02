@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { YoutubeInfoDto } from "./youtube.dto";
 
 export class ArtistDto {
   @ApiProperty({ example: 1 })
@@ -11,65 +12,39 @@ export class ArtistDto {
   nameKo: string;
 
   @ApiProperty({ example: "yoasobi", required: false })
-  alias?: string | null;
+  alias?: string;
 
   @ApiProperty({
     example: "https://yt3.googleusercontent.com/default.jpg",
     required: false,
   })
-  thumbnailDefault?: string | null;
+  thumbnailDefault?: string;
 
   @ApiProperty({
     example: "https://yt3.googleusercontent.com/medium.jpg",
     required: false,
   })
-  thumbnailMedium?: string | null;
+  thumbnailMedium?: string;
 
   @ApiProperty({
     example: "https://yt3.googleusercontent.com/high.jpg",
     required: false,
   })
-  thumbnailHigh?: string | null;
+  thumbnailHigh?: string;
 
   @ApiProperty({
     example: "UCvpredjG93ifbCP1Y77JyFA",
     required: false,
     description: "연결된 YouTube 채널 ID",
   })
-  youtubeChannelId?: string | null;
+  youtubeChannelId?: string;
 
   @ApiProperty({
     example: "https://www.tjmedia.com/tjsong/song_add.asp",
     required: false,
     description: "TJ 노래방 곡 추가 요청 URL",
   })
-  tjSongRequestUrl?: string | null;
-}
-
-export class YoutubeInfoDto {
-  @ApiProperty({ example: "UCvpredjG93ifbCP1Y77JyFA" })
-  channelId: string;
-
-  @ApiProperty({ example: "Ayase / YOASOBI", required: false })
-  title?: string | null;
-
-  @ApiProperty({ example: "YOASOBI 공식 채널", required: false })
-  description?: string | null;
-
-  @ApiProperty({ example: "@Ayase_YOASOBI", required: false })
-  customUrl?: string | null;
-
-  @ApiProperty({ example: 1000000, required: false })
-  subscriberCount?: number | null;
-
-  @ApiProperty({ example: 200, required: false })
-  videoCount?: number | null;
-
-  @ApiProperty({
-    example: "https://yt3.googleusercontent.com/yoasobi-thumbnail.jpg",
-    required: false,
-  })
-  thumbnail?: string | null;
+  tjSongRequestUrl?: string;
 }
 
 export class ArtistAliasGroupDto {
@@ -91,32 +66,32 @@ export class ArtistDetailsDto {
   nameKo: string;
 
   @ApiProperty({ example: "yoasobi", required: false })
-  alias?: string | null;
+  alias?: string;
 
   @ApiProperty({
     example: "https://yt3.googleusercontent.com/default.jpg",
     required: false,
   })
-  thumbnailDefault?: string | null;
+  thumbnailDefault?: string;
 
   @ApiProperty({
     example: "https://yt3.googleusercontent.com/medium.jpg",
     required: false,
   })
-  thumbnailMedium?: string | null;
+  thumbnailMedium?: string;
 
   @ApiProperty({
     example: "https://yt3.googleusercontent.com/high.jpg",
     required: false,
   })
-  thumbnailHigh?: string | null;
+  thumbnailHigh?: string;
 
   @ApiProperty({ example: 25 })
   songCount: number;
 
   @ApiProperty({ type: ArtistAliasGroupDto, required: false })
-  aliasGroup?: ArtistAliasGroupDto | null;
+  aliasGroup?: ArtistAliasGroupDto;
 
   @ApiProperty({ type: YoutubeInfoDto, required: false })
-  youtube?: YoutubeInfoDto | null;
+  youtube?: YoutubeInfoDto;
 }
