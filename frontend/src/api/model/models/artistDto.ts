@@ -14,8 +14,6 @@ export interface ArtistDto {
   thumbnailDefault?: string;
   thumbnailMedium?: string;
   thumbnailHigh?: string;
-  /** 연결된 YouTube 채널 ID */
-  youtubeChannelId?: string;
   /** TJ 노래방 곡 추가 요청 URL */
   tjSongRequestUrl?: string;
 }
