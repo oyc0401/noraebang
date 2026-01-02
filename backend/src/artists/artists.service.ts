@@ -227,18 +227,62 @@ export class ArtistsService {
   }
 
   /**
-   * ID 또는 alias로 아티스트 조회
+   * ID 또는 alias로 아티스트 상세 조회 (YouTube 정보 포함)
    * - 숫자면 ID로 조회
    * - 문자열이면 alias로 조회
    */
-  async findByIdOrAlias(identifier: string): Promise<ArtistDto | null> {
+  async findByIdOrAlias(
+    identifier: string,
+  ): Promise<ArtistDetailsDto | null> {
     // 숫자인지 체크
     const parsedId = parseInt(identifier, 10);
-    if (!Number.isNaN(parsedId) && parsedId.toString() === identifier) {
-      return this.findById(parsedId);
-    }
+    const isId = !Number.isNaN(parsedId) && parsedId.toString() === identifier;
 
-    // alias로 조회
-    return this.findByAlias(identifier);
+    const artist = await this.prisma.artist.findUnique({
+      where: isId ? { id: parsedId } : { alias: identifier },
+      select: {
+        id: true,
+        name: true,
+        nameKo: true,
+        alias: true,
+        thumbnailDefault: true,
+        thumbnailMedium: true,
+        thumbnailHigh: true,
+        tjSongRequestUrl: true,
+        youtubeChannel: true,
+        _count: {
+          select: { artistSongs: true },
+        },
+      },
+    });
+
+    if (!artist) return null;
+
+    return {
+      id: artist.id,
+      name: artist.name,
+      nameKo: artist.nameKo,
+      alias: artist.alias ?? undefined,
+      thumbnailDefault: artist.thumbnailDefault ?? undefined,
+      thumbnailMedium: artist.thumbnailMedium ?? undefined,
+      thumbnailHigh: artist.thumbnailHigh ?? undefined,
+      songCount: artist._count.artistSongs,
+      tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
+      youtube: artist.youtubeChannel
+        ? {
+            channelId: artist.youtubeChannel.channelId,
+            title: artist.youtubeChannel.title ?? undefined,
+            description: artist.youtubeChannel.description ?? undefined,
+            customUrl: artist.youtubeChannel.customUrl ?? undefined,
+            subscriberCount:
+              artist.youtubeChannel.subscriberCount ?? undefined,
+            videoCount: artist.youtubeChannel.videoCount ?? undefined,
+            thumbnailDefault:
+              artist.youtubeChannel.thumbnailDefault ?? undefined,
+            thumbnailMedium: artist.youtubeChannel.thumbnailMedium ?? undefined,
+            thumbnailHigh: artist.youtubeChannel.thumbnailHigh ?? undefined,
+          }
+        : undefined,
+    };
   }
 }

@@ -14,7 +14,7 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
-import { ArtistDto, ErrorResponseDto } from "../dto";
+import { ArtistDetailsDto, ErrorResponseDto } from "../dto";
 import { ApiResponse } from "../dto/api-response.dto";
 import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
 import { YoutubeService } from "../youtube/youtube.service";
@@ -129,7 +129,7 @@ export class ArtistsController {
   async findByIdOrAlias(
     @Param("identifier") identifier: string,
   ): Promise<ArtistDetailResponseDto> {
-    const artist: ArtistDto | null =
+    const artist: ArtistDetailsDto | null =
       await this.artistsService.findByIdOrAlias(identifier);
     if (!artist) {
       throw new NotFoundException("Artist not found");

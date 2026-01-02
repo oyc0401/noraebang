@@ -5,10 +5,9 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-import type { YoutubeSongSearchResponseDtoData } from './youtubeSongSearchResponseDtoData';
+import type { SongDto } from './songDto';
 
 export interface YoutubeSongSearchResponseDto {
-  /** @nullable */
-  data: YoutubeSongSearchResponseDtoData;
+  data?: SongDto;
   message?: string;
 }
