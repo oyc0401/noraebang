@@ -225,9 +225,7 @@ export class ArtistsService {
    * - 숫자면 ID로 조회
    * - 문자열이면 alias로 조회
    */
-  async findByIdOrAlias(
-    identifier: string,
-  ): Promise<ArtistDetailsDto | null> {
+  async findByIdOrAlias(identifier: string): Promise<ArtistDetailsDto | null> {
     // 숫자인지 체크
     const parsedId = parseInt(identifier, 10);
     const isId = !Number.isNaN(parsedId) && parsedId.toString() === identifier;
@@ -268,8 +266,7 @@ export class ArtistsService {
             title: artist.youtubeChannel.title ?? undefined,
             description: artist.youtubeChannel.description ?? undefined,
             customUrl: artist.youtubeChannel.customUrl ?? undefined,
-            subscriberCount:
-              artist.youtubeChannel.subscriberCount ?? undefined,
+            subscriberCount: artist.youtubeChannel.subscriberCount ?? undefined,
             videoCount: artist.youtubeChannel.videoCount ?? undefined,
             thumbnailDefault:
               artist.youtubeChannel.thumbnailDefault ?? undefined,
