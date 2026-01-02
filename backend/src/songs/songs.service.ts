@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { getArtistAliases } from "../config/artist-aliases";
+import { SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
-import { SongDto } from "./dto/song-response.dto";
 
 @Injectable()
 export class SongsService {
