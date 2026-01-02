@@ -33,13 +33,6 @@ export class ArtistDto {
   thumbnailHigh?: string;
 
   @ApiProperty({
-    example: "UCvpredjG93ifbCP1Y77JyFA",
-    required: false,
-    description: "연결된 YouTube 채널 ID",
-  })
-  youtubeChannelId?: string;
-
-  @ApiProperty({
     example: "https://www.tjmedia.com/tjsong/song_add.asp",
     required: false,
     description: "TJ 노래방 곡 추가 요청 URL",

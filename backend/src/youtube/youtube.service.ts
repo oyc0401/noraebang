@@ -377,11 +377,10 @@ export class YoutubeService {
       // 2. 채널 상세 정보 가져오기 (서비스 메서드 사용)
       const channelData = await this.getChannelDetails(channelId);
 
-      // 3. Artist의 channelId 업데이트
+      // 3. Artist 썸네일 업데이트
       await this.prisma.artist.update({
         where: { id: artist.id },
         data: {
-          youtubeChannelId: channelData.channelId,
           thumbnailDefault: channelData.thumbnailDefault,
           thumbnailMedium: channelData.thumbnailMedium,
           thumbnailHigh: channelData.thumbnailHigh,

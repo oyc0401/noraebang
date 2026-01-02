@@ -62,12 +62,12 @@ async function searchArtistChannels(
     console.log("🎵 Starting YouTube channel search...\n");
 
     // 업데이트가 필요한 아티스트만 조회
-    // 1. 채널 ID가 없는 경우
+    // 1. 채널 정보가 없는 경우
     // 2. 채널이 있지만 토픽 채널인 경우 (다시 검색)
     const whereClause = skipExisting
       ? {
           OR: [
-            { youtubeChannelId: null },
+            { youtubeChannel: null },
             { youtubeChannel: { title: { contains: " - Topic" } } },
           ],
         }
@@ -172,11 +172,10 @@ async function searchArtistChannels(
           channelData.channelId,
         );
 
-        // Artist 업데이트
+        // Artist 업데이트 (썸네일만)
         await prisma.artist.update({
           where: { id: artist.id },
           data: {
-            youtubeChannelId: detailedChannelData.channelId,
             thumbnailDefault: detailedChannelData.thumbnailDefault,
             thumbnailMedium: detailedChannelData.thumbnailMedium,
             thumbnailHigh: detailedChannelData.thumbnailHigh,
@@ -257,11 +256,11 @@ async function searchArtistChannels(
     console.log(`   Not found: ${notFound}`);
     console.log(`   Errors: ${errors}`);
 
-    // 남은 아티스트 확인 (채널 ID가 없거나 토픽 채널인 경우)
+    // 남은 아티스트 확인 (채널 정보가 없거나 토픽 채널인 경우)
     const remaining = await prisma.artist.count({
       where: {
         OR: [
-          { youtubeChannelId: null },
+          { youtubeChannel: null },
           { youtubeChannel: { title: { contains: " - Topic" } } },
         ],
       },

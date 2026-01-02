@@ -17,42 +17,26 @@ async function updateChannelDetails(
   try {
     console.log("🎬 Starting YouTube channel details fetch...\n");
 
-    // 우선순위 1: youtubeChannelId는 있지만 youtubeChannel 정보가 없는 경우
-    const priority1Artists = await prisma.artist.findMany({
-      where: {
-        youtubeChannelId: { not: null },
-        youtubeChannel: null,
-      },
+    // Topic 채널 갱신 또는 모든 채널 갱신
+    const artists = await prisma.artist.findMany({
+      where: skipExisting
+        ? {
+            youtubeChannel: {
+              title: { contains: " - Topic" },
+            },
+          }
+        : {
+            youtubeChannel: {
+              isNot: null,
+            },
+          },
       include: {
         youtubeChannel: true,
       },
       take: batchSize,
     });
 
-    // 우선순위 2: Topic 채널인 경우 (재검색 필요)
-    const priority2Artists = skipExisting
-      ? []
-      : await prisma.artist.findMany({
-          where: {
-            youtubeChannelId: { not: null },
-            youtubeChannel: {
-              title: { contains: " - Topic" },
-            },
-          },
-          include: {
-            youtubeChannel: true,
-          },
-          take: Math.max(0, batchSize - priority1Artists.length),
-        });
-
-    // 우선순위별로 병합
-    const artists = [...priority1Artists, ...priority2Artists];
-
-    console.log(`Found ${artists.length} artists to process`);
-    console.log(`  - Priority 1 (No details): ${priority1Artists.length}`);
-    console.log(
-      `  - Priority 2 (Topic channels): ${priority2Artists.length}\n`,
-    );
+    console.log(`Found ${artists.length} artists to process\n`);
 
     if (artists.length === 0) {
       console.log("✅ All artists have proper channel details!");
@@ -77,7 +61,7 @@ async function updateChannelDetails(
         continue;
       }
 
-      if (!artist.youtubeChannelId) {
+      if (!artist.youtubeChannel?.channelId) {
         console.log(`   ⚠️  No channel ID`);
         skipped++;
         console.log("");
@@ -87,7 +71,7 @@ async function updateChannelDetails(
       try {
         // YouTube 채널 상세 정보 가져오기 (서비스 사용)
         const channelData = await youtubeService.getChannelDetails(
-          artist.youtubeChannelId,
+          artist.youtubeChannel.channelId,
         );
 
         console.log(`   ✅ Found: ${channelData.title}`);
@@ -144,7 +128,6 @@ async function updateChannelDetails(
         await prisma.artist.update({
           where: { id: artist.id },
           data: {
-            youtubeChannelId: channelData.channelId,
             thumbnailDefault: channelData.thumbnailDefault,
             thumbnailMedium: channelData.thumbnailMedium,
             thumbnailHigh: channelData.thumbnailHigh,
@@ -184,25 +167,16 @@ async function updateChannelDetails(
     console.log(`   Errors: ${errors}`);
 
     // 남은 아티스트 확인
-    const remainingNoDetails = await prisma.artist.count({
-      where: {
-        youtubeChannelId: { not: null },
-        youtubeChannel: null,
-      },
-    });
-
     const remainingTopicChannels = await prisma.artist.count({
       where: {
-        youtubeChannelId: { not: null },
         youtubeChannel: {
           title: { contains: " - Topic" },
         },
       },
     });
 
-    if (remainingNoDetails > 0 || remainingTopicChannels > 0) {
+    if (remainingTopicChannels > 0) {
       console.log(`\n⚠️  Remaining artists:`);
-      console.log(`   - No details: ${remainingNoDetails}`);
       console.log(`   - Topic channels: ${remainingTopicChannels}`);
       console.log("💡 Run this script again to continue");
     } else {
