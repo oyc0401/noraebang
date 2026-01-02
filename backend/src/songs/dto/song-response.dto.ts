@@ -6,7 +6,7 @@ export class SongListResponseDto {
   data: SongDto[];
 
   @ApiProperty({ example: null, required: false })
-  message?: string | null;
+  message?: string;
 }
 
 export class SongDetailResponseDto {
@@ -14,5 +14,5 @@ export class SongDetailResponseDto {
   data: SongDto;
 
   @ApiProperty({ example: null, required: false })
-  message?: string | null;
+  message?: string;
 }
