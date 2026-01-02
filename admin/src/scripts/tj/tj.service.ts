@@ -1,6 +1,4 @@
-import { Injectable } from "@nestjs/common";
 import * as cheerio from "cheerio";
-import { z } from "zod";
 
 export interface TJSongData {
   karaokeNo: string;
@@ -11,24 +9,6 @@ export interface TJSongData {
   nationType: string;
 }
 
-const TJMonthlyResponseSchema = z.object({
-  resultCode: z.string(),
-  resultData: z
-    .object({
-      items: z.array(
-        z.object({
-          pro: z.union([z.number(), z.string()]),
-          indexTitle: z.string(),
-          indexSong: z.string(),
-          word: z.string().optional(),
-          com: z.string().optional(),
-        }),
-      ),
-    })
-    .optional(),
-});
-
-@Injectable()
 export class TJService {
   private readonly BASE_URL =
     "https://www.tjmedia.com/song/accompaniment_search";
@@ -62,7 +42,7 @@ export class TJService {
         return [];
       }
 
-      const data = TJMonthlyResponseSchema.parse(await response.json());
+      const data: any = await response.json();
 
       if (data.resultCode !== "99" || !data.resultData?.items) {
         console.error("❌ Unexpected API response:", data);

@@ -2,13 +2,13 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
-import { TJService } from "../src/tj/tj.service";
+import { TJService } from "./tj.service";
 import { saveSongToDatabase } from "./saveSong";
 
 // 특정 년월부터 현재까지 모든 TJ 노래 크롤링 (기본값: 200101)
-// pnpm ts-node scripts/tj/fetch-all-songs.ts
-// pnpm ts-node scripts/tj/fetch-all-songs.ts 202001
-// pnpm ts-node scripts/tj/fetch-all-songs.ts 202001 --force
+// pnpm ts-node src/scripts/tj/fetch-all-songs.ts
+// pnpm ts-node src/scripts/tj/fetch-all-songs.ts 202001
+// pnpm ts-node src/scripts/tj/fetch-all-songs.ts 202001 --force
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);

@@ -1,21 +1,117 @@
 import "dotenv/config";
-import { NestFactory } from "@nestjs/core";
-import type { ChannelSearchResult } from "../../src/youtube/youtube.service";
-import { YoutubeService } from "../../src/youtube/youtube.service";
-import { AppModule } from "../../src/app.module";
-import { PrismaService } from "../../src/prisma/prisma.service";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import pg from "pg";
 
-// pnpm ts-node scripts/youtube/search-artist-channels.ts
+// pnpm ts-node src/scripts/youtube/search-artist-channels.ts
 
-/**
- * 최적의 채널 선택 로직
- * 1. Topic 채널 제외
- * 2. 구독자 수가 가장 많은 채널 선택
- * 3. 상위 3개 중에서만 선택
- */
-function selectBestChannel(
-  channels: ChannelSearchResult[],
-): ChannelSearchResult | null {
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+
+if (!YOUTUBE_API_KEY) {
+  throw new Error("YOUTUBE_API_KEY is not set");
+}
+
+interface ChannelSearchResult {
+  channelId: string;
+  title: string;
+  description: string;
+  subscriberCount?: number;
+}
+
+interface YoutubeChannelDetails {
+  channelId: string;
+  title: string;
+  description?: string;
+  customUrl?: string;
+  publishedAt: string;
+  country?: string;
+  defaultLanguage?: string;
+  thumbnailDefault?: string;
+  thumbnailMedium?: string;
+  thumbnailHigh?: string;
+  subscriberCount?: number;
+  videoCount?: number;
+  viewCount?: bigint;
+  hiddenSubscriberCount?: boolean;
+  uploadsPlaylistId?: string;
+}
+
+async function searchChannels(query: string): Promise<ChannelSearchResult[]> {
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&maxResults=5&key=${YOUTUBE_API_KEY}`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`YouTube API error: ${data.error?.message || response.statusText}`);
+  }
+
+  if (!data.items || data.items.length === 0) {
+    return [];
+  }
+
+  // 각 채널의 상세 정보 가져오기 (구독자 수 포함)
+  const channelIds = data.items.map((item: any) => item.snippet.channelId).join(',');
+  const detailsUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIds}&key=${YOUTUBE_API_KEY}`;
+
+  const detailsResponse = await fetch(detailsUrl);
+  const detailsData = await detailsResponse.json();
+
+  if (!detailsResponse.ok) {
+    throw new Error(`YouTube API error: ${detailsData.error?.message || detailsResponse.statusText}`);
+  }
+
+  return detailsData.items.map((item: any) => ({
+    channelId: item.id,
+    title: item.snippet.title,
+    description: item.snippet.description || '',
+    subscriberCount: item.statistics?.subscriberCount ? parseInt(item.statistics.subscriberCount) : undefined,
+  }));
+}
+
+async function getChannelDetails(channelId: string): Promise<YoutubeChannelDetails> {
+  const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${encodeURIComponent(channelId)}&key=${YOUTUBE_API_KEY}`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`YouTube API error: ${data.error?.message || response.statusText}`);
+  }
+
+  if (!data.items || data.items.length === 0) {
+    throw new Error(`Channel not found: ${channelId}`);
+  }
+
+  const channel = data.items[0];
+  const snippet = channel.snippet;
+  const statistics = channel.statistics;
+  const contentDetails = channel.contentDetails;
+
+  return {
+    channelId: channel.id,
+    title: snippet.title,
+    description: snippet.description,
+    customUrl: snippet.customUrl,
+    publishedAt: snippet.publishedAt,
+    country: snippet.country,
+    defaultLanguage: snippet.defaultLanguage,
+    thumbnailDefault: snippet.thumbnails?.default?.url,
+    thumbnailMedium: snippet.thumbnails?.medium?.url,
+    thumbnailHigh: snippet.thumbnails?.high?.url,
+    subscriberCount: statistics?.subscriberCount ? parseInt(statistics.subscriberCount) : undefined,
+    videoCount: statistics?.videoCount ? parseInt(statistics.videoCount) : undefined,
+    viewCount: statistics?.viewCount ? BigInt(statistics.viewCount) : undefined,
+    hiddenSubscriberCount: statistics?.hiddenSubscriberCount,
+    uploadsPlaylistId: contentDetails?.relatedPlaylists?.uploads,
+  };
+}
+
+function selectBestChannel(channels: ChannelSearchResult[]): ChannelSearchResult | null {
   if (!channels || channels.length === 0) {
     return null;
   }
@@ -54,16 +150,10 @@ async function searchArtistChannels(
   batchSize: number = 1,
   skipExisting: boolean = true,
 ) {
-  const app = await NestFactory.createApplicationContext(AppModule);
-  const prisma = app.get(PrismaService);
-  const youtubeService = app.get(YoutubeService);
-
   try {
     console.log("🎵 Starting YouTube channel search...\n");
 
     // 업데이트가 필요한 아티스트만 조회
-    // 1. 채널 정보가 없는 경우
-    // 2. 채널이 있지만 토픽 채널인 경우 (다시 검색)
     const whereClause = skipExisting
       ? {
           OR: [
@@ -80,10 +170,10 @@ async function searchArtistChannels(
           take: 1,
           orderBy: { order: "asc" },
           include: {
-            song: true, // 실제 Song 데이터
+            song: true,
           },
         },
-        youtubeChannel: true, // 토픽 채널 확인을 위해 포함
+        youtubeChannel: true,
       },
       orderBy: { name: "asc" },
       take: batchSize,
@@ -119,12 +209,12 @@ async function searchArtistChannels(
           console.log(`   🔍 Search: "${searchQuery}" (no songs found)`);
         }
 
-        // YouTube 채널 검색 (서비스 사용)
-        const channels = await youtubeService.searchChannels(searchQuery);
+        const channels = await searchChannels(searchQuery);
 
         if (!channels || channels.length === 0) {
           console.log(`   ⚠️  Channel not found`);
           notFound++;
+          console.log("");
           continue;
         }
 
@@ -134,6 +224,7 @@ async function searchArtistChannels(
         if (!channelData) {
           console.log(`   ⚠️  No suitable channel found`);
           notFound++;
+          console.log("");
           continue;
         }
 
@@ -157,6 +248,7 @@ async function searchArtistChannels(
             );
             console.log(`      New: ${newSubscribers.toLocaleString()}`);
             notFound++;
+            console.log("");
             continue;
           } else {
             console.log(`   ✨ Upgrading: New channel has more subscribers`);
@@ -168,9 +260,7 @@ async function searchArtistChannels(
         }
 
         // 채널 상세 정보 가져오기
-        const detailedChannelData = await youtubeService.getChannelDetails(
-          channelData.channelId,
-        );
+        const detailedChannelData = await getChannelDetails(channelData.channelId);
 
         // Artist 업데이트 (썸네일만)
         await prisma.artist.update({
@@ -256,7 +346,7 @@ async function searchArtistChannels(
     console.log(`   Not found: ${notFound}`);
     console.log(`   Errors: ${errors}`);
 
-    // 남은 아티스트 확인 (채널 정보가 없거나 토픽 채널인 경우)
+    // 남은 아티스트 확인
     const remaining = await prisma.artist.count({
       where: {
         OR: [
@@ -278,7 +368,8 @@ async function searchArtistChannels(
     console.error("❌ Fatal error:", error);
     throw error;
   } finally {
-    await app.close();
+    await prisma.$disconnect();
+    await pool.end();
   }
 }
 
@@ -288,5 +379,3 @@ if (require.main === module) {
     .then(() => process.exit(0))
     .catch(() => process.exit(1));
 }
-
-export default searchArtistChannels;

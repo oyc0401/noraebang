@@ -24,8 +24,5 @@ export * from './searchControllerGetSongByYoutubeUrlParams';
 export * from './songDetailResponseDto';
 export * from './songDto';
 export * from './songListResponseDto';
-export * from './youtubeChannelUpdateDto';
-export * from './youtubeChannelUpdateResponseDataDto';
-export * from './youtubeChannelUpdateResponseDto';
 export * from './youtubeInfoDto';
 export * from './youtubeSongSearchResponseDto';
