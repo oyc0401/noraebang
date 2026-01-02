@@ -42,3 +42,5 @@ pnpm ts-node download-api-json.ts
 pnpm --filter backend build
 
 pnpm --filter frontend build
+
+pnpm --filter admin exec prisma generate
