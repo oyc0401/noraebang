@@ -8,19 +8,19 @@ datasource db {
 
 model Artist {
   id               Int             @id @default(autoincrement())
-  name             String
-  tjSongRequestUrl String?         @map("tj_song_request_url")
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @updatedAt @map("updated_at")
-  nameKo           String          @map("name_ko")
-  blogId           String?         @map("blog_id")
   alias            String?         @unique // 아티스트의 경로이지만, null이라면 userId로 접근가능.
-  youtubeChannelId String?         @map("youtube_channel_id")
+  name             String
+  nameKo           String          @map("name_ko")
+  tjSongRequestUrl String?         @map("tj_song_request_url")
+
   thumbnailDefault String?         @map("thumbnail_default")
   thumbnailMedium  String?         @map("thumbnail_medium")
   thumbnailHigh    String?         @map("thumbnail_high")
   artistSongs      ArtistSong[]
   youtubeChannel   YoutubeChannel?
+
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
 
   @@map("artist")
 }

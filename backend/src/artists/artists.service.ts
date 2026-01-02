@@ -168,7 +168,6 @@ export class ArtistsService {
         thumbnailDefault: true,
         thumbnailMedium: true,
         thumbnailHigh: true,
-        youtubeChannelId: true,
         tjSongRequestUrl: true,
       },
     });
@@ -183,7 +182,6 @@ export class ArtistsService {
       thumbnailDefault: artist.thumbnailDefault ?? undefined,
       thumbnailMedium: artist.thumbnailMedium ?? undefined,
       thumbnailHigh: artist.thumbnailHigh ?? undefined,
-      youtubeChannelId: artist.youtubeChannelId ?? undefined,
       tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
     };
   }
@@ -199,7 +197,6 @@ export class ArtistsService {
         thumbnailDefault: true,
         thumbnailMedium: true,
         thumbnailHigh: true,
-        youtubeChannelId: true,
         tjSongRequestUrl: true,
       },
     });
@@ -214,7 +211,6 @@ export class ArtistsService {
       thumbnailDefault: artist.thumbnailDefault ?? undefined,
       thumbnailMedium: artist.thumbnailMedium ?? undefined,
       thumbnailHigh: artist.thumbnailHigh ?? undefined,
-      youtubeChannelId: artist.youtubeChannelId ?? undefined,
       tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
     };
   }
