@@ -31,6 +31,9 @@ model Song {
   titleKo          String?       @map("title_ko")
   youtubeVideoId   String?       @map("youtube_video_id")
   youtubeFetchedAt DateTime?     @map("youtube_fetched_at")
+  thumbnailDefault String?       @map("thumbnail_default")
+  thumbnailMedium  String?       @map("thumbnail_medium")
+  thumbnailHigh    String?       @map("thumbnail_high")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
   karaokeSongs     KaraokeSong[]
@@ -84,6 +87,7 @@ model TjSong {
   composerList  String[] @map("composer_list")
   nationType String  @map("nation_type")
   releasedYearMonth String @map("released_year_month")
+  saved     Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
