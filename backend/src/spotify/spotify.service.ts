@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { z } from "zod";
 
 export interface SpotifyArtist {
   id: string;
@@ -18,18 +19,43 @@ export interface SpotifyArtist {
   };
 }
 
-export interface SpotifySearchResponse {
-  artists: {
-    items: SpotifyArtist[];
-    total: number;
-    limit: number;
-    offset: number;
-  };
-}
+const SpotifyImageSchema = z.object({
+  url: z.string(),
+  height: z.number(),
+  width: z.number(),
+});
+
+const SpotifyArtistSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  followers: z.object({
+    total: z.number(),
+  }),
+  images: z.array(SpotifyImageSchema),
+  genres: z.array(z.string()),
+  popularity: z.number(),
+  external_urls: z.object({
+    spotify: z.string(),
+  }),
+});
+
+const SpotifySearchResponseSchema = z.object({
+  artists: z.object({
+    items: z.array(SpotifyArtistSchema),
+    total: z.number(),
+    limit: z.number(),
+    offset: z.number(),
+  }),
+});
+
+const SpotifyTokenResponseSchema = z.object({
+  access_token: z.string(),
+  expires_in: z.number(),
+});
 
 @Injectable()
 export class SpotifyService {
-  private accessToken: string | null = null;
+  private accessToken?: string;
   private tokenExpiresAt: number = 0;
 
   /**
@@ -65,8 +91,8 @@ export class SpotifyService {
       );
     }
 
-    const data = await response.json();
-    const token = data.access_token as string;
+    const data = SpotifyTokenResponseSchema.parse(await response.json());
+    const token = data.access_token;
     this.accessToken = token;
     this.tokenExpiresAt = Date.now() + data.expires_in * 1000 - 60000; // 1분 여유
 
@@ -101,7 +127,7 @@ export class SpotifyService {
       );
     }
 
-    const data: SpotifySearchResponse = await response.json();
+    const data = SpotifySearchResponseSchema.parse(await response.json());
 
     // Raw 데이터 출력 (임시)
     console.log("\n🔍 RAW SPOTIFY API RESPONSE:");
@@ -114,13 +140,13 @@ export class SpotifyService {
   /**
    * 가장 일치하는 아티스트 찾기
    * @param artistName 검색할 아티스트 이름
-   * @returns 가장 일치하는 아티스트 또는 null
+   * @returns 가장 일치하는 아티스트 또는 undefined
    */
-  async findBestMatch(artistName: string): Promise<SpotifyArtist | null> {
+  async findBestMatch(artistName: string): Promise<SpotifyArtist | undefined> {
     const results = await this.searchArtist(artistName, 20);
 
     if (results.length === 0) {
-      return null;
+      return undefined;
     }
 
     // 정확히 일치하는 이름 찾기 (대소문자 무시)
@@ -159,6 +185,6 @@ export class SpotifyService {
       );
     }
 
-    return response.json();
+    return SpotifyArtistSchema.parse(await response.json());
   }
 }

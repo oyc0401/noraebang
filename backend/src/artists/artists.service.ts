@@ -1,18 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import type { Artist, Prisma, YoutubeChannel } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import {
   ARTIST_ALIAS_GROUPS,
   getArtistAliases,
 } from "../config/artist-aliases";
 import { ArtistDetailsDto, ArtistDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
-
-export type ArtistDetails = Artist & {
-  youtubeChannel: YoutubeChannel | null;
-  _count: {
-    artistSongs: number;
-  };
-};
 
 export const ARTIST_SORT_OPTIONS = [
   "id_desc",
@@ -50,7 +43,9 @@ const ARTIST_SORT_ORDER_MAP: Record<
 export class ArtistsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(sort: ArtistSortOption = DEFAULT_ARTIST_SORT): Promise<ArtistDto[]> {
+  async findAll(
+    sort: ArtistSortOption = DEFAULT_ARTIST_SORT,
+  ): Promise<ArtistDto[]> {
     const artists = await this.prisma.artist.findMany({
       select: {
         id: true,
@@ -114,7 +109,7 @@ export class ArtistsService {
     });
 
     return artists.map((artist) => {
-      let aliasGroup: { groupId: string; aliases: string[] } | null = null;
+      let aliasGroup: { groupId: string; aliases: string[] } | undefined;
 
       const artistAlias = artist.alias;
       if (artistAlias) {
@@ -141,17 +136,20 @@ export class ArtistsService {
         thumbnailMedium: artist.thumbnailMedium ?? undefined,
         thumbnailHigh: artist.thumbnailHigh ?? undefined,
         songCount: artist._count.artistSongs,
-        aliasGroup: aliasGroup ?? undefined,
+        aliasGroup,
         youtube: artist.youtubeChannel
           ? {
               channelId: artist.youtubeChannel.channelId,
               title: artist.youtubeChannel.title ?? undefined,
               description: artist.youtubeChannel.description ?? undefined,
               customUrl: artist.youtubeChannel.customUrl ?? undefined,
-              subscriberCount: artist.youtubeChannel.subscriberCount ?? undefined,
+              subscriberCount:
+                artist.youtubeChannel.subscriberCount ?? undefined,
               videoCount: artist.youtubeChannel.videoCount ?? undefined,
-              thumbnailDefault: artist.youtubeChannel.thumbnailDefault ?? undefined,
-              thumbnailMedium: artist.youtubeChannel.thumbnailMedium ?? undefined,
+              thumbnailDefault:
+                artist.youtubeChannel.thumbnailDefault ?? undefined,
+              thumbnailMedium:
+                artist.youtubeChannel.thumbnailMedium ?? undefined,
               thumbnailHigh: artist.youtubeChannel.thumbnailHigh ?? undefined,
             }
           : undefined,
@@ -233,7 +231,7 @@ export class ArtistsService {
    * - 숫자면 ID로 조회
    * - 문자열이면 alias로 조회
    */
-  async findByIdOrAlias(identifier: string) {
+  async findByIdOrAlias(identifier: string): Promise<ArtistDto | null> {
     // 숫자인지 체크
     const parsedId = parseInt(identifier, 10);
     if (!Number.isNaN(parsedId) && parsedId.toString() === identifier) {

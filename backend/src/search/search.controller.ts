@@ -67,6 +67,6 @@ export class SearchController {
       return matchesTitle || matchesTitleKo;
     });
 
-    return ApiResponse.success(matchedSong ?? null, youtube.title);
+    return ApiResponse.success(matchedSong ?? undefined, youtube.title);
   }
 }

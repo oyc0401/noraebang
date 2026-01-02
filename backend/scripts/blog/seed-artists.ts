@@ -45,8 +45,8 @@ async function seedArtists() {
           console.log(`   ✏️  Updated: ${artist.name} (${artist.nameKo})`);
           updated++;
         }
-      } catch (error: any) {
-        console.error(`   ❌ Error processing ${artist.name}:`, error.message);
+      } catch (error) {
+        console.error(`   ❌ Error processing ${artist.name}:`, error);
       }
     }
 
@@ -55,7 +55,7 @@ async function seedArtists() {
     console.log(`   Updated: ${updated}`);
     console.log(`   Total: ${blogArtist.length}`);
     console.log("\n✅ Seeding completed!");
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Fatal error:", error);
     throw error;
   } finally {

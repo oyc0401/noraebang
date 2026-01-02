@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import * as cheerio from "cheerio";
+import { z } from "zod";
 
 export interface TJSongData {
   karaokeNo: string;
@@ -9,6 +10,23 @@ export interface TJSongData {
   composer: string;
   nationType: string;
 }
+
+const TJMonthlyResponseSchema = z.object({
+  resultCode: z.string(),
+  resultData: z
+    .object({
+      items: z.array(
+        z.object({
+          pro: z.union([z.number(), z.string()]),
+          indexTitle: z.string(),
+          indexSong: z.string(),
+          word: z.string().optional(),
+          com: z.string().optional(),
+        }),
+      ),
+    })
+    .optional(),
+});
 
 @Injectable()
 export class TJService {
@@ -44,14 +62,14 @@ export class TJService {
         return [];
       }
 
-      const data = await response.json();
+      const data = TJMonthlyResponseSchema.parse(await response.json());
 
       if (data.resultCode !== "99" || !data.resultData?.items) {
         console.error("❌ Unexpected API response:", data);
         return [];
       }
 
-      const songs: TJSongData[] = data.resultData.items.map((item: any) => {
+      const songs: TJSongData[] = data.resultData.items.map((item) => {
         // 국가 타입 추정
         let nationType = "KOR";
         if (
@@ -70,8 +88,8 @@ export class TJService {
           karaokeNo: item.pro.toString(),
           title: item.indexTitle,
           artist: item.indexSong,
-          lyricist: item.word || "",
-          composer: item.com || "",
+          lyricist: item.word ?? "",
+          composer: item.com ?? "",
           nationType,
         };
       });
@@ -117,7 +135,9 @@ export class TJService {
   /**
    * 곡번호로 TJ 곡 검색
    */
-  async searchBySongNumber(songNumber: number): Promise<TJSongData | null> {
+  async searchBySongNumber(
+    songNumber: number,
+  ): Promise<TJSongData | undefined> {
     const url = `${this.BASE_URL}?nationType=&strType=16&searchTxt=${songNumber}&pageNo=1&pageRowCnt=100`;
 
     try {
@@ -132,7 +152,7 @@ export class TJService {
 
       if (!response.ok) {
         console.error(`❌ HTTP Error: ${response.status}`);
-        return null;
+        return undefined;
       }
 
       const html = await response.text();
@@ -141,19 +161,19 @@ export class TJService {
       // 곡번호 검색은 정확히 매칭되는 1곡만 반환
       const row = $("ul.grid-container.list").first();
       if (row.length === 0) {
-        return null;
+        return undefined;
       }
 
       const items = row.find("li.grid-item");
       if (items.length === 0) {
-        return null;
+        return undefined;
       }
 
       // 곡번호 추출
       const karaokeNo = $(items[0]).find(".num2").text().trim();
       if (!karaokeNo || karaokeNo !== songNumber.toString()) {
         // 정확히 매칭되지 않으면 무시 (부분 매칭 방지)
-        return null;
+        return undefined;
       }
 
       // 곡제목 추출
@@ -175,7 +195,7 @@ export class TJService {
       const composer = $(items[4]).find("p span").text().trim();
 
       if (!title || !artist) {
-        return null;
+        return undefined;
       }
 
       // 국가 타입 추정 (간단한 휴리스틱)
@@ -199,7 +219,7 @@ export class TJService {
       };
     } catch (error) {
       console.error(`❌ Fetch error for song ${songNumber}:`, error);
-      return null;
+      return undefined;
     }
   }
 }

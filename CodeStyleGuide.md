@@ -13,7 +13,13 @@
 ### 1.1 금지: 모호한 타입
 
 * ❌ `any`, `unknown`, `never` 사용 금지
-* ✅ 예외: **IO 경계에서만** `unknown`을 “즉시 Zod parse” 목적일 때 허용(2.1)
+
+try-catch에서는 이렇게 가능.
+``` ts
+catch (error) {
+  console.error("❌ Fatal error:", error);
+}
+```
 
 ### 1.2 금지: Non-null assertion
 

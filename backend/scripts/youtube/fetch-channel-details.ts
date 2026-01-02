@@ -156,11 +156,11 @@ async function updateChannelDetails(
 
         // YouTube API rate limit을 고려한 딜레이 (200ms)
         await new Promise((resolve) => setTimeout(resolve, 200));
-      } catch (error: any) {
+      } catch (error) {
         // 403 에러 (쿼터 초과)가 발생하면 중단
         if (
-          error.message?.includes("403") ||
-          error.message?.includes("quota")
+          error instanceof Error &&
+          (error.message.includes("403") || error.message.includes("quota"))
         ) {
           console.error(
             "\n❌ YouTube API quota exceeded. Please try again tomorrow.",
@@ -170,7 +170,7 @@ async function updateChannelDetails(
           );
           break;
         }
-        console.error(`   ❌ Error processing ${artist.name}:`, error.message);
+        console.error(`   ❌ Error processing ${artist.name}:`, error);
         errors++;
       }
 
@@ -208,7 +208,7 @@ async function updateChannelDetails(
     } else {
       console.log("\n✅ All artists have proper channel details!");
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Fatal error:", error);
     throw error;
   } finally {

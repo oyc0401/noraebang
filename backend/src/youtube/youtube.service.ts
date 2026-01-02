@@ -1,6 +1,126 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { z } from "zod";
 import { PrismaService } from "../prisma/prisma.service";
 import { OembedDataDto } from "./dto/oembed-data.dto";
+
+const YoutubeThumbnailSchema = z.object({
+  url: z.string(),
+});
+
+const YoutubeOembedSchema = z.object({
+  title: z.string(),
+  author_name: z.string(),
+  author_url: z.string(),
+  type: z.string(),
+  height: z.number().optional(),
+  width: z.number().optional(),
+  version: z.string(),
+  provider_name: z.string(),
+  provider_url: z.string(),
+  thumbnail_height: z.number().optional(),
+  thumbnail_width: z.number().optional(),
+  thumbnail_url: z.string().optional(),
+  html: z.string().optional(),
+});
+
+const YoutubeSearchResponseSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        id: z.object({
+          channelId: z.string(),
+        }),
+        snippet: z.object({
+          title: z.string(),
+          description: z.string().optional(),
+          customUrl: z.string().optional(),
+          thumbnails: z.object({
+            default: YoutubeThumbnailSchema.optional(),
+            medium: YoutubeThumbnailSchema.optional(),
+          }),
+          country: z.string().optional(),
+        }),
+      }),
+    )
+    .default([]),
+});
+
+const YoutubeChannelResponseSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        id: z.string(),
+        snippet: z.object({
+          title: z.string(),
+          description: z.string().optional(),
+          customUrl: z.string().optional(),
+          country: z.string().optional(),
+          defaultLanguage: z.string().optional(),
+          publishedAt: z.string(),
+          thumbnails: z.object({
+            default: YoutubeThumbnailSchema.optional(),
+            medium: YoutubeThumbnailSchema.optional(),
+            high: YoutubeThumbnailSchema.optional(),
+          }),
+        }),
+        statistics: z.object({
+          subscriberCount: z.string().optional(),
+          videoCount: z.string().optional(),
+          viewCount: z.string().optional(),
+          hiddenSubscriberCount: z.boolean().optional(),
+        }),
+        contentDetails: z
+          .object({
+            relatedPlaylists: z
+              .object({
+                uploads: z.string().optional(),
+              })
+              .optional(),
+          })
+          .optional(),
+      }),
+    )
+    .default([]),
+});
+
+const YoutubePlaylistResponseSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        id: z.string(),
+        snippet: z.object({
+          title: z.string(),
+          description: z.string().optional(),
+          publishedAt: z.string(),
+        }),
+        contentDetails: z.object({
+          itemCount: z.number().optional(),
+        }),
+      }),
+    )
+    .default([]),
+});
+
+const YoutubePlaylistItemsResponseSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        snippet: z.object({
+          resourceId: z.object({
+            videoId: z.string(),
+          }),
+          title: z.string(),
+          description: z.string().optional(),
+          publishedAt: z.string(),
+          channelId: z.string().optional(),
+          channelTitle: z.string().optional(),
+          videoOwnerChannelId: z.string().optional(),
+          videoOwnerChannelTitle: z.string().optional(),
+        }),
+      }),
+    )
+    .default([]),
+});
 
 export interface ChannelSearchResult {
   channelId: string;
@@ -34,11 +154,11 @@ export interface ChannelDetails {
 export interface OfficialChannelResult {
   officialChannelId: string;
   title: string;
-  customUrl: string | null;
+  customUrl?: string;
   description: string;
-  thumbnail: string | undefined;
-  subscriberCount: number | null;
-  videoCount: number | null;
+  thumbnail?: string;
+  subscriberCount?: number;
+  videoCount?: number;
   videosAnalyzed: number;
   confidence: number;
 }
@@ -62,7 +182,7 @@ export class YoutubeService {
         );
       }
 
-      return (await response.json()) as OembedDataDto;
+      return YoutubeOembedSchema.parse(await response.json());
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -97,14 +217,15 @@ export class YoutubeService {
         );
       }
 
-      const searchData = await searchResponse.json();
+      const searchJson: unknown = await searchResponse.json();
+      const searchData = YoutubeSearchResponseSchema.parse(searchJson);
 
-      if (!searchData.items || searchData.items.length === 0) {
+      if (searchData.items.length === 0) {
         return [];
       }
 
       // 2. 채널 ID 목록 추출
-      const channelIds = searchData.items.map((item: any) => item.id.channelId);
+      const channelIds = searchData.items.map((item) => item.id.channelId);
 
       // 3. Channels API로 상세 정보 가져오기
       const channelsUrl = `${this.API_BASE_URL}/channels?part=snippet,statistics&id=${channelIds.join(",")}&key=${this.API_KEY}`;
@@ -117,28 +238,29 @@ export class YoutubeService {
         );
       }
 
-      const channelsData = await channelsResponse.json();
+      const channelsJson: unknown = await channelsResponse.json();
+      const channelsData = YoutubeChannelResponseSchema.parse(channelsJson);
 
-      if (!channelsData.items || channelsData.items.length === 0) {
+      if (channelsData.items.length === 0) {
         return [];
       }
 
       // 4. 결과 포맷팅
-      return channelsData.items.map((channel: any) => ({
+      return channelsData.items.map((channel) => ({
         channelId: channel.id,
         title: channel.snippet.title,
-        description: channel.snippet.description || "",
-        customUrl: channel.snippet.customUrl || null,
+        description: channel.snippet.description ?? "",
+        customUrl: channel.snippet.customUrl ?? undefined,
         thumbnail:
           channel.snippet.thumbnails.medium?.url ||
           channel.snippet.thumbnails.default?.url,
         subscriberCount: channel.statistics.subscriberCount
           ? parseInt(channel.statistics.subscriberCount, 10)
-          : null,
+          : undefined,
         videoCount: channel.statistics.videoCount
           ? parseInt(channel.statistics.videoCount, 10)
-          : null,
-        country: channel.snippet.country || null,
+          : undefined,
+        country: channel.snippet.country ?? undefined,
       }));
     } catch (error) {
       if (error instanceof HttpException) {
@@ -189,9 +311,9 @@ export class YoutubeService {
         );
       }
 
-      const data = await response.json();
+      const data = YoutubeChannelResponseSchema.parse(await response.json());
 
-      if (!data.items || data.items.length === 0) {
+      if (data.items.length === 0) {
         throw new HttpException("Channel not found", HttpStatus.NOT_FOUND);
       }
 
@@ -204,23 +326,26 @@ export class YoutubeService {
       return {
         channelId: channel.id,
         title: snippet.title,
-        description: snippet.description || "",
-        customUrl: snippet.customUrl || null,
+        description: snippet.description ?? "",
+        customUrl: snippet.customUrl ?? undefined,
         publishedAt: snippet.publishedAt,
-        country: snippet.country || null,
-        defaultLanguage: snippet.defaultLanguage || null,
-        thumbnailDefault: thumbnails.default?.url || null,
-        thumbnailMedium: thumbnails.medium?.url || null,
-        thumbnailHigh: thumbnails.high?.url || null,
+        country: snippet.country ?? undefined,
+        defaultLanguage: snippet.defaultLanguage ?? undefined,
+        thumbnailDefault: thumbnails.default?.url ?? undefined,
+        thumbnailMedium: thumbnails.medium?.url ?? undefined,
+        thumbnailHigh: thumbnails.high?.url ?? undefined,
         subscriberCount: statistics.subscriberCount
           ? parseInt(statistics.subscriberCount, 10)
-          : null,
+          : undefined,
         videoCount: statistics.videoCount
           ? parseInt(statistics.videoCount, 10)
-          : null,
-        viewCount: statistics.viewCount ? BigInt(statistics.viewCount) : null,
-        hiddenSubscriberCount: statistics.hiddenSubscriberCount || false,
-        uploadsPlaylistId: contentDetails.relatedPlaylists?.uploads || null,
+          : undefined,
+        viewCount: statistics.viewCount
+          ? BigInt(statistics.viewCount)
+          : undefined,
+        hiddenSubscriberCount: statistics.hiddenSubscriberCount ?? false,
+        uploadsPlaylistId:
+          contentDetails?.relatedPlaylists?.uploads ?? undefined,
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -363,17 +488,17 @@ export class YoutubeService {
         );
       }
 
-      const data = await response.json();
+      const data = YoutubePlaylistResponseSchema.parse(await response.json());
 
-      if (!data.items || data.items.length === 0) {
+      if (data.items.length === 0) {
         return [];
       }
 
-      return data.items.map((item: any) => ({
+      return data.items.map((item) => ({
         playlistId: item.id,
         title: item.snippet.title,
-        description: item.snippet.description || "",
-        itemCount: item.contentDetails.itemCount || 0,
+        description: item.snippet.description ?? "",
+        itemCount: item.contentDetails.itemCount ?? 0,
         publishedAt: item.snippet.publishedAt,
       }));
     } catch (error) {
@@ -399,7 +524,7 @@ export class YoutubeService {
       title: string;
       description: string;
       publishedAt: string;
-      thumbnailUrl: string | null;
+      thumbnailUrl?: string;
     }[]
   > {
     if (!this.API_KEY) {
@@ -432,7 +557,7 @@ export class YoutubeService {
         title: video.title,
         description: video.description,
         publishedAt: video.publishedAt,
-        thumbnailUrl: null, // playlistItems에는 썸네일이 포함되어 있지만 여기선 생략
+        thumbnailUrl: undefined,
       }));
     } catch (error) {
       if (error instanceof HttpException) {
@@ -487,18 +612,21 @@ export class YoutubeService {
         );
       }
 
-      const data = await response.json();
+      const data = YoutubePlaylistItemsResponseSchema.parse(
+        await response.json(),
+      );
 
-      if (!data.items || data.items.length === 0) {
+      if (data.items.length === 0) {
         return [];
       }
 
-      return data.items.map((item: any) => ({
+      return data.items.map((item) => ({
         videoId: item.snippet.resourceId.videoId,
         title: item.snippet.title,
-        description: item.snippet.description || "",
+        description: item.snippet.description ?? "",
         publishedAt: item.snippet.publishedAt,
-        channelId: item.snippet.videoOwnerChannelId || item.snippet.channelId,
+        channelId:
+          item.snippet.videoOwnerChannelId || item.snippet.channelId || "",
         channelTitle:
           item.snippet.videoOwnerChannelTitle || item.snippet.channelTitle,
       }));
