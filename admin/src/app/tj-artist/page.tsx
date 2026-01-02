@@ -2,6 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import * as transliteration from "transliteration";
+
+const rawSlugify =
+  (transliteration as any).slugify ??
+  (transliteration as any).default?.slugify ??
+  ((value: string) => value);
+const slugify = (value: string, options?: unknown) =>
+  rawSlugify(value, options);
 
 import {
   checkArtistConflicts,
@@ -71,6 +79,8 @@ export default function TjArtistPage() {
   const [createThumbnailDefault, setCreateThumbnailDefault] = useState("");
   const [createThumbnailMedium, setCreateThumbnailMedium] = useState("");
   const [createThumbnailHigh, setCreateThumbnailHigh] = useState("");
+  const [createYoutubeMain, setCreateYoutubeMain] = useState("");
+  const [createYoutubeTopic, setCreateYoutubeTopic] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [conflictChecking, setConflictChecking] = useState(false);
@@ -79,6 +89,7 @@ export default function TjArtistPage() {
     nameKo: false,
     alias: false,
   });
+  const [aliasManuallyEdited, setAliasManuallyEdited] = useState(false);
   const [sameNameArtists, setSameNameArtists] = useState<NamedArtistSummary[]>(
     [],
   );
@@ -284,6 +295,27 @@ export default function TjArtistPage() {
     return () => clearTimeout(handler);
   }, [createDialogOpen, createName, createNameKo, createAlias]);
 
+  useEffect(() => {
+    if (!createDialogOpen || aliasManuallyEdited) return;
+    const source =
+      createName.trim() ||
+      createNameKo.trim() ||
+      selectedArtistSummary?.name?.trim() ||
+      "";
+    if (!source) return;
+    const suggested = slugify(source, { lowercase: true, separator: "-" });
+    if (suggested && suggested !== createAlias) {
+      setCreateAlias(suggested);
+    }
+  }, [
+    createDialogOpen,
+    aliasManuallyEdited,
+    createName,
+    createNameKo,
+    selectedArtistSummary?.name,
+    createAlias,
+  ]);
+
   const handleOpenCreateDialog = () => {
     const baseName = selectedArtistSummary?.name ?? "";
     setCreateName(baseName);
@@ -293,7 +325,10 @@ export default function TjArtistPage() {
     setCreateThumbnailDefault("");
     setCreateThumbnailMedium("");
     setCreateThumbnailHigh("");
+    setCreateYoutubeMain("");
+    setCreateYoutubeTopic("");
     setConflicts({ name: false, nameKo: false, alias: false });
+    setAliasManuallyEdited(false);
     setCreateError(null);
     setCreateDialogOpen(true);
   };
@@ -325,6 +360,8 @@ export default function TjArtistPage() {
         thumbnailDefault: createThumbnailDefault,
         thumbnailMedium: createThumbnailMedium,
         thumbnailHigh: createThumbnailHigh,
+        youtubeMainUrl: createYoutubeMain,
+        youtubeTopicUrl: createYoutubeTopic,
       });
       await fetchRealArtists();
       setSelectedRealArtistId(created.id);
@@ -400,6 +437,20 @@ export default function TjArtistPage() {
         selectedRealArtist.id
       }`
     : null;
+  const youtubeSearchQueryName =
+    createName.trim() || selectedArtistSummary?.name?.trim() || "";
+  const youtubeSearchUrl = youtubeSearchQueryName
+    ? `https://music.youtube.com/search?q=${encodeURIComponent(
+        youtubeSearchQueryName,
+      )}`
+    : null;
+  const englishSearchName =
+    createNameKo.trim() || selectedArtistSummary?.nameKo?.trim() || "";
+  const googleEnglishSearchUrl = englishSearchName
+    ? `https://www.google.com/search?q=${encodeURIComponent(
+        englishSearchName,
+      )}+${encodeURIComponent("영어로")}`
+    : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 p-6 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
@@ -410,8 +461,8 @@ export default function TjArtistPage() {
         </p>
       </div>
 
-      <div className="flex flex-1 flex-col gap-6 lg:flex-row">
-        <div className="flex w-full flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:w-80 lg:flex-none xl:w-96">
+      <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:overflow-hidden">
+        <div className="flex w-full flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:w-80 lg:flex-none lg:max-h-[calc(100vh-200px)] lg:overflow-hidden xl:w-96">
           <div className="space-y-3">
             <input
               type="search"
@@ -494,7 +545,7 @@ export default function TjArtistPage() {
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex flex-1 flex-col rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900 lg:max-h-[calc(100vh-200px)] lg:overflow-hidden">
           {!selectedArtistSummary ? (
             <div className="flex flex-1 items-center justify-center text-sm text-zinc-500">
               표시할 아티스트가 없습니다.
@@ -672,7 +723,7 @@ export default function TjArtistPage() {
           )}
         </div>
 
-        <div className="flex w-full flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:w-80 lg:flex-none xl:w-96">
+        <div className="flex w-full flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:w-80 lg:flex-none lg:max-h-[calc(100vh-200px)] lg:overflow-hidden xl:w-96">
           <div>
             <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
               실제 Artist
@@ -847,12 +898,34 @@ export default function TjArtistPage() {
               </div>
 
               <div className="sm:col-span-1">
-                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  별칭 (선택)
-                </label>
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    별칭 (선택)
+                  </label>
+                  <a
+                    href={googleEnglishSearchUrl ?? "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`text-xs font-semibold ${
+                      googleEnglishSearchUrl
+                        ? "text-sky-600 hover:underline dark:text-sky-400"
+                        : "cursor-not-allowed text-zinc-400 dark:text-zinc-600"
+                    }`}
+                    onClick={(event) => {
+                      if (!googleEnglishSearchUrl) {
+                        event.preventDefault();
+                      }
+                    }}
+                  >
+                    영어 검색
+                  </a>
+                </div>
                 <input
                   value={createAlias}
-                  onChange={(event) => setCreateAlias(event.target.value)}
+                  onChange={(event) => {
+                    setAliasManuallyEdited(true);
+                    setCreateAlias(event.target.value);
+                  }}
                   className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-900 ${
                     conflicts.alias
                       ? "border-red-500 focus:border-red-500 focus:ring-red-500/30"
@@ -919,6 +992,55 @@ export default function TjArtistPage() {
                     placeholder="https://..."
                   />
                 </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    메인 YouTube 링크 (선택)
+                  </label>
+                  <a
+                    href={youtubeSearchUrl ?? "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`text-xs font-semibold ${
+                      youtubeSearchUrl
+                        ? "text-sky-600 hover:underline dark:text-sky-400"
+                        : "cursor-not-allowed text-zinc-400 dark:text-zinc-600"
+                    }`}
+                    onClick={(event) => {
+                      if (!youtubeSearchUrl) {
+                        event.preventDefault();
+                      }
+                    }}
+                  >
+                    유튜브 검색
+                  </a>
+                </div>
+                <input
+                  value={createYoutubeMain}
+                  onChange={(event) => setCreateYoutubeMain(event.target.value)}
+                  className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:ring-sky-500/30 dark:border-zinc-700 dark:bg-zinc-900"
+                  placeholder="https://www.youtube.com/@channel 또는 채널 ID"
+                />
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  입력하면 YouTube API로 채널을 조회해 메인 채널로 저장합니다.
+                </p>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  토픽 YouTube 링크 (선택)
+                </label>
+                <input
+                  value={createYoutubeTopic}
+                  onChange={(event) => setCreateYoutubeTopic(event.target.value)}
+                  className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:ring-sky-500/30 dark:border-zinc-700 dark:bg-zinc-900"
+                  placeholder="https://www.youtube.com/@artist-topic"
+                />
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  토픽 URL/ID 입력 시 자동으로 토픽 채널 정보를 저장합니다.
+                </p>
               </div>
             </div>
 
