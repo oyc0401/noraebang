@@ -74,6 +74,37 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Link>
+
+          <Link
+            href="/song"
+            className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          >
+            <div className="flex items-center gap-4">
+              <div className="rounded-lg bg-emerald-100 p-3 dark:bg-emerald-900/30">
+                <svg
+                  className="h-6 w-6 text-emerald-600 dark:text-emerald-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 18V5l12-3v13M9 18c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
+                  곡 상세 관리
+                </h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  곡 정보, 아티스트, 노래방 필터
+                </p>
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
     </div>
