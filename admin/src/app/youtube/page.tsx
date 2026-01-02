@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   FormEvent,
   useCallback,
@@ -277,13 +278,35 @@ export default function YoutubeAdminPage() {
     <div className="min-h-screen bg-zinc-50">
       <div className="mx-auto max-w-7xl px-4 py-8">
         <header className="mb-6 flex flex-col gap-2">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-red-500">
-              YouTube
-            </p>
-            <h1 className="text-3xl font-bold text-zinc-900">
-              유튜브 채널 관리
-            </h1>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900"
+              aria-label="관리자 대시보드로 돌아가기"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-5 w-5"
+              >
+                <path
+                  d="M15 19l-7-7 7-7"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Link>
+            <div>
+              <p className="text-sm font-medium uppercase tracking-wide text-red-500">
+                YouTube
+              </p>
+              <h1 className="text-3xl font-bold text-zinc-900">
+                유튜브 채널 관리
+              </h1>
+            </div>
           </div>
           <p className="text-sm text-zinc-600">
             아티스트별 메인/토픽 채널을 등록하고 구독자 수, 채널 정보를 한눈에
