@@ -47,6 +47,37 @@ export default function AdminDashboard() {
           </Link>
 
           <Link
+            href="/tj-artist"
+            className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          >
+            <div className="flex items-center gap-4">
+              <div className="rounded-lg bg-amber-100 p-3 dark:bg-amber-900/30">
+                <svg
+                  className="h-6 w-6 text-amber-600 dark:text-amber-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
+                  TJ 아티스트
+                </h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  TjSong 기반 아티스트/곡 상태 확인
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
             href="/youtube"
             className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
           >
