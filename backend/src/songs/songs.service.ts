@@ -1,131 +1,125 @@
 import { Injectable } from "@nestjs/common";
 import { getArtistAliases } from "../config/artist-aliases";
 import { PrismaService } from "../prisma/prisma.service";
+import { SongDto } from "./dto/song-response.dto";
 
 @Injectable()
 export class SongsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
-    return this.prisma.song.findMany({
-      include: {
-        karaokeSongs: true,
-        artistSongs: {
-          orderBy: { order: "asc" },
-        },
+  private readonly songDtoSelect = {
+    id: true,
+    title: true,
+    titleKo: true,
+    karaokeSongs: {
+      select: {
+        provider: true,
+        karaokeNo: true,
       },
+    },
+    artistSongs: {
+      select: {
+        artistId: true,
+        role: true,
+      },
+    },
+  };
+
+  private mapToDto(song: {
+    id: number;
+    title: string;
+    titleKo: string | null;
+    karaokeSongs: { provider: string; karaokeNo: string }[];
+    artistSongs: { artistId: number; role: string | null }[];
+  }): SongDto {
+    return {
+      id: song.id,
+      title: song.title,
+      titleKo: song.titleKo,
+      artists: song.artistSongs.map((as) => ({
+        artistId: as.artistId,
+        role: as.role,
+      })),
+      karaokeSongs: song.karaokeSongs,
+    };
+  }
+
+  async findAll(): Promise<SongDto[]> {
+    const songs = await this.prisma.song.findMany({
+      select: this.songDtoSelect,
       orderBy: { id: "asc" },
     });
+
+    return songs.map((song) => this.mapToDto(song));
   }
 
-  async findById(id: number) {
-    return this.prisma.song.findUnique({
+  async findById(id: number): Promise<SongDto | null> {
+    const song = await this.prisma.song.findUnique({
       where: { id },
-      include: {
-        karaokeSongs: true,
-        artistSongs: {
-          orderBy: { order: "asc" },
-        },
-      },
+      select: this.songDtoSelect,
     });
+
+    if (!song) return null;
+
+    return this.mapToDto(song);
   }
 
-  async searchByTitle(query: string) {
+  async searchByTitle(query: string): Promise<SongDto[]> {
     if (!query.trim()) {
       return this.findAll();
     }
 
     const lowerQuery = query.toLowerCase();
 
-    return this.prisma.song.findMany({
+    const songs = await this.prisma.song.findMany({
       where: {
         OR: [
           { title: { contains: lowerQuery, mode: "insensitive" } },
           { titleKo: { contains: lowerQuery, mode: "insensitive" } },
         ],
       },
-      include: {
-        karaokeSongs: true,
-        artistSongs: {
-          orderBy: { order: "asc" },
-        },
-      },
+      select: this.songDtoSelect,
       orderBy: { id: "asc" },
     });
+
+    return songs.map((song) => this.mapToDto(song));
   }
 
-  async findByArtistId(artistId: number) {
+  async findByArtistId(artistId: number): Promise<SongDto[]> {
     // 1. 주어진 artistId로 Artist 조회
     const artist = await this.prisma.artist.findUnique({
       where: { id: artistId },
     });
 
-    if (!artist || !artist.alias) {
-      // alias가 없으면 기본 동작
-      return this.prisma.song.findMany({
-        where: {
-          artistSongs: {
-            some: {
-              artistId,
-            },
-          },
-        },
-        include: {
-          karaokeSongs: true,
-          artistSongs: {
-            orderBy: { order: "asc" },
-          },
-        },
-        orderBy: { id: "asc" },
-      });
+    let targetArtistIds: number[] = [artistId];
+
+    // 2. alias가 있고 별칭 그룹에 속한 경우, 모든 별칭의 아티스트 ID 가져오기
+    if (artist?.alias) {
+      const allAliases = getArtistAliases(artist.alias);
+      if (allAliases.length > 1) {
+        const aliasArtists = await this.prisma.artist.findMany({
+          where: { alias: { in: allAliases } },
+          select: { id: true },
+          orderBy: { id: "asc" },
+        });
+        targetArtistIds = aliasArtists.map((a) => a.id);
+      }
     }
 
-    // 2. 별칭 그룹의 모든 별칭 가져오기
-    const allAliases = getArtistAliases(artist.alias);
-
-    // 3. 별칭이 하나뿐이면 (그룹에 속하지 않음) 기본 동작
-    if (allAliases.length === 1) {
-      return this.prisma.song.findMany({
-        where: {
-          artistSongs: {
-            some: {
-              artistId,
-            },
-          },
-        },
-        include: {
-          karaokeSongs: true,
-          artistSongs: {
-            orderBy: { order: "asc" },
-          },
-        },
-        orderBy: { id: "asc" },
-      });
-    }
-
-    // 4. 모든 별칭의 아티스트 조회
-    const aliasArtists = await this.prisma.artist.findMany({
-      where: { alias: { in: allAliases } },
-      orderBy: { id: "asc" },
-    });
-    const artistIds = aliasArtists.map((a) => a.id);
-
-    // 5. 모든 아티스트의 곡 조회
-    return this.prisma.song.findMany({
+    // 3. 곡 조회 (필요한 필드만 select)
+    const songs = await this.prisma.song.findMany({
       where: {
         artistSongs: {
           some: {
-            artistId: { in: artistIds },
+            artistId: { in: targetArtistIds },
           },
         },
       },
-      include: {
-        karaokeSongs: true,
-        artistSongs: {
-          orderBy: { order: "asc" },
-        },
-      },
+      select: this.songDtoSelect,
       orderBy: { id: "asc" },
     });
+
+    // 4. DTO로 변환
+    return songs.map((song) => this.mapToDto(song));
   }
 }

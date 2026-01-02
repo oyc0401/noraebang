@@ -8,6 +8,14 @@ export class KaraokeSongDto {
   karaokeNo: string;
 }
 
+export class ArtistSongDto {
+  @ApiProperty({ example: 1 })
+  artistId: number;
+
+  @ApiProperty({ example: "MAIN", required: false, enum: ["MAIN", "FEATURING", "PRODUCER"] })
+  role?: string | null;
+}
+
 export class SongDto {
   @ApiProperty({ example: 101 })
   id: number;
@@ -18,8 +26,8 @@ export class SongDto {
   @ApiProperty({ example: "밤을 달리다", required: false })
   titleKo?: string | null;
 
-  @ApiProperty({ example: [1, 2], type: [Number] })
-  artistIds: number[];
+  @ApiProperty({ type: [ArtistSongDto] })
+  artists: ArtistSongDto[];
 
   @ApiProperty({ type: [KaraokeSongDto], required: false })
   karaokeSongs?: KaraokeSongDto[];

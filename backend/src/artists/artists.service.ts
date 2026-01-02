@@ -1,6 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import type { Artist, Prisma, YoutubeChannel } from "@prisma/client";
+import {
+  ARTIST_ALIAS_GROUPS,
+  getArtistAliases,
+} from "../config/artist-aliases";
 import { PrismaService } from "../prisma/prisma.service";
+import { ArtistDetailsDto } from "./dto/artist-response.dto";
 
 export type ArtistDetails = Artist & {
   youtubeChannel: YoutubeChannel | null;
@@ -53,10 +58,28 @@ export class ArtistsService {
 
   async findAllDetails(
     sort: ArtistSortOption = DEFAULT_ARTIST_SORT,
-  ): Promise<ArtistDetails[]> {
-    return this.prisma.artist.findMany({
-      include: {
-        youtubeChannel: true,
+  ): Promise<ArtistDetailsDto[]> {
+    const artists = await this.prisma.artist.findMany({
+      select: {
+        id: true,
+        name: true,
+        nameKo: true,
+        alias: true,
+        thumbnailDefault: true,
+        thumbnailMedium: true,
+        thumbnailHigh: true,
+        youtubeChannel: {
+          select: {
+            channelId: true,
+            title: true,
+            description: true,
+            customUrl: true,
+            subscriberCount: true,
+            videoCount: true,
+            thumbnailDefault: true,
+            thumbnailMedium: true,
+          },
+        },
         _count: {
           select: {
             artistSongs: true,
@@ -64,6 +87,51 @@ export class ArtistsService {
         },
       },
       orderBy: ARTIST_SORT_ORDER_MAP[sort],
+    });
+
+    return artists.map((artist) => {
+      let aliasGroup: { groupId: string; aliases: string[] } | null = null;
+
+      const artistAlias = artist.alias;
+      if (artistAlias) {
+        const aliases = getArtistAliases(artistAlias);
+        if (aliases.length > 1) {
+          const group = ARTIST_ALIAS_GROUPS.find((item) =>
+            item.aliases.includes(artistAlias),
+          );
+          if (group) {
+            aliasGroup = {
+              groupId: group.groupId,
+              aliases,
+            };
+          }
+        }
+      }
+
+      return {
+        id: artist.id,
+        name: artist.name,
+        nameKo: artist.nameKo,
+        alias: artist.alias,
+        thumbnailDefault: artist.thumbnailDefault,
+        thumbnailMedium: artist.thumbnailMedium,
+        thumbnailHigh: artist.thumbnailHigh,
+        songCount: artist._count.artistSongs,
+        aliasGroup,
+        youtube: artist.youtubeChannel
+          ? {
+              channelId: artist.youtubeChannel.channelId,
+              title: artist.youtubeChannel.title,
+              description: artist.youtubeChannel.description,
+              customUrl: artist.youtubeChannel.customUrl,
+              subscriberCount: artist.youtubeChannel.subscriberCount,
+              videoCount: artist.youtubeChannel.videoCount,
+              thumbnail:
+                artist.youtubeChannel.thumbnailMedium ||
+                artist.youtubeChannel.thumbnailDefault,
+            }
+          : null,
+      };
     });
   }
 

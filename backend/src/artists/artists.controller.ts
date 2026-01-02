@@ -14,10 +14,6 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
-import {
-  ARTIST_ALIAS_GROUPS,
-  getArtistAliases,
-} from "../config/artist-aliases";
 import { ApiResponse } from "../dto/api-response.dto";
 import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
 import { YoutubeService } from "../youtube/youtube.service";
@@ -91,53 +87,7 @@ export class ArtistsController {
   ): Promise<ArtistDetailsListResponseDto> {
     const sortOption = isArtistSortOption(sort) ? sort : DEFAULT_ARTIST_SORT;
     const artists = await this.artistsService.findAllDetails(sortOption);
-
-    // 응답 포맷: 구독자 수와 미디엄 썸네일 포함
-    const formatted = artists.map((artist) => {
-      let aliasGroup: { groupId: string; aliases: string[] } | null = null;
-      const aliasValue = artist.alias;
-      if (aliasValue) {
-        const aliases = getArtistAliases(aliasValue);
-        if (aliases.length > 1) {
-          const group = ARTIST_ALIAS_GROUPS.find((item) =>
-            item.aliases.includes(aliasValue),
-          );
-          if (group) {
-            aliasGroup = {
-              groupId: group.groupId,
-              aliases,
-            };
-          }
-        }
-      }
-
-      return {
-        id: artist.id,
-        name: artist.name,
-        nameKo: artist.nameKo,
-        alias: artist.alias,
-        thumbnailDefault: artist.thumbnailDefault,
-        thumbnailMedium: artist.thumbnailMedium,
-        thumbnailHigh: artist.thumbnailHigh,
-        songCount: artist._count.artistSongs,
-        aliasGroup,
-        youtube: artist.youtubeChannel
-          ? {
-              channelId: artist.youtubeChannel.channelId,
-              title: artist.youtubeChannel.title,
-              description: artist.youtubeChannel.description,
-              customUrl: artist.youtubeChannel.customUrl,
-              subscriberCount: artist.youtubeChannel.subscriberCount,
-              videoCount: artist.youtubeChannel.videoCount,
-              thumbnail:
-                artist.youtubeChannel.thumbnailMedium ||
-                artist.youtubeChannel.thumbnailDefault,
-            }
-          : null,
-      };
-    });
-
-    return ApiResponse.success(formatted);
+    return ApiResponse.success(artists);
   }
 
   @Get(":identifier")

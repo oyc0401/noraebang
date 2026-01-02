@@ -14,7 +14,6 @@ import {
 import { ApiResponse } from "../dto/api-response.dto";
 import {
   SongDetailResponseDto,
-  SongDto,
   SongListResponseDto,
 } from "./dto/song-response.dto";
 import { SongsService } from "./songs.service";
@@ -39,18 +38,7 @@ export class SongsController {
     @Param("artistId", ParseIntPipe) artistId: number,
   ): Promise<SongListResponseDto> {
     const songs = await this.songsService.findByArtistId(artistId);
-    const mapped: SongDto[] = songs.map((song) => ({
-      id: song.id,
-      title: song.title,
-      titleKo: song.titleKo,
-      artistIds: song.artistSongs.map((as) => as.artistId),
-      karaokeSongs: song.karaokeSongs.map(({ provider, karaokeNo }) => ({
-        provider,
-        karaokeNo,
-      })),
-    }));
-
-    return ApiResponse.success(mapped);
+    return ApiResponse.success(songs);
   }
 
   @Get(":id")
@@ -73,17 +61,6 @@ export class SongsController {
       throw new NotFoundException("Song not found");
     }
 
-    const mapped: SongDto = {
-      id: song.id,
-      title: song.title,
-      titleKo: song.titleKo,
-      artistIds: song.artistSongs.map((as) => as.artistId),
-      karaokeSongs: song.karaokeSongs.map(({ provider, karaokeNo }) => ({
-        provider,
-        karaokeNo,
-      })),
-    };
-
-    return ApiResponse.success(mapped);
+    return ApiResponse.success(song);
   }
 }

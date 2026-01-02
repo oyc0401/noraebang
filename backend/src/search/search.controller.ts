@@ -6,12 +6,9 @@ import {
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
 import { ApiResponse } from "../dto/api-response.dto";
-import { SongDto } from "../songs/dto/song-response.dto";
 import { SongsService } from "../songs/songs.service";
 import { YoutubeService } from "../youtube/youtube.service";
 import { YoutubeSongSearchResponseDto } from "./dto/youtube-song-search-response.dto";
-
-type SongWithRelations = Awaited<ReturnType<SongsService["findAll"]>>[number];
 
 @ApiTags("Search")
 @Controller("search")
@@ -60,21 +57,6 @@ export class SearchController {
       return matchesTitle || matchesTitleKo;
     });
 
-    const song = matchedSong ? this.mapSongToDto(matchedSong) : null;
-
-    return ApiResponse.success(song, youtube.title);
-  }
-
-  private mapSongToDto(song: SongWithRelations): SongDto {
-    return {
-      id: song.id,
-      title: song.title,
-      titleKo: song.titleKo,
-      artistIds: song.artistSongs.map((as) => as.artistId),
-      karaokeSongs: song.karaokeSongs.map(({ provider, karaokeNo }) => ({
-        provider,
-        karaokeNo,
-      })),
-    };
+    return ApiResponse.success(matchedSong ?? null, youtube.title);
   }
 }
