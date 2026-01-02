@@ -3,11 +3,15 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import {
+  createKaraokeSong,
+  deleteKaraokeSong,
   getArtists,
   getSongsByArtist,
   updateArtistAlias,
   updateArtistName,
   updateArtistNameKo,
+  updateKaraokeSong,
+  updateSongTitle,
   updateYoutubeChannel,
 } from "./actions";
 
@@ -57,6 +61,24 @@ export default function AdminArtistsPage() {
   const [aliasInput, setAliasInput] = useState("");
   const [aliasSaving, setAliasSaving] = useState(false);
   const [aliasError, setAliasError] = useState<string | null>(null);
+
+  // 곡 편집 관련
+  const [editingSong, setEditingSong] = useState<Song | null>(null);
+  const [songMenuOpen, setSongMenuOpen] = useState<number | null>(null);
+  const songMenuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  const [showSongTitleDialog, setShowSongTitleDialog] = useState(false);
+  const [songTitleInput, setSongTitleInput] = useState("");
+  const [songTitleKoInput, setSongTitleKoInput] = useState("");
+  const [songTitleSaving, setSongTitleSaving] = useState(false);
+  const [songTitleError, setSongTitleError] = useState<string | null>(null);
+
+  const [showKaraokeDialog, setShowKaraokeDialog] = useState(false);
+  const [karaokeTjInput, setKaraokeTjInput] = useState("");
+  const [karaokeKyInput, setKaraokeKyInput] = useState("");
+  const [karaokeJoysoundInput, setKaraokeJoysoundInput] = useState("");
+  const [karaokeSaving, setKaraokeSaving] = useState(false);
+  const [karaokeError, setKaraokeError] = useState<string | null>(null);
 
   // YouTube 채널 관리
   const [showYoutubeSection, setShowYoutubeSection] = useState(false);
@@ -220,6 +242,20 @@ export default function AdminArtistsPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [aliasMenuOpen]);
+
+  useEffect(() => {
+    if (songMenuOpen === null) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const ref = songMenuRefs.current.get(songMenuOpen);
+      if (ref && !ref.contains(event.target as Node)) {
+        setSongMenuOpen(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [songMenuOpen]);
 
   const extractChannelId = (url: string): string | null => {
     const channelMatch = url.match(/youtube\.com\/channel\/([a-zA-Z0-9_-]+)/);
@@ -413,6 +449,117 @@ export default function AdminArtistsPage() {
       setAliasError(error.message ?? "별칭 저장 중 오류가 발생했습니다.");
     } finally {
       setAliasSaving(false);
+    }
+  };
+
+  const handleSongTitleSave = async () => {
+    if (!editingSong) return;
+
+    const trimmedTitle = songTitleInput.trim();
+    if (!trimmedTitle) {
+      setSongTitleError("제목을 입력해주세요.");
+      return;
+    }
+
+    setSongTitleSaving(true);
+    setSongTitleError(null);
+
+    try {
+      await updateSongTitle(
+        editingSong.id,
+        trimmedTitle,
+        songTitleKoInput.trim() || undefined,
+      );
+
+      setMessage({
+        type: "success",
+        text: `✅ 제목이 "${trimmedTitle}"로 저장되었습니다.`,
+      });
+
+      if (selectedArtist) {
+        const updatedSongs = await getSongsByArtist(selectedArtist.id);
+        setSongs(updatedSongs);
+      }
+
+      setShowSongTitleDialog(false);
+      setSongMenuOpen(null);
+    } catch (error: any) {
+      setSongTitleError(error.message ?? "제목 저장 중 오류가 발생했습니다.");
+    } finally {
+      setSongTitleSaving(false);
+    }
+  };
+
+  const handleKaraokeSave = async () => {
+    if (!editingSong) return;
+
+    setKaraokeSaving(true);
+    setKaraokeError(null);
+
+    try {
+      const existingTj = editingSong.karaokeSongs.find((k) => k.provider === "TJ");
+      const existingKy = editingSong.karaokeSongs.find((k) => k.provider === "KY");
+      const existingJoysound = editingSong.karaokeSongs.find(
+        (k) => k.provider === "JOYSOUND",
+      );
+
+      // TJ 처리
+      if (karaokeTjInput.trim()) {
+        if (existingTj) {
+          await updateKaraokeSong(editingSong.id, "TJ", karaokeTjInput.trim());
+        } else {
+          await createKaraokeSong(editingSong.id, "TJ", karaokeTjInput.trim());
+        }
+      } else if (existingTj) {
+        await deleteKaraokeSong(editingSong.id, "TJ");
+      }
+
+      // KY 처리
+      if (karaokeKyInput.trim()) {
+        if (existingKy) {
+          await updateKaraokeSong(editingSong.id, "KY", karaokeKyInput.trim());
+        } else {
+          await createKaraokeSong(editingSong.id, "KY", karaokeKyInput.trim());
+        }
+      } else if (existingKy) {
+        await deleteKaraokeSong(editingSong.id, "KY");
+      }
+
+      // JOYSOUND 처리
+      if (karaokeJoysoundInput.trim()) {
+        if (existingJoysound) {
+          await updateKaraokeSong(
+            editingSong.id,
+            "JOYSOUND",
+            karaokeJoysoundInput.trim(),
+          );
+        } else {
+          await createKaraokeSong(
+            editingSong.id,
+            "JOYSOUND",
+            karaokeJoysoundInput.trim(),
+          );
+        }
+      } else if (existingJoysound) {
+        await deleteKaraokeSong(editingSong.id, "JOYSOUND");
+      }
+
+      setMessage({
+        type: "success",
+        text: `✅ 노래방 번호가 저장되었습니다.`,
+      });
+
+      if (selectedArtist) {
+        const updatedSongs = await getSongsByArtist(selectedArtist.id);
+        setSongs(updatedSongs);
+      }
+
+      setShowKaraokeDialog(false);
+      setSongMenuOpen(null);
+    } catch (error: any) {
+      setKaraokeError(error.message ?? "노래방 번호 저장 중 오류가 발생했습니다.");
+    } finally {
+      setKaraokeSaving(false);
     }
   };
 
@@ -902,6 +1049,83 @@ export default function AdminArtistsPage() {
                               </div>
                             )}
                         </div>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSongMenuOpen(
+                                songMenuOpen === song.id ? null : song.id,
+                              )
+                            }
+                            className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                            style={{ cursor: "pointer" }}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              className="h-5 w-5 text-zinc-500 dark:text-zinc-400"
+                              aria-hidden="true"
+                            >
+                              <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                            </svg>
+                          </button>
+                          {songMenuOpen === song.id && (
+                            <div
+                              ref={(el) => {
+                                if (el) {
+                                  songMenuRefs.current.set(song.id, el);
+                                } else {
+                                  songMenuRefs.current.delete(song.id);
+                                }
+                              }}
+                              className="absolute right-0 mt-2 w-48 rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 z-20"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingSong(song);
+                                  setSongTitleInput(song.title);
+                                  setSongTitleKoInput(song.titleKo ?? "");
+                                  setSongTitleError(null);
+                                  setShowSongTitleDialog(true);
+                                  setSongMenuOpen(null);
+                                }}
+                                className="block w-full px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                style={{ cursor: "pointer" }}
+                              >
+                                제목 편집
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingSong(song);
+                                  const tj = song.karaokeSongs.find(
+                                    (k) => k.provider === "TJ",
+                                  );
+                                  const ky = song.karaokeSongs.find(
+                                    (k) => k.provider === "KY",
+                                  );
+                                  const joysound = song.karaokeSongs.find(
+                                    (k) => k.provider === "JOYSOUND",
+                                  );
+                                  setKaraokeTjInput(tj?.karaokeNo ?? "");
+                                  setKaraokeKyInput(ky?.karaokeNo ?? "");
+                                  setKaraokeJoysoundInput(
+                                    joysound?.karaokeNo ?? "",
+                                  );
+                                  setKaraokeError(null);
+                                  setShowKaraokeDialog(true);
+                                  setSongMenuOpen(null);
+                                }}
+                                className="block w-full px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                style={{ cursor: "pointer" }}
+                              >
+                                노래방번호 편집
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1127,6 +1351,202 @@ export default function AdminArtistsPage() {
                   style={{ cursor: "pointer" }}
                 >
                   {aliasSaving ? "저장 중..." : "저장"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showSongTitleDialog && editingSong && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                제목 편집
+              </h3>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                곡 제목을 수정하세요.
+              </p>
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label
+                    htmlFor="song-title-input"
+                    className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    제목
+                  </label>
+                  <input
+                    id="song-title-input"
+                    type="text"
+                    value={songTitleInput}
+                    onChange={(e) => {
+                      setSongTitleInput(e.target.value);
+                      if (songTitleError) setSongTitleError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSongTitleSave();
+                      }
+                    }}
+                    placeholder="夜に駆ける"
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                    style={{ cursor: "text" }}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="song-titleko-input"
+                    className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    한글 제목 (선택)
+                  </label>
+                  <input
+                    id="song-titleko-input"
+                    type="text"
+                    value={songTitleKoInput}
+                    onChange={(e) => {
+                      setSongTitleKoInput(e.target.value);
+                      if (songTitleError) setSongTitleError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSongTitleSave();
+                      }
+                    }}
+                    placeholder="밤을 달리다"
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                    style={{ cursor: "text" }}
+                  />
+                </div>
+                {songTitleError && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {songTitleError}
+                  </p>
+                )}
+              </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSongTitleDialog(false);
+                    setSongTitleError(null);
+                  }}
+                  className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  style={{ cursor: "pointer" }}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSongTitleSave}
+                  disabled={songTitleSaving}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
+                  style={{ cursor: "pointer" }}
+                >
+                  {songTitleSaving ? "저장 중..." : "저장"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showKaraokeDialog && editingSong && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                노래방번호 편집
+              </h3>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                노래방 번호를 수정하세요. 빈 값으로 두면 삭제됩니다.
+              </p>
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label
+                    htmlFor="karaoke-tj-input"
+                    className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    TJ
+                  </label>
+                  <input
+                    id="karaoke-tj-input"
+                    type="text"
+                    value={karaokeTjInput}
+                    onChange={(e) => {
+                      setKaraokeTjInput(e.target.value);
+                      if (karaokeError) setKaraokeError(null);
+                    }}
+                    placeholder=""
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                    style={{ cursor: "text" }}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="karaoke-ky-input"
+                    className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    KY
+                  </label>
+                  <input
+                    id="karaoke-ky-input"
+                    type="text"
+                    value={karaokeKyInput}
+                    onChange={(e) => {
+                      setKaraokeKyInput(e.target.value);
+                      if (karaokeError) setKaraokeError(null);
+                    }}
+                    placeholder=""
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                    style={{ cursor: "text" }}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="karaoke-joysound-input"
+                    className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    JOYSOUND
+                  </label>
+                  <input
+                    id="karaoke-joysound-input"
+                    type="text"
+                    value={karaokeJoysoundInput}
+                    onChange={(e) => {
+                      setKaraokeJoysoundInput(e.target.value);
+                      if (karaokeError) setKaraokeError(null);
+                    }}
+                    placeholder=""
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                    style={{ cursor: "text" }}
+                  />
+                </div>
+                {karaokeError && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {karaokeError}
+                  </p>
+                )}
+              </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowKaraokeDialog(false);
+                    setKaraokeError(null);
+                  }}
+                  className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  style={{ cursor: "pointer" }}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleKaraokeSave}
+                  disabled={karaokeSaving}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
+                  style={{ cursor: "pointer" }}
+                >
+                  {karaokeSaving ? "저장 중..." : "저장"}
                 </button>
               </div>
             </div>
