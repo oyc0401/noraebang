@@ -5,6 +5,7 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
+import { ErrorResponseDto } from "../dto";
 import { ApiResponse } from "../dto/api-response.dto";
 import { SongsService } from "../songs/songs.service";
 import { YoutubeService } from "../youtube/youtube.service";
@@ -30,7 +31,16 @@ export class SearchController {
     description: "YouTube 정보와 매칭된 곡 데이터",
     type: YoutubeSongSearchResponseDto,
   })
-  @SwaggerApiResponse({ status: 400, description: "URL 파라미터 필요" })
+  @SwaggerApiResponse({
+    status: 400,
+    description: "URL 파라미터 필요",
+    type: ErrorResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 500,
+    description: "서버 오류",
+    type: ErrorResponseDto,
+  })
   async getSongByYoutubeUrl(
     @Query("url") url: string,
   ): Promise<YoutubeSongSearchResponseDto> {

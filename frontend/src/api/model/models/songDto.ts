@@ -11,8 +11,7 @@ import type { KaraokeSongDto } from './karaokeSongDto';
 export interface SongDto {
   id: number;
   title: string;
-  /** @nullable */
-  titleKo?: string | null;
+  titleKo?: string;
   artists: ArtistSongDto[];
   karaokeSongs?: KaraokeSongDto[];
 }

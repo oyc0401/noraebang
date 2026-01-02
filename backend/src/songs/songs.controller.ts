@@ -11,6 +11,7 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
+import { ErrorResponseDto } from "../dto";
 import { ApiResponse } from "../dto/api-response.dto";
 import {
   SongDetailResponseDto,
@@ -34,6 +35,11 @@ export class SongsController {
     description: "곡 목록",
     type: SongListResponseDto,
   })
+  @SwaggerApiResponse({
+    status: 500,
+    description: "서버 오류",
+    type: ErrorResponseDto,
+  })
   async findByArtistId(
     @Param("artistId", ParseIntPipe) artistId: number,
   ): Promise<SongListResponseDto> {
@@ -52,7 +58,16 @@ export class SongsController {
     description: "곡 상세 정보",
     type: SongDetailResponseDto,
   })
-  @SwaggerApiResponse({ status: 404, description: "곡을 찾을 수 없음" })
+  @SwaggerApiResponse({
+    status: 404,
+    description: "곡을 찾을 수 없음",
+    type: ErrorResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 500,
+    description: "서버 오류",
+    type: ErrorResponseDto,
+  })
   async findOne(
     @Param("id", ParseIntPipe) id: number,
   ): Promise<SongDetailResponseDto> {

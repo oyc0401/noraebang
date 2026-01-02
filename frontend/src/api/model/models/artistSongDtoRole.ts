@@ -6,10 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-/**
- * @nullable
- */
-export type ArtistSongDtoRole = typeof ArtistSongDtoRole[keyof typeof ArtistSongDtoRole] | null;
+export type ArtistSongDtoRole = typeof ArtistSongDtoRole[keyof typeof ArtistSongDtoRole];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare

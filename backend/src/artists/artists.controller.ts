@@ -14,6 +14,7 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
+import { ArtistDto, ErrorResponseDto } from "../dto";
 import { ApiResponse } from "../dto/api-response.dto";
 import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
 import { YoutubeService } from "../youtube/youtube.service";
@@ -29,8 +30,6 @@ import {
   ArtistListResponseDto,
   YoutubeChannelUpdateResponseDto,
 } from "./dto/artist-response.dto";
-
-import { ArtistDto } from "../dto";
 
 const isArtistSortOption = (value?: string): value is ArtistSortOption =>
   !!value && ARTIST_SORT_OPTIONS.includes(value as ArtistSortOption);
@@ -60,6 +59,11 @@ export class ArtistsController {
     description: "아티스트 목록",
     type: ArtistListResponseDto,
   })
+  @SwaggerApiResponse({
+    status: 500,
+    description: "서버 오류",
+    type: ErrorResponseDto,
+  })
   async findAll(@Query("sort") sort?: string): Promise<ArtistListResponseDto> {
     const sortOption = isArtistSortOption(sort) ? sort : DEFAULT_ARTIST_SORT;
     const artists = await this.artistsService.findAll(sortOption);
@@ -76,6 +80,11 @@ export class ArtistsController {
     status: 200,
     description: "아티스트 목록 (상세 정보 포함)",
     type: ArtistDetailsListResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 500,
+    description: "서버 오류",
+    type: ErrorResponseDto,
   })
   @ApiQuery({
     name: "sort",
@@ -107,7 +116,16 @@ export class ArtistsController {
     description: "아티스트 상세 정보",
     type: ArtistDetailResponseDto,
   })
-  @SwaggerApiResponse({ status: 404, description: "아티스트를 찾을 수 없음" })
+  @SwaggerApiResponse({
+    status: 404,
+    description: "아티스트를 찾을 수 없음",
+    type: ErrorResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 500,
+    description: "서버 오류",
+    type: ErrorResponseDto,
+  })
   async findByIdOrAlias(
     @Param("identifier") identifier: string,
   ): Promise<ArtistDetailResponseDto> {
@@ -131,7 +149,21 @@ export class ArtistsController {
     description: "업데이트 성공",
     type: YoutubeChannelUpdateResponseDto,
   })
-  @SwaggerApiResponse({ status: 400, description: "channelId 필요" })
+  @SwaggerApiResponse({
+    status: 400,
+    description: "잘못된 요청",
+    type: ErrorResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 404,
+    description: "아티스트를 찾을 수 없음",
+    type: ErrorResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 500,
+    description: "서버 오류",
+    type: ErrorResponseDto,
+  })
   async updateYoutubeChannel(
     @Param("artistId") artistId: number,
     @Body() body: YoutubeChannelUpdateDto,

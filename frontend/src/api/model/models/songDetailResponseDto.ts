@@ -9,6 +9,5 @@ import type { SongDto } from './songDto';
 
 export interface SongDetailResponseDto {
   data: SongDto;
-  /** @nullable */
-  message?: string | null;
+  message?: string;
 }

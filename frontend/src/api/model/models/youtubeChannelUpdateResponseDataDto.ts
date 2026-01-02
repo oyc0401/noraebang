@@ -10,6 +10,5 @@ export interface YoutubeChannelUpdateResponseDataDto {
   artist: string;
   channelId: string;
   channelTitle: string;
-  /** @nullable */
-  subscriberCount?: number | null;
+  subscriberCount?: number;
 }
