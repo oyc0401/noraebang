@@ -21,9 +21,6 @@ export class SongDto {
   @ApiProperty({ example: [1, 2], type: [Number] })
   artistIds: number[];
 
-  @ApiProperty({ example: "MAIN", required: false })
-  role?: string | null;
-
   @ApiProperty({ type: [KaraokeSongDto], required: false })
   karaokeSongs?: KaraokeSongDto[];
 }
