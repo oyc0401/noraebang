@@ -1,5 +1,7 @@
 'use server'
 
+import { Prisma } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
 
 type SortOption = 'id_desc' | 'name_asc' | 'name_desc' | 'subscriber_desc' | 'subscriber_asc' | 'song_count_desc' | 'song_count_asc'
@@ -147,5 +149,34 @@ export async function updateYoutubeChannel(artistId: number, channelId: string) 
   return {
     channelTitle: updated.title ?? undefined,
     message: 'YouTube channel updated'
+  }
+}
+
+export async function updateArtistAlias(artistId: number, alias: string) {
+  const sanitizedAlias = alias.trim().replace(/^@/, '')
+
+  if (!sanitizedAlias) {
+    throw new Error('별칭을 입력해주세요.')
+  }
+
+  try {
+    const updated = await prisma.artist.update({
+      where: { id: artistId },
+      data: { alias: sanitizedAlias },
+      select: { id: true, alias: true }
+    })
+
+    return {
+      alias: updated.alias ?? undefined
+    }
+  } catch (error: any) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      throw new Error('이미 존재하는 별칭입니다.')
+    }
+
+    throw error
   }
 }

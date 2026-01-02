@@ -1,8 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { getArtists, getSongsByArtist, updateYoutubeChannel } from "./actions";
+import { useEffect, useRef, useState } from "react";
+import {
+  getArtists,
+  getSongsByArtist,
+  updateArtistAlias,
+  updateYoutubeChannel,
+} from "./actions";
 
 const SORT_OPTIONS = [
   { value: "id_desc", label: "최신" },
@@ -14,7 +19,7 @@ const SORT_OPTIONS = [
   { value: "song_count_asc", label: "곡 ↓" },
 ] as const;
 
-type SortOption = typeof SORT_OPTIONS[number]["value"];
+type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 const DEFAULT_SORT: SortOption = "name_asc";
 
 type Artist = Awaited<ReturnType<typeof getArtists>>[number];
@@ -29,6 +34,12 @@ export default function AdminArtistsPage() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [songsLoading, setSongsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [aliasMenuOpen, setAliasMenuOpen] = useState(false);
+  const aliasMenuRef = useRef<HTMLDivElement | null>(null);
+  const [showAliasDialog, setShowAliasDialog] = useState(false);
+  const [aliasInput, setAliasInput] = useState("");
+  const [aliasSaving, setAliasSaving] = useState(false);
+  const [aliasError, setAliasError] = useState<string | null>(null);
 
   // YouTube 채널 관리
   const [showYoutubeSection, setShowYoutubeSection] = useState(false);
@@ -58,6 +69,13 @@ export default function AdminArtistsPage() {
     getSongsByArtist(selectedArtist.id)
       .then(setSongs)
       .finally(() => setSongsLoading(false));
+  }, [selectedArtist]);
+
+  useEffect(() => {
+    setAliasMenuOpen(false);
+    setShowAliasDialog(false);
+    setAliasError(null);
+    setAliasInput(selectedArtist?.alias ?? "");
   }, [selectedArtist]);
 
   const filteredArtists = artists.filter(
@@ -101,7 +119,12 @@ export default function AdminArtistsPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!filteredArtists || filteredArtists.length === 0) return;
 
-      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (
+        e.key === "ArrowDown" ||
+        e.key === "ArrowUp" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight"
+      ) {
         e.preventDefault();
 
         const currentIndex = selectedArtist
@@ -109,7 +132,7 @@ export default function AdminArtistsPage() {
           : -1;
 
         let nextIndex: number;
-        if (e.key === "ArrowDown") {
+        if (e.key === "ArrowDown" || e.key === "ArrowRight") {
           nextIndex =
             currentIndex < filteredArtists.length - 1 ? currentIndex + 1 : 0;
         } else {
@@ -124,6 +147,22 @@ export default function AdminArtistsPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [filteredArtists, selectedArtist]);
+
+  useEffect(() => {
+    if (!aliasMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        aliasMenuRef.current &&
+        !aliasMenuRef.current.contains(event.target as Node)
+      ) {
+        setAliasMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [aliasMenuOpen]);
 
   const extractChannelId = (url: string): string | null => {
     const channelMatch = url.match(/youtube\.com\/channel\/([a-zA-Z0-9_-]+)/);
@@ -179,7 +218,9 @@ export default function AdminArtistsPage() {
       setArtists(updatedArtists);
 
       // 선택된 아티스트 업데이트
-      const updatedArtist = updatedArtists.find(a => a.id === selectedArtist.id);
+      const updatedArtist = updatedArtists.find(
+        (a) => a.id === selectedArtist.id,
+      );
       if (updatedArtist) {
         setSelectedArtist(updatedArtist);
       }
@@ -190,6 +231,50 @@ export default function AdminArtistsPage() {
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleAliasSave = async () => {
+    if (!selectedArtist) return;
+
+    const sanitizedAlias = aliasInput.trim().replace(/^@/, "");
+    if (!sanitizedAlias) {
+      setAliasError("별칭을 입력해주세요.");
+      return;
+    }
+
+    setAliasSaving(true);
+    setAliasError(null);
+
+    try {
+      const response = await updateArtistAlias(
+        selectedArtist.id,
+        sanitizedAlias,
+      );
+
+      setMessage({
+        type: "success",
+        text: `✅ ${selectedArtist.nameKo}: @${
+          response.alias ?? sanitizedAlias
+        }로 저장되었습니다.`,
+      });
+
+      const updatedArtists = await getArtists(sort);
+      setArtists(updatedArtists);
+
+      const updatedArtist = updatedArtists.find(
+        (a) => a.id === selectedArtist.id,
+      );
+      if (updatedArtist) {
+        setSelectedArtist(updatedArtist);
+      }
+
+      setShowAliasDialog(false);
+      setAliasMenuOpen(false);
+    } catch (error: any) {
+      setAliasError(error.message ?? "별칭 저장 중 오류가 발생했습니다.");
+    } finally {
+      setAliasSaving(false);
     }
   };
 
@@ -357,14 +442,56 @@ export default function AdminArtistsPage() {
                       {selectedArtist.alias && (
                         <>
                           {" • "}
-                          <a
-                            href={`/channel/${selectedArtist.alias}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline dark:text-blue-400"
+                          <span
+                            className="relative inline-block"
+                            ref={aliasMenuRef}
                           >
-                            @{selectedArtist.alias}
-                          </a>
+                            <button
+                              type="button"
+                              onClick={() => setAliasMenuOpen((prev) => !prev)}
+                              className="inline-flex items-center gap-1 text-blue-600 hover:underline dark:text-blue-400"
+                            >
+                              @{selectedArtist.alias}
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </button>
+                            {aliasMenuOpen && (
+                              <div className="absolute right-0 mt-2 w-48 rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 z-20">
+                                <a
+                                  href={`/channel/${selectedArtist.alias}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => setAliasMenuOpen(false)}
+                                  className="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                >
+                                  아티스트 페이지로 이동
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setAliasMenuOpen(false);
+                                    setShowAliasDialog(true);
+                                    setAliasError(null);
+                                    setAliasInput(selectedArtist.alias ?? "");
+                                  }}
+                                  className="block w-full px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                >
+                                  별칭 수정
+                                </button>
+                              </div>
+                            )}
+                          </span>
                         </>
                       )}
                     </p>
@@ -565,6 +692,73 @@ export default function AdminArtistsPage() {
             </div>
           )}
         </div>
+
+        {showAliasDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                별칭 수정
+              </h3>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                새로운 별칭을 입력하면 바로 적용됩니다.
+              </p>
+              <div className="mt-4">
+                <label
+                  htmlFor="alias-input"
+                  className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  새 별칭
+                </label>
+                <input
+                  id="alias-input"
+                  type="text"
+                  value={aliasInput}
+                  autoFocus
+                  onChange={(e) => {
+                    setAliasInput(e.target.value);
+                    if (aliasError) setAliasError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAliasSave();
+                    }
+                  }}
+                  placeholder="yuika"
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                />
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  '@' 없이 입력하세요. 예) yuika
+                </p>
+                {aliasError && (
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {aliasError}
+                  </p>
+                )}
+              </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAliasDialog(false);
+                    setAliasError(null);
+                  }}
+                  className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAliasSave}
+                  disabled={aliasSaving}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
+                >
+                  {aliasSaving ? "저장 중..." : "저장"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
