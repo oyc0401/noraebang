@@ -45,6 +45,8 @@ pnpm --filter backend build
 pnpm --filter frontend build
 
 ## prisma 생성
+pnpm generate
+
 pnpm --filter backend exec prisma generate
 
 pnpm --filter admin exec prisma generate
