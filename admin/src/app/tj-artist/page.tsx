@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   checkArtistConflicts,
+  createArtist,
   createArtistAndMapSongs,
   getRealArtists,
   getTjArtists,
@@ -274,28 +275,20 @@ export default function TjArtistPage() {
       setCreateError("중복된 정보가 있습니다. 수정 후 다시 시도해주세요.");
       return;
     }
-    if (selectedSongIds.length === 0) {
-      if (typeof window !== "undefined") {
-        window.alert("매핑할 곡을 최소 1곡 이상 선택해주세요.");
-      }
-      return;
-    }
     if (conflictChecking) return;
 
     setCreateLoading(true);
     setCreateError(null);
     try {
-      const result = await createArtistAndMapSongs({
+      const artist = await createArtist({
         name: trimmedName,
         nameKo: trimmedNameKo || undefined,
         tjSongRequestUrl: createRequestUrl,
         youtubeMainUrl: createYoutubeMain,
         youtubeTopicUrl: createYoutubeTopic,
-        tjSongIds: selectedSongIds,
       });
-      await Promise.all([fetchRealArtists(), fetchSongs(), fetchArtists()]);
-      setSelectedRealArtistId(result.artist.id);
-      setSelectedSongIds([]);
+      await fetchRealArtists();
+      setSelectedRealArtistId(artist.id);
       setCreateDialogOpen(false);
     } catch (error) {
       setCreateError(
@@ -365,7 +358,7 @@ export default function TjArtistPage() {
   };
 
   const handleBatchCreateAboveThreshold = async () => {
-      const targets = filteredArtists.filter((artist) => artist.totalSongs >= 30);
+    const targets = filteredArtists.filter((artist) => artist.totalSongs >= 30);
     if (targets.length === 0) return;
     setQuickCreateLoading(true);
     setQuickCreateError(null);
@@ -409,7 +402,6 @@ export default function TjArtistPage() {
     !createName.trim() ||
     conflicts.name ||
     conflicts.nameKo ||
-    selectedSongIds.length === 0 ||
     conflictChecking ||
     createLoading;
 
@@ -488,7 +480,7 @@ export default function TjArtistPage() {
               onClick={handleBatchCreateAboveThreshold}
               className="w-full cursor-pointer rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
             >
-              TJ 50곡↑ 자동 매핑
+              TJ 30곡↑ 자동 매핑
             </button>
             <input
               type="search"
