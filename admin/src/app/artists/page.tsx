@@ -14,15 +14,12 @@ import {
   updateArtistNameKo,
   updateKaraokeSong,
   updateSongTitle,
-  updateYoutubeChannel,
 } from "./actions";
 
 const SORT_OPTIONS = [
   { value: "id_desc", label: "최신" },
   { value: "name_asc", label: "이름 ↑" },
   { value: "name_desc", label: "이름 ↓" },
-  { value: "subscriber_desc", label: "구독자 ↑" },
-  { value: "subscriber_asc", label: "구독자 ↓" },
   { value: "song_count_desc", label: "곡 ↑" },
   { value: "song_count_asc", label: "곡 ↓" },
 ] as const;
@@ -82,10 +79,6 @@ export default function AdminArtistsPage() {
   const [karaokeSaving, setKaraokeSaving] = useState(false);
   const [karaokeError, setKaraokeError] = useState<string | null>(null);
 
-  // YouTube 채널 관리
-  const [showYoutubeSection, setShowYoutubeSection] = useState(false);
-  const [channelUrl, setChannelUrl] = useState("");
-  const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -258,76 +251,6 @@ export default function AdminArtistsPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [songMenuOpen]);
-
-  const extractChannelId = (url: string): string | null => {
-    const channelMatch = url.match(/youtube\.com\/channel\/([a-zA-Z0-9_-]+)/);
-    if (channelMatch) return channelMatch[1];
-
-    const handleMatch = url.match(/youtube\.com\/@([a-zA-Z0-9_-]+)/);
-    if (handleMatch) return `@${handleMatch[1]}`;
-
-    const customMatch = url.match(/youtube\.com\/c\/([a-zA-Z0-9_-]+)/);
-    if (customMatch) return customMatch[1];
-
-    if (url.startsWith("UC") || url.startsWith("@")) {
-      return url;
-    }
-
-    return null;
-  };
-
-  const handleUpdateChannel = async () => {
-    if (!selectedArtist || !channelUrl.trim()) {
-      setMessage({
-        type: "error",
-        text: "채널 URL을 입력해주세요.",
-      });
-      return;
-    }
-
-    const channelId = extractChannelId(channelUrl);
-    if (!channelId) {
-      setMessage({
-        type: "error",
-        text: "올바른 YouTube 채널 URL을 입력해주세요.",
-      });
-      return;
-    }
-
-    setMessage(null);
-    setUpdating(true);
-
-    try {
-      const response = await updateYoutubeChannel(selectedArtist.id, channelId);
-
-      setMessage({
-        type: "success",
-        text: `✅ ${selectedArtist.nameKo}: ${
-          response.channelTitle ?? response.message
-        }`,
-      });
-      setChannelUrl("");
-
-      // 아티스트 목록 새로고침
-      const updatedArtists = await getArtists(sort);
-      setArtists(updatedArtists);
-
-      // 선택된 아티스트 업데이트
-      const updatedArtist = updatedArtists.find(
-        (a) => a.id === selectedArtist.id,
-      );
-      if (updatedArtist) {
-        setSelectedArtist(updatedArtist);
-      }
-    } catch (error: any) {
-      setMessage({
-        type: "error",
-        text: `❌ 오류 발생: ${error.message}`,
-      });
-    } finally {
-      setUpdating(false);
-    }
-  };
 
   const handleNameKoSave = async () => {
     if (!selectedArtist) return;
@@ -564,8 +487,6 @@ export default function AdminArtistsPage() {
       setKaraokeSaving(false);
     }
   };
-
-  const youtubeInfo = selectedArtist?.youtube;
 
   return (
     <div className="h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
@@ -907,126 +828,12 @@ export default function AdminArtistsPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {selectedArtist.alias && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowYoutubeSection(!showYoutubeSection)
-                        }
-                        className="rounded-lg p-2 transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                        title="YouTube 정보"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 159 110"
-                          className="h-6 w-9"
-                          role="img"
-                          aria-label="YouTube"
-                        >
-                          <path
-                            fill="#FF0000"
-                            d="M154 17.5c-1.82-6.73-7.07-12-13.8-13.8-9.04-3.49-96.6-5.2-122 0.1-6.73 1.82-12 7.07-13.8 13.8-4.08 17.9-4.39 56.6 0.1 74.9 1.82 6.73 7.07 12 13.8 13.8 17.9 4.12 103 4.7 122 0 6.73-1.82 12-7.07 13.8-13.8 4.35-19.5 4.66-55.8-0.1-75z"
-                          />
-                          <path fill="#FFF" d="M105 55L64.2 31.6v46.8z" />
-                        </svg>
-                      </button>
-                    )}
                     <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                       {selectedArtist.songCount}곡
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Expandable YouTube Section */}
-              {showYoutubeSection && selectedArtist.alias && (
-                <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 px-6 py-4">
-                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
-                    YouTube 채널 정보
-                  </h3>
-
-                  {/* Current YouTube Info */}
-                  {youtubeInfo ? (
-                    <div className="mb-4 p-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
-                      <div className="space-y-2">
-                        <div>
-                          <div className="font-medium text-zinc-900 dark:text-zinc-50">
-                            {youtubeInfo.title}
-                          </div>
-                          <a
-                            href={
-                              youtubeInfo.customUrl
-                                ? `https://youtube.com/${youtubeInfo.customUrl}`
-                                : `https://youtube.com/channel/${youtubeInfo.channelId}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-                          >
-                            {youtubeInfo.customUrl || youtubeInfo.channelId}
-                          </a>
-                        </div>
-                        {youtubeInfo.subscriberCount && (
-                          <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                            구독자{" "}
-                            {youtubeInfo.subscriberCount.toLocaleString()}명
-                          </div>
-                        )}
-                        {youtubeInfo.videoCount && (
-                          <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                            동영상 {youtubeInfo.videoCount.toLocaleString()}개
-                          </div>
-                        )}
-                        {youtubeInfo.description && (
-                          <div className="text-xs text-zinc-500 dark:text-zinc-500 mt-2">
-                            {youtubeInfo.description}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mb-4 p-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        채널 정보가 없습니다
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Update Channel Form */}
-                  <div className="space-y-3">
-                    <div>
-                      <label
-                        htmlFor="channel-url-input"
-                        className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                      >
-                        YouTube 채널 URL
-                      </label>
-                      <input
-                        id="channel-url-input"
-                        type="text"
-                        value={channelUrl}
-                        onChange={(e) => setChannelUrl(e.target.value)}
-                        onKeyDown={(e) =>
-                          e.key === "Enter" && handleUpdateChannel()
-                        }
-                        placeholder="https://www.youtube.com/channel/UCxxx 또는 https://www.youtube.com/@channelname"
-                        className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
-                      />
-                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                        채널 페이지 URL을 복사해서 붙여넣기 하세요
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleUpdateChannel}
-                      disabled={updating || !channelUrl.trim()}
-                      className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
-                    >
-                      {updating ? "처리 중..." : "채널 정보 업데이트"}
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Song List */}
               <div className="flex-1 overflow-y-auto p-6">

@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
 
-type SortOption = 'id_desc' | 'name_asc' | 'name_desc' | 'subscriber_desc' | 'subscriber_asc' | 'song_count_desc' | 'song_count_asc'
+type SortOption = 'id_desc' | 'name_asc' | 'name_desc' | 'song_count_desc' | 'song_count_asc'
 
 export async function getArtists(sort?: SortOption) {
   let orderBy: any = {}
@@ -12,15 +12,12 @@ export async function getArtists(sort?: SortOption) {
   if (sort === 'id_desc') orderBy.id = 'desc'
   else if (sort === 'name_asc') orderBy.nameKo = 'asc'
   else if (sort === 'name_desc') orderBy.nameKo = 'desc'
-  else if (sort === 'subscriber_desc') orderBy = { youtubeChannel: { subscriberCount: 'desc' } }
-  else if (sort === 'subscriber_asc') orderBy = { youtubeChannel: { subscriberCount: 'asc' } }
   else if (sort === 'song_count_desc') orderBy = { artistSongs: { _count: 'desc' } }
   else if (sort === 'song_count_asc') orderBy = { artistSongs: { _count: 'asc' } }
   else orderBy.nameKo = 'asc'
 
   const artists = await prisma.artist.findMany({
     include: {
-      youtubeChannel: true,
       _count: {
         select: { artistSongs: true }
       }
@@ -37,17 +34,6 @@ export async function getArtists(sort?: SortOption) {
     thumbnailMedium: a.thumbnailMedium ?? undefined,
     thumbnailHigh: a.thumbnailHigh ?? undefined,
     songCount: a._count.artistSongs,
-    youtube: a.youtubeChannel ? {
-      channelId: a.youtubeChannel.channelId,
-      title: a.youtubeChannel.title ?? undefined,
-      customUrl: a.youtubeChannel.customUrl ?? undefined,
-      description: a.youtubeChannel.description ?? undefined,
-      subscriberCount: a.youtubeChannel.subscriberCount ?? undefined,
-      videoCount: a.youtubeChannel.videoCount ?? undefined,
-      thumbnailDefault: a.youtubeChannel.thumbnailDefault ?? undefined,
-      thumbnailMedium: a.youtubeChannel.thumbnailMedium ?? undefined,
-      thumbnailHigh: a.youtubeChannel.thumbnailHigh ?? undefined,
-    } : undefined,
     aliasGroup: undefined
   }))
 }
@@ -74,82 +60,6 @@ export async function getSongsByArtist(artistId: number) {
       karaokeNo: ks.karaokeNo
     }))
   }))
-}
-
-export async function updateYoutubeChannel(artistId: number, channelId: string) {
-  // YouTube API 호출해서 채널 정보 가져오기
-  const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY
-  if (!YOUTUBE_API_KEY) throw new Error('YouTube API key not configured')
-
-  const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${encodeURIComponent(channelId)}&key=${YOUTUBE_API_KEY}`
-  const res = await fetch(url)
-  const data = await res.json()
-
-  if (!data.items || data.items.length === 0) {
-    throw new Error('YouTube channel not found')
-  }
-
-  const channel = data.items[0]
-  const snippet = channel.snippet
-  const statistics = channel.statistics
-  const branding = channel.brandingSettings?.channel
-
-  // DB 업데이트
-  const updated = await prisma.youtubeChannel.upsert({
-    where: { artistId },
-    create: {
-      artistId,
-      channelId: channel.id,
-      title: snippet.title,
-      description: snippet.description,
-      customUrl: snippet.customUrl,
-      publishedAt: new Date(snippet.publishedAt),
-      country: snippet.country,
-      defaultLanguage: snippet.defaultLanguage,
-      thumbnailDefault: snippet.thumbnails?.default?.url,
-      thumbnailMedium: snippet.thumbnails?.medium?.url,
-      thumbnailHigh: snippet.thumbnails?.high?.url,
-      subscriberCount: statistics?.subscriberCount ? parseInt(statistics.subscriberCount) : undefined,
-      videoCount: statistics?.videoCount ? parseInt(statistics.videoCount) : undefined,
-      viewCount: statistics?.viewCount ? BigInt(statistics.viewCount) : undefined,
-      hiddenSubscriberCount: statistics?.hiddenSubscriberCount,
-      uploadsPlaylistId: channel.contentDetails?.relatedPlaylists?.uploads,
-      fetchedAt: new Date(),
-    },
-    update: {
-      channelId: channel.id,
-      title: snippet.title,
-      description: snippet.description,
-      customUrl: snippet.customUrl,
-      publishedAt: new Date(snippet.publishedAt),
-      country: snippet.country,
-      defaultLanguage: snippet.defaultLanguage,
-      thumbnailDefault: snippet.thumbnails?.default?.url,
-      thumbnailMedium: snippet.thumbnails?.medium?.url,
-      thumbnailHigh: snippet.thumbnails?.high?.url,
-      subscriberCount: statistics?.subscriberCount ? parseInt(statistics.subscriberCount) : undefined,
-      videoCount: statistics?.videoCount ? parseInt(statistics.videoCount) : undefined,
-      viewCount: statistics?.viewCount ? BigInt(statistics.viewCount) : undefined,
-      hiddenSubscriberCount: statistics?.hiddenSubscriberCount,
-      uploadsPlaylistId: channel.contentDetails?.relatedPlaylists?.uploads,
-      fetchedAt: new Date(),
-    }
-  })
-
-  // 아티스트 썸네일도 업데이트
-  await prisma.artist.update({
-    where: { id: artistId },
-    data: {
-      thumbnailDefault: snippet.thumbnails?.default?.url,
-      thumbnailMedium: snippet.thumbnails?.medium?.url,
-      thumbnailHigh: snippet.thumbnails?.high?.url,
-    }
-  })
-
-  return {
-    channelTitle: updated.title ?? undefined,
-    message: 'YouTube channel updated'
-  }
 }
 
 export async function updateArtistAlias(artistId: number, alias: string) {
