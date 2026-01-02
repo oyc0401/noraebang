@@ -216,3 +216,90 @@ export async function updateArtistNameKo(artistId: number, nameKo: string) {
     nameKo: updated.nameKo
   }
 }
+
+export async function updateSongTitle(songId: number, title: string, titleKo?: string) {
+  const trimmedTitle = title.trim()
+
+  if (!trimmedTitle) {
+    throw new Error('제목을 입력해주세요.')
+  }
+
+  const updated = await prisma.song.update({
+    where: { id: songId },
+    data: {
+      title: trimmedTitle,
+      titleKo: titleKo?.trim() || undefined
+    },
+    select: { id: true, title: true, titleKo: true }
+  })
+
+  return {
+    title: updated.title,
+    titleKo: updated.titleKo ?? undefined
+  }
+}
+
+export async function createKaraokeSong(songId: number, provider: 'TJ' | 'KY' | 'JOYSOUND', karaokeNo: string) {
+  const trimmedNo = karaokeNo.trim()
+
+  if (!trimmedNo) {
+    throw new Error('노래방 번호를 입력해주세요.')
+  }
+
+  const created = await prisma.karaokeSong.create({
+    data: {
+      songId,
+      provider,
+      karaokeNo: trimmedNo
+    }
+  })
+
+  return created
+}
+
+export async function updateKaraokeSong(songId: number, provider: 'TJ' | 'KY' | 'JOYSOUND', karaokeNo: string) {
+  const trimmedNo = karaokeNo.trim()
+
+  if (!trimmedNo) {
+    throw new Error('노래방 번호를 입력해주세요.')
+  }
+
+  const existing = await prisma.karaokeSong.findFirst({
+    where: {
+      songId,
+      provider
+    }
+  })
+
+  if (!existing) {
+    throw new Error('노래방 번호를 찾을 수 없습니다.')
+  }
+
+  const updated = await prisma.karaokeSong.update({
+    where: { id: existing.id },
+    data: {
+      karaokeNo: trimmedNo
+    }
+  })
+
+  return updated
+}
+
+export async function deleteKaraokeSong(songId: number, provider: 'TJ' | 'KY' | 'JOYSOUND') {
+  const existing = await prisma.karaokeSong.findFirst({
+    where: {
+      songId,
+      provider
+    }
+  })
+
+  if (!existing) {
+    throw new Error('노래방 번호를 찾을 수 없습니다.')
+  }
+
+  await prisma.karaokeSong.delete({
+    where: { id: existing.id }
+  })
+
+  return { success: true }
+}
