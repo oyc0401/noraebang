@@ -6,6 +6,8 @@ import {
   getArtists,
   getSongsByArtist,
   updateArtistAlias,
+  updateArtistName,
+  updateArtistNameKo,
   updateYoutubeChannel,
 } from "./actions";
 
@@ -34,8 +36,23 @@ export default function AdminArtistsPage() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [songsLoading, setSongsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [nameKoMenuOpen, setNameKoMenuOpen] = useState(false);
+  const nameKoMenuRef = useRef<HTMLDivElement | null>(null);
+  const [nameMenuOpen, setNameMenuOpen] = useState(false);
+  const nameMenuRef = useRef<HTMLDivElement | null>(null);
   const [aliasMenuOpen, setAliasMenuOpen] = useState(false);
   const aliasMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const [showNameKoDialog, setShowNameKoDialog] = useState(false);
+  const [nameKoInput, setNameKoInput] = useState("");
+  const [nameKoSaving, setNameKoSaving] = useState(false);
+  const [nameKoError, setNameKoError] = useState<string | null>(null);
+
+  const [showNameDialog, setShowNameDialog] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [nameSaving, setNameSaving] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+
   const [showAliasDialog, setShowAliasDialog] = useState(false);
   const [aliasInput, setAliasInput] = useState("");
   const [aliasSaving, setAliasSaving] = useState(false);
@@ -72,9 +89,17 @@ export default function AdminArtistsPage() {
   }, [selectedArtist]);
 
   useEffect(() => {
+    setNameKoMenuOpen(false);
+    setNameMenuOpen(false);
     setAliasMenuOpen(false);
+    setShowNameKoDialog(false);
+    setShowNameDialog(false);
     setShowAliasDialog(false);
+    setNameKoError(null);
+    setNameError(null);
     setAliasError(null);
+    setNameKoInput(selectedArtist?.nameKo ?? "");
+    setNameInput(selectedArtist?.name ?? "");
     setAliasInput(selectedArtist?.alias ?? "");
   }, [selectedArtist]);
 
@@ -147,6 +172,38 @@ export default function AdminArtistsPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [filteredArtists, selectedArtist]);
+
+  useEffect(() => {
+    if (!nameKoMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        nameKoMenuRef.current &&
+        !nameKoMenuRef.current.contains(event.target as Node)
+      ) {
+        setNameKoMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [nameKoMenuOpen]);
+
+  useEffect(() => {
+    if (!nameMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        nameMenuRef.current &&
+        !nameMenuRef.current.contains(event.target as Node)
+      ) {
+        setNameMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [nameMenuOpen]);
 
   useEffect(() => {
     if (!aliasMenuOpen) return;
@@ -231,6 +288,87 @@ export default function AdminArtistsPage() {
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleNameKoSave = async () => {
+    if (!selectedArtist) return;
+
+    const trimmedNameKo = nameKoInput.trim();
+    if (!trimmedNameKo) {
+      setNameKoError("한국어 이름을 입력해주세요.");
+      return;
+    }
+
+    setNameKoSaving(true);
+    setNameKoError(null);
+
+    try {
+      const response = await updateArtistNameKo(
+        selectedArtist.id,
+        trimmedNameKo,
+      );
+
+      setMessage({
+        type: "success",
+        text: `✅ 한국어 이름이 "${response.nameKo}"로 저장되었습니다.`,
+      });
+
+      const updatedArtists = await getArtists(sort);
+      setArtists(updatedArtists);
+
+      const updatedArtist = updatedArtists.find(
+        (a) => a.id === selectedArtist.id,
+      );
+      if (updatedArtist) {
+        setSelectedArtist(updatedArtist);
+      }
+
+      setShowNameKoDialog(false);
+      setNameKoMenuOpen(false);
+    } catch (error: any) {
+      setNameKoError(error.message ?? "한국어 이름 저장 중 오류가 발생했습니다.");
+    } finally {
+      setNameKoSaving(false);
+    }
+  };
+
+  const handleNameSave = async () => {
+    if (!selectedArtist) return;
+
+    const trimmedName = nameInput.trim();
+    if (!trimmedName) {
+      setNameError("이름을 입력해주세요.");
+      return;
+    }
+
+    setNameSaving(true);
+    setNameError(null);
+
+    try {
+      const response = await updateArtistName(selectedArtist.id, trimmedName);
+
+      setMessage({
+        type: "success",
+        text: `✅ 이름이 "${response.name}"로 저장되었습니다.`,
+      });
+
+      const updatedArtists = await getArtists(sort);
+      setArtists(updatedArtists);
+
+      const updatedArtist = updatedArtists.find(
+        (a) => a.id === selectedArtist.id,
+      );
+      if (updatedArtist) {
+        setSelectedArtist(updatedArtist);
+      }
+
+      setShowNameDialog(false);
+      setNameMenuOpen(false);
+    } catch (error: any) {
+      setNameError(error.message ?? "이름 저장 중 오류가 발생했습니다.");
+    } finally {
+      setNameSaving(false);
     }
   };
 
@@ -434,11 +572,109 @@ export default function AdminArtistsPage() {
                     <div className="h-12 w-12 rounded-full bg-zinc-200 dark:bg-zinc-700" />
                   )}
                   <div className="flex-1">
-                    <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
-                      {selectedArtist.nameKo}
-                    </h2>
+                    <div className="relative inline-block" ref={nameKoMenuRef}>
+                      <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
+                        <button
+                          type="button"
+                          onClick={() => setNameKoMenuOpen((prev) => !prev)}
+                          className="inline-flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          style={{ cursor: "pointer" }}
+                        >
+                          {selectedArtist.nameKo}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </h2>
+                      {nameKoMenuOpen && (
+                        <div className="absolute left-0 mt-2 w-48 rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 z-20">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNameKoMenuOpen(false);
+                              setShowNameKoDialog(true);
+                              setNameKoError(null);
+                              setNameKoInput(selectedArtist.nameKo);
+                            }}
+                            className="block w-full px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                            style={{ cursor: "pointer" }}
+                          >
+                            편집
+                          </button>
+                          <a
+                            href={`https://www.google.com/search?q=${encodeURIComponent(selectedArtist.nameKo)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setNameKoMenuOpen(false)}
+                            className="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                            style={{ cursor: "pointer" }}
+                          >
+                            구글 검색
+                          </a>
+                        </div>
+                      )}
+                    </div>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      {selectedArtist.name}
+                      <span className="relative inline-block" ref={nameMenuRef}>
+                        <button
+                          type="button"
+                          onClick={() => setNameMenuOpen((prev) => !prev)}
+                          className="inline-flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          style={{ cursor: "pointer" }}
+                        >
+                          {selectedArtist.name}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                        {nameMenuOpen && (
+                          <div className="absolute left-0 mt-2 w-48 rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 z-20">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setNameMenuOpen(false);
+                                setShowNameDialog(true);
+                                setNameError(null);
+                                setNameInput(selectedArtist.name);
+                              }}
+                              className="block w-full px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                              style={{ cursor: "pointer" }}
+                            >
+                              편집
+                            </button>
+                            <a
+                              href={`https://www.google.com/search?q=${encodeURIComponent(selectedArtist.name)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setNameMenuOpen(false)}
+                              className="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                              style={{ cursor: "pointer" }}
+                            >
+                              구글 검색
+                            </a>
+                          </div>
+                        )}
+                      </span>
                       {selectedArtist.alias && (
                         <>
                           {" • "}
@@ -450,6 +686,7 @@ export default function AdminArtistsPage() {
                               type="button"
                               onClick={() => setAliasMenuOpen((prev) => !prev)}
                               className="inline-flex items-center gap-1 text-blue-600 hover:underline dark:text-blue-400"
+                              style={{ cursor: "pointer" }}
                             >
                               @{selectedArtist.alias}
                               <svg
@@ -474,6 +711,7 @@ export default function AdminArtistsPage() {
                                   rel="noopener noreferrer"
                                   onClick={() => setAliasMenuOpen(false)}
                                   className="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                  style={{ cursor: "pointer" }}
                                 >
                                   아티스트 페이지로 이동
                                 </a>
@@ -486,6 +724,7 @@ export default function AdminArtistsPage() {
                                     setAliasInput(selectedArtist.alias ?? "");
                                   }}
                                   className="block w-full px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                  style={{ cursor: "pointer" }}
                                 >
                                   별칭 수정
                                 </button>
@@ -693,6 +932,138 @@ export default function AdminArtistsPage() {
           )}
         </div>
 
+        {showNameKoDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                한국어 이름 수정
+              </h3>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                새로운 한국어 이름을 입력하세요.
+              </p>
+              <div className="mt-4">
+                <label
+                  htmlFor="nameko-input"
+                  className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  한국어 이름
+                </label>
+                <input
+                  id="nameko-input"
+                  type="text"
+                  value={nameKoInput}
+                  onChange={(e) => {
+                    setNameKoInput(e.target.value);
+                    if (nameKoError) setNameKoError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleNameKoSave();
+                    }
+                  }}
+                  placeholder="상대성이론"
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                  style={{ cursor: "text" }}
+                />
+                {nameKoError && (
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {nameKoError}
+                  </p>
+                )}
+              </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNameKoDialog(false);
+                    setNameKoError(null);
+                  }}
+                  className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  style={{ cursor: "pointer" }}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNameKoSave}
+                  disabled={nameKoSaving}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
+                  style={{ cursor: "pointer" }}
+                >
+                  {nameKoSaving ? "저장 중..." : "저장"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showNameDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                이름 수정
+              </h3>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                새로운 이름을 입력하세요.
+              </p>
+              <div className="mt-4">
+                <label
+                  htmlFor="name-input"
+                  className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  이름
+                </label>
+                <input
+                  id="name-input"
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => {
+                    setNameInput(e.target.value);
+                    if (nameError) setNameError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleNameSave();
+                    }
+                  }}
+                  placeholder="相対性理論"
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                  style={{ cursor: "text" }}
+                />
+                {nameError && (
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {nameError}
+                  </p>
+                )}
+              </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNameDialog(false);
+                    setNameError(null);
+                  }}
+                  className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  style={{ cursor: "pointer" }}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNameSave}
+                  disabled={nameSaving}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
+                  style={{ cursor: "pointer" }}
+                >
+                  {nameSaving ? "저장 중..." : "저장"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showAliasDialog && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
             <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
@@ -713,7 +1084,6 @@ export default function AdminArtistsPage() {
                   id="alias-input"
                   type="text"
                   value={aliasInput}
-                  autoFocus
                   onChange={(e) => {
                     setAliasInput(e.target.value);
                     if (aliasError) setAliasError(null);
@@ -726,6 +1096,7 @@ export default function AdminArtistsPage() {
                   }}
                   placeholder="yuika"
                   className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                  style={{ cursor: "text" }}
                 />
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                   '@' 없이 입력하세요. 예) yuika
@@ -744,6 +1115,7 @@ export default function AdminArtistsPage() {
                     setAliasError(null);
                   }}
                   className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  style={{ cursor: "pointer" }}
                 >
                   취소
                 </button>
@@ -752,6 +1124,7 @@ export default function AdminArtistsPage() {
                   onClick={handleAliasSave}
                   disabled={aliasSaving}
                   className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
+                  style={{ cursor: "pointer" }}
                 >
                   {aliasSaving ? "저장 중..." : "저장"}
                 </button>
