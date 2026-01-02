@@ -16,7 +16,6 @@ import {
 } from "@nestjs/swagger";
 import { ArtistDetailsDto, ErrorResponseDto } from "../dto";
 import { ApiResponse } from "../dto/api-response.dto";
-import { YoutubeChannelUpdateDto } from "../youtube/dto/youtube-channel-update.dto";
 import { YoutubeService } from "../youtube/youtube.service";
 import {
   ARTIST_SORT_OPTIONS,
@@ -28,7 +27,6 @@ import {
   ArtistDetailResponseDto,
   ArtistDetailsListResponseDto,
   ArtistListResponseDto,
-  YoutubeChannelUpdateResponseDto,
 } from "./dto/artist-response.dto";
 
 const isArtistSortOption = (value?: string): value is ArtistSortOption =>
@@ -37,10 +35,7 @@ const isArtistSortOption = (value?: string): value is ArtistSortOption =>
 @ApiTags("Artists")
 @Controller("artists")
 export class ArtistsController {
-  constructor(
-    private readonly artistsService: ArtistsService,
-    private readonly youtubeService: YoutubeService,
-  ) {}
+  constructor(private readonly artistsService: ArtistsService) {}
 
   @Get()
   @ApiOperation({
@@ -135,43 +130,5 @@ export class ArtistsController {
       throw new NotFoundException("Artist not found");
     }
     return ApiResponse.success(artist);
-  }
-
-  @Post(":artistId/youtube-channel")
-  @ApiOperation({
-    summary: "아티스트 YouTube 채널 정보 업데이트",
-    description:
-      "선택한 아티스트에 YouTube 채널 ID 또는 @handle 을 연결합니다.",
-  })
-  @ApiParam({ name: "artistId", description: "아티스트 ID" })
-  @SwaggerApiResponse({
-    status: 200,
-    description: "업데이트 성공",
-    type: YoutubeChannelUpdateResponseDto,
-  })
-  @SwaggerApiResponse({
-    status: 400,
-    description: "잘못된 요청",
-    type: ErrorResponseDto,
-  })
-  @SwaggerApiResponse({
-    status: 404,
-    description: "아티스트를 찾을 수 없음",
-    type: ErrorResponseDto,
-  })
-  @SwaggerApiResponse({
-    status: 500,
-    description: "서버 오류",
-    type: ErrorResponseDto,
-  })
-  async updateYoutubeChannel(
-    @Param("artistId") artistId: number,
-    @Body() body: YoutubeChannelUpdateDto,
-  ): Promise<YoutubeChannelUpdateResponseDto> {
-    const data = await this.youtubeService.updateArtistChannel(
-      artistId,
-      body.channelId,
-    );
-    return ApiResponse.success(data, "YouTube channel updated successfully");
   }
 }

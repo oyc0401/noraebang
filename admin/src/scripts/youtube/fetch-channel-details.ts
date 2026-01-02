@@ -1,19 +1,80 @@
 import "dotenv/config";
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "../../src/app.module";
-import { PrismaService } from "../../src/prisma/prisma.service";
-import { YoutubeService } from "../../src/youtube/youtube.service";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import pg from "pg";
 
-// pnpm ts-node scripts/youtube/fetch-channel-details.ts
+// pnpm ts-node src/scripts/youtube/fetch-channel-details.ts
+
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+
+if (!YOUTUBE_API_KEY) {
+  throw new Error("YOUTUBE_API_KEY is not set");
+}
+
+interface YoutubeChannelDetails {
+  channelId: string;
+  title: string;
+  description?: string;
+  customUrl?: string;
+  publishedAt: string;
+  country?: string;
+  defaultLanguage?: string;
+  thumbnailDefault?: string;
+  thumbnailMedium?: string;
+  thumbnailHigh?: string;
+  subscriberCount?: number;
+  videoCount?: number;
+  viewCount?: bigint;
+  hiddenSubscriberCount?: boolean;
+  uploadsPlaylistId?: string;
+}
+
+async function getChannelDetails(channelId: string): Promise<YoutubeChannelDetails> {
+  const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${encodeURIComponent(channelId)}&key=${YOUTUBE_API_KEY}`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`YouTube API error: ${data.error?.message || response.statusText}`);
+  }
+
+  if (!data.items || data.items.length === 0) {
+    throw new Error(`Channel not found: ${channelId}`);
+  }
+
+  const channel = data.items[0];
+  const snippet = channel.snippet;
+  const statistics = channel.statistics;
+  const contentDetails = channel.contentDetails;
+
+  return {
+    channelId: channel.id,
+    title: snippet.title,
+    description: snippet.description,
+    customUrl: snippet.customUrl,
+    publishedAt: snippet.publishedAt,
+    country: snippet.country,
+    defaultLanguage: snippet.defaultLanguage,
+    thumbnailDefault: snippet.thumbnails?.default?.url,
+    thumbnailMedium: snippet.thumbnails?.medium?.url,
+    thumbnailHigh: snippet.thumbnails?.high?.url,
+    subscriberCount: statistics?.subscriberCount ? parseInt(statistics.subscriberCount) : undefined,
+    videoCount: statistics?.videoCount ? parseInt(statistics.videoCount) : undefined,
+    viewCount: statistics?.viewCount ? BigInt(statistics.viewCount) : undefined,
+    hiddenSubscriberCount: statistics?.hiddenSubscriberCount,
+    uploadsPlaylistId: contentDetails?.relatedPlaylists?.uploads,
+  };
+}
 
 async function updateChannelDetails(
   batchSize: number = 10,
   skipExisting: boolean = true,
 ) {
-  const app = await NestFactory.createApplicationContext(AppModule);
-  const prisma = app.get(PrismaService);
-  const youtubeService = app.get(YoutubeService);
-
   try {
     console.log("🎬 Starting YouTube channel details fetch...\n");
 
@@ -69,10 +130,7 @@ async function updateChannelDetails(
       }
 
       try {
-        // YouTube 채널 상세 정보 가져오기 (서비스 사용)
-        const channelData = await youtubeService.getChannelDetails(
-          artist.youtubeChannel.channelId,
-        );
+        const channelData = await getChannelDetails(artist.youtubeChannel.channelId);
 
         console.log(`   ✅ Found: ${channelData.title}`);
         console.log(
@@ -186,7 +244,8 @@ async function updateChannelDetails(
     console.error("❌ Fatal error:", error);
     throw error;
   } finally {
-    await app.close();
+    await prisma.$disconnect();
+    await pool.end();
   }
 }
 
@@ -196,5 +255,3 @@ if (require.main === module) {
     .then(() => process.exit(0))
     .catch(() => process.exit(1));
 }
-
-export default updateChannelDetails;

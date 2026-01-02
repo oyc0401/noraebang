@@ -1,6 +1,3 @@
-import { Injectable } from "@nestjs/common";
-import { z } from "zod";
-
 export interface SpotifyArtist {
   id: string;
   name: string;
@@ -19,41 +16,6 @@ export interface SpotifyArtist {
   };
 }
 
-const SpotifyImageSchema = z.object({
-  url: z.string(),
-  height: z.number(),
-  width: z.number(),
-});
-
-const SpotifyArtistSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  followers: z.object({
-    total: z.number(),
-  }),
-  images: z.array(SpotifyImageSchema),
-  genres: z.array(z.string()),
-  popularity: z.number(),
-  external_urls: z.object({
-    spotify: z.string(),
-  }),
-});
-
-const SpotifySearchResponseSchema = z.object({
-  artists: z.object({
-    items: z.array(SpotifyArtistSchema),
-    total: z.number(),
-    limit: z.number(),
-    offset: z.number(),
-  }),
-});
-
-const SpotifyTokenResponseSchema = z.object({
-  access_token: z.string(),
-  expires_in: z.number(),
-});
-
-@Injectable()
 export class SpotifyService {
   private accessToken?: string;
   private tokenExpiresAt: number = 0;
@@ -91,7 +53,7 @@ export class SpotifyService {
       );
     }
 
-    const data = SpotifyTokenResponseSchema.parse(await response.json());
+    const data: any = await response.json();
     const token = data.access_token;
     this.accessToken = token;
     this.tokenExpiresAt = Date.now() + data.expires_in * 1000 - 60000; // 1분 여유
@@ -127,12 +89,7 @@ export class SpotifyService {
       );
     }
 
-    const data = SpotifySearchResponseSchema.parse(await response.json());
-
-    // Raw 데이터 출력 (임시)
-    console.log("\n🔍 RAW SPOTIFY API RESPONSE:");
-    console.log(response);
-    console.log("\n");
+    const data: any = await response.json();
 
     return data.artists.items;
   }
@@ -185,6 +142,6 @@ export class SpotifyService {
       );
     }
 
-    return SpotifyArtistSchema.parse(await response.json());
+    return await response.json() as SpotifyArtist;
   }
 }
