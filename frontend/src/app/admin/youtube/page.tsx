@@ -187,9 +187,16 @@ export default function AdminPage() {
                     className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                   >
                     <td className="px-4 py-3">
-                      {artist.youtube?.thumbnail ? (
+                      {artist.youtube?.thumbnailMedium ||
+                      artist.youtube?.thumbnailHigh ||
+                      artist.youtube?.thumbnailDefault ? (
                         <Image
-                          src={artist.youtube.thumbnail}
+                          src={
+                            artist.youtube.thumbnailMedium ||
+                            artist.youtube.thumbnailHigh ||
+                            artist.youtube.thumbnailDefault ||
+                            ""
+                          }
                           alt={artist.nameKo}
                           width={80}
                           height={48}
