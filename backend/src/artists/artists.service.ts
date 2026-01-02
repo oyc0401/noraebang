@@ -5,7 +5,7 @@ import {
   getArtistAliases,
 } from "../config/artist-aliases";
 import { PrismaService } from "../prisma/prisma.service";
-import { ArtistDetailsDto } from "./dto/artist-response.dto";
+import { ArtistDetailsDto } from "../dto";
 
 export type ArtistDetails = Artist & {
   youtubeChannel: YoutubeChannel | null;

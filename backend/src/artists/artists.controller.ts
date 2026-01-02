@@ -26,10 +26,11 @@ import {
 import {
   ArtistDetailResponseDto,
   ArtistDetailsListResponseDto,
-  ArtistDto,
   ArtistListResponseDto,
   YoutubeChannelUpdateResponseDto,
 } from "./dto/artist-response.dto";
+
+import { ArtistDto } from "../dto";
 
 const isArtistSortOption = (value?: string): value is ArtistSortOption =>
   !!value && ARTIST_SORT_OPTIONS.includes(value as ArtistSortOption);
