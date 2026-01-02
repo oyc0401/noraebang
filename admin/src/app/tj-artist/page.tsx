@@ -364,6 +364,47 @@ export default function TjArtistPage() {
     }
   };
 
+  const handleBatchCreateAboveThreshold = async () => {
+      const targets = filteredArtists.filter((artist) => artist.totalSongs >= 30);
+    if (targets.length === 0) return;
+    setQuickCreateLoading(true);
+    setQuickCreateError(null);
+
+    try {
+      for (const target of targets) {
+        const songs = await getTjSongsByArtist(target.name, "all");
+        const tjIds = songs.map((song) => song.id);
+        if (!tjIds.length) continue;
+
+        const conflicts = await checkArtistConflicts({
+          name: target.name.trim(),
+        });
+        if (conflicts.name || conflicts.nameKo) {
+          continue;
+        }
+
+        await createArtistAndMapSongs({
+          name: target.name.trim(),
+          tjSongIds: tjIds,
+        });
+      }
+
+      await Promise.all([fetchRealArtists(), fetchSongs(), fetchArtists()]);
+      setSelectedSongIds([]);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "자동 매핑 중 오류가 발생했습니다.";
+      setQuickCreateError(message);
+      if (typeof window !== "undefined") {
+        window.alert(message);
+      }
+    } finally {
+      setQuickCreateLoading(false);
+    }
+  };
+
   const disableCreateSubmit =
     !createName.trim() ||
     conflicts.name ||
@@ -442,6 +483,13 @@ export default function TjArtistPage() {
       <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:overflow-hidden">
         <div className="flex w-full flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:w-80 lg:flex-none lg:max-h-[calc(100vh-200px)] lg:overflow-hidden xl:w-96">
           <div className="space-y-3">
+            <button
+              type="button"
+              onClick={handleBatchCreateAboveThreshold}
+              className="w-full cursor-pointer rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+            >
+              TJ 50곡↑ 자동 매핑
+            </button>
             <input
               type="search"
               placeholder="아티스트 검색"
