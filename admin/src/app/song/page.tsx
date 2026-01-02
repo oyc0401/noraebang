@@ -2,6 +2,8 @@
 /** biome-ignore-all lint/a11y/noSvgWithoutTitle: <explanation> */
 "use client";
 
+import Link from "next/link";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -701,17 +703,39 @@ export default function AdminSongPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <header className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            Admin
-          </p>
-          <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50">
-            곡 관리
-          </h1>
-          <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-            곡 정보, 아티스트 연결, 노래방 번호를 한 곳에서 관리하세요.
-          </p>
+      <div className="mx-auto max-w-7xl px-4 py-5">
+        <header className="mb-5 flex items-center gap-4">
+          <Link
+            href="/"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+            aria-label="관리자 대시보드로 돌아가기"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-5 w-5"
+            >
+              <path
+                d="M15 19l-7-7 7-7"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              Admin
+            </p>
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+              곡 관리
+            </h1>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              곡 정보, 아티스트 연결, 노래방 번호를 한 곳에서 관리하세요.
+            </p>
+          </div>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
