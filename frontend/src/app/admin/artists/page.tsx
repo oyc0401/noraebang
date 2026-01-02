@@ -589,13 +589,6 @@ export default function AdminArtistsPage() {
                               </div>
                             )}
                         </div>
-                        {song.role && (
-                          <span
-                            className={`text-xs px-2 py-1 rounded font-medium ${getRoleBadgeColor(song.role)}`}
-                          >
-                            {getRoleLabel(song.role)}
-                          </span>
-                        )}
                       </div>
                     </div>
                   ))}

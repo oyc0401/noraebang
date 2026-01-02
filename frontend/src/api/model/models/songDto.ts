@@ -5,6 +5,7 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
+import type { ArtistSongDto } from './artistSongDto';
 import type { KaraokeSongDto } from './karaokeSongDto';
 
 export interface SongDto {
@@ -12,6 +13,6 @@ export interface SongDto {
   title: string;
   /** @nullable */
   titleKo?: string | null;
-  artistIds: number[];
+  artists: ArtistSongDto[];
   karaokeSongs?: KaraokeSongDto[];
 }
