@@ -1,19 +1,18 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
+import { ChannelType, PrismaClient } from "@prisma/client";
 import pg from "pg";
+import { pathToFileURL } from "url";
+import {
+  getYoutubeApiKey,
+  rotateYoutubeApiKey,
+} from "../../lib/youtube-key-manager.ts";
 
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
-
-const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
-
-if (!YOUTUBE_API_KEY) {
-  throw new Error("YOUTUBE_API_KEY is not set");
-}
 
 interface ChannelSearchResult {
   channelId: string;
@@ -40,48 +39,106 @@ interface YoutubeChannelDetails {
   uploadsPlaylistId?: string;
 }
 
-async function searchChannels(query: string): Promise<ChannelSearchResult[]> {
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&maxResults=5&key=${YOUTUBE_API_KEY}`;
-
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(`YouTube API error: ${data.error?.message || response.statusText}`);
+function isQuotaErrorPayload(payload: any): boolean {
+  const reason = payload?.error?.errors?.[0]?.reason;
+  if (reason) {
+    return [
+      "quotaExceeded",
+      "dailyLimitExceeded",
+      "userRateLimitExceeded",
+      "rateLimitExceeded",
+    ].includes(reason);
   }
+
+  const message: string | undefined = payload?.error?.message;
+  return typeof message === "string" && message.toLowerCase().includes("quota");
+}
+
+async function fetchYoutubeJson(buildUrl: (apiKey: string) => string) {
+  while (true) {
+    const apiKey = getYoutubeApiKey();
+    const response = await fetch(buildUrl(apiKey));
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      // ignore JSON parse errors for non-JSON responses
+    }
+
+    if (response.ok) {
+      return data;
+    }
+
+    if (response.status === 403 && isQuotaErrorPayload(data)) {
+      console.warn("   ⛔️ Quota exceeded for current API key.");
+      if (rotateYoutubeApiKey()) {
+        console.log("   🔁 Retrying request with fallback API key...");
+        continue;
+      }
+    }
+
+    throw new Error(
+      `YouTube API error: ${data?.error?.message || response.statusText}`,
+    );
+  }
+}
+
+function isTopicChannelTitle(title?: string | null): boolean {
+  if (!title) {
+    return false;
+  }
+  return title.toLowerCase().endsWith(" - topic");
+}
+
+async function searchChannels(query: string): Promise<ChannelSearchResult[]> {
+  const data = await fetchYoutubeJson((apiKey) => {
+    const params = new URLSearchParams({
+      part: "snippet",
+      type: "channel",
+      q: query,
+      maxResults: "5",
+      key: apiKey,
+    });
+    return `https://www.googleapis.com/youtube/v3/search?${params.toString()}`;
+  });
 
   if (!data.items || data.items.length === 0) {
     return [];
   }
 
   // 각 채널의 상세 정보 가져오기 (구독자 수 포함)
-  const channelIds = data.items.map((item: any) => item.snippet.channelId).join(',');
-  const detailsUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIds}&key=${YOUTUBE_API_KEY}`;
+  const channelIds = data.items
+    .map((item: any) => item.snippet.channelId)
+    .join(",");
 
-  const detailsResponse = await fetch(detailsUrl);
-  const detailsData = await detailsResponse.json();
-
-  if (!detailsResponse.ok) {
-    throw new Error(`YouTube API error: ${detailsData.error?.message || detailsResponse.statusText}`);
-  }
+  const detailsData = await fetchYoutubeJson((apiKey) => {
+    const params = new URLSearchParams({
+      part: "snippet,statistics",
+      id: channelIds,
+      key: apiKey,
+    });
+    return `https://www.googleapis.com/youtube/v3/channels?${params.toString()}`;
+  });
 
   return detailsData.items.map((item: any) => ({
     channelId: item.id,
     title: item.snippet.title,
-    description: item.snippet.description || '',
-    subscriberCount: item.statistics?.subscriberCount ? parseInt(item.statistics.subscriberCount) : undefined,
+    description: item.snippet.description || "",
+    subscriberCount: item.statistics?.subscriberCount
+      ? parseInt(item.statistics.subscriberCount)
+      : undefined,
   }));
 }
 
 async function getChannelDetails(channelId: string): Promise<YoutubeChannelDetails> {
-  const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${encodeURIComponent(channelId)}&key=${YOUTUBE_API_KEY}`;
-
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(`YouTube API error: ${data.error?.message || response.statusText}`);
-  }
+  const data = await fetchYoutubeJson((apiKey) => {
+    const params = new URLSearchParams({
+      part: "snippet,statistics,contentDetails",
+      id: channelId,
+      key: apiKey,
+    });
+    return `https://www.googleapis.com/youtube/v3/channels?${params.toString()}`;
+  });
 
   if (!data.items || data.items.length === 0) {
     throw new Error(`Channel not found: ${channelId}`);
@@ -103,68 +160,58 @@ async function getChannelDetails(channelId: string): Promise<YoutubeChannelDetai
     thumbnailDefault: snippet.thumbnails?.default?.url,
     thumbnailMedium: snippet.thumbnails?.medium?.url,
     thumbnailHigh: snippet.thumbnails?.high?.url,
-    subscriberCount: statistics?.subscriberCount ? parseInt(statistics.subscriberCount) : undefined,
-    videoCount: statistics?.videoCount ? parseInt(statistics.videoCount) : undefined,
+    subscriberCount: statistics?.subscriberCount
+      ? parseInt(statistics.subscriberCount)
+      : undefined,
+    videoCount: statistics?.videoCount
+      ? parseInt(statistics.videoCount)
+      : undefined,
     viewCount: statistics?.viewCount ? BigInt(statistics.viewCount) : undefined,
     hiddenSubscriberCount: statistics?.hiddenSubscriberCount,
     uploadsPlaylistId: contentDetails?.relatedPlaylists?.uploads,
   };
 }
 
-function selectBestChannel(channels: ChannelSearchResult[]): ChannelSearchResult | null {
+function selectBestChannel(
+  channels: ChannelSearchResult[],
+): ChannelSearchResult | null {
   if (!channels || channels.length === 0) {
     return null;
   }
 
-  // Topic 채널 제외
-  const nonTopicChannels = channels.filter(
-    (channel) => !channel.title.includes(" - Topic"),
+  const topicChannel = channels.find((channel) =>
+    isTopicChannelTitle(channel.title),
   );
 
-  if (nonTopicChannels.length === 0) {
-    console.log(`   ⚠️  Only Topic channels found, using first result`);
-    return channels[0];
+  if (topicChannel) {
+    console.log(`   🎯 Topic channel found: ${topicChannel.title}`);
+    return topicChannel;
   }
 
-  // 구독자 수로 정렬 (내림차순)
-  const sortedChannels = nonTopicChannels
-    .filter((channel) => channel.subscriberCount !== null)
-    .sort((a, b) => (b.subscriberCount || 0) - (a.subscriberCount || 0));
-
-  // 상위 3개 중 첫 번째 (가장 구독자 많은)
-  const topChannels = sortedChannels.slice(0, 3);
-
-  if (topChannels.length > 1) {
-    console.log(`   📊 Top ${topChannels.length} candidates:`);
-    topChannels.forEach((ch, idx) => {
-      console.log(
-        `      ${idx + 1}. ${ch.title} - ${ch.subscriberCount?.toLocaleString()} subscribers`,
-      );
-    });
-  }
-
-  return topChannels[0] || nonTopicChannels[0];
+  console.log(`   ⚠️  No topic channel found in results`);
+  return null;
 }
 
-async function searchArtistChannels(
-  batchSize: number = 1,
-  skipExisting: boolean = true,
-) {
+async function searchArtistChannels(batchSize?: number | null) {
   try {
     console.log("🎵 Starting YouTube channel search...\n");
 
     // 업데이트가 필요한 아티스트만 조회
-    const whereClause = skipExisting
-      ? {
-          OR: [
-            { youtubeChannel: null },
-            { youtubeChannel: { title: { contains: " - Topic" } } },
-          ],
-        }
-      : {};
-
     const artists = await prisma.artist.findMany({
-      where: whereClause,
+      where: {
+        youtubeChannels: {
+          some: {
+            type: ChannelType.MAIN,
+          },
+        },
+        NOT: {
+          youtubeChannels: {
+            some: {
+              type: ChannelType.TOPIC,
+            },
+          },
+        },
+      },
       include: {
         artistSongs: {
           take: 1,
@@ -173,10 +220,10 @@ async function searchArtistChannels(
             song: true,
           },
         },
-        youtubeChannel: true,
+        youtubeChannels: true,
       },
       orderBy: { name: "asc" },
-      take: batchSize,
+      take: batchSize ?? undefined,
     });
 
     console.log(`Found ${artists.length} artists to update\n`);
@@ -191,12 +238,17 @@ async function searchArtistChannels(
     let errors = 0;
 
     for (const artist of artists) {
-      const isTopicChannel = artist.youtubeChannel?.title?.includes(" - Topic");
-      const statusPrefix = isTopicChannel
-        ? "🔄 Re-searching (Topic channel)"
-        : "📌 Processing";
+      const mainChannel = artist.youtubeChannels.find(
+        (channel) => channel.type === ChannelType.MAIN,
+      );
+      const statusPrefix = "📌 Processing (searching topic channel)";
 
       console.log(`${statusPrefix}: ${artist.name} (${artist.nameKo})`);
+      if (mainChannel) {
+        console.log(
+          `   Existing main channel: ${mainChannel.title} (${mainChannel.channelId})`,
+        );
+      }
 
       try {
         // 검색어: 아티스트명 + 대표곡명
@@ -228,7 +280,7 @@ async function searchArtistChannels(
           continue;
         }
 
-        console.log(`   ✅ Selected: ${channelData.title}`);
+        console.log(`   ✅ Selected topic channel: ${channelData.title}`);
         console.log(
           `   📊 Subscribers: ${channelData.subscriberCount?.toLocaleString() || "Hidden"}`,
         );
@@ -236,47 +288,20 @@ async function searchArtistChannels(
           `   📝 Description: ${channelData.description.substring(0, 50)}...`,
         );
 
-        // 기존 채널이 토픽 채널인 경우, 구독자 수 비교
-        if (isTopicChannel && artist.youtubeChannel?.subscriberCount) {
-          const existingSubscribers = artist.youtubeChannel.subscriberCount;
-          const newSubscribers = channelData.subscriberCount || 0;
-
-          if (newSubscribers < existingSubscribers) {
-            console.log(`   ⏭️  Skipping: New channel has fewer subscribers`);
-            console.log(
-              `      Existing: ${existingSubscribers.toLocaleString()}`,
-            );
-            console.log(`      New: ${newSubscribers.toLocaleString()}`);
-            notFound++;
-            console.log("");
-            continue;
-          } else {
-            console.log(`   ✨ Upgrading: New channel has more subscribers`);
-            console.log(
-              `      Old (Topic): ${existingSubscribers.toLocaleString()}`,
-            );
-            console.log(`      New: ${newSubscribers.toLocaleString()}`);
-          }
-        }
-
         // 채널 상세 정보 가져오기
         const detailedChannelData = await getChannelDetails(channelData.channelId);
 
-        // Artist 업데이트 (썸네일만)
-        await prisma.artist.update({
-          where: { id: artist.id },
-          data: {
-            thumbnailDefault: detailedChannelData.thumbnailDefault,
-            thumbnailMedium: detailedChannelData.thumbnailMedium,
-            thumbnailHigh: detailedChannelData.thumbnailHigh,
-          },
-        });
-
         // YoutubeChannel 테이블 upsert
         await prisma.youtubeChannel.upsert({
-          where: { artistId: artist.id },
+          where: {
+            artistId_type: {
+              artistId: artist.id,
+              type: ChannelType.TOPIC,
+            },
+          },
           create: {
             artistId: artist.id,
+            type: ChannelType.TOPIC,
             channelId: detailedChannelData.channelId,
             title: detailedChannelData.title,
             description: detailedChannelData.description,
@@ -295,6 +320,7 @@ async function searchArtistChannels(
             fetchedAt: new Date(),
           },
           update: {
+            type: ChannelType.TOPIC,
             channelId: detailedChannelData.channelId,
             title: detailedChannelData.title,
             description: detailedChannelData.description,
@@ -349,16 +375,24 @@ async function searchArtistChannels(
     // 남은 아티스트 확인
     const remaining = await prisma.artist.count({
       where: {
-        OR: [
-          { youtubeChannel: null },
-          { youtubeChannel: { title: { contains: " - Topic" } } },
-        ],
+        youtubeChannels: {
+          some: {
+            type: ChannelType.MAIN,
+          },
+        },
+        NOT: {
+          youtubeChannels: {
+            some: {
+              type: ChannelType.TOPIC,
+            },
+          },
+        },
       },
     });
 
     if (remaining > 0) {
       console.log(
-        `\n⚠️  ${remaining} artists still need YouTube channel data (or have Topic channels)`,
+        `\n⚠️  ${remaining} artists still need topic channel data`,
       );
       console.log("💡 Run this script again to continue updating");
     } else {
@@ -374,8 +408,12 @@ async function searchArtistChannels(
 }
 
 // 스크립트 실행
-if (require.main === module) {
-  searchArtistChannels(50)
+const isDirectExecution =
+  process.argv[1] &&
+  pathToFileURL(process.argv[1]).href === import.meta.url;
+
+if (isDirectExecution) {
+  searchArtistChannels()
     .then(() => process.exit(0))
     .catch(() => process.exit(1));
 }
