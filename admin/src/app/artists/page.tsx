@@ -11,6 +11,7 @@ import {
   getArtists,
   getArtistById,
   getSongsByArtist,
+  addSongOwnership,
   updateArtistAlias,
   updateArtistName,
   updateArtistNameKo,
@@ -95,6 +96,13 @@ export default function AdminArtistsPage() {
   const [transferArtistIdInput, setTransferArtistIdInput] = useState("");
   const [transferSaving, setTransferSaving] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
+  const [showAddOwnershipDialog, setShowAddOwnershipDialog] = useState(false);
+  const [addOwnershipSong, setAddOwnershipSong] = useState<Song | null>(null);
+  const [addOwnershipArtistIdInput, setAddOwnershipArtistIdInput] = useState("");
+  const [addOwnershipSaving, setAddOwnershipSaving] = useState(false);
+  const [addOwnershipError, setAddOwnershipError] = useState<string | null>(
+    null,
+  );
 
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -564,6 +572,35 @@ export default function AdminArtistsPage() {
       setTransferError(error?.message ?? "소유권 이전 중 오류가 발생했습니다.");
     } finally {
       setTransferSaving(false);
+    }
+  };
+
+  const handleAddOwnership = async () => {
+    if (!addOwnershipSong) return;
+    const trimmed = addOwnershipArtistIdInput.trim();
+    const targetId = Number.parseInt(trimmed, 10);
+    if (!trimmed || Number.isNaN(targetId) || targetId <= 0) {
+      setAddOwnershipError("추가할 아티스트 ID를 올바르게 입력해주세요.");
+      return;
+    }
+
+    setAddOwnershipSaving(true);
+    setAddOwnershipError(null);
+    try {
+      await addSongOwnership(addOwnershipSong.id, targetId);
+      if (selectedArtist) {
+        const refreshed = await getSongsByArtist(selectedArtist.id);
+        setSongs(refreshed);
+      }
+      setShowAddOwnershipDialog(false);
+      setAddOwnershipSong(null);
+      setAddOwnershipArtistIdInput("");
+    } catch (error: any) {
+      setAddOwnershipError(
+        error?.message ?? "소유권 추가 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setAddOwnershipSaving(false);
     }
   };
 
@@ -1044,6 +1081,26 @@ export default function AdminArtistsPage() {
                               {song.titleKo}
                             </div>
                           )}
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                            곡 ID: {song.id}
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            소유 아티스트:&nbsp;
+                            {song.owners && song.owners.length > 0 ? (
+                              song.owners
+                                .map(
+                                  (owner) =>
+                                    `${owner.nameKo || owner.name} (ID ${
+                                      owner.id
+                                    })`,
+                                )
+                                .join(", ")
+                            ) : (
+                              <span className="text-zinc-400">
+                                연결된 아티스트 없음
+                              </span>
+                            )}
+                          </div>
 
                           {song.karaokeSongs &&
                             song.karaokeSongs.length > 0 && (
@@ -1132,6 +1189,20 @@ export default function AdminArtistsPage() {
                                 style={{ cursor: "pointer" }}
                               >
                                 노래방번호 편집
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAddOwnershipSong(song);
+                                  setAddOwnershipArtistIdInput("");
+                                  setAddOwnershipError(null);
+                                  setShowAddOwnershipDialog(true);
+                                  setSongMenuOpen(null);
+                                }}
+                                className="block w-full px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                style={{ cursor: "pointer" }}
+                              >
+                                곡 소유권 추가하기
                               </button>
                               <button
                                 type="button"
@@ -1242,6 +1313,76 @@ export default function AdminArtistsPage() {
                   style={{ cursor: "pointer" }}
                 >
                   {transferSaving ? "이전 중..." : "이전하기"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAddOwnershipDialog && addOwnershipSong && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                곡 소유권 추가
+              </h3>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                다른 아티스트를 이 곡에 추가로 매핑합니다.
+              </p>
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800">
+                  <p className="font-semibold text-zinc-900 dark:text-zinc-50">
+                    {addOwnershipSong.title}
+                  </p>
+                  {addOwnershipSong.titleKo && (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {addOwnershipSong.titleKo}
+                    </p>
+                  )}
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    곡 ID: {addOwnershipSong.id}
+                  </p>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    추가할 아티스트 ID
+                  </label>
+                  <input
+                    type="number"
+                    value={addOwnershipArtistIdInput}
+                    onChange={(e) => setAddOwnershipArtistIdInput(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                    placeholder="예: 1234"
+                    style={{ cursor: "text" }}
+                  />
+                  {addOwnershipError && (
+                    <p className="mt-2 text-xs text-red-500">
+                      {addOwnershipError}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddOwnershipDialog(false);
+                    setAddOwnershipSong(null);
+                    setAddOwnershipArtistIdInput("");
+                    setAddOwnershipError(null);
+                  }}
+                  className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  style={{ cursor: "pointer" }}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddOwnership}
+                  disabled={addOwnershipSaving}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300 dark:bg-blue-500 dark:hover:bg-blue-400 dark:disabled:bg-blue-900/40"
+                  style={{ cursor: "pointer" }}
+                >
+                  {addOwnershipSaving ? "추가 중..." : "추가하기"}
                 </button>
               </div>
             </div>
