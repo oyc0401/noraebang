@@ -3,15 +3,17 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
 
-// TJ 곡의 artistList를 기반으로 Artist 생성 및 Song 매핑
+// TJ 곡의 artistList를 기반으로 Artist 생성 및 Song 매핑 (최적화 버전)
 //
 // 실행 흐름:
 // 1. saved=false인 TjSong의 artistList 수집
-// 2. 각 아티스트명에 대해:
-//    - 정확히 일치하는 Artist가 있는지 확인 (대소문자 구분)
+// 2. 모든 Artist를 메모리에 로드 (캐싱)
+// 3. 각 아티스트명에 대해:
+//    - name 필드가 정확히 일치하는 Artist가 있는지 확인 (대소문자 구분)
 //    - 있으면: 해당 Artist 사용
-//    - 없으면: 새로운 Artist 생성
-// 3. Artist가 확정되면 해당 아티스트의 TjSong 매핑
+//    - 없으면: 새로운 Artist 생성 후 캐시 업데이트
+// 4. Artist가 확정되면 해당 아티스트의 TjSong 매핑
+//    - 배치로 KaraokeSong 조회 및 처리
 //    - Song이 없으면 생성
 //    - ArtistSong 매핑 생성
 //    - TjSong.saved = true로 업데이트
@@ -24,27 +26,11 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-async function checkExactArtist(name: string) {
-  // 대소문자 구분하여 name 필드만 정확히 일치하는 Artist 찾기
-  const artist = await prisma.artist.findFirst({
-    where: {
-      name: { equals: name },
-    },
-    select: {
-      id: true,
-      name: true,
-      nameKo: true,
-    },
-  });
-
-  return artist;
-}
-
-
 async function mapTjSongsToArtist(
   artistId: number,
   artistName: string,
   isDryRun: boolean,
+  karaokeSongMap: Map<string, number>,
 ) {
   // 해당 아티스트명을 가진 TjSong 조회
   const tjSongs = await prisma.tjSong.findMany({
@@ -67,72 +53,78 @@ async function mapTjSongsToArtist(
   let createdSongs = 0;
   let mappedSongs = 0;
 
-  for (const tjSong of tjSongs) {
-    if (isDryRun) {
-      mappedSongs++;
-      continue;
-    }
+  if (isDryRun) {
+    return { mappedSongs: tjSongs.length, createdSongs: 0 };
+  }
 
-    // KaraokeSong이 있는지 확인
-    const existingKaraoke = await prisma.karaokeSong.findUnique({
-      where: {
-        provider_karaokeNo: {
-          provider: "TJ",
-          karaokeNo: tjSong.id,
-        },
-      },
-      select: {
-        songId: true,
+  // 배치 처리를 위한 데이터 준비
+  const songsToCreate: Array<{ tjSongId: string; title: string }> = [];
+  const artistSongsToCreate: Array<{ artistId: number; songId: number }> = [];
+  const tjSongIdsToUpdate: string[] = [];
+
+  for (const tjSong of tjSongs) {
+    const existingSongId = karaokeSongMap.get(tjSong.id);
+
+    if (existingSongId) {
+      // 기존 Song이 있으면 ArtistSong 매핑만 추가
+      artistSongsToCreate.push({ artistId, songId: existingSongId });
+      tjSongIdsToUpdate.push(tjSong.id);
+      mappedSongs++;
+    } else {
+      // Song을 생성해야 함
+      songsToCreate.push({ tjSongId: tjSong.id, title: tjSong.title });
+    }
+  }
+
+  // Song 배치 생성
+  for (const songData of songsToCreate) {
+    const createdSong = await prisma.song.create({
+      data: {
+        title: songData.title,
+        titleKo: songData.title,
       },
     });
 
-    let songId: number | undefined = existingKaraoke?.songId;
+    await prisma.karaokeSong.create({
+      data: {
+        songId: createdSong.id,
+        provider: "TJ",
+        karaokeNo: songData.tjSongId,
+      },
+    });
 
-    // Song이 없으면 생성
-    if (!songId) {
-      const createdSong = await prisma.song.create({
-        data: {
-          title: tjSong.title,
-          titleKo: tjSong.title,
-        },
-      });
+    // 캐시 업데이트
+    karaokeSongMap.set(songData.tjSongId, createdSong.id);
 
-      await prisma.karaokeSong.create({
-        data: {
-          songId: createdSong.id,
-          provider: "TJ",
-          karaokeNo: tjSong.id,
-        },
-      });
+    artistSongsToCreate.push({ artistId, songId: createdSong.id });
+    tjSongIdsToUpdate.push(songData.tjSongId);
+    createdSongs++;
+    mappedSongs++;
+  }
 
-      songId = createdSong.id;
-      createdSongs += 1;
-    }
-
-    // ArtistSong 매핑 생성
+  // ArtistSong 매핑 생성 (중복 방지)
+  for (const mapping of artistSongsToCreate) {
     await prisma.artistSong.upsert({
       where: {
         artistId_songId: {
-          artistId,
-          songId,
+          artistId: mapping.artistId,
+          songId: mapping.songId,
         },
       },
       update: {},
       create: {
-        artistId,
-        songId,
+        artistId: mapping.artistId,
+        songId: mapping.songId,
       },
     });
-
-    mappedSongs += 1;
   }
 
   // TjSong.saved = true로 업데이트
-  if (!isDryRun) {
+  if (tjSongIdsToUpdate.length > 0) {
     await prisma.tjSong.updateMany({
       where: {
         id: {
-          in: tjSongs.map((s) => s.id),
+          in: tjSongIdsToUpdate,
         },
       },
       data: { saved: true },
@@ -148,11 +140,45 @@ async function main() {
   const limitArg = process.argv.find((arg) => arg.startsWith("--limit="));
   const limit = limitArg ? Number.parseInt(limitArg.split("=")[1]) : undefined;
 
-  console.log("🎵 TJ 아티스트 자동 생성 및 매핑 시작");
+  console.log("🎵 TJ 아티스트 자동 생성 및 매핑 시작 (최적화 버전)");
   console.log(`Mode: ${isDryRun ? "DRY RUN" : "FORCE (실제 생성)"}`);
   if (limit) {
     console.log(`Limit: ${limit}명`);
   }
+  console.log("");
+
+  // 0. 모든 Artist를 메모리에 로드 (캐싱)
+  console.log("Step 0: Artist 캐시 로딩 중...");
+  const allArtists = await prisma.artist.findMany({
+    select: {
+      id: true,
+      name: true,
+      nameKo: true,
+    },
+  });
+  const artistMap = new Map<string, { id: number; name: string; nameKo: string | null }>();
+  for (const artist of allArtists) {
+    artistMap.set(artist.name, artist);
+  }
+  console.log(`  ✅ ${artistMap.size.toLocaleString()}명의 Artist 로드 완료`);
+  console.log("");
+
+  // 0-1. KaraokeSong 캐시 로딩
+  console.log("Step 0-1: KaraokeSong 캐시 로딩 중...");
+  const allKaraokeSongs = await prisma.karaokeSong.findMany({
+    where: {
+      provider: "TJ",
+    },
+    select: {
+      karaokeNo: true,
+      songId: true,
+    },
+  });
+  const karaokeSongMap = new Map<string, number>();
+  for (const ks of allKaraokeSongs) {
+    karaokeSongMap.set(ks.karaokeNo, ks.songId);
+  }
+  console.log(`  ✅ ${karaokeSongMap.size.toLocaleString()}개의 KaraokeSong 로드 완료`);
   console.log("");
 
   // 1. saved=false인 TjSong의 artistList 수집
@@ -208,8 +234,8 @@ async function main() {
     const artistName = row.artist_name;
     const songCount = Number(row.song_count);
 
-    // 정확히 일치하는 Artist 확인 (대소문자 구분)
-    const exactArtist = await checkExactArtist(artistName);
+    // 캐시에서 확인 (대소문자 구분)
+    const exactArtist = artistMap.get(artistName);
 
     if (exactArtist) {
       // 정확히 일치하는 Artist가 있으면 사용
@@ -224,6 +250,7 @@ async function main() {
         exactArtist.id,
         artistName,
         isDryRun,
+        karaokeSongMap,
       );
       totalMappedSongs += stats.mappedSongs;
       totalCreatedSongs += stats.createdSongs;
@@ -262,14 +289,24 @@ async function main() {
       },
     });
 
-    if (processed <= 10) {
-      console.log(
-        `  ✨ [CREATE] ${artistName} (ID: ${newArtist.id}) - ${songCount}곡`,
-      );
-    }
+    // 캐시 업데이트
+    artistMap.set(artistName, {
+      id: newArtist.id,
+      name: newArtist.name,
+      nameKo: newArtist.nameKo,
+    });
+
+    console.log(
+      `  ✨ [CREATE] ${artistName} (ID: ${newArtist.id}) - ${songCount}곡`,
+    );
 
     // 매핑
-    const stats = await mapTjSongsToArtist(newArtist.id, artistName, isDryRun);
+    const stats = await mapTjSongsToArtist(
+      newArtist.id,
+      artistName,
+      isDryRun,
+      karaokeSongMap,
+    );
     totalMappedSongs += stats.mappedSongs;
     totalCreatedSongs += stats.createdSongs;
   }
