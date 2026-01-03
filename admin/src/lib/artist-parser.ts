@@ -35,12 +35,6 @@ export function parseTJArtist(tjArtist: string): ParsedArtists {
   features.push(...extraction.features);
   producers.push(...extraction.producers);
 
-  const inlineWith = splitByKeywordOutsideParens(remaining, "with");
-  if (inlineWith) {
-    remaining = inlineWith.base.trim();
-    features.push(...splitNames(inlineWith.rest));
-  }
-
   const artistCandidates = splitNames(remaining);
   result.artist.push(
     ...artistCandidates
@@ -147,14 +141,41 @@ function classifyParenthesisContent(
 
 function splitNames(text: string): string[] {
   const results: string[] = [];
+  const lower = text.toLowerCase();
+  const connectors = ["with", "meets"];
   let depth = 0;
   let current = "";
+  let i = 0;
 
-  for (let i = 0; i < text.length; i++) {
+  while (i < text.length) {
+    if (depth === 0) {
+      const connector = connectors.find((conn) => lower.startsWith(conn, i));
+      if (connector) {
+        const prevChar = i > 0 ? lower[i - 1] : "";
+        const nextChar =
+          i + connector.length < text.length
+            ? lower[i + connector.length]
+            : "";
+        if (!/[a-z]/.test(prevChar) && !/[a-z]/.test(nextChar)) {
+          const trimmed = current.trim();
+          if (trimmed.length > 0) {
+            results.push(trimmed);
+          }
+          current = "";
+          i += connector.length;
+          while (i < text.length && /[\s.,]/.test(text[i])) {
+            i++;
+          }
+          continue;
+        }
+      }
+    }
+
     const char = text[i];
     if (char === "(") {
       depth++;
       current += char;
+      i++;
       continue;
     }
     if (char === ")") {
@@ -162,6 +183,7 @@ function splitNames(text: string): string[] {
         depth--;
       }
       current += char;
+      i++;
       continue;
     }
 
@@ -174,10 +196,12 @@ function splitNames(text: string): string[] {
         results.push(trimmed);
       }
       current = "";
+      i++;
       continue;
     }
 
     current += char;
+    i++;
   }
 
   const finalValue = current.trim();
@@ -186,51 +210,6 @@ function splitNames(text: string): string[] {
   }
 
   return results;
-}
-
-function splitByKeywordOutsideParens(
-  text: string,
-  keyword: string,
-): { base: string; rest: string } | null {
-  const lower = text.toLowerCase();
-  const target = keyword.toLowerCase();
-  let depth = 0;
-
-  for (let i = 0; i <= text.length - target.length; i++) {
-    const char = text[i];
-    if (char === "(") {
-      depth++;
-      continue;
-    }
-    if (char === ")") {
-      if (depth > 0) {
-        depth--;
-      }
-      continue;
-    }
-    if (depth > 0) {
-      continue;
-    }
-
-    if (lower.slice(i, i + target.length) !== target) {
-      continue;
-    }
-
-    const prevChar = i > 0 ? lower[i - 1] : "";
-    const nextChar =
-      i + target.length < lower.length ? lower[i + target.length] : "";
-
-    if (/[a-z]/.test(prevChar) || /[a-z]/.test(nextChar)) {
-      continue;
-    }
-
-    return {
-      base: text.slice(0, i),
-      rest: text.slice(i + target.length).trim(),
-    };
-  }
-
-  return null;
 }
 
 function cleanupArtistName(name: string): string {

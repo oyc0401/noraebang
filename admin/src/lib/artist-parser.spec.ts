@@ -392,11 +392,29 @@ describe("parseTJArtist", () => {
       });
     });
 
-    it("with 텍스트가 붙어도 첫 아티스트로 인식되어야 함", () => {
+    it("괄호 밖에 있는 with도 아티스트 구분자로 인식되어야 함", () => {
       const result = parseTJArtist("安室奈美恵 with スーパーモンキーズ");
       expect(result).toEqual({
-        artist: ["安室奈美恵"],
-        feature: ["スーパーモンキーズ"],
+        artist: ["安室奈美恵", "スーパーモンキーズ"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("영어 with 표기도 아티스트 구분자로 처리되어야 함", () => {
+      const result = parseTJArtist("CHiCO with HoneyWorks");
+      expect(result).toEqual({
+        artist: ["CHiCO", "HoneyWorks"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("with 이후 meets 가 이어져도 모든 아티스트가 분리되어야 함", () => {
+      const result = parseTJArtist("CHiCO with HoneyWorks meets 中川翔子");
+      expect(result).toEqual({
+        artist: ["CHiCO", "HoneyWorks", "中川翔子"],
+        feature: [],
         producer: [],
       });
     });
@@ -533,7 +551,7 @@ describe("parseTJArtist", () => {
     it("meets 키워드가 있는 복합 아티스트명", () => {
       const result = parseTJArtist("HoneyWorks meets CHiCO & sana");
       expect(result).toEqual({
-        artist: ["HoneyWorks meets CHiCO", "sana"],
+        artist: ["HoneyWorks", "CHiCO", "sana"],
         feature: [],
         producer: [],
       });
