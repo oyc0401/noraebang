@@ -95,6 +95,15 @@ describe("parseTJArtist", () => {
         producer: [],
       });
     });
+
+    it("특정 그룹명 멤버 목록이 오면 그룹명만 유지해야 함 (BTOB, TWICE)", () => {
+      const result = parseTJArtist("BTOB(이민혁,프니엘,정일훈)");
+      expect(result).toEqual({
+        artist: ["BTOB"],
+        feature: [],
+        producer: [],
+      });
+    });
   });
 
   describe("피처링 (Feat.) 처리", () => {
@@ -124,6 +133,106 @@ describe("parseTJArtist", () => {
         producer: [],
       });
     });
+
+    it("Duet. 은 Feat. 과 동일하게 처리되어야 함", () => {
+      const result = parseTJArtist("박재정(Duet.규현)");
+      expect(result).toEqual({
+        artist: ["박재정"],
+        feature: ["규현"],
+        producer: [],
+      });
+    });
+
+    it("Duet With 은 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("김동률(Duet With 이소은)");
+      expect(result).toEqual({
+        artist: ["김동률"],
+        feature: ["이소은"],
+        producer: [],
+      });
+    });
+
+    it("With 은 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("바이브(With 벤(Ben))");
+      expect(result).toEqual({
+        artist: ["바이브"],
+        feature: ["벤(Ben)"],
+        producer: [],
+      });
+    });
+
+    it("With. 은 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("후이(With.장혜진)");
+      expect(result).toEqual({
+        artist: ["후이"],
+        feature: ["장혜진"],
+        producer: [],
+      });
+    });
+
+    it("여러 아티스트 케이스에서도 With. 은 피처링 처리되어야 함", () => {
+      const result = parseTJArtist("이창섭(With.린)");
+      expect(result).toEqual({
+        artist: ["이창섭"],
+        feature: ["린"],
+        producer: [],
+      });
+    });
+    it("앞에 한국어가 있어도 Duet. 은 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("브라운아이즈(Duet.장혜진)");
+      expect(result).toEqual({
+        artist: ["브라운아이즈"],
+        feature: ["장혜진"],
+        producer: [],
+      });
+    });
+
+    // it("닫히지 않은 Feat 괄호도 피처링으로 처리되어야 함", () => {
+    //   const result = parseTJArtist("지코(Feat.루나(F(X))");
+    //   expect(result).toEqual({
+    //     artist: ["지코"],
+    //     feature: ["루나(F(X))"],
+    //     producer: [],
+    //   });
+    // });
+
+    it("Rap. 도 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("마야(Rap.상추)");
+      expect(result).toEqual({
+        artist: ["마야"],
+        feature: ["상추"],
+        producer: [],
+      });
+    });
+
+    it("Special Ment. 도 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("여행스케치(Special Ment. 엄앵란)");
+      expect(result).toEqual({
+        artist: ["여행스케치"],
+        feature: ["엄앵란"],
+        producer: [],
+      });
+    });
+
+    it("Narr. 도 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("다비치(Narr.하하)");
+      expect(result).toEqual({
+        artist: ["다비치"],
+        feature: ["하하"],
+        producer: [],
+      });
+    });
+
+    it("By 는 참여 멤버 목록으로 처리되어야 함", () => {
+      const result = parseTJArtist(
+        "tripleS(트리플에스)(By 나경,마유,시온,채원)",
+      );
+      expect(result).toEqual({
+        artist: ["tripleS(트리플에스)"],
+        feature: ["나경", "마유", "시온", "채원"],
+        producer: [],
+      });
+    });
   });
 
   describe("프로듀서 (Prod.) 처리", () => {
@@ -142,6 +251,15 @@ describe("parseTJArtist", () => {
         artist: ["아티스트"],
         feature: [],
         producer: ["프로듀서1", "프로듀서2"],
+      });
+    });
+
+    it("Prod. By 패턴에서도 프로듀서를 추출해야 함", () => {
+      const result = parseTJArtist("윤하(Prod. By 이찬혁(AKMU(악뮤)))");
+      expect(result).toEqual({
+        artist: ["윤하"],
+        feature: [],
+        producer: ["이찬혁(AKMU(악뮤))"],
       });
     });
   });
@@ -204,6 +322,44 @@ describe("parseTJArtist", () => {
         artist: ["아티스트"],
         feature: ["피처링"],
         producer: ["프로듀서"],
+      });
+    });
+  });
+
+  describe("추가 구분자 및 접미사 처리", () => {
+    it("외 다수 접미사는 제거되어야 함", () => {
+      const result = parseTJArtist("G-DRAGON 외 다수");
+      expect(result).toEqual({
+        artist: ["G-DRAGON"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("× 기호도 아티스트 구분자로 인식되어야 함", () => {
+      const result = parseTJArtist("w-inds.×G-DRAGON(BIG BANG)");
+      expect(result).toEqual({
+        artist: ["w-inds.", "G-DRAGON(BIG BANG)"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("전각 ＆ 기호도 아티스트 구분자로 인식되어야 함", () => {
+      const result = parseTJArtist("EXILE＆倖田來未");
+      expect(result).toEqual({
+        artist: ["EXILE", "倖田來未"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("with 텍스트가 붙어도 첫 아티스트로 인식되어야 함", () => {
+      const result = parseTJArtist("安室奈美恵 with スーパーモンキーズ");
+      expect(result).toEqual({
+        artist: ["安室奈美恵"],
+        feature: ["スーパーモンキーズ"],
+        producer: [],
       });
     });
   });
@@ -369,7 +525,7 @@ describe("parseTJArtist", () => {
       const result = parseTJArtist("양정승(With KCM & 노누)");
       expect(result).toEqual({
         artist: ["양정승"],
-        feature: [],
+        feature: ["KCM", "노누"],
         producer: [],
       });
     });
@@ -378,7 +534,7 @@ describe("parseTJArtist", () => {
       const result = parseTJArtist("KCM(With 나비)");
       expect(result).toEqual({
         artist: ["KCM"],
-        feature: [],
+        feature: ["나비"],
         producer: [],
       });
     });
@@ -387,7 +543,7 @@ describe("parseTJArtist", () => {
       const result = parseTJArtist("김장훈(With 알리)");
       expect(result).toEqual({
         artist: ["김장훈"],
-        feature: [],
+        feature: ["알리"],
         producer: [],
       });
     });
