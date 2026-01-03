@@ -40,7 +40,7 @@ async function findNameCollisions() {
 
     for (const artist of artists) {
       const keyword = artist.name?.trim();
-      if (!keyword) continue;
+      if (!keyword || keyword.length <= 1) continue;
 
       const matches = await prisma.artist.findMany({
         where: {
