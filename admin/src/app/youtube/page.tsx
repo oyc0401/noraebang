@@ -158,7 +158,7 @@ export default function YoutubeAdminPage() {
     });
   }, [artists, filters, searchQuery]);
 
-  const visibleArtists = useMemo(() => {
+  const sortedArtists = useMemo(() => {
     const sorted = [...filteredArtists];
     sorted.sort((a, b) => {
       switch (filters.sort) {
@@ -175,9 +175,7 @@ export default function YoutubeAdminPage() {
           );
         }
         case "channelCount": {
-          return (
-            b.youtubeChannels.length - a.youtubeChannels.length
-          );
+          return b.youtubeChannels.length - a.youtubeChannels.length;
         }
         case "id": {
           return a.id - b.id;
@@ -186,9 +184,15 @@ export default function YoutubeAdminPage() {
           return 0;
       }
     });
+    return sorted;
+  }, [filteredArtists, filters.sort]);
 
-    return sorted.slice(0, visibleCount);
-  }, [filteredArtists, visibleCount, filters.sort]);
+  const visibleArtists = useMemo(
+    () => sortedArtists.slice(0, visibleCount),
+    [sortedArtists, visibleCount],
+  );
+
+  const totalArtists = sortedArtists.length;
 
   useEffect(() => {
     if (!artists.length || initialSelectionResolved.current) return;
@@ -227,17 +231,17 @@ export default function YoutubeAdminPage() {
 
   useEffect(() => {
     if (!selectedArtistId) return;
-    const index = filteredArtists.findIndex(
+    const index = sortedArtists.findIndex(
       (artist) => artist.id === selectedArtistId,
     );
     if (index >= 0 && index >= visibleCount) {
       setVisibleCount((prev) => Math.max(prev, index + 1));
     }
-  }, [filteredArtists, selectedArtistId, visibleCount]);
+  }, [sortedArtists, selectedArtistId, visibleCount]);
 
   useEffect(() => {
     if (!initialSelectionResolved.current) return;
-    if (!filteredArtists.length) {
+    if (!sortedArtists.length) {
       setSelectedArtistId(null);
       return;
     }
@@ -250,8 +254,8 @@ export default function YoutubeAdminPage() {
       return;
     }
 
-    setSelectedArtistId(filteredArtists[0]?.id ?? null);
-  }, [filteredArtists, selectedArtistId, artists]);
+    setSelectedArtistId(sortedArtists[0]?.id ?? null);
+  }, [sortedArtists, selectedArtistId, artists]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -274,15 +278,92 @@ export default function YoutubeAdminPage() {
     const { scrollTop, scrollHeight, clientHeight } = container;
     if (scrollTop + clientHeight >= scrollHeight - 80) {
       setVisibleCount((prev) => {
-        if (prev >= filteredArtists.length) return prev;
-        return Math.min(filteredArtists.length, prev + VISIBLE_INCREMENT);
+        if (prev >= totalArtists) return prev;
+        return Math.min(totalArtists, prev + VISIBLE_INCREMENT);
       });
     }
-  }, [filteredArtists.length]);
+  }, [totalArtists]);
 
   const selectedArtist = artists.find(
     (artist) => artist.id === selectedArtistId,
   );
+  const youtubeMusicSearchQuery =
+    selectedArtist?.name?.trim() || selectedArtist?.nameKo?.trim() || "";
+  const youtubeMusicSearchUrl = youtubeMusicSearchQuery
+    ? `https://music.youtube.com/search?q=${encodeURIComponent(
+        youtubeMusicSearchQuery,
+      )}`
+    : null;
+
+  const moveSelection = useCallback(
+    (direction: "prev" | "next") => {
+      if (!sortedArtists.length) return;
+
+      if (!selectedArtistId) {
+        setSelectedArtistId(sortedArtists[0].id);
+        return;
+      }
+
+      const currentIndex = sortedArtists.findIndex(
+        (artist) => artist.id === selectedArtistId,
+      );
+
+      if (currentIndex === -1) {
+        setSelectedArtistId(sortedArtists[0].id);
+        return;
+      }
+
+      if (direction === "prev" && currentIndex > 0) {
+        setSelectedArtistId(sortedArtists[currentIndex - 1].id);
+      } else if (
+        direction === "next" &&
+        currentIndex < sortedArtists.length - 1
+      ) {
+        setSelectedArtistId(sortedArtists[currentIndex + 1].id);
+      }
+    },
+    [sortedArtists, selectedArtistId],
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key !== "ArrowUp" &&
+        event.key !== "ArrowDown" &&
+        event.key !== "ArrowLeft" &&
+        event.key !== "ArrowRight"
+      ) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tagName = target.tagName;
+        if (
+          tagName === "INPUT" ||
+          tagName === "TEXTAREA" ||
+          tagName === "SELECT" ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+      }
+
+      if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+        event.preventDefault();
+        moveSelection("prev");
+        return;
+      }
+
+      if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+        event.preventDefault();
+        moveSelection("next");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [moveSelection]);
 
   const handleDeleteChannel = async (type: ChannelType) => {
     if (!selectedArtist) return;
@@ -780,6 +861,16 @@ export default function YoutubeAdminPage() {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <div className="flex flex-wrap gap-2">
+                      {youtubeMusicSearchUrl && (
+                        <a
+                          href={youtubeMusicSearchUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:border-red-300 hover:text-red-600"
+                        >
+                          유튜브뮤직 이동
+                        </a>
+                      )}
                       <button
                         type="button"
                         onClick={() => openDialog("MAIN")}

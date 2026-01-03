@@ -526,6 +526,24 @@ describe("parseTJArtist", () => {
         producer: [],
       });
     });
+
+    it("K/DA는 슬래시가 있어도 하나의 아티스트로 처리되어야 함", () => {
+      const result = parseTJArtist("K/DA,(여자)아이들,Madison Beer,Jaira Burns");
+      expect(result).toEqual({
+        artist: ["K/DA", "(여자)아이들", "Madison Beer", "Jaira Burns"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("K/DA가 중간에 있어도 하나의 아티스트로 처리되어야 함", () => {
+      const result = parseTJArtist("(여자)아이들,Madison Beer,Lexie Liu,Jaira Burns,Seraphine,K/DA,League of Legends");
+      expect(result).toEqual({
+        artist: ["(여자)아이들", "Madison Beer", "Lexie Liu", "Jaira Burns", "Seraphine", "K/DA", "League of Legends"],
+        feature: [],
+        producer: [],
+      });
+    });
   });
 
   describe("공백 처리", () => {

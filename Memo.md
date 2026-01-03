@@ -20,10 +20,7 @@ pnpx prisma migrate dev
 pnpx prisma migrate deploy
 
   ### 최근 아티스트 보기
-   SELECT id, name, alias, created_at
-  FROM artist
-  ORDER BY created_at DESC
-  LIMIT 30;
+SELECT channel_id FROM youtube_channel LIMIT 30 ;
 
   ## 최근 곡 보기
 SELECT s.id, s.title, a.name as artist_name, s.created_at
