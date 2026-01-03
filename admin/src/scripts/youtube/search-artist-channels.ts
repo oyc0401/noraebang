@@ -192,13 +192,42 @@ function selectBestChannel(
   return null;
 }
 
-async function searchArtistChannels(batchSize?: number | null) {
+async function getDefaultStartArtistId(): Promise<number> {
+  const latestTopicChannel = await prisma.youtubeChannel.findFirst({
+    where: { type: ChannelType.TOPIC },
+    orderBy: { artistId: "desc" },
+    select: { artistId: true },
+  });
+
+  if (!latestTopicChannel) {
+    return 1;
+  }
+
+  return latestTopicChannel.artistId + 1;
+}
+
+interface SearchOptions {
+  batchSize?: number | null;
+  startId?: number | null;
+}
+
+async function searchArtistChannels(options?: SearchOptions) {
   try {
     console.log("🎵 Starting YouTube channel search...\n");
+
+    const desiredStartId =
+      options?.startId && options.startId > 0
+        ? options.startId
+        : await getDefaultStartArtistId();
+
+    console.log(`➡️  Processing artists with id >= ${desiredStartId}`);
 
     // 업데이트가 필요한 아티스트만 조회
     const artists = await prisma.artist.findMany({
       where: {
+        id: {
+          gte: desiredStartId,
+        },
         youtubeChannels: {
           some: {
             type: ChannelType.MAIN,
@@ -222,8 +251,8 @@ async function searchArtistChannels(batchSize?: number | null) {
         },
         youtubeChannels: true,
       },
-      orderBy: { name: "asc" },
-      take: batchSize ?? undefined,
+      orderBy: { id: "asc" },
+      take: options?.batchSize ?? undefined,
     });
 
     console.log(`Found ${artists.length} artists to update\n`);
@@ -236,6 +265,7 @@ async function searchArtistChannels(batchSize?: number | null) {
     let updated = 0;
     let notFound = 0;
     let errors = 0;
+    let lastProcessedId: number | null = null;
 
     for (const artist of artists) {
       const mainChannel = artist.youtubeChannels.find(
@@ -342,6 +372,7 @@ async function searchArtistChannels(batchSize?: number | null) {
 
         console.log(`   💾 Channel data saved successfully`);
         updated++;
+        lastProcessedId = artist.id;
 
         // YouTube API rate limit을 고려한 딜레이 (200ms)
         await new Promise((resolve) => setTimeout(resolve, 200));
@@ -357,6 +388,11 @@ async function searchArtistChannels(batchSize?: number | null) {
           console.error(
             "💡 Tip: You can continue from where you left off by running this script again.",
           );
+          if (lastProcessedId) {
+            console.error(
+              `⚠️  Last processed artist ID: ${lastProcessedId}. Use this value when restarting.`,
+            );
+          }
           break;
         }
         console.error(`   ❌ Error processing ${artist.name}:`, error);
@@ -413,7 +449,12 @@ const isDirectExecution =
   pathToFileURL(process.argv[1]).href === import.meta.url;
 
 if (isDirectExecution) {
-  searchArtistChannels()
+  const startIdArg = process.argv[2];
+  const limitArg = process.argv[3];
+  const startId = startIdArg ? Number(startIdArg) : undefined;
+  const batchSize = limitArg ? Number(limitArg) : undefined;
+
+  searchArtistChannels({ startId, batchSize })
     .then(() => process.exit(0))
     .catch(() => process.exit(1));
 }
