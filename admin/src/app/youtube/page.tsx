@@ -14,12 +14,16 @@ import {
 import {
   deleteYoutubeChannel,
   getYoutubeArtists,
+  getYoutubeSongsByArtist,
   upsertYoutubeChannel,
 } from "./actions";
 
 type Artist = Awaited<ReturnType<typeof getYoutubeArtists>>[number];
 type YoutubeChannel = Artist["youtubeChannels"][number];
 type ChannelType = YoutubeChannel["type"];
+type ArtistSong = Awaited<
+  ReturnType<typeof getYoutubeSongsByArtist>
+>[number];
 
 type FilterState = {
   main: "all" | "has" | "missing";
@@ -85,6 +89,9 @@ export default function YoutubeAdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(VISIBLE_INCREMENT);
   const listContainerRef = useRef<HTMLDivElement>(null);
+  const [artistSongs, setArtistSongs] = useState<ArtistSong[]>([]);
+  const [songsLoading, setSongsLoading] = useState(false);
+  const [songsError, setSongsError] = useState<string | null>(null);
 
   const initialSelectionResolved = useRef(false);
 
@@ -294,6 +301,47 @@ export default function YoutubeAdminPage() {
         youtubeMusicSearchQuery,
       )}`
     : null;
+  const youtubeSearchUrl = youtubeMusicSearchQuery
+    ? `https://www.youtube.com/results?search_query=${encodeURIComponent(
+        youtubeMusicSearchQuery,
+      )}`
+    : null;
+
+  useEffect(() => {
+    if (!selectedArtistId) {
+      setArtistSongs([]);
+      setSongsError(null);
+      setSongsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSongsLoading(true);
+    setSongsError(null);
+
+    getYoutubeSongsByArtist(selectedArtistId)
+      .then((songs) => {
+        if (cancelled) return;
+        setArtistSongs(songs);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        const message =
+          error instanceof Error
+            ? error.message
+            : "곡 정보를 불러오지 못했습니다.";
+        setSongsError(message);
+        setArtistSongs([]);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setSongsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedArtistId]);
 
   const moveSelection = useCallback(
     (direction: "prev" | "next") => {
@@ -437,7 +485,7 @@ export default function YoutubeAdminPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto w-full max-w-[1600px] px-3 py-8 sm:px-4 lg:px-6">
         <header className="mb-6 flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <Link
@@ -496,8 +544,8 @@ export default function YoutubeAdminPage() {
           </div>
         )}
 
-        <div className="flex flex-col gap-6 lg:flex-row">
-          <aside className="w-full flex-shrink-0 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm lg:flex lg:h-[calc(100vh-8rem)] lg:w-[360px] lg:flex-col">
+        <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[340px_minmax(0,1fr)_360px] xl:items-start">
+          <aside className="flex w-full flex-shrink-0 flex-col rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm xl:h-[calc(100vh-6rem)]">
             <div className="flex-shrink-0 relative">
               <button
                 ref={filterButtonRef}
@@ -861,12 +909,22 @@ export default function YoutubeAdminPage() {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <div className="flex flex-wrap gap-2">
+                      {youtubeSearchUrl && (
+                        <a
+                          href={youtubeSearchUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:border-red-300 hover:text-red-600"
+                        >
+                          유튜브 이동
+                        </a>
+                      )}
                       {youtubeMusicSearchUrl && (
                         <a
                           href={youtubeMusicSearchUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:border-red-300 hover:text-red-600"
+                          className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:border-red-300 hover:text-red-600"
                         >
                           유튜브뮤직 이동
                         </a>
@@ -874,14 +932,14 @@ export default function YoutubeAdminPage() {
                       <button
                         type="button"
                         onClick={() => openDialog("MAIN")}
-                        className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-700"
+                        className="rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-red-700"
                       >
                         메인 채널 수정
                       </button>
                       <button
                         type="button"
                         onClick={() => openDialog("TOPIC")}
-                        className="rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-amber-600"
+                        className="rounded-full bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-amber-600"
                       >
                         토픽 채널 수정
                       </button>
@@ -1023,6 +1081,101 @@ export default function YoutubeAdminPage() {
                 </p>
               </div>
             )}
+          </section>
+
+          <section className="flex w-full flex-col rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm xl:h-[calc(100vh-6rem)]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-zinc-900">
+                  연결된 곡
+                </p>
+                <p className="text-xs text-zinc-500">
+                  {selectedArtist
+                    ? `${artistSongs.length.toLocaleString("ko-KR")}곡이 연결되어 있습니다.`
+                    : "아티스트를 선택하면 곡 목록을 확인할 수 있습니다."}
+                </p>
+              </div>
+              {selectedArtist && (
+                <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
+                  ID {selectedArtist.id}
+                </span>
+              )}
+            </div>
+
+            <div className="mt-4 min-h-[200px] flex-1 overflow-y-auto pr-1">
+              {!selectedArtist ? (
+                <p className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/60 p-4 text-center text-sm text-zinc-500">
+                  왼쪽에서 아티스트를 선택해 곡을 확인하세요.
+                </p>
+              ) : songsLoading ? (
+                <p className="rounded-2xl border border-dashed border-zinc-200 p-4 text-center text-sm text-zinc-500">
+                  곡 정보를 불러오는 중입니다...
+                </p>
+              ) : songsError ? (
+                <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600">
+                  {songsError}
+                </p>
+              ) : artistSongs.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/60 p-4 text-center text-sm text-zinc-500">
+                  연결된 곡이 없습니다.
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {artistSongs.map((song) => (
+                    <li
+                      key={song.id}
+                      className="rounded-2xl border border-zinc-100 bg-zinc-50/80 p-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-900">
+                            {song.title}
+                          </p>
+                          {song.titleKo && (
+                            <p className="text-xs text-zinc-500">
+                              {song.titleKo}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-semibold text-zinc-400">
+                          #{song.id}
+                        </span>
+                      </div>
+
+                      {song.owners.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {song.owners.map((owner) => (
+                            <span
+                              key={`${song.id}-owner-${owner.id}`}
+                              className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-600"
+                            >
+                              {owner.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {song.karaokeSongs.length > 0 ? (
+                          song.karaokeSongs.map((karaoke) => (
+                            <span
+                              key={`${song.id}-${karaoke.provider}-${karaoke.karaokeNo ?? "na"}`}
+                              className="rounded-full bg-zinc-900/5 px-2 py-0.5 text-[11px] font-semibold text-zinc-600"
+                            >
+                              {karaoke.provider} {karaoke.karaokeNo ?? "-"}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[11px] text-zinc-400">
+                            노래방 번호 없음
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </section>
         </div>
       </div>
