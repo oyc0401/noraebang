@@ -62,7 +62,7 @@ export async function getTjSongsByArtist(artistName: string, savedFilter: SongSa
           ? { saved: false }
           : {})
     },
-    orderBy: [{ releasedYearMonth: 'desc' }, { title: 'asc' }],
+    orderBy: [{ title: 'asc' }],
     select: {
       id: true,
       title: true,
@@ -70,11 +70,10 @@ export async function getTjSongsByArtist(artistName: string, savedFilter: SongSa
       artistList: true,
       featureList: true,
       saved: true,
-      releasedYearMonth: true,
       lyricist: true,
       composer: true,
       producerList: true,
-      nationType: true
+      publishdate: true
     }
   })
 
@@ -85,11 +84,10 @@ export async function getTjSongsByArtist(artistName: string, savedFilter: SongSa
     artistList: song.artistList,
     featureList: song.featureList,
     saved: song.saved,
-    releasedYearMonth: song.releasedYearMonth,
     lyricist: song.lyricist ?? undefined,
     composer: song.composer ?? undefined,
     producerList: song.producerList,
-    nationType: song.nationType
+    publishdate: song.publishdate ?? undefined
   }))
 }
 

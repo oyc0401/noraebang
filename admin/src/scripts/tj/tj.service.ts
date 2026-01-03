@@ -6,7 +6,8 @@ export interface TJSongData {
   artist: string;
   lyricist: string;
   composer: string;
-  nationType: string;
+  thumbnailImg?: string;
+  publishdate: string;
 }
 
 export class TJService {
@@ -44,33 +45,24 @@ export class TJService {
 
       const data: any = await response.json();
 
+      // console.log(` data:`, JSON.stringify(data, null, 2)); // --- ADD ---
+
       if (data.resultCode !== "99" || !data.resultData?.items) {
         console.error("❌ Unexpected API response:", data);
         return [];
       }
 
       const songs: TJSongData[] = data.resultData.items.map((item: any) => {
-        // 국가 타입 추정
-        let nationType = "KOR";
-        if (
-          /[\u3040-\u309F\u30A0-\u30FF]/.test(item.indexTitle) ||
-          /[\u3040-\u309F\u30A0-\u30FF]/.test(item.indexSong)
-        ) {
-          nationType = "JPN";
-        } else if (
-          /[a-zA-Z]/.test(item.indexTitle) &&
-          !/[가-힣]/.test(item.indexTitle)
-        ) {
-          nationType = "ENG";
-        }
-
         return {
           karaokeNo: item.pro.toString(),
           title: item.indexTitle,
           artist: item.indexSong,
-          lyricist: item.word ?? "",
-          composer: item.com ?? "",
-          nationType,
+          lyricist: item.word,
+          composer: item.com,
+          thumbnailImg: item.thumbnailImg,
+          // icongubun: item.icongubun,
+          // mv_yn: "N",
+          publishdate: item.publishdate,
         };
       });
 
@@ -112,94 +104,94 @@ export class TJService {
     }
   }
 
-  /**
-   * 곡번호로 TJ 곡 검색
-   */
-  async searchBySongNumber(
-    songNumber: number,
-  ): Promise<TJSongData | undefined> {
-    const url = `${this.BASE_URL}?nationType=&strType=16&searchTxt=${songNumber}&pageNo=1&pageRowCnt=100`;
+  // /**
+  //  * 곡번호로 TJ 곡 검색
+  //  */
+  // async searchBySongNumber(
+  //   songNumber: number,
+  // ): Promise<TJSongData | undefined> {
+  //   const url = `${this.BASE_URL}?nationType=&strType=16&searchTxt=${songNumber}&pageNo=1&pageRowCnt=100`;
 
-    try {
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          Accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-      });
+  //   try {
+  //     const response = await fetch(url, {
+  //       headers: {
+  //         "User-Agent":
+  //           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+  //         Accept:
+  //           "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  //       },
+  //     });
 
-      if (!response.ok) {
-        console.error(`❌ HTTP Error: ${response.status}`);
-        return undefined;
-      }
+  //     if (!response.ok) {
+  //       console.error(`❌ HTTP Error: ${response.status}`);
+  //       return undefined;
+  //     }
 
-      const html = await response.text();
-      const $ = cheerio.load(html);
+  //     const html = await response.text();
+  //     const $ = cheerio.load(html);
 
-      // 곡번호 검색은 정확히 매칭되는 1곡만 반환
-      const row = $("ul.grid-container.list").first();
-      if (row.length === 0) {
-        return undefined;
-      }
+  //     // 곡번호 검색은 정확히 매칭되는 1곡만 반환
+  //     const row = $("ul.grid-container.list").first();
+  //     if (row.length === 0) {
+  //       return undefined;
+  //     }
 
-      const items = row.find("li.grid-item");
-      if (items.length === 0) {
-        return undefined;
-      }
+  //     const items = row.find("li.grid-item");
+  //     if (items.length === 0) {
+  //       return undefined;
+  //     }
 
-      // 곡번호 추출
-      const karaokeNo = $(items[0]).find(".num2").text().trim();
-      if (!karaokeNo || karaokeNo !== songNumber.toString()) {
-        // 정확히 매칭되지 않으면 무시 (부분 매칭 방지)
-        return undefined;
-      }
+  //     // 곡번호 추출
+  //     const karaokeNo = $(items[0]).find(".num2").text().trim();
+  //     if (!karaokeNo || karaokeNo !== songNumber.toString()) {
+  //       // 정확히 매칭되지 않으면 무시 (부분 매칭 방지)
+  //       return undefined;
+  //     }
 
-      // 곡제목 추출
-      const title = $(items[1]).find("p span").first().text().trim();
+  //     // 곡제목 추출
+  //     const title = $(items[1]).find("p span").first().text().trim();
 
-      // 가수 추출
-      let artist = $(items[2]).find(".highlight").text().trim();
-      if (!artist) {
-        artist = $(items[2]).find("p > span > span").first().text().trim();
-      }
-      if (!artist) {
-        artist = $(items[2]).find("p").text().trim();
-      }
+  //     // 가수 추출
+  //     let artist = $(items[2]).find(".highlight").text().trim();
+  //     if (!artist) {
+  //       artist = $(items[2]).find("p > span > span").first().text().trim();
+  //     }
+  //     if (!artist) {
+  //       artist = $(items[2]).find("p").text().trim();
+  //     }
 
-      // 작사가 추출
-      const lyricist = $(items[3]).find("p span").text().trim();
+  //     // 작사가 추출
+  //     const lyricist = $(items[3]).find("p span").text().trim();
 
-      // 작곡가 추출
-      const composer = $(items[4]).find("p span").text().trim();
+  //     // 작곡가 추출
+  //     const composer = $(items[4]).find("p span").text().trim();
 
-      if (!title || !artist) {
-        return undefined;
-      }
+  //     if (!title || !artist) {
+  //       return undefined;
+  //     }
 
-      // 국가 타입 추정 (간단한 휴리스틱)
-      let nationType = "KOR"; // 기본값
-      if (
-        /[\u3040-\u309F\u30A0-\u30FF]/.test(title) ||
-        /[\u3040-\u309F\u30A0-\u30FF]/.test(artist)
-      ) {
-        nationType = "JPN";
-      } else if (/[a-zA-Z]/.test(title) && !/[가-힣]/.test(title)) {
-        nationType = "ENG";
-      }
+  //     // 국가 타입 추정 (간단한 휴리스틱)
+  //     let nationType = "KOR"; // 기본값
+  //     if (
+  //       /[\u3040-\u309F\u30A0-\u30FF]/.test(title) ||
+  //       /[\u3040-\u309F\u30A0-\u30FF]/.test(artist)
+  //     ) {
+  //       nationType = "JPN";
+  //     } else if (/[a-zA-Z]/.test(title) && !/[가-힣]/.test(title)) {
+  //       nationType = "ENG";
+  //     }
 
-      return {
-        karaokeNo,
-        title,
-        artist,
-        lyricist: lyricist || "",
-        composer: composer || "",
-        nationType,
-      };
-    } catch (error) {
-      console.error(`❌ Fetch error for song ${songNumber}:`, error);
-      return undefined;
-    }
-  }
+  //     return {
+  //       karaokeNo,
+  //       title,
+  //       artist,
+  //       lyricist: lyricist || "",
+  //       composer: composer || "",
+  //       nationType,
+  //     };
+  //   } catch (error) {
+  //     console.error(`❌ Fetch error for song ${songNumber}:`, error);
+  //     return undefined;
+  //   }
+  // }
 }

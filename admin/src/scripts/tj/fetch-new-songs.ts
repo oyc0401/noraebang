@@ -49,7 +49,7 @@ async function fetchNewTJSongs(force: boolean) {
     console.log(`[${i + 1}/${songs.length}] ${song.karaokeNo} - ${song.title}`);
 
     try {
-      const result = await saveSongToDatabase(song, force, currentYearMonth);
+      const result = await saveSongToDatabase(song, force);
       if (result === "created") {
         totalCreated++;
       } else if (result === "updated") {

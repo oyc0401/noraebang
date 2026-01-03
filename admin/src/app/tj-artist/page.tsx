@@ -719,7 +719,7 @@ export default function TjArtistPage() {
                                 {song.title}
                               </p>
                               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                {song.releasedYearMonth || "미정"} ·{" "}
+                                {song.publishdate || "미정"} ·{" "}
                                 {song.artistList.join(", ")}
                               </p>
                             </div>

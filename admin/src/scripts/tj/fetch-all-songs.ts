@@ -2,7 +2,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
-import { TJService } from "./tj.service";
+import { TJService, type TJSongData } from "./tj.service";
 import { saveSongToDatabase } from "./saveSong";
 
 // 특정 년월부터 현재까지 모든 TJ 노래 크롤링 (기본값: 200101)
@@ -15,11 +15,74 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 const tjService = new TJService();
+const SONG_CONCURRENCY = Math.max(
+  1,
+  Number.parseInt(process.env.TJ_SONG_CONCURRENCY ?? "10", 10),
+);
+
+type FetchTotals = {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+};
+
+async function processSongWithStats(
+  song: TJSongData,
+  index: number,
+  total: number,
+  force: boolean,
+  totals: FetchTotals,
+): Promise<void> {
+  console.log(
+    `  [${index + 1}/${total}] ${song.karaokeNo} - ${song.title}`,
+  );
+
+  try {
+    const result = await saveSongToDatabase(song, force);
+    if (result === "created") {
+      totals.created++;
+    } else if (result === "updated") {
+      totals.updated++;
+    } else if (result === "skipped") {
+      totals.skipped++;
+    }
+  } catch (_error) {
+    totals.errors++;
+  }
+}
+
+async function processSongsConcurrently(
+  songs: TJSongData[],
+  force: boolean,
+  totals: FetchTotals,
+): Promise<void> {
+  for (let start = 0; start < songs.length; start += SONG_CONCURRENCY) {
+    const batch = songs.slice(start, start + SONG_CONCURRENCY);
+    await Promise.allSettled(
+      batch.map((song, offset) =>
+        processSongWithStats(
+          song,
+          start + offset,
+          songs.length,
+          force,
+          totals,
+        ),
+      ),
+    );
+  }
+}
 
 /**
  * 메인 함수 (특정 년월 ~ 현재까지 모든 월)
  */
 async function fetchAllTJSongs(fromYearMonth: string, force: boolean) {
+  const totals: FetchTotals = {
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    errors: 0,
+  };
   console.log(
     `🚀 Starting TJ Media ALL songs fetch (${fromYearMonth} ~ now)...\n`,
   );
@@ -27,10 +90,6 @@ async function fetchAllTJSongs(fromYearMonth: string, force: boolean) {
     console.log(`⚡ Force mode enabled - will update existing songs\n`);
   }
 
-  let totalCreated = 0;
-  let totalUpdated = 0;
-  let totalSkipped = 0;
-  let totalErrors = 0;
   let totalMonths = 0;
 
   // fetchAllSongs는 제너레이터이므로 for await...of 사용
@@ -46,40 +105,20 @@ async function fetchAllTJSongs(fromYearMonth: string, force: boolean) {
 
     console.log(`\n📋 [${yearMonth}] Processing ${songs.length} songs`);
 
-    for (let i = 0; i < songs.length; i++) {
-      const song = songs[i];
-      console.log(
-        `  [${i + 1}/${songs.length}] ${song.karaokeNo} - ${song.title}`,
-      );
-
-      try {
-        const result = await saveSongToDatabase(song, force, yearMonth);
-        if (result === "created") {
-          totalCreated++;
-        } else if (result === "updated") {
-          totalUpdated++;
-        } else if (result === "skipped") {
-          totalSkipped++;
-        }
-      } catch (_error) {
-        totalErrors++;
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    }
+    await processSongsConcurrently(songs, force, totals);
 
     console.log(`  ✅ [${yearMonth}] Completed`);
     console.log(
-      `  📊 Progress: Months ${totalMonths} | Created ${totalCreated} | Updated ${totalUpdated} | Skipped ${totalSkipped} | Errors ${totalErrors}`,
+      `  📊 Progress: Months ${totalMonths} | Created ${totals.created} | Updated ${totals.updated} | Skipped ${totals.skipped} | Errors ${totals.errors}`,
     );
   }
 
   console.log(`\n✅ Fetch completed!`);
   console.log(`   Total months: ${totalMonths}`);
-  console.log(`   Created: ${totalCreated}`);
-  console.log(`   Updated: ${totalUpdated}`);
-  console.log(`   Skipped: ${totalSkipped}`);
-  console.log(`   Errors: ${totalErrors}`);
+  console.log(`   Created: ${totals.created}`);
+  console.log(`   Updated: ${totals.updated}`);
+  console.log(`   Skipped: ${totals.skipped}`);
+  console.log(`   Errors: ${totals.errors}`);
 }
 
 // 커맨드 라인 인자에서 fromYearMonth와 --force 플래그 가져오기
