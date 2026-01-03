@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import pg from "pg";
 
 // TJ 곡의 artistList를 기반으로 Artist 생성 및 Song 매핑 (최적화 버전)
@@ -21,6 +21,7 @@ import pg from "pg";
 // pnpm tsx src/scripts/tj/auto-map-artists.ts (dry-run)
 // pnpm tsx src/scripts/tj/auto-map-artists.ts --force (실제 생성)
 // pnpm tsx src/scripts/tj/auto-map-artists.ts --force --limit=10
+// pnpm tsx src/scripts/tj/auto-map-artists.ts --force --include-saved --no-create-artist --no-create-song (기존 곡 핫픽스)
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -32,21 +33,31 @@ type ArtistCacheEntry = {
   nameKo: string | null;
 };
 
+type MapOptions = {
+  includeSavedSongs: boolean;
+  allowSongCreation: boolean;
+};
+
 async function mapTjSongsToArtist(
   artistId: number,
   artistName: string,
   isDryRun: boolean,
   karaokeSongMap: Map<string, number>,
   artistMap: Map<string, ArtistCacheEntry>,
+  options: MapOptions,
 ) {
   // 해당 아티스트명을 가진 TjSong 조회
-  const tjSongs = await prisma.tjSong.findMany({
-    where: {
-      artistList: {
-        has: artistName,
-      },
-      saved: false,
+  const tjSongWhere: Prisma.TjSongWhereInput = {
+    artistList: {
+      has: artistName,
     },
+  };
+  if (!options.includeSavedSongs) {
+    tjSongWhere.saved = false;
+  }
+
+  const tjSongs = await prisma.tjSong.findMany({
+    where: tjSongWhere,
     select: {
       id: true,
       title: true,
@@ -69,6 +80,7 @@ async function mapTjSongsToArtist(
   const songsToCreate: Array<{ tjSongId: string; title: string }> = [];
   const artistSongsToCreate: Array<{ artistId: number; songId: number }> = [];
   const touchedSongIds = new Set<string>();
+  let skippedSongCreations = 0;
 
   for (const tjSong of tjSongs) {
     const existingSongId = karaokeSongMap.get(tjSong.id);
@@ -79,6 +91,10 @@ async function mapTjSongsToArtist(
       touchedSongIds.add(tjSong.id);
       mappedSongs++;
     } else {
+      if (!options.allowSongCreation) {
+        skippedSongCreations++;
+        continue;
+      }
       // Song을 생성해야 함
       songsToCreate.push({ tjSongId: tjSong.id, title: tjSong.title });
       touchedSongIds.add(tjSong.id);
@@ -131,6 +147,12 @@ async function mapTjSongsToArtist(
     touchedSongIds.has(song.id),
   );
   await markCompletedTjSongs(songsForCompletion, artistMap, karaokeSongMap);
+
+  if (skippedSongCreations > 0) {
+    console.log(
+      `    ⚠️  Song 미보유로 스킵된 TJ 곡: ${skippedSongCreations}개 (song 생성 비활성화)`,
+    );
+  }
 
   return { mappedSongs, createdSongs };
 }
@@ -233,11 +255,28 @@ async function main() {
   const isDryRun = !isForce;
   const limitArg = process.argv.find((arg) => arg.startsWith("--limit="));
   const limit = limitArg ? Number.parseInt(limitArg.split("=")[1]) : undefined;
+  const includeSavedSongs = process.argv.includes("--include-saved");
+  const disableArtistCreation = process.argv.includes("--no-create-artist");
+  const disableSongCreation = process.argv.includes("--no-create-song");
+
+  const mapOptions: MapOptions = {
+    includeSavedSongs,
+    allowSongCreation: !disableSongCreation,
+  };
 
   console.log("🎵 TJ 아티스트 자동 생성 및 매핑 시작 (최적화 버전)");
   console.log(`Mode: ${isDryRun ? "DRY RUN" : "FORCE (실제 생성)"}`);
   if (limit) {
     console.log(`Limit: ${limit}명`);
+  }
+  console.log(
+    `Include saved TJ songs: ${includeSavedSongs ? "YES" : "NO (saved=false만 처리)"}`,
+  );
+  if (disableArtistCreation) {
+    console.log("Artist creation: DISABLED (--no-create-artist)");
+  }
+  if (disableSongCreation) {
+    console.log("Song creation: DISABLED (--no-create-song)");
   }
   console.log("");
 
@@ -278,6 +317,10 @@ async function main() {
   // 1. saved=false인 TjSong의 artistList 수집
   console.log("Step 1: 저장되지 않은 TjSong의 아티스트 수집 중...");
 
+  const savedFilter = includeSavedSongs
+    ? Prisma.sql``
+    : Prisma.sql`WHERE saved = false`;
+
   const allUnsavedArtists = await prisma.$queryRaw<
     Array<{
       artist_name: string;
@@ -290,7 +333,7 @@ async function main() {
     FROM (
       SELECT UNNEST(artist_list) as artist_name
       FROM tj_song
-      WHERE saved = false
+      ${savedFilter}
     ) as artists
     WHERE artist_name IS NOT NULL AND artist_name <> ''
     GROUP BY artist_name
@@ -346,9 +389,17 @@ async function main() {
         isDryRun,
         karaokeSongMap,
         artistMap,
+        mapOptions,
       );
       totalMappedSongs += stats.mappedSongs;
       totalCreatedSongs += stats.createdSongs;
+      continue;
+    }
+
+    if (disableArtistCreation) {
+      console.log(
+        `  ⚠️  [SKIP] ${artistName} - Artist 생성 비활성화 (--no-create-artist)`,
+      );
       continue;
     }
 
@@ -362,13 +413,16 @@ async function main() {
         );
       }
       // dry-run에서도 매핑 카운트를 위해 계산
-      const tjSongs = await prisma.tjSong.findMany({
-        where: {
-          artistList: {
-            has: artistName,
-          },
-          saved: false,
+      const tjSongWhere: Prisma.TjSongWhereInput = {
+        artistList: {
+          has: artistName,
         },
+      };
+      if (!includeSavedSongs) {
+        tjSongWhere.saved = false;
+      }
+      const tjSongs = await prisma.tjSong.findMany({
+        where: tjSongWhere,
         select: {
           id: true,
         },
@@ -402,6 +456,7 @@ async function main() {
       isDryRun,
       karaokeSongMap,
       artistMap,
+      mapOptions,
     );
     totalMappedSongs += stats.mappedSongs;
     totalCreatedSongs += stats.createdSongs;

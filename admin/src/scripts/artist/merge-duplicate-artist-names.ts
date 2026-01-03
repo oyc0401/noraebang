@@ -147,29 +147,19 @@ async function mergeArtistIds(
     let copiedCount = 0;
     let skippedCount = 0;
 
-    for (const song of songs) {
-      const existing = await tx.artistSong.findUnique({
-        where: {
-          artistId_songId: {
-            artistId: toArtist.id,
-            songId: song.songId,
-          },
-        },
+    if (songs.length > 0) {
+      const createManyResult = await tx.artistSong.createMany({
+        data: songs.map((song) => ({
+          artistId: toArtist.id,
+          songId: song.songId,
+          order: song.order,
+          role: song.role,
+        })),
+        skipDuplicates: true,
       });
 
-      if (!existing) {
-        await tx.artistSong.create({
-          data: {
-            artistId: toArtist.id,
-            songId: song.songId,
-            order: song.order,
-            role: song.role,
-          },
-        });
-        copiedCount++;
-      } else {
-        skippedCount++;
-      }
+      copiedCount = createManyResult.count;
+      skippedCount = songs.length - createManyResult.count;
     }
 
     await tx.artistSong.deleteMany({
