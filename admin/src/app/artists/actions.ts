@@ -115,7 +115,12 @@ export async function getSongsByArtist(artistId: number) {
     include: {
       song: {
         include: {
-          karaokeSongs: true
+          karaokeSongs: true,
+          artistSongs: {
+            include: {
+              artist: true
+            }
+          }
         }
       }
     },
@@ -129,6 +134,11 @@ export async function getSongsByArtist(artistId: number) {
     karaokeSongs: as.song.karaokeSongs.map(ks => ({
       provider: ks.provider,
       karaokeNo: ks.karaokeNo
+    })),
+    owners: as.song.artistSongs.map(owner => ({
+      id: owner.artistId,
+      name: owner.artist.name,
+      nameKo: owner.artist.nameKo
     }))
   }))
 }
@@ -343,6 +353,33 @@ export async function transferSongOwnership(songId: number, fromArtistId: number
 export async function deleteArtist(artistId: number) {
   await prisma.artist.delete({
     where: { id: artistId }
+  })
+
+  return { success: true }
+}
+
+export async function addSongOwnership(songId: number, artistId: number) {
+  const targetArtist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    select: { id: true }
+  })
+
+  if (!targetArtist) {
+    throw new Error('추가할 아티스트를 찾을 수 없습니다.')
+  }
+
+  await prisma.artistSong.upsert({
+    where: {
+      artistId_songId: {
+        artistId,
+        songId
+      }
+    },
+    update: {},
+    create: {
+      artistId,
+      songId
+    }
   })
 
   return { success: true }
