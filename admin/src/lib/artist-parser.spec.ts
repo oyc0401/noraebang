@@ -352,6 +352,15 @@ describe("parseTJArtist", () => {
         producer: [],
       });
     });
+
+    it("loves 키워드도 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("m-flo loves YOSHIKA");
+      expect(result).toEqual({
+        artist: ["m-flo"],
+        feature: ["YOSHIKA"],
+        producer: [],
+      });
+    });
   });
 
   describe("프로듀서 (Prod.) 처리", () => {

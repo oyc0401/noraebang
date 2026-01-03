@@ -36,7 +36,7 @@ const DEFAULT_FILTERS: FilterState = {
   main: "all",
   topic: "all",
   count: "all",
-  sort: "name",
+  sort: "id",
 };
 
 const CHANNEL_TYPE_LABELS: Record<ChannelType, string> = {
