@@ -314,4 +314,154 @@ describe("parseTJArtist", () => {
       });
     });
   });
+
+  describe("추가 예외 케이스", () => {
+    it("& 기호로 구분된 아티스트는 분리", () => {
+      const result = parseTJArtist("Jed & 임창정");
+      expect(result).toEqual({
+        artist: ["Jed", "임창정"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("Featuring 키워드를 Feat.처럼 처리하고 & 기호로 분리", () => {
+      const result = parseTJArtist(
+        "Jim Brickman (Featuring Ollin Raye & Susan Ashton)",
+      );
+      expect(result).toEqual({
+        artist: ["Jim Brickman"],
+        feature: ["Ollin Raye", "Susan Ashton"],
+        producer: [],
+      });
+    });
+
+    it("meets 키워드가 있는 복합 아티스트명", () => {
+      const result = parseTJArtist("HoneyWorks meets CHiCO & sana");
+      expect(result).toEqual({
+        artist: ["HoneyWorks meets CHiCO", "sana"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("produced by 키워드를 Prod.처럼 처리하고 & 기호로 분리", () => {
+      const result = parseTJArtist(
+        "milet & Aimer & 幾田りら(produced by Vaundy)",
+      );
+      expect(result).toEqual({
+        artist: ["milet", "Aimer", "幾田りら"],
+        feature: [],
+        producer: ["Vaundy"],
+      });
+    });
+
+    it("Prod & Feat. 복합 케이스 - & 기호로 분리", () => {
+      const result = parseTJArtist("싸이(Prod & Feat. SUGA of BTS)");
+      expect(result).toEqual({
+        artist: ["싸이"],
+        feature: ["SUGA of BTS"],
+        producer: ["SUGA of BTS"],
+      });
+    });
+
+    it("With 키워드 제거 - & 기호로 분리", () => {
+      const result = parseTJArtist("양정승(With KCM & 노누)");
+      expect(result).toEqual({
+        artist: ["양정승"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("With 키워드 제거 - 단일 아티스트", () => {
+      const result = parseTJArtist("KCM(With 나비)");
+      expect(result).toEqual({
+        artist: ["KCM"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("With 키워드 제거 - 그룹명", () => {
+      const result = parseTJArtist("김장훈(With 알리)");
+      expect(result).toEqual({
+        artist: ["김장훈"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("& 기호가 붙어있는 복합 아티스트명도 분리", () => {
+      const result = parseTJArtist("SG워너비&KCM");
+      expect(result).toEqual({
+        artist: ["SG워너비", "KCM"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("괄호 안 멤버명 제거 - & 기호 포함", () => {
+      const result = parseTJArtist("2AM(조권&창민)");
+      expect(result).toEqual({
+        artist: ["2AM"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("괄호 안 멤버명 제거 - 두 번째 괄호", () => {
+      const result = parseTJArtist("iKON(아이콘)(B.I & 바비)");
+      expect(result).toEqual({
+        artist: ["iKON(아이콘)"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("괄호 안 멤버명 제거 - 뉴이스트", () => {
+      const result = parseTJArtist("뉴이스트(민현&JR)");
+      expect(result).toEqual({
+        artist: ["뉴이스트"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("괄호 안 Solo/멤버명 제거", () => {
+      const result = parseTJArtist("뉴이스트 W(렌 Solo)");
+      expect(result).toEqual({
+        artist: ["뉴이스트 W"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("& 기호로 구분된 복합 아티스트명 - 괄호 포함", () => {
+      const result = parseTJArtist("MC THE MAX(이수)&럼블피쉬(최진이)");
+      expect(result).toEqual({
+        artist: ["MC THE MAX(이수)", "럼블피쉬(최진이)"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("괄호 안 멤버명 제거 - 빅뱅 케이스 1", () => {
+      const result = parseTJArtist("빅뱅(GD & T.O.P)");
+      expect(result).toEqual({
+        artist: ["빅뱅"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("괄호 안 멤버명 제거 - 빅뱅 케이스 2", () => {
+      const result = parseTJArtist("빅뱅(T.O.P Solo)");
+      expect(result).toEqual({
+        artist: ["빅뱅"],
+        feature: [],
+        producer: [],
+      });
+    });
+  });
 });
