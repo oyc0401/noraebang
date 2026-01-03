@@ -114,3 +114,37 @@ export async function deleteYoutubeChannel(
 
   return { success: true };
 }
+
+export async function getYoutubeSongsByArtist(artistId: number) {
+  const songs = await prisma.artistSong.findMany({
+    where: { artistId },
+    include: {
+      song: {
+        include: {
+          karaokeSongs: true,
+          artistSongs: {
+            include: {
+              artist: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { order: "asc" },
+  });
+
+  return songs.map((artistSong) => ({
+    id: artistSong.song.id,
+    title: artistSong.song.title,
+    titleKo: artistSong.song.titleKo ?? undefined,
+    karaokeSongs: artistSong.song.karaokeSongs.map((karaokeSong) => ({
+      provider: karaokeSong.provider,
+      karaokeNo: karaokeSong.karaokeNo,
+    })),
+    owners: artistSong.song.artistSongs.map((owner) => ({
+      id: owner.artistId,
+      name: owner.artist.name,
+      nameKo: owner.artist.nameKo,
+    })),
+  }));
+}
