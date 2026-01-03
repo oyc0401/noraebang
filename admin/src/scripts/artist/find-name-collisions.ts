@@ -1,10 +1,14 @@
 /**
  * 아티스트 이름으로 검색했을 때 다른 아티스트가 함께 나타나는지 검사하는 스크립트
+ * JSON 형식으로 출력 (name만 포함, nameKo/alias 제외)
  *
  * pnpm ts-node src/scripts/artist/find-name-collisions.ts
+ * pnpm ts-node src/scripts/artist/find-name-collisions.ts --output=admin/data/name-collisions.json
  */
 
 import "dotenv/config";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
@@ -13,21 +17,26 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter, log: ["warn", "error"] });
 
+const outputArg = process.argv.find((arg) => arg.startsWith("--output="));
+const outputPath = outputArg
+  ? outputArg.split("=")[1]
+  : "admin/data/name-collisions.json";
+
 async function findNameCollisions() {
-  console.log("🔍 아티스트 이름 검색 시 동명이인 여부를 검사합니다...\n");
+  const results: Array<{
+    id: number;
+    name: string;
+    conflictsWith: Array<{ id: number; name: string }>;
+  }> = [];
 
   try {
     const artists = await prisma.artist.findMany({
       select: {
         id: true,
         name: true,
-        nameKo: true,
-        alias: true,
       },
       orderBy: { id: "asc" },
     });
-
-    let collisionCount = 0;
 
     for (const artist of artists) {
       const keyword = artist.name?.trim();
@@ -35,17 +44,11 @@ async function findNameCollisions() {
 
       const matches = await prisma.artist.findMany({
         where: {
-          OR: [
-            { name: { contains: keyword, mode: "insensitive" } },
-            { nameKo: { contains: keyword, mode: "insensitive" } },
-            { alias: { contains: keyword, mode: "insensitive" } },
-          ],
+          name: { contains: keyword, mode: "insensitive" },
         },
         select: {
           id: true,
           name: true,
-          nameKo: true,
-          alias: true,
         },
         orderBy: { id: "asc" },
       });
@@ -53,30 +56,23 @@ async function findNameCollisions() {
       const others = matches.filter((match) => match.id !== artist.id);
       if (others.length === 0) continue;
 
-      collisionCount += 1;
-      console.log(
-        `⚠️  ${artist.name} (ID: ${artist.id}) 검색 시 다른 아티스트 ${
-          others.length
-        }명 발견`,
-      );
-
-      others.forEach((match) => {
-        console.log(
-          `    - ID: ${match.id}, name: ${match.name ?? "-"}, nameKo: ${
-            match.nameKo ?? "-"
-          }, alias: ${match.alias ?? "-"}`,
-        );
+      results.push({
+        id: artist.id,
+        name: artist.name,
+        conflictsWith: others.map((match) => ({
+          id: match.id,
+          name: match.name,
+        })),
       });
-      console.log("");
     }
 
-    if (collisionCount === 0) {
-      console.log("✅ 모든 아티스트 이름에서 중복 검색 결과가 발견되지 않았습니다.");
-    } else {
-      console.log(
-        `\n총 ${collisionCount}명의 아티스트에서 중복 검색 결과가 발견되었습니다.`,
-      );
+    // JSON 파일로 저장
+    const dir = path.dirname(outputPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
+    fs.writeFileSync(outputPath, JSON.stringify(results, null, 2), "utf-8");
+    console.log(`💾 ${results.length}건 저장: ${outputPath}`);
   } catch (error) {
     console.error("❌ 검사 중 오류가 발생했습니다.", error);
     process.exitCode = 1;
