@@ -67,7 +67,20 @@ function extractParenthesisSegments(text: string): ParenthesisExtraction {
 
     const segment = readBalancedSegment(text, i);
     if (!segment) {
-      cleaned += text.slice(i);
+      const remainder = text.slice(i + 1);
+      const fallback = classifyParenthesisContent(remainder);
+      if (fallback && fallback.names.length > 0) {
+        if (fallback.type === "feature") {
+          features.push(...fallback.names);
+        } else if (fallback.type === "producer") {
+          producers.push(...fallback.names);
+        } else {
+          features.push(...fallback.names);
+          producers.push(...fallback.names);
+        }
+      } else {
+        cleaned += text.slice(i);
+      }
       break;
     }
 
@@ -104,17 +117,18 @@ function classifyParenthesisContent(
   }
 
   const handlers: Array<{ regex: RegExp; type: ParenthesisType }> = [
-    { regex: /^prod(?:\.|\b)\s*&\s*feat(?:uring)?\.?\s*/i, type: "both" },
-    { regex: /^feat(?:uring)?\.?\s*&\s*prod(?:\.|\b)\s*/i, type: "both" },
+    { regex: /^prod(?:[.,]|\b)\s*&\s*feat(?:uring)?[.,]?\s*/i, type: "both" },
+    { regex: /^feat(?:uring)?[.,]?\s*&\s*prod(?:[.,]|\b)\s*/i, type: "both" },
     { regex: /^produced\s+by\s+/i, type: "producer" },
-    { regex: /^prod(?:\.|\b)\s*(?:by\s+)?/i, type: "producer" },
-    { regex: /^feat(?:uring)?\.?\s*/i, type: "feature" },
+    { regex: /^prod(?:[.,]|\b)\s*(?:by\s+)?/i, type: "producer" },
+    { regex: /^feat(?:uring)?[.,]?\s*/i, type: "feature" },
     { regex: /^duet\s+with\s*/i, type: "feature" },
     { regex: /^duet\.?\s*/i, type: "feature" },
     { regex: /^with\.?\s*/i, type: "feature" },
     { regex: /^rap\.?\s*/i, type: "feature" },
     { regex: /^narr\.?\s*/i, type: "feature" },
     { regex: /^special\s+ment\.?\s*/i, type: "feature" },
+    { regex: /^sung\s+by\s+/i, type: "feature" },
     { regex: /^by\s+/i, type: "feature" },
   ];
 

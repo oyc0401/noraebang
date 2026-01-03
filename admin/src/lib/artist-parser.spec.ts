@@ -170,6 +170,15 @@ describe("parseTJArtist", () => {
       });
     });
 
+    it("With. 은 다른 아티스트 케이스에서도 피처링 처리되어야 함", () => {
+      const result = parseTJArtist("권순관(With.남우현)");
+      expect(result).toEqual({
+        artist: ["권순관"],
+        feature: ["남우현"],
+        producer: [],
+      });
+    });
+
     it("여러 아티스트 케이스에서도 With. 은 피처링 처리되어야 함", () => {
       const result = parseTJArtist("이창섭(With.린)");
       expect(result).toEqual({
@@ -187,14 +196,23 @@ describe("parseTJArtist", () => {
       });
     });
 
-    // it("닫히지 않은 Feat 괄호도 피처링으로 처리되어야 함", () => {
-    //   const result = parseTJArtist("지코(Feat.루나(F(X))");
-    //   expect(result).toEqual({
-    //     artist: ["지코"],
-    //     feature: ["루나(F(X))"],
-    //     producer: [],
-    //   });
-    // });
+    it("겁표 뒤에 점 대신 콤마가 와도 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("Beyonce(Feat,Jay-Z)");
+      expect(result).toEqual({
+        artist: ["Beyonce"],
+        feature: ["Jay-Z"],
+        producer: [],
+      });
+    });
+
+    it("닫히지 않은 Feat 괄호도 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("지코(Feat.루나(F(X))");
+      expect(result).toEqual({
+        artist: ["지코"],
+        feature: ["루나(F(X))"],
+        producer: [],
+      });
+    });
 
     it("Rap. 도 피처링으로 처리되어야 함", () => {
       const result = parseTJArtist("마야(Rap.상추)");
@@ -219,6 +237,26 @@ describe("parseTJArtist", () => {
       expect(result).toEqual({
         artist: ["다비치"],
         feature: ["하하"],
+        producer: [],
+      });
+    });
+
+    it("닫히지 않은 Narr. 괄호도 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("HYNN(박혜원)(Narr.SBS");
+      expect(result).toEqual({
+        artist: ["HYNN(박혜원)"],
+        feature: ["SBS"],
+        producer: [],
+      });
+    });
+
+    it("Sung By 도 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist(
+        "S.M. THE BALLAD(Sung By 종현(샤이니),CHEN(EXO))",
+      );
+      expect(result).toEqual({
+        artist: ["S.M. THE BALLAD"],
+        feature: ["종현(샤이니)", "CHEN(EXO)"],
         producer: [],
       });
     });
