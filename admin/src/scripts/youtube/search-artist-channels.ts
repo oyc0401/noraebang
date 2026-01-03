@@ -9,6 +9,7 @@ import {
 } from "../../lib/youtube-key-manager.ts";
 
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts
+// pnpm ts-node src/scripts/youtube/search-artist-channels.ts [startId] [limit]
 
 // 713 - 닭부터 하기! 1/3
 
@@ -90,6 +91,14 @@ function isTopicChannelTitle(title?: string | null): boolean {
     return false;
   }
   return title.toLowerCase().endsWith(" - topic");
+}
+
+function stripTopicSuffix(title: string): string {
+  return title.replace(/ - topic$/i, "").trim();
+}
+
+function normalizeTitle(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, "");
 }
 
 async function searchChannels(query: string): Promise<ChannelSearchResult[]> {
@@ -264,6 +273,7 @@ async function searchArtistChannels(options?: SearchOptions) {
     let updated = 0;
     let notFound = 0;
     let errors = 0;
+    let promotedMainChannels = 0;
     let lastProcessedId: number | null = null;
 
     for (const artist of artists) {
@@ -280,15 +290,8 @@ async function searchArtistChannels(options?: SearchOptions) {
       }
 
       try {
-        // 검색어: 아티스트명 + 대표곡명
-        let searchQuery = artist.name;
-        if (artist.artistSongs.length > 0 && artist.artistSongs[0].song) {
-          const topSong = artist.artistSongs[0].song;
-          searchQuery = `${artist.name} ${topSong.title}`;
-          console.log(`   🔍 Search: "${searchQuery}"`);
-        } else {
-          console.log(`   🔍 Search: "${searchQuery}" (no songs found)`);
-        }
+        const searchQuery = artist.name;
+        console.log(`   🔍 Search: "${searchQuery}"`);
 
         const channels = await searchChannels(searchQuery);
 
@@ -375,6 +378,79 @@ async function searchArtistChannels(options?: SearchOptions) {
         updated++;
         lastProcessedId = artist.id;
 
+        const baseTitle = stripTopicSuffix(channelData.title);
+        const normalizedBaseTitle = normalizeTitle(baseTitle);
+        const mainCandidate = channels.find(
+          (candidate) =>
+            !isTopicChannelTitle(candidate.title) &&
+            normalizeTitle(candidate.title) === normalizedBaseTitle,
+        );
+
+        const topicSubscribers = channelData.subscriberCount ?? 0;
+        const mainSubscribers = mainCandidate?.subscriberCount ?? 0;
+
+        if (mainCandidate && mainSubscribers > topicSubscribers) {
+          console.log(
+            `   📈 Found possible main channel "${mainCandidate.title}" (${mainSubscribers.toLocaleString()} subs)`,
+          );
+
+          const mainChannelDetails = await getChannelDetails(
+            mainCandidate.channelId,
+          );
+
+          await prisma.youtubeChannel.upsert({
+            where: {
+              artistId_type: {
+                artistId: artist.id,
+                type: ChannelType.MAIN,
+              },
+            },
+            create: {
+              artistId: artist.id,
+              type: ChannelType.MAIN,
+              channelId: mainChannelDetails.channelId,
+              title: mainChannelDetails.title,
+              description: mainChannelDetails.description,
+              customUrl: mainChannelDetails.customUrl,
+              publishedAt: new Date(mainChannelDetails.publishedAt),
+              country: mainChannelDetails.country,
+              defaultLanguage: mainChannelDetails.defaultLanguage,
+              thumbnailDefault: mainChannelDetails.thumbnailDefault,
+              thumbnailMedium: mainChannelDetails.thumbnailMedium,
+              thumbnailHigh: mainChannelDetails.thumbnailHigh,
+              subscriberCount: mainChannelDetails.subscriberCount,
+              videoCount: mainChannelDetails.videoCount,
+              viewCount: mainChannelDetails.viewCount,
+              hiddenSubscriberCount: mainChannelDetails.hiddenSubscriberCount,
+              uploadsPlaylistId: mainChannelDetails.uploadsPlaylistId,
+              fetchedAt: new Date(),
+            },
+            update: {
+              channelId: mainChannelDetails.channelId,
+              title: mainChannelDetails.title,
+              description: mainChannelDetails.description,
+              customUrl: mainChannelDetails.customUrl,
+              publishedAt: new Date(mainChannelDetails.publishedAt),
+              country: mainChannelDetails.country,
+              defaultLanguage: mainChannelDetails.defaultLanguage,
+              thumbnailDefault: mainChannelDetails.thumbnailDefault,
+              thumbnailMedium: mainChannelDetails.thumbnailMedium,
+              thumbnailHigh: mainChannelDetails.thumbnailHigh,
+              subscriberCount: mainChannelDetails.subscriberCount,
+              videoCount: mainChannelDetails.videoCount,
+              viewCount: mainChannelDetails.viewCount,
+              hiddenSubscriberCount: mainChannelDetails.hiddenSubscriberCount,
+              uploadsPlaylistId: mainChannelDetails.uploadsPlaylistId,
+              fetchedAt: new Date(),
+            },
+          });
+
+          promotedMainChannels += 1;
+          console.log(
+            "   ⭐️ Main channel saved/updated because it has more subscribers than the Topic channel.",
+          );
+        }
+
         // YouTube API rate limit을 고려한 딜레이 (200ms)
         await new Promise((resolve) => setTimeout(resolve, 200));
       } catch (error) {
@@ -408,6 +484,9 @@ async function searchArtistChannels(options?: SearchOptions) {
     console.log(`   Updated: ${updated}`);
     console.log(`   Not found: ${notFound}`);
     console.log(`   Errors: ${errors}`);
+    if (promotedMainChannels > 0) {
+      console.log(`   Main channels promoted: ${promotedMainChannels}`);
+    }
 
     // 남은 아티스트 확인
     const remaining = await prisma.artist.count({
