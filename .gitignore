@@ -48,3 +48,4 @@ coverage/
 Memo.private.md
 
 *.dump
+keys.json
