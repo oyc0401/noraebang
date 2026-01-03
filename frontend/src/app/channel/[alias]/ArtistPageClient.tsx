@@ -75,11 +75,7 @@ export default function ArtistPageClient({
           <div className="flex flex-wrap gap-3">
             {artist.youtube && (
               <a
-                href={
-                  artist.youtube.customUrl
-                    ? `https://www.youtube.com/${artist.youtube.customUrl}`
-                    : `https://www.youtube.com/channel/${artist.youtube.channelId}`
-                }
+                href={`https://www.youtube.com/channel/${artist.youtube.channelId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-2 rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-red-100 px-5 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition-all hover:border-red-300 hover:shadow-md active:scale-[0.98] dark:border-red-900 dark:from-red-950 dark:to-red-900 dark:text-red-300 dark:hover:border-red-800"
