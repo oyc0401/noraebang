@@ -25,12 +25,14 @@ type FilterState = {
   main: "all" | "has" | "missing";
   topic: "all" | "has" | "missing";
   count: "all" | "0" | "1" | "2";
+  sort: "name" | "nameKo" | "updatedAt" | "channelCount" | "id";
 };
 
 const DEFAULT_FILTERS: FilterState = {
   main: "all",
   topic: "all",
   count: "all",
+  sort: "name",
 };
 
 const CHANNEL_TYPE_LABELS: Record<ChannelType, string> = {
@@ -52,6 +54,8 @@ const formatNumber = (value?: number | null) => {
   if (value === null || value === undefined) return "비공개";
   return value.toLocaleString("ko-KR");
 };
+
+const VISIBLE_INCREMENT = 40;
 
 export default function YoutubeAdminPage() {
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -78,6 +82,9 @@ export default function YoutubeAdminPage() {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(VISIBLE_INCREMENT);
+  const listContainerRef = useRef<HTMLDivElement>(null);
 
   const initialSelectionResolved = useRef(false);
 
@@ -108,7 +115,12 @@ export default function YoutubeAdminPage() {
     loadArtists();
   }, [loadArtists]);
 
+  useEffect(() => {
+    setVisibleCount(VISIBLE_INCREMENT);
+  }, [filters, searchQuery, artists.length]);
+
   const filteredArtists = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
     return artists.filter((artist) => {
       const channelCount = artist.youtubeChannels.length;
       const hasMain = artist.youtubeChannels.some(
@@ -128,9 +140,55 @@ export default function YoutubeAdminPage() {
       if (filters.count === "1" && channelCount !== 1) return false;
       if (filters.count === "2" && channelCount !== 2) return false;
 
+      if (normalizedQuery.length > 0) {
+        const haystack = [
+          artist.name,
+          artist.nameKo,
+          artist.alias ?? "",
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        if (!haystack.includes(normalizedQuery)) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [artists, filters]);
+  }, [artists, filters, searchQuery]);
+
+  const visibleArtists = useMemo(() => {
+    const sorted = [...filteredArtists];
+    sorted.sort((a, b) => {
+      switch (filters.sort) {
+        case "name": {
+          return a.name.localeCompare(b.name, "ko");
+        }
+        case "nameKo": {
+          return a.nameKo.localeCompare(b.nameKo, "ko");
+        }
+        case "updatedAt": {
+          return (
+            new Date(b.updatedAt).getTime() -
+            new Date(a.updatedAt).getTime()
+          );
+        }
+        case "channelCount": {
+          return (
+            b.youtubeChannels.length - a.youtubeChannels.length
+          );
+        }
+        case "id": {
+          return a.id - b.id;
+        }
+        default:
+          return 0;
+      }
+    });
+
+    return sorted.slice(0, visibleCount);
+  }, [filteredArtists, visibleCount, filters.sort]);
 
   useEffect(() => {
     if (!artists.length || initialSelectionResolved.current) return;
@@ -168,6 +226,16 @@ export default function YoutubeAdminPage() {
   }, [artists]);
 
   useEffect(() => {
+    if (!selectedArtistId) return;
+    const index = filteredArtists.findIndex(
+      (artist) => artist.id === selectedArtistId,
+    );
+    if (index >= 0 && index >= visibleCount) {
+      setVisibleCount((prev) => Math.max(prev, index + 1));
+    }
+  }, [filteredArtists, selectedArtistId, visibleCount]);
+
+  useEffect(() => {
     if (!initialSelectionResolved.current) return;
     if (!filteredArtists.length) {
       setSelectedArtistId(null);
@@ -199,6 +267,18 @@ export default function YoutubeAdminPage() {
       element.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [selectedArtistId]);
+
+  const handleListScroll = useCallback(() => {
+    const container = listContainerRef.current;
+    if (!container) return;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    if (scrollTop + clientHeight >= scrollHeight - 80) {
+      setVisibleCount((prev) => {
+        if (prev >= filteredArtists.length) return prev;
+        return Math.min(filteredArtists.length, prev + VISIBLE_INCREMENT);
+      });
+    }
+  }, [filteredArtists.length]);
 
   const selectedArtist = artists.find(
     (artist) => artist.id === selectedArtistId,
@@ -491,18 +571,81 @@ export default function YoutubeAdminPage() {
               )}
             </div>
 
-            <div className="mt-4 flex-shrink-0">
+            <div className="mt-4 flex-shrink-0 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-zinc-900">
-                  아티스트 목록
-                </p>
-                <span className="text-xs text-zinc-500">
-                  {filteredArtists.length}명
-                </span>
+                <div>
+                  <p className="text-sm font-semibold text-zinc-900">
+                    아티스트 목록
+                  </p>
+                  <span className="text-xs text-zinc-500">
+                    {filteredArtists.length}명
+                  </span>
+                </div>
+                <div className="relative hidden md:block">
+                  <select
+                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 focus:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-100 md:w-48"
+                    value={filters.sort}
+                    onChange={(event) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        sort: event.target.value as FilterState["sort"],
+                      }))
+                    }
+                  >
+                    <option value="name">이름 (로마자)</option>
+                    <option value="nameKo">이름 (한글)</option>
+                    <option value="id">아티스트 ID</option>
+                    <option value="channelCount">채널 개수</option>
+                    <option value="updatedAt">최근 수정 순</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="relative">
+                  <select
+                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 focus:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-100 md:hidden"
+                    value={filters.sort}
+                    onChange={(event) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        sort: event.target.value as FilterState["sort"],
+                      }))
+                    }
+                  >
+                    <option value="name">이름 (로마자)</option>
+                    <option value="nameKo">이름 (한글)</option>
+                    <option value="id">아티스트 ID</option>
+                    <option value="channelCount">채널 개수</option>
+                    <option value="updatedAt">최근 수정 순</option>
+                  </select>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="이름, 한글명 또는 별칭 검색"
+                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-100"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400 hover:text-zinc-600"
+                      aria-label="검색어 지우기"
+                      onClick={() => setSearchQuery("")}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+            <div
+              className="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto pr-1"
+              ref={listContainerRef}
+              onScroll={handleListScroll}
+            >
               {artistsLoading ? (
                 <p className="rounded-xl border border-dashed border-zinc-200 p-4 text-center text-sm text-zinc-500">
                   아티스트를 불러오는 중입니다...
@@ -512,7 +655,7 @@ export default function YoutubeAdminPage() {
                   조건에 맞는 아티스트가 없습니다.
                 </p>
               ) : (
-                filteredArtists.map((artist) => {
+                visibleArtists.map((artist) => {
                   const selected = artist.id === selectedArtistId;
                   const channelCount = artist.youtubeChannels.length;
                   const hasMain = artist.youtubeChannels.some(
@@ -560,7 +703,7 @@ export default function YoutubeAdminPage() {
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           <span className="text-xs font-semibold text-zinc-600">
-                            {channelCount}개
+                            ID: {artist.id}
                           </span>
                           <div className="flex gap-1">
                             {hasMain && (
@@ -635,14 +778,23 @@ export default function YoutubeAdminPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <button
-                      type="button"
-                      onClick={() => openDialog("MAIN")}
-                      className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-700"
-                    >
-                      유튜브채널 추가하기
-                    </button>
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openDialog("MAIN")}
+                        className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-700"
+                      >
+                        메인 채널 수정
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openDialog("TOPIC")}
+                        className="rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-amber-600"
+                      >
+                        토픽 채널 수정
+                      </button>
+                    </div>
                     {refreshing && (
                       <span className="text-xs text-zinc-400">
                         최신 데이터를 불러오는 중...
@@ -657,15 +809,7 @@ export default function YoutubeAdminPage() {
                   </p>
                   {selectedArtist.youtubeChannels.length === 0 ? (
                     <p className="mt-2 text-sm text-zinc-500">
-                      아직 등록된 채널이 없습니다.{" "}
-                      <button
-                        type="button"
-                        className="font-semibold text-red-600 underline underline-offset-2"
-                        onClick={() => openDialog("MAIN")}
-                      >
-                        유튜브채널 설정하기
-                      </button>{" "}
-                      버튼을 눌러 채널을 추가하세요.
+                      아직 등록된 채널이 없습니다. 아래 버튼으로 바로 추가해 주세요.
                     </p>
                   ) : (
                     <div className="mt-4 grid gap-4">
