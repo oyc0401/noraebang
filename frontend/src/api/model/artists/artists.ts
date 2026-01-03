@@ -35,8 +35,8 @@ import { customFetch } from '../../client';
 
 
 /**
- * 전체 아티스트를 반환합니다.
- * @summary 아티스트 목록 조회
+ * 모든 아티스트 목록을 반환합니다.
+ * @summary 전체 아티스트 조회
  */
 export const artistsControllerFindAll = (
     params?: ArtistsControllerFindAllParams,
@@ -108,7 +108,7 @@ export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof ar
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 아티스트 목록 조회
+ * @summary 전체 아티스트 조회
  */
 
 export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof artistsControllerFindAll>>, TError = ErrorResponseDto>(
@@ -129,8 +129,8 @@ export function useArtistsControllerFindAll<TData = Awaited<ReturnType<typeof ar
 
 
 /**
- * 전체 아티스트를 YouTube 채널, 썸네일 등 상세 정보와 함께 반환합니다. 구독자 수 기준으로 정렬됩니다.
- * @summary 아티스트 목록 조회 (상세 정보 포함)
+ * 전체 아티스트를 YouTube 채널, 썸네일 등 상세 정보와 함께 반환합니다.
+ * @summary 전체 아티스트 상세 조회
  */
 export const artistsControllerFindAllDetails = (
     params?: ArtistsControllerFindAllDetailsParams,
@@ -202,7 +202,7 @@ export function useArtistsControllerFindAllDetails<TData = Awaited<ReturnType<ty
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 아티스트 목록 조회 (상세 정보 포함)
+ * @summary 전체 아티스트 상세 조회
  */
 
 export function useArtistsControllerFindAllDetails<TData = Awaited<ReturnType<typeof artistsControllerFindAllDetails>>, TError = ErrorResponseDto>(

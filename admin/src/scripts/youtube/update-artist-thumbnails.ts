@@ -1,10 +1,14 @@
+/**
+ * YouTube Topic 채널의 썸네일을 Artist 썸네일로 동기화하는 스크립트
+ *
+ * pnpm ts-node src/scripts/youtube/update-artist-thumbnails.ts [limit]
+ */
+
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { ChannelType, PrismaClient } from "@prisma/client";
 import pg from "pg";
 import { pathToFileURL } from "url";
-
-// pnpm ts-node src/scripts/youtube/update-artist-thumbnails.ts [limit]
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);

@@ -127,10 +127,8 @@ export class ArtistsService {
         thumbnailMedium: true,
         thumbnailHigh: true,
         youtubeChannels: {
-          where: {
-            type: "MAIN",
-          },
           select: {
+            type: true,
             channelId: true,
             title: true,
             description: true,
@@ -141,7 +139,6 @@ export class ArtistsService {
             thumbnailMedium: true,
             thumbnailHigh: true,
           },
-          take: 1,
         },
         _count: {
           select: {
@@ -171,7 +168,9 @@ export class ArtistsService {
         }
       }
 
-      const mainChannel = artist.youtubeChannels[0];
+      const mainChannel =
+        artist.youtubeChannels.find((ch) => ch.type === "MAIN") ??
+        artist.youtubeChannels.find((ch) => ch.type === "TOPIC");
 
       return {
         id: artist.id,
@@ -322,10 +321,8 @@ export class ArtistsService {
         thumbnailHigh: true,
         tjSongRequestUrl: true,
         youtubeChannels: {
-          where: {
-            type: "MAIN",
-          },
           select: {
+            type: true,
             channelId: true,
             title: true,
             description: true,
@@ -336,7 +333,6 @@ export class ArtistsService {
             thumbnailMedium: true,
             thumbnailHigh: true,
           },
-          take: 1,
         },
         _count: {
           select: { artistSongs: true },

@@ -33,7 +33,7 @@ import { customFetch } from '../../client';
 
 /**
  * 아티스트 ID로 해당 아티스트의 곡 목록을 조회합니다.
- * @summary 특정 아티스트의 곡 목록 조회
+ * @summary 특정 아티스트의 곡 조회
  */
 export const songsControllerFindByArtistId = (
     artistId: number,
@@ -104,7 +104,7 @@ export function useSongsControllerFindByArtistId<TData = Awaited<ReturnType<type
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 특정 아티스트의 곡 목록 조회
+ * @summary 특정 아티스트의 곡 조회
  */
 
 export function useSongsControllerFindByArtistId<TData = Awaited<ReturnType<typeof songsControllerFindByArtistId>>, TError = ErrorResponseDto>(
@@ -126,7 +126,7 @@ export function useSongsControllerFindByArtistId<TData = Awaited<ReturnType<type
 
 /**
  * 곡 ID로 단일 곡 상세 정보를 조회합니다.
- * @summary 곡 상세 조회
+ * @summary 단일 곡 조회
  */
 export const songsControllerFindOne = (
     id: number,
@@ -197,7 +197,7 @@ export function useSongsControllerFindOne<TData = Awaited<ReturnType<typeof song
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 곡 상세 조회
+ * @summary 단일 곡 조회
  */
 
 export function useSongsControllerFindOne<TData = Awaited<ReturnType<typeof songsControllerFindOne>>, TError = ErrorResponseDto>(

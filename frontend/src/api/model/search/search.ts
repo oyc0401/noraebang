@@ -33,7 +33,7 @@ import { customFetch } from '../../client';
 
 /**
  * YouTube 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다.
- * @summary YouTube URL로 곡 정보 조회
+ * @summary 유튜브 URL로 단일곡 검색
  */
 export const searchControllerGetSongByYoutubeUrl = (
     params: SearchControllerGetSongByYoutubeUrlParams,
@@ -105,7 +105,7 @@ export function useSearchControllerGetSongByYoutubeUrl<TData = Awaited<ReturnTyp
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary YouTube URL로 곡 정보 조회
+ * @summary 유튜브 URL로 단일곡 검색
  */
 
 export function useSearchControllerGetSongByYoutubeUrl<TData = Awaited<ReturnType<typeof searchControllerGetSongByYoutubeUrl>>, TError = ErrorResponseDto>(
