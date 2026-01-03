@@ -10,6 +10,8 @@ import {
 
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts
 
+// 713 - 닭부터 하기! 1/3
+
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
@@ -130,7 +132,9 @@ async function searchChannels(query: string): Promise<ChannelSearchResult[]> {
   }));
 }
 
-async function getChannelDetails(channelId: string): Promise<YoutubeChannelDetails> {
+async function getChannelDetails(
+  channelId: string,
+): Promise<YoutubeChannelDetails> {
   const data = await fetchYoutubeJson((apiKey) => {
     const params = new URLSearchParams({
       part: "snippet,statistics,contentDetails",
@@ -228,11 +232,6 @@ async function searchArtistChannels(options?: SearchOptions) {
         id: {
           gte: desiredStartId,
         },
-        youtubeChannels: {
-          some: {
-            type: ChannelType.MAIN,
-          },
-        },
         NOT: {
           youtubeChannels: {
             some: {
@@ -319,7 +318,9 @@ async function searchArtistChannels(options?: SearchOptions) {
         );
 
         // 채널 상세 정보 가져오기
-        const detailedChannelData = await getChannelDetails(channelData.channelId);
+        const detailedChannelData = await getChannelDetails(
+          channelData.channelId,
+        );
 
         // YoutubeChannel 테이블 upsert
         await prisma.youtubeChannel.upsert({
@@ -427,9 +428,7 @@ async function searchArtistChannels(options?: SearchOptions) {
     });
 
     if (remaining > 0) {
-      console.log(
-        `\n⚠️  ${remaining} artists still need topic channel data`,
-      );
+      console.log(`\n⚠️  ${remaining} artists still need topic channel data`);
       console.log("💡 Run this script again to continue updating");
     } else {
       console.log("\n✅ All artists have proper YouTube channel data!");
@@ -445,8 +444,7 @@ async function searchArtistChannels(options?: SearchOptions) {
 
 // 스크립트 실행
 const isDirectExecution =
-  process.argv[1] &&
-  pathToFileURL(process.argv[1]).href === import.meta.url;
+  process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 
 if (isDirectExecution) {
   const startIdArg = process.argv[2];
