@@ -21,9 +21,7 @@ import {
 type Artist = Awaited<ReturnType<typeof getYoutubeArtists>>[number];
 type YoutubeChannel = Artist["youtubeChannels"][number];
 type ChannelType = YoutubeChannel["type"];
-type ArtistSong = Awaited<
-  ReturnType<typeof getYoutubeSongsByArtist>
->[number];
+type ArtistSong = Awaited<ReturnType<typeof getYoutubeSongsByArtist>>[number];
 
 type FilterState = {
   main: "all" | "has" | "missing";
@@ -148,11 +146,7 @@ export default function YoutubeAdminPage() {
       if (filters.count === "2" && channelCount !== 2) return false;
 
       if (normalizedQuery.length > 0) {
-        const haystack = [
-          artist.name,
-          artist.nameKo,
-          artist.alias ?? "",
-        ]
+        const haystack = [artist.name, artist.nameKo, artist.alias ?? ""]
           .join(" ")
           .toLowerCase();
 
@@ -177,8 +171,7 @@ export default function YoutubeAdminPage() {
         }
         case "updatedAt": {
           return (
-            new Date(b.updatedAt).getTime() -
-            new Date(a.updatedAt).getTime()
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
           );
         }
         case "channelCount": {
@@ -304,7 +297,7 @@ export default function YoutubeAdminPage() {
   const youtubeSearchUrl = youtubeMusicSearchQuery
     ? `https://www.youtube.com/results?search_query=${encodeURIComponent(
         youtubeMusicSearchQuery,
-      )}`
+      )}&sp=EgIQAg%253D%253D` // 필터: 채널
     : null;
 
   useEffect(() => {
@@ -958,7 +951,8 @@ export default function YoutubeAdminPage() {
                   </p>
                   {selectedArtist.youtubeChannels.length === 0 ? (
                     <p className="mt-2 text-sm text-zinc-500">
-                      아직 등록된 채널이 없습니다. 아래 버튼으로 바로 추가해 주세요.
+                      아직 등록된 채널이 없습니다. 아래 버튼으로 바로 추가해
+                      주세요.
                     </p>
                   ) : (
                     <div className="mt-4 grid gap-4">
@@ -1086,9 +1080,7 @@ export default function YoutubeAdminPage() {
           <section className="flex w-full flex-col rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm xl:h-[calc(100vh-6rem)]">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-zinc-900">
-                  연결된 곡
-                </p>
+                <p className="text-sm font-semibold text-zinc-900">연결된 곡</p>
                 <p className="text-xs text-zinc-500">
                   {selectedArtist
                     ? `${artistSongs.length.toLocaleString("ko-KR")}곡이 연결되어 있습니다.`
