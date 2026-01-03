@@ -96,6 +96,15 @@ describe("parseTJArtist", () => {
       });
     });
 
+    it("특정 번역 괄호는 제거되어야 함", () => {
+      const result = parseTJArtist("브로큰발렌타인(Broken Valentine)");
+      expect(result).toEqual({
+        artist: ["브로큰발렌타인"],
+        feature: [],
+        producer: [],
+      });
+    });
+
     it("특정 그룹명 멤버 목록이 오면 그룹명만 유지해야 함 (BTOB, TWICE)", () => {
       const result = parseTJArtist("BTOB(이민혁,프니엘,정일훈)");
       expect(result).toEqual({
@@ -130,6 +139,15 @@ describe("parseTJArtist", () => {
       expect(result).toEqual({
         artist: ["BE'O(비오)"],
         feature: ["김필선"],
+        producer: [],
+      });
+    });
+
+    it("괄호 밖 Feat. 키워드도 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("Kuh Ledesma feat. Gary Valenciano");
+      expect(result).toEqual({
+        artist: ["Kuh Ledesma"],
+        feature: ["Gary Valenciano"],
         producer: [],
       });
     });
@@ -268,6 +286,69 @@ describe("parseTJArtist", () => {
       expect(result).toEqual({
         artist: ["tripleS(트리플에스)"],
         feature: ["나경", "마유", "시온", "채원"],
+        producer: [],
+      });
+    });
+
+    it("Piano by 도 피처링처럼 처리되어야 함", () => {
+      const result = parseTJArtist("임영웅(Piano by 조영수)");
+      expect(result).toEqual({
+        artist: ["임영웅"],
+        feature: ["조영수"],
+        producer: [],
+      });
+    });
+
+    it("Piano by. 도 피처링처럼 처리되어야 함", () => {
+      const result = parseTJArtist("이준영(Piano by.박보검)");
+      expect(result).toEqual({
+        artist: ["이준영"],
+        feature: ["박보검"],
+        producer: [],
+      });
+    });
+
+    it("Art. 도 피처링처럼 처리되어야 함", () => {
+      const result = parseTJArtist("Anonymous Artists(어나니머스아티스트)(Art.이민석)");
+      expect(result).toEqual({
+        artist: ["Anonymous Artists(어나니머스아티스트)"],
+        feature: ["이민석"],
+        producer: [],
+      });
+    });
+
+    it("Song by 도 피처링처럼 처리되어야 함", () => {
+      const result = parseTJArtist("god(Song by IU,헨리,조현아,양다일)");
+      expect(result).toEqual({
+        artist: ["god"],
+        feature: ["IU", "헨리", "조현아", "양다일"],
+        producer: [],
+      });
+    });
+
+    it("공백 없는 by 문자열은 아티스트명에 포함되어야 함", () => {
+      const result = parseTJArtist("by진성");
+      expect(result).toEqual({
+        artist: ["by진성"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("Guitar by 도 피처링처럼 처리되어야 함", () => {
+      const result = parseTJArtist("원우(세븐틴)(Guitar by 박주원)");
+      expect(result).toEqual({
+        artist: ["원우(세븐틴)"],
+        feature: ["박주원"],
+        producer: [],
+      });
+    });
+
+    it("괄호 밖 Guitar by 도 피처링으로 처리되어야 함", () => {
+      const result = parseTJArtist("임영웅 Guitar by 함춘호");
+      expect(result).toEqual({
+        artist: ["임영웅"],
+        feature: ["함춘호"],
         producer: [],
       });
     });
@@ -414,6 +495,33 @@ describe("parseTJArtist", () => {
       const result = parseTJArtist("CHiCO with HoneyWorks meets 中川翔子");
       expect(result).toEqual({
         artist: ["CHiCO with HoneyWorks", "中川翔子"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("from 접미사는 제거되어야 함", () => {
+      const result = parseTJArtist("AIR MAIL from NAGASAKI");
+      expect(result).toEqual({
+        artist: ["AIR MAIL"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("특정 하이픈 케이스는 아티스트명만 유지해야 함", () => {
+      const result = parseTJArtist("M.N.J-강인한");
+      expect(result).toEqual({
+        artist: ["M.N.J"],
+        feature: [],
+        producer: [],
+      });
+    });
+
+    it("슬래시로 구분된 아티스트는 분리되어야 함", () => {
+      const result = parseTJArtist("Pops Fernandez/ Janno Gibbs");
+      expect(result).toEqual({
+        artist: ["Pops Fernandez", "Janno Gibbs"],
         feature: [],
         producer: [],
       });

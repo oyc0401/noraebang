@@ -5,7 +5,12 @@ export interface ParsedArtists {
 }
 
 // 특정 그룹들은 괄호 안 멤버 목록을 제거하고 그룹명만 유지한다.
-const GROUPS_WITH_MEMBER_LIST = new Set(["BTOB", "TWICE"]);
+const GROUPS_WITH_MEMBER_LIST = new Set(["BTOB"]);
+
+const SPECIAL_ARTIST_REPLACEMENTS = new Map([
+  ["M.N.J-강인한", "M.N.J"],
+  ["브로큰발렌타인(Broken Valentine)", "브로큰발렌타인"],
+]);
 
 type ParenthesisType = "feature" | "producer" | "both";
 
@@ -34,6 +39,15 @@ export function parseTJArtist(tjArtist: string): ParsedArtists {
   remaining = extraction.cleaned;
   features.push(...extraction.features);
   producers.push(...extraction.producers);
+
+  while (true) {
+    const inlineFeat = extractInlineFeatureList(remaining);
+    if (!inlineFeat) {
+      break;
+    }
+    remaining = inlineFeat.text;
+    features.push(...inlineFeat.features);
+  }
 
   const artistCandidates = mergeSpecialArtistNames(
     splitNames(remaining),
@@ -125,7 +139,11 @@ function classifyParenthesisContent(
     { regex: /^rap\.?\s*/i, type: "feature" },
     { regex: /^narr\.?\s*/i, type: "feature" },
     { regex: /^special\s+ment\.?\s*/i, type: "feature" },
-    { regex: /^sung\s+by\s+/i, type: "feature" },
+    { regex: /^art\.?\s*/i, type: "feature" },
+    { regex: /^sung\s+by\.?\s*/i, type: "feature" },
+    { regex: /^song\s+by\.?\s*/i, type: "feature" },
+    { regex: /^guitar\s+by\.?\s*/i, type: "feature" },
+    { regex: /^piano\s+by\.?\s*/i, type: "feature" },
     { regex: /^by\s+/i, type: "feature" },
   ];
 
@@ -156,9 +174,7 @@ function splitNames(text: string): string[] {
       if (connector) {
         const prevChar = i > 0 ? lower[i - 1] : "";
         const nextChar =
-          i + connector.length < text.length
-            ? lower[i + connector.length]
-            : "";
+          i + connector.length < text.length ? lower[i + connector.length] : "";
         if (!/[a-z]/.test(prevChar) && !/[a-z]/.test(nextChar)) {
           const trimmed = current.trim();
           if (trimmed.length > 0) {
@@ -192,7 +208,11 @@ function splitNames(text: string): string[] {
 
     if (
       depth === 0 &&
-      (char === "," || char === "&" || char === "＆" || char === "×")
+      (char === "," ||
+        char === "&" ||
+        char === "＆" ||
+        char === "×" ||
+        char === "/")
     ) {
       const trimmed = current.trim();
       if (trimmed.length > 0) {
@@ -213,6 +233,76 @@ function splitNames(text: string): string[] {
   }
 
   return results;
+}
+
+function extractInlineFeatureList(
+  text: string,
+): { text: string; features: string[] } | null {
+  const lower = text.toLowerCase();
+  const keywords = [
+    "feat.",
+    "featuring",
+    "feat",
+    "ft.",
+    "ft",
+    "song by",
+    "piano by",
+    "guitar by",
+  ];
+  let depth = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === "(") {
+      depth++;
+      continue;
+    }
+    if (char === ")") {
+      if (depth > 0) {
+        depth--;
+      }
+      continue;
+    }
+    if (depth > 0) {
+      continue;
+    }
+
+    for (const keyword of keywords) {
+      if (!lower.startsWith(keyword, i)) {
+        continue;
+      }
+
+      const prevChar = i > 0 ? lower[i - 1] : "";
+      const nextIndex = i + keyword.length;
+      const nextChar = nextIndex < lower.length ? lower[nextIndex] : "";
+      if (/[a-z0-9]/.test(prevChar) || /[a-z0-9]/.test(nextChar)) {
+        continue;
+      }
+
+      let featureStart = nextIndex;
+      while (featureStart < text.length && /[\s.:]/.test(text[featureStart])) {
+        featureStart++;
+      }
+
+      const featuresPart = text.slice(featureStart).trim();
+      if (!featuresPart) {
+        return null;
+      }
+
+      const features = splitNames(featuresPart);
+      if (features.length === 0) {
+        return null;
+      }
+
+      const mainArtist = text.slice(0, i).trim();
+      return {
+        text: mainArtist,
+        features,
+      };
+    }
+  }
+
+  return null;
 }
 
 function mergeSpecialArtistNames(names: string[], context: string): string[] {
@@ -244,12 +334,13 @@ function normalizeSimpleName(value: string): string {
 }
 
 function cleanupArtistName(name: string): string {
-  let cleaned = name.trim();
+  let cleaned = SPECIAL_ARTIST_REPLACEMENTS.get(name) ?? name.trim();
   if (!cleaned) {
     return "";
   }
 
   cleaned = cleaned.replace(/\s*외\s*(?:다수|\d+명)\s*$/i, "").trim();
+  cleaned = cleaned.replace(/\s+from\s+[^\(\)]+$/i, "").trim();
 
   let output = "";
   for (let i = 0; i < cleaned.length; ) {
