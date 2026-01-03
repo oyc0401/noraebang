@@ -5,8 +5,9 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 type SortOption = 'id_desc' | 'name_asc' | 'name_desc' | 'song_count_desc' | 'song_count_asc'
+const DEFAULT_SORT: SortOption = 'name_asc'
 
-export async function getArtists(sort?: SortOption) {
+export async function getArtists(sort: SortOption = DEFAULT_SORT, take = 100, cursor?: number, search?: string) {
   let orderBy: any = {}
 
   if (sort === 'id_desc') orderBy.id = 'desc'
@@ -16,16 +17,58 @@ export async function getArtists(sort?: SortOption) {
   else if (sort === 'song_count_asc') orderBy = { artistSongs: { _count: 'asc' } }
   else orderBy.nameKo = 'asc'
 
+  const where: any[] = []
+  const trimmedSearch = search?.trim()
+  let idFilter: number | null = null
+
+  if (trimmedSearch) {
+    if (/^\d+$/.test(trimmedSearch)) {
+      idFilter = Number.parseInt(trimmedSearch, 10)
+    }
+
+    where.push(
+      { name: { contains: trimmedSearch, mode: 'insensitive' } },
+      { nameKo: { contains: trimmedSearch, mode: 'insensitive' } },
+      { alias: { contains: trimmedSearch, mode: 'insensitive' } }
+    )
+    if (idFilter) {
+      where.push({ id: idFilter })
+    }
+  }
+
+  const useSearch = Boolean(trimmedSearch)
+
   const artists = await prisma.artist.findMany({
+    ...(useSearch
+      ? {}
+      : {
+          take: take + 1,
+          ...(cursor
+            ? {
+                skip: 1,
+                cursor: {
+                  id: cursor
+                }
+              }
+            : {})
+        }),
     include: {
       _count: {
         select: { artistSongs: true }
       }
     },
+    where: where.length
+      ? {
+          OR: where
+        }
+      : undefined,
     orderBy
   })
 
-  return artists.map(a => ({
+  const hasMore = useSearch ? false : artists.length > take
+  const filtered = useSearch ? artists : hasMore ? artists.slice(0, take) : artists
+  return {
+    artists: filtered.map(a => ({
     id: a.id,
     name: a.name,
     nameKo: a.nameKo,
@@ -35,7 +78,35 @@ export async function getArtists(sort?: SortOption) {
     thumbnailHigh: a.thumbnailHigh ?? undefined,
     songCount: a._count.artistSongs,
     aliasGroup: undefined
-  }))
+  })),
+    hasMore,
+    nextCursor: hasMore ? filtered[filtered.length - 1].id : undefined
+  }
+}
+
+export async function getArtistById(artistId: number) {
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    include: {
+      _count: {
+        select: { artistSongs: true }
+      }
+    }
+  })
+
+  if (!artist) return null
+
+  return {
+    id: artist.id,
+    name: artist.name,
+    nameKo: artist.nameKo,
+    alias: artist.alias ?? undefined,
+    thumbnailDefault: artist.thumbnailDefault ?? undefined,
+    thumbnailMedium: artist.thumbnailMedium ?? undefined,
+    thumbnailHigh: artist.thumbnailHigh ?? undefined,
+    songCount: artist._count.artistSongs,
+    aliasGroup: undefined
+  }
 }
 
 export async function getSongsByArtist(artistId: number) {
@@ -209,6 +280,69 @@ export async function deleteKaraokeSong(songId: number, provider: 'TJ' | 'KY' | 
 
   await prisma.karaokeSong.delete({
     where: { id: existing.id }
+  })
+
+  return { success: true }
+}
+
+export async function transferSongOwnership(songId: number, fromArtistId: number, toArtistId: number) {
+  if (fromArtistId === toArtistId) {
+    throw new Error('동일한 아티스트로는 이전할 수 없습니다.')
+  }
+
+  const targetArtist = await prisma.artist.findUnique({
+    where: { id: toArtistId },
+    select: { id: true }
+  })
+
+  if (!targetArtist) {
+    throw new Error('이전할 아티스트를 찾을 수 없습니다.')
+  }
+
+  const existingRelation = await prisma.artistSong.findUnique({
+    where: {
+      artistId_songId: {
+        artistId: fromArtistId,
+        songId
+      }
+    }
+  })
+
+  if (!existingRelation) {
+    throw new Error('현재 아티스트와 곡의 연결을 찾을 수 없습니다.')
+  }
+
+  await prisma.$transaction([
+    prisma.artistSong.upsert({
+      where: {
+        artistId_songId: {
+          artistId: toArtistId,
+          songId
+        }
+      },
+      update: {},
+      create: {
+        artistId: toArtistId,
+        songId,
+        order: existingRelation.order
+      }
+    }),
+    prisma.artistSong.delete({
+      where: {
+        artistId_songId: {
+          artistId: fromArtistId,
+          songId
+        }
+      }
+    })
+  ])
+
+  return { success: true }
+}
+
+export async function deleteArtist(artistId: number) {
+  await prisma.artist.delete({
+    where: { id: artistId }
   })
 
   return { success: true }

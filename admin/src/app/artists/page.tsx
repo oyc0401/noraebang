@@ -3,17 +3,20 @@
 import Link from "next/link";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createKaraokeSong,
   deleteKaraokeSong,
+  deleteArtist,
   getArtists,
+  getArtistById,
   getSongsByArtist,
   updateArtistAlias,
   updateArtistName,
   updateArtistNameKo,
   updateKaraokeSong,
   updateSongTitle,
+  transferSongOwnership,
 } from "./actions";
 
 const SORT_OPTIONS = [
@@ -27,18 +30,26 @@ const SORT_OPTIONS = [
 type SortOption = (typeof SORT_OPTIONS)[number]["value"];
 const DEFAULT_SORT: SortOption = "name_asc";
 
-type Artist = Awaited<ReturnType<typeof getArtists>>[number];
+type ArtistsResponse = Awaited<ReturnType<typeof getArtists>>;
+type Artist = ArtistsResponse["artists"][number];
 type Song = Awaited<ReturnType<typeof getSongsByArtist>>[number];
 
 export default function AdminArtistsPage() {
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [artistsLoading, setArtistsLoading] = useState(true);
+  const [artistsHasMore, setArtistsHasMore] = useState(false);
+  const [artistsCursor, setArtistsCursor] = useState<number | undefined>(undefined);
+  const [loadingMoreArtists, setLoadingMoreArtists] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [pendingArtistId, setPendingArtistId] = useState<number | null>(null);
+  const [pendingArtistLoading, setPendingArtistLoading] = useState(false);
 
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [songsLoading, setSongsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [nameKoMenuOpen, setNameKoMenuOpen] = useState(false);
   const nameKoMenuRef = useRef<HTMLDivElement | null>(null);
   const [nameMenuOpen, setNameMenuOpen] = useState(false);
@@ -79,18 +90,36 @@ export default function AdminArtistsPage() {
   const [karaokeSaving, setKaraokeSaving] = useState(false);
   const [karaokeError, setKaraokeError] = useState<string | null>(null);
 
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
+  const [transferSong, setTransferSong] = useState<Song | null>(null);
+  const [transferArtistIdInput, setTransferArtistIdInput] = useState("");
+  const [transferSaving, setTransferSaving] = useState(false);
+  const [transferError, setTransferError] = useState<string | null>(null);
+
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [deletingArtist, setDeletingArtist] = useState(false);
 
   // 아티스트 목록 로드
   useEffect(() => {
+    const handler = window.setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => window.clearTimeout(handler);
+  }, [searchQuery]);
+
+  useEffect(() => {
     setArtistsLoading(true);
-    getArtists(sort)
-      .then(setArtists)
+    getArtists(sort, 100, undefined, debouncedSearch)
+      .then((res) => {
+        setArtists(res.artists);
+        setArtistsHasMore(res.hasMore);
+        setArtistsCursor(res.nextCursor);
+      })
       .finally(() => setArtistsLoading(false));
-  }, [sort]);
+  }, [sort, debouncedSearch]);
 
   // 선택된 아티스트의 곡 목록 로드
   useEffect(() => {
@@ -120,28 +149,47 @@ export default function AdminArtistsPage() {
     setAliasInput(selectedArtist?.alias ?? "");
   }, [selectedArtist]);
 
-  const filteredArtists = artists.filter(
-    (artist) =>
-      artist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      artist.nameKo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      artist.alias?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const isFilteringArtists = debouncedSearch.trim().length > 0;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash;
+    if (hash) {
+      const artistId = Number.parseInt(hash.replace("#", ""), 10);
+      if (Number.isFinite(artistId) && artistId > 0) {
+        setPendingArtistId(artistId);
+      }
+    }
+  }, []);
 
   // 초기 로드시 URL 해시로부터 아티스트 선택
   useEffect(() => {
-    if (!filteredArtists || filteredArtists.length === 0 || selectedArtist)
-      return;
+    if (!pendingArtistId || selectedArtist) return;
 
-    const hash = window.location.hash;
-    if (hash) {
-      const artistId = parseInt(hash.replace("#", ""), 10);
-      const artist = filteredArtists.find((a) => a.id === artistId);
-      if (artist) {
-        setSelectedArtist(artist);
-      }
+    const existing = artists.find((a) => a.id === pendingArtistId);
+    if (existing) {
+      setSelectedArtist(existing);
+      setPendingArtistId(null);
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredArtists, selectedArtist]);
+
+    if (pendingArtistLoading) return;
+    setPendingArtistLoading(true);
+    getArtistById(pendingArtistId)
+      .then((artist) => {
+        if (!artist) {
+          setPendingArtistId(null);
+          return;
+        }
+        setArtists((prev) => {
+          if (prev.some((a) => a.id === artist.id)) return prev;
+          return [artist, ...prev];
+        });
+        setSelectedArtist(artist);
+        setPendingArtistId(null);
+      })
+      .finally(() => setPendingArtistLoading(false));
+  }, [pendingArtistId, artists, pendingArtistLoading, selectedArtist]);
 
   // 아티스트 선택시 URL 해시 업데이트
   useEffect(() => {
@@ -159,7 +207,7 @@ export default function AdminArtistsPage() {
   // 키보드 이벤트 핸들러
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!filteredArtists || filteredArtists.length === 0) return;
+      if (!artists || artists.length === 0) return;
 
       if (
         e.key === "ArrowDown" ||
@@ -170,25 +218,25 @@ export default function AdminArtistsPage() {
         e.preventDefault();
 
         const currentIndex = selectedArtist
-          ? filteredArtists.findIndex((a) => a.id === selectedArtist.id)
+          ? artists.findIndex((a) => a.id === selectedArtist.id)
           : -1;
 
         let nextIndex: number;
         if (e.key === "ArrowDown" || e.key === "ArrowRight") {
           nextIndex =
-            currentIndex < filteredArtists.length - 1 ? currentIndex + 1 : 0;
+            currentIndex < artists.length - 1 ? currentIndex + 1 : 0;
         } else {
           nextIndex =
-            currentIndex > 0 ? currentIndex - 1 : filteredArtists.length - 1;
+            currentIndex > 0 ? currentIndex - 1 : artists.length - 1;
         }
 
-        setSelectedArtist(filteredArtists[nextIndex]);
+        setSelectedArtist(artists[nextIndex]);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [filteredArtists, selectedArtist]);
+  }, [artists, selectedArtist]);
 
   useEffect(() => {
     if (!nameKoMenuOpen) return;
@@ -275,8 +323,10 @@ export default function AdminArtistsPage() {
         text: `✅ 한국어 이름이 "${response.nameKo}"로 저장되었습니다.`,
       });
 
-      const updatedArtists = await getArtists(sort);
-      setArtists(updatedArtists);
+      const updatedArtists = await getArtists(sort, 100, undefined, debouncedSearch);
+      setArtists(updatedArtists.artists);
+      setArtistsHasMore(updatedArtists.hasMore);
+      setArtistsCursor(updatedArtists.nextCursor);
 
       const updatedArtist = updatedArtists.find(
         (a) => a.id === selectedArtist.id,
@@ -314,10 +364,12 @@ export default function AdminArtistsPage() {
         text: `✅ 이름이 "${response.name}"로 저장되었습니다.`,
       });
 
-      const updatedArtists = await getArtists(sort);
-      setArtists(updatedArtists);
+      const updatedArtists = await getArtists(sort, 100, undefined, debouncedSearch);
+      setArtists(updatedArtists.artists);
+      setArtistsHasMore(updatedArtists.hasMore);
+      setArtistsCursor(updatedArtists.nextCursor);
 
-      const updatedArtist = updatedArtists.find(
+      const updatedArtist = updatedArtists.artists.find(
         (a) => a.id === selectedArtist.id,
       );
       if (updatedArtist) {
@@ -358,10 +410,12 @@ export default function AdminArtistsPage() {
         }로 저장되었습니다.`,
       });
 
-      const updatedArtists = await getArtists(sort);
-      setArtists(updatedArtists);
+      const updatedArtists = await getArtists(sort, 100, undefined, debouncedSearch);
+      setArtists(updatedArtists.artists);
+      setArtistsHasMore(updatedArtists.hasMore);
+      setArtistsCursor(updatedArtists.nextCursor);
 
-      const updatedArtist = updatedArtists.find(
+      const updatedArtist = updatedArtists.artists.find(
         (a) => a.id === selectedArtist.id,
       );
       if (updatedArtist) {
@@ -488,6 +542,97 @@ export default function AdminArtistsPage() {
     }
   };
 
+  const handleTransferOwnership = async () => {
+    if (!transferSong || !selectedArtist) return;
+    const trimmed = transferArtistIdInput.trim();
+    const targetId = Number.parseInt(trimmed, 10);
+    if (!trimmed || Number.isNaN(targetId) || targetId <= 0) {
+      setTransferError("이전할 아티스트 ID를 올바르게 입력해주세요.");
+      return;
+    }
+
+    setTransferSaving(true);
+    setTransferError(null);
+    try {
+      await transferSongOwnership(transferSong.id, selectedArtist.id, targetId);
+      const refreshed = await getSongsByArtist(selectedArtist.id);
+      setSongs(refreshed);
+      setShowTransferDialog(false);
+      setTransferSong(null);
+      setTransferArtistIdInput("");
+    } catch (error: any) {
+      setTransferError(error?.message ?? "소유권 이전 중 오류가 발생했습니다.");
+    } finally {
+      setTransferSaving(false);
+    }
+  };
+
+  const handleLoadMoreArtists = useCallback(async () => {
+    if (!artistsHasMore || loadingMoreArtists || isFilteringArtists) return;
+    setLoadingMoreArtists(true);
+    try {
+      const res = await getArtists(sort, 100, artistsCursor, debouncedSearch);
+      setArtists((prev) => [...prev, ...res.artists]);
+      setArtistsHasMore(res.hasMore);
+      setArtistsCursor(res.nextCursor);
+    } finally {
+      setLoadingMoreArtists(false);
+    }
+  }, [artistsHasMore, loadingMoreArtists, isFilteringArtists, sort, artistsCursor, debouncedSearch]);
+
+  const handleDeleteArtist = async () => {
+    if (!selectedArtist || deletingArtist) return;
+    if (typeof window !== "undefined") {
+      if (
+        !window.confirm(
+          `정말로 "${selectedArtist.nameKo}" (ID ${selectedArtist.id}) 아티스트를 삭제할까요?`,
+        )
+      ) {
+        return;
+      }
+    }
+
+    setDeletingArtist(true);
+    setMessage(null);
+    try {
+      await deleteArtist(selectedArtist.id);
+      const res = await getArtists(sort, 100, undefined, debouncedSearch);
+      setArtists(res.artists);
+      setArtistsHasMore(res.hasMore);
+      setArtistsCursor(res.nextCursor);
+      setSelectedArtist(null);
+      setSongs([]);
+      setMessage({
+        type: "success",
+        text: "아티스트가 삭제되었습니다.",
+      });
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: error?.message ?? "아티스트 삭제 중 오류가 발생했습니다.",
+      });
+    } finally {
+      setDeletingArtist(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!artistsHasMore || isFilteringArtists) return;
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        handleLoadMoreArtists();
+      }
+    });
+
+    observer.observe(target);
+    return () => {
+      observer.disconnect();
+    };
+  }, [artistsHasMore, isFilteringArtists, handleLoadMoreArtists]);
+
   return (
     <div className="h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
       {/* Header */}
@@ -555,7 +700,7 @@ export default function AdminArtistsPage() {
           {/* Artist List Header */}
           <div className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-2 flex items-center justify-between gap-2">
             <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase">
-              Artists ({filteredArtists.length})
+              Artists ({artists.length})
             </div>
             <div className="flex items-center gap-1 text-[10px] text-zinc-500 dark:text-zinc-400">
               <label htmlFor="artists-sort" className="sr-only">
@@ -584,7 +729,7 @@ export default function AdminArtistsPage() {
               </div>
             )}
 
-            {filteredArtists.map((artist) => (
+            {artists.map((artist) => (
               <button
                 type="button"
                 key={artist.id}
@@ -630,7 +775,15 @@ export default function AdminArtistsPage() {
               </button>
             ))}
 
-            {filteredArtists.length === 0 && !artistsLoading && (
+            <div ref={loadMoreRef} className="h-10 w-full">
+              {loadingMoreArtists && (
+                <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
+                  더 불러오는 중...
+                </p>
+              )}
+            </div>
+
+            {artists.length === 0 && !artistsLoading && (
               <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
                 검색 결과가 없습니다
               </div>
@@ -644,9 +797,9 @@ export default function AdminArtistsPage() {
             <>
               {/* Artist Info Header */}
               <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4">
-                <div className="flex items-center gap-3">
-                  {selectedArtist.thumbnailHigh ||
-                  selectedArtist.thumbnailMedium ||
+                    <div className="flex items-center gap-3">
+                      {selectedArtist.thumbnailHigh ||
+                      selectedArtist.thumbnailMedium ||
                   selectedArtist.thumbnailDefault ? (
                     <Image
                       src={
@@ -688,6 +841,9 @@ export default function AdminArtistsPage() {
                           </svg>
                         </button>
                       </h2>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        Artist ID: {selectedArtist.id}
+                      </p>
                       {nameKoMenuOpen && (
                         <div className="absolute left-0 mt-2 w-48 rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 z-20">
                           <button
@@ -827,9 +983,32 @@ export default function AdminArtistsPage() {
                       )}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                      {selectedArtist.songCount}곡
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleDeleteArtist}
+                        className="inline-flex items-center gap-1 rounded border border-red-300 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 dark:border-red-500/40 dark:text-red-300 dark:hover:bg-red-900/20"
+                        style={{ cursor: "pointer" }}
+                        disabled={deletingArtist}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                        {deletingArtist ? "삭제 중..." : "아티스트 삭제"}
+                      </button>
+                      <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                        {selectedArtist.songCount}곡
                     </div>
                   </div>
                 </div>
@@ -954,6 +1133,20 @@ export default function AdminArtistsPage() {
                               >
                                 노래방번호 편집
                               </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTransferSong(song);
+                                  setTransferArtistIdInput("");
+                                  setTransferError(null);
+                                  setShowTransferDialog(true);
+                                  setSongMenuOpen(null);
+                                }}
+                                className="block w-full px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                style={{ cursor: "pointer" }}
+                              >
+                                곡 소유권 이전하기
+                              </button>
                             </div>
                           )}
                         </div>
@@ -986,6 +1179,74 @@ export default function AdminArtistsPage() {
             </div>
           )}
         </div>
+
+        {showTransferDialog && transferSong && selectedArtist && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                곡 소유권 이전
+              </h3>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                선택한 곡을 다른 아티스트 ID로 매핑합니다.
+              </p>
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800">
+                  <p className="font-semibold text-zinc-900 dark:text-zinc-50">
+                    {transferSong.title}
+                  </p>
+                  {transferSong.titleKo && (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {transferSong.titleKo}
+                    </p>
+                  )}
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    현재 아티스트: {selectedArtist.name} (ID {selectedArtist.id})
+                  </p>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    이전할 아티스트 ID
+                  </label>
+                  <input
+                    type="number"
+                    value={transferArtistIdInput}
+                    onChange={(e) => setTransferArtistIdInput(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                    placeholder="예: 1234"
+                    style={{ cursor: "text" }}
+                  />
+                  {transferError && (
+                    <p className="mt-2 text-xs text-red-500">{transferError}</p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTransferDialog(false);
+                    setTransferSong(null);
+                    setTransferArtistIdInput("");
+                    setTransferError(null);
+                  }}
+                  className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  style={{ cursor: "pointer" }}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleTransferOwnership}
+                  disabled={transferSaving}
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300 dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:disabled:bg-indigo-900/40"
+                  style={{ cursor: "pointer" }}
+                >
+                  {transferSaving ? "이전 중..." : "이전하기"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showNameKoDialog && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
