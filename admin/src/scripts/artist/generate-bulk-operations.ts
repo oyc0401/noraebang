@@ -22,7 +22,7 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter, log: ["warn", "error"] });
 
-const COLLABORATION_KEYWORDS = ["with", "&", "X", "feat", "featuring", "ft", "duet", "Duet"];
+const COLLABORATION_KEYWORDS = ["with", "&", "X", "feat", "featuring", "ft", "duet", "Duet", "prod", "Prod"];
 
 // CLI 인자 파싱
 const args = process.argv.slice(2);
@@ -44,7 +44,7 @@ type Operation = {
 function parseArtistName(name: string): string[] {
   const lowerName = name.toLowerCase();
 
-  // with, feat 등 키워드로 분리
+  // with, feat, prod 등 키워드로 분리
   let parts: string[] = [];
 
   if (lowerName.includes("(with ")) {
@@ -59,6 +59,11 @@ function parseArtistName(name: string): string[] {
     }
   } else if (lowerName.includes("(feat")) {
     const match = name.match(/^(.+?)\((?:rap )?feat\.?(.+?)\)$/i);
+    if (match) {
+      parts = [match[1].trim(), match[2].trim()];
+    }
+  } else if (lowerName.includes("(prod")) {
+    const match = name.match(/^(.+?)\(prod\.?(.+?)\)$/i);
     if (match) {
       parts = [match[1].trim(), match[2].trim()];
     }

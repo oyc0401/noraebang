@@ -53,6 +53,8 @@ function hasCollaborationKeyword(desc: string): boolean {
     desc.includes("Feat") ||
     desc.includes("Duet") ||
     desc.includes("duet") ||
+    desc.includes("Prod") ||
+    desc.includes("prod") ||
     desc.includes("X")
   );
 }
