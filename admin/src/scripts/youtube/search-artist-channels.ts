@@ -11,7 +11,8 @@ import {
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts [startId] [limit]
 
-// 713 - 닭부터 하기! 1/3
+// 여기까지 체크함: 770
+//
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -107,7 +108,7 @@ async function searchChannels(query: string): Promise<ChannelSearchResult[]> {
       part: "snippet",
       type: "channel",
       q: query,
-      maxResults: "5",
+      maxResults: "3",
       key: apiKey,
     });
     return `https://www.googleapis.com/youtube/v3/search?${params.toString()}`;
