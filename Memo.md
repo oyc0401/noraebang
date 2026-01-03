@@ -47,3 +47,6 @@ pnpm generate
 pnpm --filter backend exec prisma generate
 
 pnpm --filter admin exec prisma generate
+
+
+동방신기 해외편 -> 687 東方神起

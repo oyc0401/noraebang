@@ -90,6 +90,7 @@ export default function YoutubeAdminPage() {
   const [artistSongs, setArtistSongs] = useState<ArtistSong[]>([]);
   const [songsLoading, setSongsLoading] = useState(false);
   const [songsError, setSongsError] = useState<string | null>(null);
+  const [showSongs, setShowSongs] = useState(false);
 
   const initialSelectionResolved = useRef(false);
 
@@ -301,7 +302,7 @@ export default function YoutubeAdminPage() {
     : null;
 
   useEffect(() => {
-    if (!selectedArtistId) {
+    if (!selectedArtistId || !showSongs) {
       setArtistSongs([]);
       setSongsError(null);
       setSongsLoading(false);
@@ -334,7 +335,7 @@ export default function YoutubeAdminPage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedArtistId]);
+  }, [selectedArtistId, showSongs]);
 
   const moveSelection = useCallback(
     (direction: "prev" | "next") => {
@@ -537,7 +538,7 @@ export default function YoutubeAdminPage() {
           </div>
         )}
 
-        <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[340px_minmax(0,1fr)_360px] xl:items-start">
+        <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[420px_minmax(0,1.0625fr)_360px] xl:items-start">
           <aside className="flex w-full flex-shrink-0 flex-col rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm xl:h-[calc(100vh-6rem)]">
             <div className="flex-shrink-0 relative">
               <button
@@ -786,6 +787,12 @@ export default function YoutubeAdminPage() {
                   const hasTopic = artist.youtubeChannels.some(
                     (channel) => channel.type === "TOPIC",
                   );
+                  const mainChannel = artist.youtubeChannels.find(
+                    (channel) => channel.type === "MAIN",
+                  );
+                  const topicChannel = artist.youtubeChannels.find(
+                    (channel) => channel.type === "TOPIC",
+                  );
 
                   return (
                     <button
@@ -799,7 +806,7 @@ export default function YoutubeAdminPage() {
                           : "border-zinc-200 hover:border-zinc-300"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3">
                         <div className="relative h-12 w-12 overflow-hidden rounded-xl bg-zinc-100">
                           {artist.thumbnailMedium ? (
                             <Image
@@ -815,30 +822,124 @@ export default function YoutubeAdminPage() {
                             </div>
                           )}
                         </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-zinc-900">
-                            {artist.name}
-                          </p>
-                          <p className="text-xs text-zinc-500">
-                            {artist.nameKo}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span className="text-xs font-semibold text-zinc-600">
-                            ID: {artist.id}
-                          </span>
-                          <div className="flex gap-1">
-                            {hasMain && (
-                              <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700">
-                                메인
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <p className="text-base font-semibold text-zinc-900">
+                                {artist.name}
+                              </p>
+                              <p className="text-sm text-zinc-500">
+                                {artist.nameKo}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xs font-semibold text-zinc-600">
+                                ID: {artist.id}
                               </span>
+                              <div className="flex gap-1 justify-end">
+                                {hasMain && (
+                                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700">
+                                    메인
+                                  </span>
+                                )}
+                                {hasTopic && (
+                                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                                    토픽
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            {mainChannel && (
+                              <div className="rounded-xl bg-white/70 p-2">
+                                <div className="flex items-start gap-2">
+                                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+                                    {mainChannel.thumbnailDefault ? (
+                                      <Image
+                                        src={mainChannel.thumbnailDefault}
+                                        alt="메인 채널"
+                                        fill
+                                        className="object-cover"
+                                        sizes="40px"
+                                      />
+                                    ) : (
+                                      <div className="flex h-full w-full items-center justify-center text-[8px] text-zinc-400">
+                                        NO
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="truncate text-md font-medium text-zinc-900">
+                                      {mainChannel.title}
+                                    </p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-red-500">
+                                      Main
+                                    </p>
+                                    <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-zinc-500">
+                                      <span>
+                                        구독자{" "}
+                                        {formatNumber(
+                                          mainChannel.subscriberCount,
+                                        )}
+                                      </span>
+                                      <span>·</span>
+                                      <span>
+                                        동영상{" "}
+                                        {formatNumber(mainChannel.videoCount)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             )}
-                            {hasTopic && (
-                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-                                토픽
-                              </span>
+                            {topicChannel && (
+                              <div className="rounded-xl bg-white/70 p-2">
+                                <div className="flex items-start gap-2">
+                                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+                                    {topicChannel.thumbnailDefault ? (
+                                      <Image
+                                        src={topicChannel.thumbnailDefault}
+                                        alt="토픽 채널"
+                                        fill
+                                        className="object-cover"
+                                        sizes="40px"
+                                      />
+                                    ) : (
+                                      <div className="flex h-full w-full items-center justify-center text-[8px] text-zinc-400">
+                                        NO
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="truncate text-md font-medium text-zinc-900">
+                                      {topicChannel.title}
+                                    </p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-500">
+                                      Topic
+                                    </p>
+                                    <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-zinc-500">
+                                      <span>
+                                        구독자{" "}
+                                        {formatNumber(
+                                          topicChannel.subscriberCount,
+                                        )}
+                                      </span>
+                                      <span>·</span>
+                                      <span>
+                                        동영상{" "}
+                                        {formatNumber(topicChannel.videoCount)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             )}
                           </div>
+                          <p className="text-[10px] text-zinc-400">
+                            총 채널 {channelCount}개
+                          </p>
                         </div>
                       </div>
                     </button>
@@ -875,29 +976,6 @@ export default function YoutubeAdminPage() {
                       <p className="text-sm text-zinc-500">
                         {selectedArtist.nameKo}
                       </p>
-                      <div className="mt-2 flex gap-2 text-xs text-zinc-500">
-                        <span>
-                          총 {selectedArtist.youtubeChannels.length}개의 채널
-                        </span>
-                        <span>•</span>
-                        <span>
-                          메인{" "}
-                          {selectedArtist.youtubeChannels.some(
-                            (channel) => channel.type === "MAIN",
-                          )
-                            ? "연동됨"
-                            : "미연동"}
-                        </span>
-                        <span>•</span>
-                        <span>
-                          토픽{" "}
-                          {selectedArtist.youtubeChannels.some(
-                            (channel) => channel.type === "TOPIC",
-                          )
-                            ? "확인됨"
-                            : "없음"}
-                        </span>
-                      </div>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -1087,11 +1165,25 @@ export default function YoutubeAdminPage() {
                     : "아티스트를 선택하면 곡 목록을 확인할 수 있습니다."}
                 </p>
               </div>
-              {selectedArtist && (
-                <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
-                  ID {selectedArtist.id}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSongs(!showSongs)}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                    showSongs
+                      ? "border-blue-300 bg-blue-50 text-blue-700"
+                      : "border-zinc-200 text-zinc-700 hover:border-zinc-400"
+                  }`}
+                  style={{ cursor: "pointer" }}
+                >
+                  {showSongs ? "OFF" : "ON"}
+                </button>
+                {selectedArtist && (
+                  <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
+                    ID {selectedArtist.id}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="mt-4 min-h-[200px] flex-1 overflow-y-auto pr-1">
