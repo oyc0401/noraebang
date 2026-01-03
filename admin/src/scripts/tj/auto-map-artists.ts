@@ -26,11 +26,18 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+type ArtistCacheEntry = {
+  id: number;
+  name: string;
+  nameKo: string | null;
+};
+
 async function mapTjSongsToArtist(
   artistId: number,
   artistName: string,
   isDryRun: boolean,
   karaokeSongMap: Map<string, number>,
+  artistMap: Map<string, ArtistCacheEntry>,
 ) {
   // 해당 아티스트명을 가진 TjSong 조회
   const tjSongs = await prisma.tjSong.findMany({
@@ -43,6 +50,7 @@ async function mapTjSongsToArtist(
     select: {
       id: true,
       title: true,
+      artistList: true,
     },
   });
 
@@ -60,7 +68,7 @@ async function mapTjSongsToArtist(
   // 배치 처리를 위한 데이터 준비
   const songsToCreate: Array<{ tjSongId: string; title: string }> = [];
   const artistSongsToCreate: Array<{ artistId: number; songId: number }> = [];
-  const tjSongIdsToUpdate: string[] = [];
+  const touchedSongIds = new Set<string>();
 
   for (const tjSong of tjSongs) {
     const existingSongId = karaokeSongMap.get(tjSong.id);
@@ -68,11 +76,12 @@ async function mapTjSongsToArtist(
     if (existingSongId) {
       // 기존 Song이 있으면 ArtistSong 매핑만 추가
       artistSongsToCreate.push({ artistId, songId: existingSongId });
-      tjSongIdsToUpdate.push(tjSong.id);
+      touchedSongIds.add(tjSong.id);
       mappedSongs++;
     } else {
       // Song을 생성해야 함
       songsToCreate.push({ tjSongId: tjSong.id, title: tjSong.title });
+      touchedSongIds.add(tjSong.id);
     }
   }
 
@@ -97,7 +106,6 @@ async function mapTjSongsToArtist(
     karaokeSongMap.set(songData.tjSongId, createdSong.id);
 
     artistSongsToCreate.push({ artistId, songId: createdSong.id });
-    tjSongIdsToUpdate.push(songData.tjSongId);
     createdSongs++;
     mappedSongs++;
   }
@@ -119,19 +127,105 @@ async function mapTjSongsToArtist(
     });
   }
 
-  // TjSong.saved = true로 업데이트
-  if (tjSongIdsToUpdate.length > 0) {
-    await prisma.tjSong.updateMany({
-      where: {
-        id: {
-          in: tjSongIdsToUpdate,
-        },
-      },
-      data: { saved: true },
-    });
-  }
+  const songsForCompletion = tjSongs.filter((song) =>
+    touchedSongIds.has(song.id),
+  );
+  await markCompletedTjSongs(songsForCompletion, artistMap, karaokeSongMap);
 
   return { mappedSongs, createdSongs };
+}
+
+async function markCompletedTjSongs(
+  tjSongs: Array<{ id: string; artistList: string[] }>,
+  artistMap: Map<string, ArtistCacheEntry>,
+  karaokeSongMap: Map<string, number>,
+) {
+  if (tjSongs.length === 0) {
+    return;
+  }
+
+  const candidateMap = new Map<
+    string,
+    { songId: number; requiredArtistIds: number[] }
+  >();
+
+  for (const tjSong of tjSongs) {
+    const songId = karaokeSongMap.get(tjSong.id);
+    if (!songId) continue;
+
+    const requiredIds: number[] = [];
+    let missingArtist = false;
+
+    for (const name of tjSong.artistList) {
+      if (!name) continue;
+      const artist = artistMap.get(name);
+      if (!artist) {
+        missingArtist = true;
+        break;
+      }
+      requiredIds.push(artist.id);
+    }
+
+    if (missingArtist || requiredIds.length === 0) {
+      continue;
+    }
+
+    const uniqueRequiredIds = Array.from(new Set(requiredIds));
+    candidateMap.set(tjSong.id, { songId, requiredArtistIds: uniqueRequiredIds });
+  }
+
+  if (candidateMap.size === 0) {
+    return;
+  }
+
+  const songIds = Array.from(
+    new Set(Array.from(candidateMap.values()).map((entry) => entry.songId)),
+  );
+  const artistSongRows = await prisma.artistSong.findMany({
+    where: {
+      songId: {
+        in: songIds,
+      },
+    },
+    select: {
+      songId: true,
+      artistId: true,
+    },
+  });
+
+  const songArtistMap = new Map<number, Set<number>>();
+  for (const row of artistSongRows) {
+    if (!songArtistMap.has(row.songId)) {
+      songArtistMap.set(row.songId, new Set());
+    }
+    songArtistMap.get(row.songId)!.add(row.artistId);
+  }
+
+  const completedTjSongIds: string[] = [];
+  for (const [tjSongId, requirement] of candidateMap.entries()) {
+    const mappedArtistIds = songArtistMap.get(requirement.songId);
+    if (!mappedArtistIds) continue;
+
+    const allMapped = requirement.requiredArtistIds.every((artistId) =>
+      mappedArtistIds.has(artistId),
+    );
+    if (allMapped) {
+      completedTjSongIds.push(tjSongId);
+    }
+  }
+
+  if (completedTjSongIds.length === 0) {
+    return;
+  }
+
+  await prisma.tjSong.updateMany({
+    where: {
+      id: {
+        in: completedTjSongIds,
+      },
+    },
+    data: { saved: true },
+  });
 }
 
 async function main() {
@@ -156,7 +250,7 @@ async function main() {
       nameKo: true,
     },
   });
-  const artistMap = new Map<string, { id: number; name: string; nameKo: string | null }>();
+  const artistMap = new Map<string, ArtistCacheEntry>();
   for (const artist of allArtists) {
     artistMap.set(artist.name, artist);
   }
@@ -251,6 +345,7 @@ async function main() {
         artistName,
         isDryRun,
         karaokeSongMap,
+        artistMap,
       );
       totalMappedSongs += stats.mappedSongs;
       totalCreatedSongs += stats.createdSongs;
@@ -306,6 +401,7 @@ async function main() {
       artistName,
       isDryRun,
       karaokeSongMap,
+      artistMap,
     );
     totalMappedSongs += stats.mappedSongs;
     totalCreatedSongs += stats.createdSongs;
