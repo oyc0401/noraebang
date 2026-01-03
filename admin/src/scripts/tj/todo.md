@@ -2,7 +2,7 @@ dev_20260103_033101.dump
 에서
 
 가수 리스트 파싱
-pnpm ts-node src/scripts/tj/reparse-artists.ts
+pnpm tsx src/scripts/tj/reparse-artists.ts
 
 song에 저장
 pnpm ts-node src/scripts/tj/auto-map-artists.ts
