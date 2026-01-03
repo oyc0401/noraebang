@@ -35,7 +35,10 @@ export function parseTJArtist(tjArtist: string): ParsedArtists {
   features.push(...extraction.features);
   producers.push(...extraction.producers);
 
-  const artistCandidates = splitNames(remaining);
+  const artistCandidates = mergeSpecialArtistNames(
+    splitNames(remaining),
+    remaining,
+  );
   result.artist.push(
     ...artistCandidates
       .map(cleanupArtistName)
@@ -210,6 +213,34 @@ function splitNames(text: string): string[] {
   }
 
   return results;
+}
+
+function mergeSpecialArtistNames(names: string[], context: string): string[] {
+  if (!/CHiCO\s+with\s+HoneyWorks/i.test(context)) {
+    return names;
+  }
+
+  const merged: string[] = [];
+
+  for (let i = 0; i < names.length; i++) {
+    if (
+      normalizeSimpleName(names[i]) === "chico" &&
+      i + 1 < names.length &&
+      normalizeSimpleName(names[i + 1]) === "honeyworks"
+    ) {
+      merged.push("CHiCO with HoneyWorks");
+      i++;
+      continue;
+    }
+
+    merged.push(names[i]);
+  }
+
+  return merged;
+}
+
+function normalizeSimpleName(value: string): string {
+  return value.replace(/[^a-z0-9]/gi, "").toLowerCase();
 }
 
 function cleanupArtistName(name: string): string {

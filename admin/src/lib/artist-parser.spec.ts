@@ -401,10 +401,10 @@ describe("parseTJArtist", () => {
       });
     });
 
-    it("영어 with 표기도 아티스트 구분자로 처리되어야 함", () => {
+    it("CHiCO with HoneyWorks는 하나의 가수로 처리되어야 함", () => {
       const result = parseTJArtist("CHiCO with HoneyWorks");
       expect(result).toEqual({
-        artist: ["CHiCO", "HoneyWorks"],
+        artist: ["CHiCO with HoneyWorks"],
         feature: [],
         producer: [],
       });
@@ -413,7 +413,7 @@ describe("parseTJArtist", () => {
     it("with 이후 meets 가 이어져도 모든 아티스트가 분리되어야 함", () => {
       const result = parseTJArtist("CHiCO with HoneyWorks meets 中川翔子");
       expect(result).toEqual({
-        artist: ["CHiCO", "HoneyWorks", "中川翔子"],
+        artist: ["CHiCO with HoneyWorks", "中川翔子"],
         feature: [],
         producer: [],
       });
