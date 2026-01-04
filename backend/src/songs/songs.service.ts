@@ -11,6 +11,7 @@ export class SongsService {
     id: true,
     title: true,
     titleKo: true,
+    catalog: true,
     thumbnailDefault: true,
     thumbnailMedium: true,
     thumbnailHigh: true,
@@ -32,6 +33,7 @@ export class SongsService {
     id: number;
     title: string;
     titleKo: string | null;
+    catalog: string | null;
     thumbnailDefault: string | null;
     thumbnailMedium: string | null;
     thumbnailHigh: string | null;
@@ -42,6 +44,7 @@ export class SongsService {
       id: song.id,
       title: song.title,
       titleKo: song.titleKo ?? undefined,
+      catalog: song.catalog ?? undefined,
       artists: song.artistSongs.map((as) => ({
         artistId: as.artistId,
         role: as.role ?? undefined,
