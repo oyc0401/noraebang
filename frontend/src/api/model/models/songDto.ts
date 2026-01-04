@@ -12,6 +12,7 @@ export interface SongDto {
   id: number;
   title: string;
   titleKo?: string;
+  catalog?: string;
   artists: ArtistSongDto[];
   karaokeSongs?: KaraokeSongDto[];
   thumbnailDefault?: string;

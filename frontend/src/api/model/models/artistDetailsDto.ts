@@ -13,6 +13,8 @@ export interface ArtistDetailsDto {
   name: string;
   nameKo: string;
   alias?: string;
+  /** 아티스트의 대표 카탈로그 */
+  homeCatalog?: string;
   thumbnailDefault?: string;
   thumbnailMedium?: string;
   thumbnailHigh?: string;

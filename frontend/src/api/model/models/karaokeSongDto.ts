@@ -9,4 +9,8 @@
 export interface KaraokeSongDto {
   provider: string;
   karaokeNo: string;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  artist?: string | null;
 }

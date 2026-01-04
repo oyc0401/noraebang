@@ -63,6 +63,8 @@ export class SearchController {
     const songs = await this.songsService.findAll();
 
     const normalizedTitle = youtube.title?.toLowerCase() ?? "";
+    console.log("[YouTube Search] oEmbed title:", youtube.title);
+    console.log("[YouTube Search] normalized title:", normalizedTitle);
 
     const matchedSong = songs.find((song) => {
       const songTitle = song.title.toLowerCase();
@@ -74,6 +76,11 @@ export class SearchController {
       const matchesTitleKo = titleKo
         ? normalizedTitle.includes(titleKo)
         : false;
+      if (matchesTitle || matchesTitleKo) {
+        console.log(
+          `[YouTube Search] matched song: #${song.id} ${song.title} (${song.titleKo ?? "-"})`,
+        );
+      }
 
       return matchesTitle || matchesTitleKo;
     });
