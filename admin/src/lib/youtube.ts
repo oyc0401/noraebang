@@ -1,7 +1,7 @@
 import {
   searchYoutubeChannels,
   fetchYoutubeChannel,
-} from "../../../lib/youtube/index.ts";
+} from "../thirdparty/youtube";
 
 const CHANNEL_ID_REGEX = /^UC[0-9A-Za-z_-]{22}$/;
 
