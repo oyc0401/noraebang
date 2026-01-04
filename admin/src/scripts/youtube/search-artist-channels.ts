@@ -4,9 +4,9 @@ import { ChannelType, PrismaClient } from "@prisma/client";
 import pg from "pg";
 import { pathToFileURL } from "url";
 import {
-  getYoutubeApiKey,
-  rotateYoutubeApiKey,
-} from "../../lib/youtube-key-manager.ts";
+  fetchYoutubeChannel,
+  searchYoutubeChannels,
+} from "../../../../lib/youtube/index.ts";
 
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts [startId] [limit]
@@ -43,50 +43,6 @@ interface YoutubeChannelDetails {
   uploadsPlaylistId?: string;
 }
 
-function isQuotaErrorPayload(payload: any): boolean {
-  const reason = payload?.error?.errors?.[0]?.reason;
-  if (reason) {
-    return [
-      "quotaExceeded",
-      "dailyLimitExceeded",
-      "userRateLimitExceeded",
-      "rateLimitExceeded",
-    ].includes(reason);
-  }
-
-  const message: string | undefined = payload?.error?.message;
-  return typeof message === "string" && message.toLowerCase().includes("quota");
-}
-
-async function fetchYoutubeJson(buildUrl: (apiKey: string) => string) {
-  while (true) {
-    const apiKey = getYoutubeApiKey();
-    const response = await fetch(buildUrl(apiKey));
-    let data: any = null;
-    try {
-      data = await response.json();
-    } catch {
-      // ignore JSON parse errors for non-JSON responses
-    }
-
-    if (response.ok) {
-      return data;
-    }
-
-    if (response.status === 403 && isQuotaErrorPayload(data)) {
-      console.warn("   ⛔️ Quota exceeded for current API key.");
-      if (rotateYoutubeApiKey()) {
-        console.log("   🔁 Retrying request with fallback API key...");
-        continue;
-      }
-    }
-
-    throw new Error(
-      `YouTube API error: ${data?.error?.message || response.statusText}`,
-    );
-  }
-}
-
 function isTopicChannelTitle(title?: string | null): boolean {
   if (!title) {
     return false;
@@ -103,85 +59,77 @@ function normalizeTitle(value: string): string {
 }
 
 async function searchChannels(query: string): Promise<ChannelSearchResult[]> {
-  const data = await fetchYoutubeJson((apiKey) => {
-    const params = new URLSearchParams({
-      part: "snippet",
-      type: "channel",
-      q: query,
-      maxResults: "3",
-      key: apiKey,
-    });
-    return `https://www.googleapis.com/youtube/v3/search?${params.toString()}`;
-  });
-
+  const data = await searchYoutubeChannels(query, 3);
   if (!data.items || data.items.length === 0) {
     return [];
   }
 
-  // 각 채널의 상세 정보 가져오기 (구독자 수 포함)
-  const channelIds = data.items
-    .map((item: any) => item.snippet.channelId)
-    .join(",");
+  const results: ChannelSearchResult[] = [];
 
-  const detailsData = await fetchYoutubeJson((apiKey) => {
-    const params = new URLSearchParams({
-      part: "snippet,statistics",
-      id: channelIds,
-      key: apiKey,
+  for (const item of data.items) {
+    const channelId =
+      typeof item.id === "string" ? item.id : item.id?.channelId;
+    if (!channelId) continue;
+
+    const channelData = await fetchYoutubeChannel({ channelId });
+    const channel = channelData.items?.[0];
+    if (!channel) continue;
+
+    const snippet = channel.snippet ?? {};
+    const statistics = channel.statistics ?? {};
+    results.push({
+      channelId: channel.id,
+      title: (snippet.title as string) ?? "",
+      description: (snippet.description as string) ?? "",
+      subscriberCount: statistics?.subscriberCount
+        ? parseInt(statistics.subscriberCount as string)
+        : undefined,
     });
-    return `https://www.googleapis.com/youtube/v3/channels?${params.toString()}`;
-  });
+  }
 
-  return detailsData.items.map((item: any) => ({
-    channelId: item.id,
-    title: item.snippet.title,
-    description: item.snippet.description || "",
-    subscriberCount: item.statistics?.subscriberCount
-      ? parseInt(item.statistics.subscriberCount)
-      : undefined,
-  }));
+  return results;
 }
 
 async function getChannelDetails(
   channelId: string,
 ): Promise<YoutubeChannelDetails> {
-  const data = await fetchYoutubeJson((apiKey) => {
-    const params = new URLSearchParams({
-      part: "snippet,statistics,contentDetails",
-      id: channelId,
-      key: apiKey,
-    });
-    return `https://www.googleapis.com/youtube/v3/channels?${params.toString()}`;
-  });
-
+  const data = await fetchYoutubeChannel({ channelId });
   if (!data.items || data.items.length === 0) {
     throw new Error(`Channel not found: ${channelId}`);
   }
 
   const channel = data.items[0];
-  const snippet = channel.snippet;
-  const statistics = channel.statistics;
-  const contentDetails = channel.contentDetails;
+  const snippet = channel.snippet ?? {};
+  const statistics = channel.statistics ?? {};
+  const contentDetails = channel.contentDetails as
+    | { relatedPlaylists?: { uploads?: string } }
+    | undefined;
+  const thumbnails = (snippet as any)?.thumbnails ?? {};
 
   return {
     channelId: channel.id,
-    title: snippet.title,
-    description: snippet.description,
-    customUrl: snippet.customUrl,
-    publishedAt: snippet.publishedAt,
-    country: snippet.country,
-    defaultLanguage: snippet.defaultLanguage,
-    thumbnailDefault: snippet.thumbnails?.default?.url,
-    thumbnailMedium: snippet.thumbnails?.medium?.url,
-    thumbnailHigh: snippet.thumbnails?.high?.url,
+    title: (snippet as any).title,
+    description: (snippet as any).description,
+    customUrl: (snippet as any).customUrl,
+    publishedAt: (snippet as any).publishedAt,
+    country: (snippet as any).country,
+    defaultLanguage: (snippet as any).defaultLanguage,
+    thumbnailDefault: thumbnails?.default?.url,
+    thumbnailMedium: thumbnails?.medium?.url,
+    thumbnailHigh: thumbnails?.high?.url,
     subscriberCount: statistics?.subscriberCount
-      ? parseInt(statistics.subscriberCount)
+      ? parseInt(statistics.subscriberCount as string)
       : undefined,
     videoCount: statistics?.videoCount
-      ? parseInt(statistics.videoCount)
+      ? parseInt(statistics.videoCount as string)
       : undefined,
-    viewCount: statistics?.viewCount ? BigInt(statistics.viewCount) : undefined,
-    hiddenSubscriberCount: statistics?.hiddenSubscriberCount,
+    viewCount: statistics?.viewCount
+      ? BigInt(statistics.viewCount as string)
+      : undefined,
+    hiddenSubscriberCount:
+      typeof statistics?.hiddenSubscriberCount === "boolean"
+        ? statistics.hiddenSubscriberCount
+        : undefined,
     uploadsPlaylistId: contentDetails?.relatedPlaylists?.uploads,
   };
 }

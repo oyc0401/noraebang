@@ -1,5 +1,6 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 export interface YoutubeKeyConfig {
   keys: string[];
@@ -73,10 +74,35 @@ export class YoutubeKeyManager {
 
 let cachedManager: YoutubeKeyManager | null = null;
 
+async function resolveKeysFile(): Promise<string> {
+  const here = typeof __dirname !== "undefined"
+    ? __dirname
+    : path.dirname(fileURLToPath(import.meta.url));
+
+  const candidates = [
+    process.env.YOUTUBE_KEYS_FILE,
+    path.resolve(process.cwd(), "lib/youtube/keys/keys.json"),
+    path.resolve(process.cwd(), "../lib/youtube/keys/keys.json"),
+    path.resolve(process.cwd(), "../../lib/youtube/keys/keys.json"),
+    path.resolve(here, "keys.json"),
+  ].filter((p): p is string => Boolean(p));
+
+  for (const candidate of candidates) {
+    try {
+      await fs.access(candidate);
+      return candidate;
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error("YouTube keys file not found. Set YOUTUBE_KEYS_FILE env or add lib/youtube/keys/keys.json.");
+}
+
 export async function getYoutubeKeyManager(): Promise<YoutubeKeyManager> {
   if (cachedManager) return cachedManager;
 
-  const keysPath = path.resolve(__dirname, "keys.json");
+  const keysPath = await resolveKeysFile();
   cachedManager = await YoutubeKeyManager.fromFile(keysPath);
   return cachedManager;
 }
