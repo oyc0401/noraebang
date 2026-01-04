@@ -19,9 +19,11 @@ import {
   updateSongTitle,
   transferSongOwnership,
   mergeArtist,
+  updateArtistCatalog,
 } from "./actions";
 
 const SORT_OPTIONS = [
+  { value: "id_asc", label: "아이디 ↑" },
   { value: "id_desc", label: "최신" },
   { value: "name_asc", label: "이름 ↑" },
   { value: "name_desc", label: "이름 ↓" },
@@ -30,18 +32,28 @@ const SORT_OPTIONS = [
 ] as const;
 
 type SortOption = (typeof SORT_OPTIONS)[number]["value"];
-const DEFAULT_SORT: SortOption = "name_asc";
+const DEFAULT_SORT: SortOption = "id_asc";
 
 type ArtistsResponse = Awaited<ReturnType<typeof getArtists>>;
 type Artist = ArtistsResponse["artists"][number];
 type Song = Awaited<ReturnType<typeof getSongsByArtist>>[number];
+const ARTIST_CATALOG_OPTIONS = [
+  { label: "삭제", value: null as const },
+  { label: "KPOP", value: "KPOP" as const },
+  { label: "JPOP", value: "JPOP" as const },
+  { label: "POP", value: "POP" as const },
+  { label: "CPOP", value: "CPOP" as const },
+] as const;
+type ArtistCatalogOption = (typeof ARTIST_CATALOG_OPTIONS)[number]["value"];
 
 export default function AdminArtistsPage() {
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [artistsLoading, setArtistsLoading] = useState(true);
   const [artistsHasMore, setArtistsHasMore] = useState(false);
-  const [artistsCursor, setArtistsCursor] = useState<number | undefined>(undefined);
+  const [artistsCursor, setArtistsCursor] = useState<number | undefined>(
+    undefined,
+  );
   const [loadingMoreArtists, setLoadingMoreArtists] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [pendingArtistId, setPendingArtistId] = useState<number | null>(null);
@@ -58,6 +70,8 @@ export default function AdminArtistsPage() {
   const nameMenuRef = useRef<HTMLDivElement | null>(null);
   const [aliasMenuOpen, setAliasMenuOpen] = useState(false);
   const aliasMenuRef = useRef<HTMLDivElement | null>(null);
+  const [catalogMenuOpen, setCatalogMenuOpen] = useState(false);
+  const catalogMenuRef = useRef<HTMLDivElement | null>(null);
 
   const [showNameKoDialog, setShowNameKoDialog] = useState(false);
   const [nameKoInput, setNameKoInput] = useState("");
@@ -99,7 +113,8 @@ export default function AdminArtistsPage() {
   const [transferError, setTransferError] = useState<string | null>(null);
   const [showAddOwnershipDialog, setShowAddOwnershipDialog] = useState(false);
   const [addOwnershipSong, setAddOwnershipSong] = useState<Song | null>(null);
-  const [addOwnershipArtistIdInput, setAddOwnershipArtistIdInput] = useState("");
+  const [addOwnershipArtistIdInput, setAddOwnershipArtistIdInput] =
+    useState("");
   const [addOwnershipSaving, setAddOwnershipSaving] = useState(false);
   const [addOwnershipError, setAddOwnershipError] = useState<string | null>(
     null,
@@ -115,6 +130,7 @@ export default function AdminArtistsPage() {
     text: string;
   } | null>(null);
   const [deletingArtist, setDeletingArtist] = useState(false);
+  const [catalogSaving, setCatalogSaving] = useState(false);
 
   // 아티스트 목록 로드
   useEffect(() => {
@@ -152,6 +168,8 @@ export default function AdminArtistsPage() {
     setNameKoMenuOpen(false);
     setNameMenuOpen(false);
     setAliasMenuOpen(false);
+    setCatalogMenuOpen(false);
+    setCatalogSaving(false);
     setShowNameKoDialog(false);
     setShowNameDialog(false);
     setShowAliasDialog(false);
@@ -237,11 +255,9 @@ export default function AdminArtistsPage() {
 
         let nextIndex: number;
         if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-          nextIndex =
-            currentIndex < artists.length - 1 ? currentIndex + 1 : 0;
+          nextIndex = currentIndex < artists.length - 1 ? currentIndex + 1 : 0;
         } else {
-          nextIndex =
-            currentIndex > 0 ? currentIndex - 1 : artists.length - 1;
+          nextIndex = currentIndex > 0 ? currentIndex - 1 : artists.length - 1;
         }
 
         setSelectedArtist(artists[nextIndex]);
@@ -301,6 +317,22 @@ export default function AdminArtistsPage() {
   }, [aliasMenuOpen]);
 
   useEffect(() => {
+    if (!catalogMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        catalogMenuRef.current &&
+        !catalogMenuRef.current.contains(event.target as Node)
+      ) {
+        setCatalogMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [catalogMenuOpen]);
+
+  useEffect(() => {
     if (songMenuOpen === null) return;
 
     const handleClickOutside = (event: MouseEvent) => {
@@ -337,12 +369,17 @@ export default function AdminArtistsPage() {
         text: `✅ 한국어 이름이 "${response.nameKo}"로 저장되었습니다.`,
       });
 
-      const updatedArtists = await getArtists(sort, 100, undefined, debouncedSearch);
+      const updatedArtists = await getArtists(
+        sort,
+        100,
+        undefined,
+        debouncedSearch,
+      );
       setArtists(updatedArtists.artists);
       setArtistsHasMore(updatedArtists.hasMore);
       setArtistsCursor(updatedArtists.nextCursor);
 
-      const updatedArtist = updatedArtists.find(
+      const updatedArtist = updatedArtists.artists.find(
         (a) => a.id === selectedArtist.id,
       );
       if (updatedArtist) {
@@ -352,7 +389,9 @@ export default function AdminArtistsPage() {
       setShowNameKoDialog(false);
       setNameKoMenuOpen(false);
     } catch (error: any) {
-      setNameKoError(error.message ?? "한국어 이름 저장 중 오류가 발생했습니다.");
+      setNameKoError(
+        error.message ?? "한국어 이름 저장 중 오류가 발생했습니다.",
+      );
     } finally {
       setNameKoSaving(false);
     }
@@ -378,7 +417,12 @@ export default function AdminArtistsPage() {
         text: `✅ 이름이 "${response.name}"로 저장되었습니다.`,
       });
 
-      const updatedArtists = await getArtists(sort, 100, undefined, debouncedSearch);
+      const updatedArtists = await getArtists(
+        sort,
+        100,
+        undefined,
+        debouncedSearch,
+      );
       setArtists(updatedArtists.artists);
       setArtistsHasMore(updatedArtists.hasMore);
       setArtistsCursor(updatedArtists.nextCursor);
@@ -424,7 +468,12 @@ export default function AdminArtistsPage() {
         }로 저장되었습니다.`,
       });
 
-      const updatedArtists = await getArtists(sort, 100, undefined, debouncedSearch);
+      const updatedArtists = await getArtists(
+        sort,
+        100,
+        undefined,
+        debouncedSearch,
+      );
       setArtists(updatedArtists.artists);
       setArtistsHasMore(updatedArtists.hasMore);
       setArtistsCursor(updatedArtists.nextCursor);
@@ -490,8 +539,12 @@ export default function AdminArtistsPage() {
     setKaraokeError(null);
 
     try {
-      const existingTj = editingSong.karaokeSongs.find((k) => k.provider === "TJ");
-      const existingKy = editingSong.karaokeSongs.find((k) => k.provider === "KY");
+      const existingTj = editingSong.karaokeSongs.find(
+        (k) => k.provider === "TJ",
+      );
+      const existingKy = editingSong.karaokeSongs.find(
+        (k) => k.provider === "KY",
+      );
       const existingJoysound = editingSong.karaokeSongs.find(
         (k) => k.provider === "JOYSOUND",
       );
@@ -550,9 +603,67 @@ export default function AdminArtistsPage() {
       setShowKaraokeDialog(false);
       setSongMenuOpen(null);
     } catch (error: any) {
-      setKaraokeError(error.message ?? "노래방 번호 저장 중 오류가 발생했습니다.");
+      setKaraokeError(
+        error.message ?? "노래방 번호 저장 중 오류가 발생했습니다.",
+      );
     } finally {
       setKaraokeSaving(false);
+    }
+  };
+
+  const handleArtistCatalogChange = async (value: ArtistCatalogOption) => {
+    if (!selectedArtist) return;
+    if (catalogSaving) return;
+
+    if (
+      value &&
+      songs.some((song) => !song.catalog) &&
+      typeof window !== "undefined"
+    ) {
+      const confirmed = window.confirm(
+        `해당 아티스트의 곡 중 분류가 없는 곡의 분류도 ${value}으로 수정하시겠습니까?`,
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    setCatalogSaving(true);
+
+    try {
+      await updateArtistCatalog(selectedArtist.id, value);
+
+      setMessage({
+        type: "success",
+        text: value
+          ? `✅ ${selectedArtist.nameKo} 분류가 ${value}로 설정되었습니다.`
+          : `✅ ${selectedArtist.nameKo} 분류가 삭제되었습니다.`,
+      });
+
+      const [updatedArtists, updatedSongs] = await Promise.all([
+        getArtists(sort, 100, undefined, debouncedSearch),
+        getSongsByArtist(selectedArtist.id),
+      ]);
+
+      setArtists(updatedArtists.artists);
+      setArtistsHasMore(updatedArtists.hasMore);
+      setArtistsCursor(updatedArtists.nextCursor);
+      setSongs(updatedSongs);
+
+      const refreshed = updatedArtists.artists.find(
+        (artist) => artist.id === selectedArtist.id,
+      );
+      if (refreshed) {
+        setSelectedArtist(refreshed);
+      }
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: error?.message ?? "분류 설정 중 오류가 발생했습니다.",
+      });
+    } finally {
+      setCatalogSaving(false);
+      setCatalogMenuOpen(false);
     }
   };
 
@@ -621,7 +732,14 @@ export default function AdminArtistsPage() {
     } finally {
       setLoadingMoreArtists(false);
     }
-  }, [artistsHasMore, loadingMoreArtists, isFilteringArtists, sort, artistsCursor, debouncedSearch]);
+  }, [
+    artistsHasMore,
+    loadingMoreArtists,
+    isFilteringArtists,
+    sort,
+    artistsCursor,
+    debouncedSearch,
+  ]);
 
   const handleDeleteArtist = async () => {
     if (!selectedArtist || deletingArtist) return;
@@ -860,6 +978,9 @@ export default function AdminArtistsPage() {
                     <div className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                       {artist.name}
                     </div>
+                    <div className="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+                      분류: {artist.homeCatalog ?? "미지정"}
+                    </div>
                   </div>
                   <div className="text-right">
                     <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -895,9 +1016,9 @@ export default function AdminArtistsPage() {
             <>
               {/* Artist Info Header */}
               <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      {selectedArtist.thumbnailHigh ||
-                      selectedArtist.thumbnailMedium ||
+                <div className="flex items-center gap-3">
+                  {selectedArtist.thumbnailHigh ||
+                  selectedArtist.thumbnailMedium ||
                   selectedArtist.thumbnailDefault ? (
                     <Image
                       src={
@@ -1080,60 +1201,106 @@ export default function AdminArtistsPage() {
                         </>
                       )}
                     </p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                      분류: {selectedArtist.homeCatalog ?? "미지정"}
+                    </p>
                   </div>
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="relative" ref={catalogMenuRef}>
                       <button
                         type="button"
-                        onClick={() => {
-                          setShowMergeDialog(true);
-                          setMergeTargetArtistIdInput("");
-                          setMergeError(null);
-                        }}
-                        className="inline-flex items-center gap-1 rounded border border-blue-300 px-3 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 dark:border-blue-500/40 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                        onClick={() => setCatalogMenuOpen((prev) => !prev)}
+                        className="inline-flex items-center gap-1 rounded border border-purple-300 px-3 py-1 text-xs font-semibold text-purple-600 hover:bg-purple-50 dark:border-purple-500/40 dark:text-purple-200 dark:hover:bg-purple-900/30 disabled:cursor-not-allowed disabled:opacity-60"
                         style={{ cursor: "pointer" }}
+                        disabled={catalogSaving}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-4 w-4"
-                        >
-                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                          <circle cx="9" cy="7" r="4" />
-                          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                        </svg>
-                        아티스트 병합하기
+                        {catalogSaving ? "설정 중..." : "가수분류설정"}
+                        {selectedArtist.homeCatalog ? (
+                          <span className="ml-1 text-[11px] font-normal text-purple-500 dark:text-purple-200">
+                            ({selectedArtist.homeCatalog})
+                          </span>
+                        ) : null}
                       </button>
-                      <button
-                        type="button"
-                        onClick={handleDeleteArtist}
-                        className="inline-flex items-center gap-1 rounded border border-red-300 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 dark:border-red-500/40 dark:text-red-300 dark:hover:bg-red-900/20"
-                        style={{ cursor: "pointer" }}
-                        disabled={deletingArtist}
+                      {catalogMenuOpen && (
+                        <div className="absolute right-0 mt-2 w-32 rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 z-20">
+                          {ARTIST_CATALOG_OPTIONS.map((option) => {
+                            const isActive = option.value
+                              ? selectedArtist.homeCatalog === option.value
+                              : !selectedArtist.homeCatalog;
+                            return (
+                              <button
+                                key={option.label}
+                                type="button"
+                                onClick={() =>
+                                  handleArtistCatalogChange(option.value)
+                                }
+                                disabled={catalogSaving}
+                                className={`block w-full px-3 py-2 text-left text-sm ${
+                                  isActive
+                                    ? "bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-200"
+                                    : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                }`}
+                                style={{ cursor: "pointer" }}
+                              >
+                                {option.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowMergeDialog(true);
+                        setMergeTargetArtistIdInput("");
+                        setMergeError(null);
+                      }}
+                      className="inline-flex items-center gap-1 rounded border border-blue-300 px-3 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 dark:border-blue-500/40 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                      style={{ cursor: "pointer" }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-4 w-4"
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                        {deletingArtist ? "삭제 중..." : "아티스트 삭제"}
-                      </button>
-                      <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                        {selectedArtist.songCount}곡
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                      아티스트 병합하기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeleteArtist}
+                      className="inline-flex items-center gap-1 rounded border border-red-300 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 dark:border-red-500/40 dark:text-red-300 dark:hover:bg-red-900/20"
+                      style={{ cursor: "pointer" }}
+                      disabled={deletingArtist}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                      {deletingArtist ? "삭제 중..." : "아티스트 삭제"}
+                    </button>
+                    <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                      {selectedArtist.songCount}곡
                     </div>
                   </div>
                 </div>
@@ -1188,6 +1355,9 @@ export default function AdminArtistsPage() {
                                 연결된 아티스트 없음
                               </span>
                             )}
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            분류: {song.catalog ?? "미지정"}
                           </div>
 
                           {song.karaokeSongs &&
@@ -1359,7 +1529,8 @@ export default function AdminArtistsPage() {
                     </p>
                   )}
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    현재 아티스트: {selectedArtist.name} (ID {selectedArtist.id})
+                    현재 아티스트: {selectedArtist.name} (ID {selectedArtist.id}
+                    )
                   </p>
                 </div>
                 <div>
@@ -1437,7 +1608,9 @@ export default function AdminArtistsPage() {
                   <input
                     type="number"
                     value={addOwnershipArtistIdInput}
-                    onChange={(e) => setAddOwnershipArtistIdInput(e.target.value)}
+                    onChange={(e) =>
+                      setAddOwnershipArtistIdInput(e.target.value)
+                    }
                     className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                     placeholder="예: 1234"
                     style={{ cursor: "text" }}
@@ -1779,7 +1952,8 @@ export default function AdminArtistsPage() {
                 아티스트 병합
               </h3>
               <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                현재 아티스트의 모든 곡을 대상 아티스트로 이전하고, 현재 아티스트를 삭제합니다.
+                현재 아티스트의 모든 곡을 대상 아티스트로 이전하고, 현재
+                아티스트를 삭제합니다.
               </p>
               <div className="mt-4 space-y-3 text-sm">
                 <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800">
@@ -1800,7 +1974,9 @@ export default function AdminArtistsPage() {
                   <input
                     type="number"
                     value={mergeTargetArtistIdInput}
-                    onChange={(e) => setMergeTargetArtistIdInput(e.target.value)}
+                    onChange={(e) =>
+                      setMergeTargetArtistIdInput(e.target.value)
+                    }
                     className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                     placeholder="예: 24"
                     style={{ cursor: "text" }}
