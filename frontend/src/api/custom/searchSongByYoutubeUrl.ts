@@ -8,7 +8,7 @@ export interface YoutubeSongSearchResponse {
 
 export const searchSongByYoutubeUrl = (params: { url: string }) => {
   return customFetch<YoutubeSongSearchResponse>({
-    url: "/search/youtube-song",
+    url: "/search/youtube",
     method: "GET",
     params,
   });

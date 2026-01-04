@@ -11,7 +11,7 @@ SELECT tablename FROM pg_tables WHERE schemaname = 'public';
 cd backend
 
 1. Prisma Client 생성
-pnpx generate"
+pnpx generate
 
 2. 마이그레이션 실행 (테이블 생성)
 pnpx prisma migrate dev
