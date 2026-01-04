@@ -615,6 +615,7 @@ export default function AdminArtistsPage() {
     if (!selectedArtist) return;
     if (catalogSaving) return;
 
+    let applyToNullSongs = false;
     if (
       value &&
       songs.some((song) => !song.catalog) &&
@@ -626,12 +627,13 @@ export default function AdminArtistsPage() {
       if (!confirmed) {
         return;
       }
+      applyToNullSongs = true;
     }
 
     setCatalogSaving(true);
 
     try {
-      await updateArtistCatalog(selectedArtist.id, value);
+      await updateArtistCatalog(selectedArtist.id, value, applyToNullSongs);
 
       setMessage({
         type: "success",
