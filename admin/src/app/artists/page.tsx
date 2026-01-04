@@ -18,6 +18,7 @@ import {
   updateKaraokeSong,
   updateSongTitle,
   transferSongOwnership,
+  mergeArtist,
 } from "./actions";
 
 const SORT_OPTIONS = [
@@ -103,6 +104,11 @@ export default function AdminArtistsPage() {
   const [addOwnershipError, setAddOwnershipError] = useState<string | null>(
     null,
   );
+
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
+  const [mergeTargetArtistIdInput, setMergeTargetArtistIdInput] = useState("");
+  const [mergeSaving, setMergeSaving] = useState(false);
+  const [mergeError, setMergeError] = useState<string | null>(null);
 
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -653,6 +659,56 @@ export default function AdminArtistsPage() {
     }
   };
 
+  const handleMergeArtist = async () => {
+    if (!selectedArtist) return;
+    const trimmed = mergeTargetArtistIdInput.trim();
+    const targetId = Number.parseInt(trimmed, 10);
+    if (!trimmed || Number.isNaN(targetId) || targetId <= 0) {
+      setMergeError("대상 아티스트 ID를 올바르게 입력해주세요.");
+      return;
+    }
+
+    setMergeSaving(true);
+    setMergeError(null);
+    try {
+      const targetArtist = await getArtistById(targetId);
+      if (!targetArtist) {
+        setMergeError("대상 아티스트를 찾을 수 없습니다.");
+        setMergeSaving(false);
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        if (
+          !window.confirm(
+            `정말 ${targetArtist.nameKo} (${targetId})에게 곡을 이전하고, ${selectedArtist.nameKo}(${selectedArtist.id})를 삭제하시겠습니까?`,
+          )
+        ) {
+          setMergeSaving(false);
+          return;
+        }
+      }
+
+      await mergeArtist(selectedArtist.id, targetId);
+      const res = await getArtists(sort, 100, undefined, debouncedSearch);
+      setArtists(res.artists);
+      setArtistsHasMore(res.hasMore);
+      setArtistsCursor(res.nextCursor);
+      setSelectedArtist(null);
+      setSongs([]);
+      setShowMergeDialog(false);
+      setMergeTargetArtistIdInput("");
+      setMessage({
+        type: "success",
+        text: "아티스트가 병합되었습니다.",
+      });
+    } catch (error: any) {
+      setMergeError(error?.message ?? "아티스트 병합 중 오류가 발생했습니다.");
+    } finally {
+      setMergeSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (!artistsHasMore || isFilteringArtists) return;
     const target = loadMoreRef.current;
@@ -805,8 +861,13 @@ export default function AdminArtistsPage() {
                       {artist.name}
                     </div>
                   </div>
-                  <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    {artist.songCount}
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                      #{artist.id}
+                    </div>
+                    <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                      {artist.songCount}곡
+                    </div>
                   </div>
                 </div>
               </button>
@@ -1021,6 +1082,33 @@ export default function AdminArtistsPage() {
                     </p>
                   </div>
                     <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMergeDialog(true);
+                          setMergeTargetArtistIdInput("");
+                          setMergeError(null);
+                        }}
+                        className="inline-flex items-center gap-1 rounded border border-blue-300 px-3 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 dark:border-blue-500/40 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                        >
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        아티스트 병합하기
+                      </button>
                       <button
                         type="button"
                         onClick={handleDeleteArtist}
@@ -1678,6 +1766,71 @@ export default function AdminArtistsPage() {
                   style={{ cursor: "pointer" }}
                 >
                   {songTitleSaving ? "저장 중..." : "저장"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showMergeDialog && selectedArtist && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                아티스트 병합
+              </h3>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                현재 아티스트의 모든 곡을 대상 아티스트로 이전하고, 현재 아티스트를 삭제합니다.
+              </p>
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800">
+                  <p className="font-semibold text-zinc-900 dark:text-zinc-50">
+                    {selectedArtist.nameKo}
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    현재 아티스트 ID: {selectedArtist.id} (삭제될 아티스트)
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                    곡 수: {selectedArtist.songCount}
+                  </p>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    대상 아티스트 ID (곡을 받을 아티스트)
+                  </label>
+                  <input
+                    type="number"
+                    value={mergeTargetArtistIdInput}
+                    onChange={(e) => setMergeTargetArtistIdInput(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                    placeholder="예: 24"
+                    style={{ cursor: "text" }}
+                  />
+                  {mergeError && (
+                    <p className="mt-2 text-xs text-red-500">{mergeError}</p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMergeDialog(false);
+                    setMergeTargetArtistIdInput("");
+                    setMergeError(null);
+                  }}
+                  className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  style={{ cursor: "pointer" }}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleMergeArtist}
+                  disabled={mergeSaving}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300 dark:bg-blue-500 dark:hover:bg-blue-400 dark:disabled:bg-blue-900/40"
+                  style={{ cursor: "pointer" }}
+                >
+                  {mergeSaving ? "병합 중..." : "확인"}
                 </button>
               </div>
             </div>
