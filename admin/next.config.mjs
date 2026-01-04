@@ -7,7 +7,15 @@ const nextConfig = {
         hostname: 'yt3.ggpht.com',
       },
       {
+        protocol: 'http',
+        hostname: 'yt3.ggpht.com',
+      },
+      {
         protocol: 'https',
+        hostname: 'i.ytimg.com',
+      },
+      {
+        protocol: 'http',
         hostname: 'i.ytimg.com',
       },
     ],
