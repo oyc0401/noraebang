@@ -14,4 +14,7 @@ export interface SongDto {
   titleKo?: string;
   artists: ArtistSongDto[];
   karaokeSongs?: KaraokeSongDto[];
+  thumbnailDefault?: string;
+  thumbnailMedium?: string;
+  thumbnailHigh?: string;
 }
