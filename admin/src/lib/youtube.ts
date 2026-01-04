@@ -1,3 +1,8 @@
+import {
+  searchYoutubeChannels,
+  fetchYoutubeChannel,
+} from "../../../lib/youtube/index.ts";
+
 const CHANNEL_ID_REGEX = /^UC[0-9A-Za-z_-]{22}$/;
 
 export type ChannelIdentifier = {
@@ -101,49 +106,23 @@ function pickBestSearchCandidate(items: any[], handle?: string) {
 }
 
 export async function fetchChannelFromYoutube(identifier: ChannelIdentifier) {
-  const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
-
-  if (!YOUTUBE_API_KEY) {
-    throw new Error("YouTube API 키가 설정되지 않았습니다.");
-  }
-
-  const baseUrl = "https://www.googleapis.com/youtube/v3";
-
   async function fetchByChannelId(channelId: string) {
-    const url = `${baseUrl}/channels?part=snippet,statistics,brandingSettings,contentDetails&id=${encodeURIComponent(channelId)}&key=${YOUTUBE_API_KEY}`;
-    const response = await fetch(url, { cache: "no-store" });
-
-    if (!response.ok) {
-      throw new Error("YouTube API 호출에 실패했습니다.");
-    }
-
-    const data = await response.json();
-
-    if (!data.items || data.items.length === 0) {
+    const data = await fetchYoutubeChannel({ channelId });
+    const channel = data.items?.[0];
+    if (!channel) {
       throw new Error("해당 채널 정보를 찾을 수 없습니다.");
     }
-
-    return data.items[0];
-  }
-
-  async function fetchByUsername(username: string) {
-    const url = `${baseUrl}/channels?part=snippet,statistics,brandingSettings,contentDetails&forUsername=${encodeURIComponent(username)}&key=${YOUTUBE_API_KEY}`;
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    if (!data.items || data.items.length === 0) return null;
-    return data.items[0];
+    return channel;
   }
 
   async function fetchByHandle(handle: string) {
-    const url = `${baseUrl}/channels?part=snippet,statistics,brandingSettings,contentDetails&forHandle=${encodeURIComponent(handle)}&key=${YOUTUBE_API_KEY}`;
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) return null;
+    const data = await fetchYoutubeChannel({ handle });
+    return data.items?.[0] ?? null;
+  }
 
-    const data = await response.json();
-    if (!data.items || data.items.length === 0) return null;
-    return data.items[0];
+  async function fetchByUsername(username: string) {
+    const data = await fetchYoutubeChannel({ username });
+    return data.items?.[0] ?? null;
   }
 
   if (identifier.channelId) {
@@ -168,14 +147,7 @@ export async function fetchChannelFromYoutube(identifier: ChannelIdentifier) {
     throw new Error("채널 식별자를 알 수 없습니다. 주소를 다시 확인해주세요.");
   }
 
-  const searchUrl = `${baseUrl}/search?part=snippet&type=channel&maxResults=5&q=${encodeURIComponent(searchTerm)}&key=${YOUTUBE_API_KEY}`;
-  const searchRes = await fetch(searchUrl, { cache: "no-store" });
-
-  if (!searchRes.ok) {
-    throw new Error("YouTube 채널 검색 중 오류가 발생했습니다.");
-  }
-
-  const searchData = await searchRes.json();
+  const searchData = await searchYoutubeChannels(searchTerm);
   if (!searchData.items || searchData.items.length === 0) {
     throw new Error("검색된 채널이 없습니다.");
   }
@@ -185,11 +157,16 @@ export async function fetchChannelFromYoutube(identifier: ChannelIdentifier) {
     identifier.handle,
   );
 
-  if (!candidate?.id?.channelId) {
+  const candidateId =
+    candidate?.id && typeof candidate.id !== "string"
+      ? candidate.id.channelId
+      : candidate?.id;
+
+  if (!candidateId) {
     throw new Error("검색 결과에서 채널 ID를 확인할 수 없습니다.");
   }
 
-  return fetchByChannelId(candidate.id.channelId);
+  return fetchByChannelId(candidateId);
 }
 
 export function buildYoutubeChannelData(channel: any) {
