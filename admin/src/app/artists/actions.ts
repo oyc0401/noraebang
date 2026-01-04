@@ -450,7 +450,7 @@ export async function mergeArtist(sourceArtistId: number, targetArtistId: number
   }
 }
 
-export async function updateArtistCatalog(artistId: number, catalog: ArtistCatalog | null) {
+export async function updateArtistCatalog(artistId: number, catalog: ArtistCatalog | null, updateNullSongCatalog = false) {
   if (!artistId) {
     throw new Error('아티스트 정보를 확인할 수 없습니다.')
   }
@@ -473,24 +473,31 @@ export async function updateArtistCatalog(artistId: number, catalog: ArtistCatal
       }
     })
   ]
+  let updatedSongCount = 0
 
-  if (songIds.length > 0) {
+  if (catalog && updateNullSongCatalog && songIds.length > 0) {
     operations.push(
       prisma.song.updateMany({
         where: {
-          id: { in: songIds }
+          id: { in: songIds },
+          catalog: null
         },
         data: {
-          catalog: catalog
+          catalog
         }
       })
     )
   }
 
-  await prisma.$transaction(operations)
+  const results = await prisma.$transaction(operations)
+
+  if (catalog && updateNullSongCatalog && results.length > 1) {
+    const songResult = results[results.length - 1] as Prisma.BatchPayload
+    updatedSongCount = songResult.count
+  }
 
   return {
     homeCatalog: catalog ?? undefined,
-    updatedSongCount: songIds.length
+    updatedSongCount
   }
 }
