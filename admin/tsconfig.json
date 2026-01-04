@@ -26,6 +26,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@thirdparty/youtube": [
+        "./src/thirdparty/youtube/index.ts"
       ]
     }
   },
