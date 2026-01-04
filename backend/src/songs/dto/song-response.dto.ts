@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { SongDto } from "../../dto";
+import { SongDto, ApiResponseMeta } from "../../dto";
 
 export class SongListResponseDto {
   @ApiProperty({ type: [SongDto] })
@@ -7,6 +7,9 @@ export class SongListResponseDto {
 
   @ApiProperty({ example: null, required: false })
   message?: string;
+
+  @ApiProperty({ type: ApiResponseMeta, required: false })
+  meta?: ApiResponseMeta;
 }
 
 export class SongDetailResponseDto {

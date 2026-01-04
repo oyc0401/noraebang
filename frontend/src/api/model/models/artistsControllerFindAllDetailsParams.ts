@@ -12,4 +12,12 @@ export type ArtistsControllerFindAllDetailsParams = {
  * 정렬 기준 (id_desc, name_asc, name_desc, subscriber_desc, subscriber_asc, song_count_asc, song_count_desc)
  */
 sort?: ArtistsControllerFindAllDetailsSort;
+/**
+ * 페이지 번호 (기본값: 1)
+ */
+page?: string;
+/**
+ * 페이지당 항목 수 (기본값: 20)
+ */
+limit?: string;
 };

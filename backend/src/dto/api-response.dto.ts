@@ -1,10 +1,17 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-interface ApiResponseMeta {
-  total?: number; // 전체 개수
-  page?: number; // 현재 페이지
-  limit?: number; // 페이지 크기
-  hasMore?: boolean; // 더 있는지
+export class ApiResponseMeta {
+  @ApiProperty({ description: "전체 개수", required: false })
+  total?: number;
+
+  @ApiProperty({ description: "현재 페이지", required: false })
+  page?: number;
+
+  @ApiProperty({ description: "페이지 크기", required: false })
+  limit?: number;
+
+  @ApiProperty({ description: "더 있는지", required: false })
+  hasMore?: boolean;
 }
 
 export class ApiResponse<T> {

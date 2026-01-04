@@ -6,8 +6,10 @@
  * OpenAPI spec version: 1.0
  */
 import type { ArtistDetailsDto } from './artistDetailsDto';
+import type { ApiResponseMeta } from './apiResponseMeta';
 
 export interface ArtistDetailsListResponseDto {
   data: ArtistDetailsDto[];
   message?: string;
+  meta?: ApiResponseMeta;
 }
