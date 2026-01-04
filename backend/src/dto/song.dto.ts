@@ -6,6 +6,12 @@ export class KaraokeSongDto {
 
   @ApiProperty({ example: "12345" })
   karaokeNo: string;
+
+  @ApiProperty({ example: "밤편지", required: false, nullable: true })
+  title?: string | null;
+
+  @ApiProperty({ example: "아이유", required: false, nullable: true })
+  artist?: string | null;
 }
 
 export class ArtistSongDto {
