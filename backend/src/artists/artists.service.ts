@@ -39,7 +39,14 @@ export class ArtistsService {
 
   async findAll(
     sort: ArtistSortOption = DEFAULT_ARTIST_SORT,
-  ): Promise<ArtistDto[]> {
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{ artists: ArtistDto[]; total: number }> {
+    const skip = (page - 1) * limit;
+
+    // 전체 개수 조회
+    const total = await this.prisma.artist.count();
+
     const artists = await this.prisma.artist.findMany({
       select: {
         id: true,
@@ -65,6 +72,8 @@ export class ArtistsService {
         },
       },
       orderBy: ARTIST_SORT_ORDER_MAP[sort],
+      take: limit,
+      skip,
     });
 
     const mappedArtists = artists.map((artist) => ({
@@ -82,43 +91,63 @@ export class ArtistsService {
 
     // 구독자 수로 정렬하는 경우 애플리케이션 레벨에서 정렬
     if (sort === "subscriber_desc") {
-      return mappedArtists.sort((a, b) => {
-        const aCount = a._subscriberCount ?? null;
-        const bCount = b._subscriberCount ?? null;
+      return {
+        artists: mappedArtists
+          .sort((a, b) => {
+            const aCount = a._subscriberCount ?? null;
+            const bCount = b._subscriberCount ?? null;
 
-        if (aCount === null && bCount === null) {
-          return b.id - a.id;
-        }
-        if (aCount === null) return 1;
-        if (bCount === null) return -1;
+            if (aCount === null && bCount === null) {
+              return b.id - a.id;
+            }
+            if (aCount === null) return 1;
+            if (bCount === null) return -1;
 
-        if (bCount !== aCount) return bCount - aCount;
-        return b.id - a.id;
-      }).map(({ _subscriberCount, ...artist }) => artist);
+            if (bCount !== aCount) return bCount - aCount;
+            return b.id - a.id;
+          })
+          .map(({ _subscriberCount, ...artist }) => artist),
+        total,
+      };
     }
 
     if (sort === "subscriber_asc") {
-      return mappedArtists.sort((a, b) => {
-        const aCount = a._subscriberCount ?? null;
-        const bCount = b._subscriberCount ?? null;
+      return {
+        artists: mappedArtists
+          .sort((a, b) => {
+            const aCount = a._subscriberCount ?? null;
+            const bCount = b._subscriberCount ?? null;
 
-        if (aCount === null && bCount === null) {
-          return b.id - a.id;
-        }
-        if (aCount === null) return 1;
-        if (bCount === null) return -1;
+            if (aCount === null && bCount === null) {
+              return b.id - a.id;
+            }
+            if (aCount === null) return 1;
+            if (bCount === null) return -1;
 
-        if (aCount !== bCount) return aCount - bCount;
-        return b.id - a.id;
-      }).map(({ _subscriberCount, ...artist }) => artist);
+            if (aCount !== bCount) return aCount - bCount;
+            return b.id - a.id;
+          })
+          .map(({ _subscriberCount, ...artist }) => artist),
+        total,
+      };
     }
 
-    return mappedArtists.map(({ _subscriberCount, ...artist }) => artist);
+    return {
+      artists: mappedArtists.map(({ _subscriberCount, ...artist }) => artist),
+      total,
+    };
   }
 
   async findAllDetails(
     sort: ArtistSortOption = DEFAULT_ARTIST_SORT,
-  ): Promise<ArtistDetailsDto[]> {
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{ artists: ArtistDetailsDto[]; total: number }> {
+    const skip = (page - 1) * limit;
+
+    // 전체 개수 조회
+    const total = await this.prisma.artist.count();
+
     const artists = await this.prisma.artist.findMany({
       select: {
         id: true,
@@ -150,6 +179,8 @@ export class ArtistsService {
         },
       },
       orderBy: ARTIST_SORT_ORDER_MAP[sort],
+      take: limit,
+      skip,
     });
 
     const mappedArtists = artists.map((artist) => {
@@ -204,38 +235,47 @@ export class ArtistsService {
 
     // 구독자 수로 정렬하는 경우 애플리케이션 레벨에서 정렬
     if (sort === "subscriber_desc") {
-      return mappedArtists.sort((a, b) => {
-        const aCount = a.youtube?.subscriberCount ?? null;
-        const bCount = b.youtube?.subscriberCount ?? null;
+      return {
+        artists: mappedArtists.sort((a, b) => {
+          const aCount = a.youtube?.subscriberCount ?? null;
+          const bCount = b.youtube?.subscriberCount ?? null;
 
-        if (aCount === null && bCount === null) {
+          if (aCount === null && bCount === null) {
+            return b.id - a.id;
+          }
+          if (aCount === null) return 1;
+          if (bCount === null) return -1;
+
+          if (bCount !== aCount) return bCount - aCount;
           return b.id - a.id;
-        }
-        if (aCount === null) return 1;
-        if (bCount === null) return -1;
-
-        if (bCount !== aCount) return bCount - aCount;
-        return b.id - a.id;
-      });
+        }),
+        total,
+      };
     }
 
     if (sort === "subscriber_asc") {
-      return mappedArtists.sort((a, b) => {
-        const aCount = a.youtube?.subscriberCount ?? null;
-        const bCount = b.youtube?.subscriberCount ?? null;
+      return {
+        artists: mappedArtists.sort((a, b) => {
+          const aCount = a.youtube?.subscriberCount ?? null;
+          const bCount = b.youtube?.subscriberCount ?? null;
 
-        if (aCount === null && bCount === null) {
+          if (aCount === null && bCount === null) {
+            return b.id - a.id;
+          }
+          if (aCount === null) return 1;
+          if (bCount === null) return -1;
+
+          if (aCount !== bCount) return aCount - bCount;
           return b.id - a.id;
-        }
-        if (aCount === null) return 1;
-        if (bCount === null) return -1;
-
-        if (aCount !== bCount) return aCount - bCount;
-        return b.id - a.id;
-      });
+        }),
+        total,
+      };
     }
 
-    return mappedArtists;
+    return {
+      artists: mappedArtists,
+      total,
+    };
   }
 
   async findById(id: number): Promise<ArtistDto | null> {

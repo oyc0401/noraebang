@@ -1,5 +1,5 @@
-import { Provider } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
+import { Provider } from "@prisma/client";
 import { getArtistAliases } from "../config/artist-aliases";
 import { KaraokeSongDto, SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
@@ -143,7 +143,11 @@ export class SongsService {
     return songs.map((song) => this.mapToDto(song, tjSongMap));
   }
 
-  async findByArtistId(artistId: number): Promise<SongDto[]> {
+  async findByArtistId(
+    artistId: number,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{ songs: SongDto[]; total: number }> {
     // 1. 주어진 artistId로 Artist 조회
     const artist = await this.prisma.artist.findUnique({
       where: { id: artistId },
@@ -164,21 +168,33 @@ export class SongsService {
       }
     }
 
-    // 3. 곡 조회 (필요한 필드만 select)
-    const songs = await this.prisma.song.findMany({
-      where: {
-        artistSongs: {
-          some: {
-            artistId: { in: targetArtistIds },
-          },
+    const skip = (page - 1) * limit;
+
+    const whereClause = {
+      artistSongs: {
+        some: {
+          artistId: { in: targetArtistIds },
         },
       },
+    };
+
+    // 전체 개수 조회
+    const total = await this.prisma.song.count({ where: whereClause });
+
+    // 3. 곡 조회 (필요한 필드만 select)
+    const songs = await this.prisma.song.findMany({
+      where: whereClause,
       select: this.songDtoSelect,
       orderBy: { id: "asc" },
+      take: limit,
+      skip,
     });
 
     // 4. DTO로 변환
     const tjSongMap = await this.buildTjSongMap(songs);
-    return songs.map((song) => this.mapToDto(song, tjSongMap));
+    return {
+      songs: songs.map((song) => this.mapToDto(song, tjSongMap)),
+      total,
+    };
   }
 }
