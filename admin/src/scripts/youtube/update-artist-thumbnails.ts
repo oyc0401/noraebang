@@ -35,7 +35,6 @@ async function updateArtistThumbnails(limit?: number) {
 
     if (artists.length === 0) {
       console.log("✅ No artists with topic channels found.");
-      return;
     }
 
     let updated = 0;
@@ -66,7 +65,46 @@ async function updateArtistThumbnails(limit?: number) {
     }
 
     console.log(
-      `\n📊 Summary: ${updated} artist(s) updated (processed ${artists.length}).`,
+      `\n📊 Topic Channel Summary: ${updated} artist(s) updated (processed ${artists.length}).`,
+    );
+
+    console.log("\n🗑️  Clearing thumbnails for artists without YouTube channels...\n");
+
+    const artistsWithoutChannels = await prisma.artist.findMany({
+      where: {
+        youtubeChannels: {
+          none: {},
+        },
+        OR: [
+          { thumbnailDefault: { not: null } },
+          { thumbnailMedium: { not: null } },
+          { thumbnailHigh: { not: null } },
+        ],
+      },
+      orderBy: { name: "asc" },
+    });
+
+    let cleared = 0;
+
+    for (const artist of artistsWithoutChannels) {
+      await prisma.artist.update({
+        where: { id: artist.id },
+        data: {
+          thumbnailDefault: null,
+          thumbnailMedium: null,
+          thumbnailHigh: null,
+        },
+      });
+
+      cleared++;
+
+      console.log(
+        `   ✅ ${artist.name} (${artist.nameKo}) thumbnails cleared (no YouTube channels).`,
+      );
+    }
+
+    console.log(
+      `\n📊 Clear Summary: ${cleared} artist(s) thumbnails cleared.`,
     );
   } catch (error) {
     console.error("❌ Failed to sync thumbnails:", error);

@@ -28,6 +28,10 @@ type FilterState = {
   topic: "all" | "has" | "missing";
   count: "all" | "0" | "1" | "2";
   sort: "name" | "nameKo" | "updatedAt" | "channelCount" | "id";
+  videoCountEnabled: boolean;
+  maxVideoCount: number;
+  subscriberCountEnabled: boolean;
+  maxSubscriberCount: number;
 };
 
 const DEFAULT_FILTERS: FilterState = {
@@ -35,6 +39,10 @@ const DEFAULT_FILTERS: FilterState = {
   topic: "all",
   count: "all",
   sort: "id",
+  videoCountEnabled: false,
+  maxVideoCount: 0,
+  subscriberCountEnabled: false,
+  maxSubscriberCount: 0,
 };
 
 const CHANNEL_TYPE_LABELS: Record<ChannelType, string> = {
@@ -145,6 +153,24 @@ export default function YoutubeAdminPage() {
       if (filters.count === "0" && channelCount !== 0) return false;
       if (filters.count === "1" && channelCount !== 1) return false;
       if (filters.count === "2" && channelCount !== 2) return false;
+
+      if (filters.videoCountEnabled) {
+        const hasChannelWithLowVideoCount = artist.youtubeChannels.some(
+          (channel) =>
+            channel.videoCount !== undefined &&
+            channel.videoCount <= filters.maxVideoCount,
+        );
+        if (!hasChannelWithLowVideoCount) return false;
+      }
+
+      if (filters.subscriberCountEnabled) {
+        const hasChannelWithLowSubscriberCount = artist.youtubeChannels.some(
+          (channel) =>
+            channel.subscriberCount !== undefined &&
+            channel.subscriberCount <= filters.maxSubscriberCount,
+        );
+        if (!hasChannelWithLowSubscriberCount) return false;
+      }
 
       if (normalizedQuery.length > 0) {
         const haystack = [artist.name, artist.nameKo, artist.alias ?? ""]
@@ -686,6 +712,91 @@ export default function YoutubeAdminPage() {
                           >
                             2개
                           </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="mb-2 flex items-center justify-between">
+                          <p className="text-xs font-semibold text-zinc-700">
+                            동영상 개수 필터
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({
+                                ...prev,
+                                videoCountEnabled: !prev.videoCountEnabled,
+                              }))
+                            }
+                            className={`rounded px-2 py-0.5 text-xs font-medium ${
+                              filters.videoCountEnabled
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-zinc-100 text-zinc-500"
+                            }`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            {filters.videoCountEnabled ? "ON" : "OFF"}
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            value={filters.maxVideoCount}
+                            onChange={(e) =>
+                              setFilters((prev) => ({
+                                ...prev,
+                                maxVideoCount: Number(e.target.value),
+                              }))
+                            }
+                            disabled={!filters.videoCountEnabled}
+                            className="w-full rounded border border-zinc-200 px-2 py-1 text-xs disabled:bg-zinc-50 disabled:text-zinc-400"
+                            placeholder="동영상 개수"
+                          />
+                          <span className="text-xs text-zinc-500">개 이하</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="mb-2 flex items-center justify-between">
+                          <p className="text-xs font-semibold text-zinc-700">
+                            구독자 수 필터
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters((prev) => ({
+                                ...prev,
+                                subscriberCountEnabled:
+                                  !prev.subscriberCountEnabled,
+                              }))
+                            }
+                            className={`rounded px-2 py-0.5 text-xs font-medium ${
+                              filters.subscriberCountEnabled
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-zinc-100 text-zinc-500"
+                            }`}
+                            style={{ cursor: "pointer" }}
+                          >
+                            {filters.subscriberCountEnabled ? "ON" : "OFF"}
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            value={filters.maxSubscriberCount}
+                            onChange={(e) =>
+                              setFilters((prev) => ({
+                                ...prev,
+                                maxSubscriberCount: Number(e.target.value),
+                              }))
+                            }
+                            disabled={!filters.subscriberCountEnabled}
+                            className="w-full rounded border border-zinc-200 px-2 py-1 text-xs disabled:bg-zinc-50 disabled:text-zinc-400"
+                            placeholder="구독자 수"
+                          />
+                          <span className="text-xs text-zinc-500">명 이하</span>
                         </div>
                       </div>
                     </div>

@@ -11,7 +11,7 @@ import {
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts [startId] [limit]
 
-// 여기까지 체크함: 770
+// 여기까지 체크함: 870
 //
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
