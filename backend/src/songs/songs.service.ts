@@ -11,6 +11,9 @@ export class SongsService {
     id: true,
     title: true,
     titleKo: true,
+    thumbnailDefault: true,
+    thumbnailMedium: true,
+    thumbnailHigh: true,
     karaokeSongs: {
       select: {
         provider: true,
@@ -29,6 +32,9 @@ export class SongsService {
     id: number;
     title: string;
     titleKo: string | null;
+    thumbnailDefault: string | null;
+    thumbnailMedium: string | null;
+    thumbnailHigh: string | null;
     karaokeSongs: { provider: string; karaokeNo: string }[];
     artistSongs: { artistId: number; role: string | null }[];
   }): SongDto {
@@ -41,6 +47,9 @@ export class SongsService {
         role: as.role ?? undefined,
       })),
       karaokeSongs: song.karaokeSongs,
+      thumbnailDefault: song.thumbnailDefault ?? undefined,
+      thumbnailMedium: song.thumbnailMedium ?? undefined,
+      thumbnailHigh: song.thumbnailHigh ?? undefined,
     };
   }
 
