@@ -1,4 +1,4 @@
-import { getYoutubeKeyManager } from "./keys/index.ts";
+import { getYoutubeKeyManager } from "./keys/index.js";
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 
