@@ -4,13 +4,16 @@ import { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
 
-type SortOption = 'id_desc' | 'name_asc' | 'name_desc' | 'song_count_desc' | 'song_count_asc'
-const DEFAULT_SORT: SortOption = 'name_asc'
+type SortOption = 'id_desc' | 'id_asc' | 'name_asc' | 'name_desc' | 'song_count_desc' | 'song_count_asc'
+const DEFAULT_SORT: SortOption = 'id_asc'
+const ARTIST_CATALOGS = ['KPOP', 'JPOP', 'POP', 'CPOP'] as const
+export type ArtistCatalog = (typeof ARTIST_CATALOGS)[number]
 
 export async function getArtists(sort: SortOption = DEFAULT_SORT, take = 100, cursor?: number, search?: string) {
   let orderBy: any = {}
 
   if (sort === 'id_desc') orderBy.id = 'desc'
+  else if (sort === 'id_asc') orderBy.id = 'asc'
   else if (sort === 'name_asc') orderBy.nameKo = 'asc'
   else if (sort === 'name_desc') orderBy.nameKo = 'desc'
   else if (sort === 'song_count_desc') orderBy = { artistSongs: { _count: 'desc' } }
@@ -73,6 +76,7 @@ export async function getArtists(sort: SortOption = DEFAULT_SORT, take = 100, cu
     name: a.name,
     nameKo: a.nameKo,
     alias: a.alias ?? undefined,
+    homeCatalog: a.homeCatalog ?? undefined,
     thumbnailDefault: a.thumbnailDefault ?? undefined,
     thumbnailMedium: a.thumbnailMedium ?? undefined,
     thumbnailHigh: a.thumbnailHigh ?? undefined,
@@ -101,6 +105,7 @@ export async function getArtistById(artistId: number) {
     name: artist.name,
     nameKo: artist.nameKo,
     alias: artist.alias ?? undefined,
+    homeCatalog: artist.homeCatalog ?? undefined,
     thumbnailDefault: artist.thumbnailDefault ?? undefined,
     thumbnailMedium: artist.thumbnailMedium ?? undefined,
     thumbnailHigh: artist.thumbnailHigh ?? undefined,
@@ -131,6 +136,7 @@ export async function getSongsByArtist(artistId: number) {
     id: as.song.id,
     title: as.song.title,
     titleKo: as.song.titleKo ?? undefined,
+    catalog: as.song.catalog ?? undefined,
     karaokeSongs: as.song.karaokeSongs.map(ks => ({
       provider: ks.provider,
       karaokeNo: ks.karaokeNo
@@ -441,5 +447,50 @@ export async function mergeArtist(sourceArtistId: number, targetArtistId: number
     success: true,
     sourceArtist,
     targetArtist
+  }
+}
+
+export async function updateArtistCatalog(artistId: number, catalog: ArtistCatalog | null) {
+  if (!artistId) {
+    throw new Error('아티스트 정보를 확인할 수 없습니다.')
+  }
+
+  if (catalog && !ARTIST_CATALOGS.includes(catalog)) {
+    throw new Error('지원하지 않는 분류입니다.')
+  }
+
+  const relations = await prisma.artistSong.findMany({
+    where: { artistId },
+    select: { songId: true }
+  })
+
+  const songIds = [...new Set(relations.map(rel => rel.songId))]
+  const operations: Prisma.PrismaPromise<any>[] = [
+    prisma.artist.update({
+      where: { id: artistId },
+      data: {
+        homeCatalog: catalog
+      }
+    })
+  ]
+
+  if (songIds.length > 0) {
+    operations.push(
+      prisma.song.updateMany({
+        where: {
+          id: { in: songIds }
+        },
+        data: {
+          catalog: catalog
+        }
+      })
+    )
+  }
+
+  await prisma.$transaction(operations)
+
+  return {
+    homeCatalog: catalog ?? undefined,
+    updatedSongCount: songIds.length
   }
 }

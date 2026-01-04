@@ -15,7 +15,7 @@ export class ArtistDto {
   alias?: string;
 
   @ApiProperty({
-    example: "KR",
+    example: "KPOP",
     required: false,
     description: "아티스트의 대표 카탈로그",
   })
@@ -69,7 +69,7 @@ export class ArtistDetailsDto {
   alias?: string;
 
   @ApiProperty({
-    example: "POP",
+    example: "JPOP",
     required: false,
     description: "아티스트의 대표 카탈로그",
   })
