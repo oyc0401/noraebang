@@ -11,6 +11,7 @@ model Artist {
   alias            String?          @unique // 아티스트의 경로이지만, null이라면 userId로 접근가능.
   name             String
   nameKo           String           @map("name_ko")
+  catalog          String? // "KR" | "JP" | "POP" | etc.
   tjSongRequestUrl String?          @map("tj_song_request_url") // 이거보단 가장 많이등록된 tj아티스트명이 낫지 않을까?
 
   thumbnailDefault String?          @map("thumbnail_default")
@@ -29,6 +30,7 @@ model Song {
   id               Int           @id @default(autoincrement())
   title            String
   titleKo          String?       @map("title_ko")
+  catalog          String? // "KR" | "JP" | "POP" | etc.
   youtubeVideoId   String?       @map("youtube_video_id")
   youtubeFetchedAt DateTime?     @map("youtube_fetched_at")
   thumbnailDefault String?       @map("thumbnail_default")
