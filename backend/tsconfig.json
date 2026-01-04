@@ -25,7 +25,8 @@
   "include": [
     "src/**/*",
     "scripts/blog/blog-scrape.service.ts",
-    "scripts/blog/data"
+    "scripts/blog/data",
+    "thirdparty"
   ],
   "exclude": ["node_modules", "dist", "scripts"]
 }
