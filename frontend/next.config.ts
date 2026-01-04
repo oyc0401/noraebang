@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         hostname: "yt3.ggpht.com",
       },
       {
+        protocol: "http",
+        hostname: "yt3.ggpht.com",
+      },
+      {
         protocol: "https",
         hostname: "**.googleusercontent.com",
       },
