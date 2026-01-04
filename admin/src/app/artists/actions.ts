@@ -384,3 +384,62 @@ export async function addSongOwnership(songId: number, artistId: number) {
 
   return { success: true }
 }
+
+export async function mergeArtist(sourceArtistId: number, targetArtistId: number) {
+  if (sourceArtistId === targetArtistId) {
+    throw new Error('동일한 아티스트로는 병합할 수 없습니다.')
+  }
+
+  const [sourceArtist, targetArtist] = await Promise.all([
+    prisma.artist.findUnique({
+      where: { id: sourceArtistId },
+      select: { id: true, name: true, nameKo: true }
+    }),
+    prisma.artist.findUnique({
+      where: { id: targetArtistId },
+      select: { id: true, name: true, nameKo: true }
+    })
+  ])
+
+  if (!sourceArtist) {
+    throw new Error('원본 아티스트를 찾을 수 없습니다.')
+  }
+
+  if (!targetArtist) {
+    throw new Error('대상 아티스트를 찾을 수 없습니다.')
+  }
+
+  const sourceSongs = await prisma.artistSong.findMany({
+    where: { artistId: sourceArtistId },
+    select: { songId: true, order: true, role: true }
+  })
+
+  await prisma.$transaction([
+    ...sourceSongs.map(song =>
+      prisma.artistSong.upsert({
+        where: {
+          artistId_songId: {
+            artistId: targetArtistId,
+            songId: song.songId
+          }
+        },
+        update: {},
+        create: {
+          artistId: targetArtistId,
+          songId: song.songId,
+          order: song.order,
+          role: song.role
+        }
+      })
+    ),
+    prisma.artist.delete({
+      where: { id: sourceArtistId }
+    })
+  ])
+
+  return {
+    success: true,
+    sourceArtist,
+    targetArtist
+  }
+}
