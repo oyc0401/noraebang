@@ -5,13 +5,12 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-import type { ArtistsControllerFindAllSort } from './artistsControllerFindAllSort';
 
-export type ArtistsControllerFindAllParams = {
+export type SearchControllerSearchParams = {
 /**
- * 정렬 기준 (id_desc, name_asc, name_desc, subscriber_desc, subscriber_asc, song_count_asc, song_count_desc)
+ * 검색어
  */
-sort?: ArtistsControllerFindAllSort;
+query: string;
 /**
  * 페이지 번호 (기본값: 1)
  */

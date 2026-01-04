@@ -6,9 +6,9 @@
  * OpenAPI spec version: 1.0
  */
 
-export type SearchControllerGetSongByYoutubeUrlParams = {
-/**
- * YouTube 동영상 URL
- */
-url: string;
+export type SearchResponseDtoMeta = {
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
 };

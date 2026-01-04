@@ -19,6 +19,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**.googleusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "www.tjmedia.com",
+      },
+      {
+        protocol: "http",
+        hostname: "www.tjmedia.com",
+      },
     ],
   },
 };
