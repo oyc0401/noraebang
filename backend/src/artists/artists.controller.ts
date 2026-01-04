@@ -46,6 +46,18 @@ export class ArtistsController {
     description:
       "정렬 기준 (id_desc, name_asc, name_desc, subscriber_desc, subscriber_asc, song_count_asc, song_count_desc)",
   })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    description: "페이지 번호 (기본값: 1)",
+    example: 1,
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    description: "페이지당 항목 수 (기본값: 20)",
+    example: 20,
+  })
   @SwaggerApiResponse({
     status: 200,
     description: "아티스트 목록",
@@ -56,10 +68,27 @@ export class ArtistsController {
     description: "서버 오류",
     type: ErrorResponseDto,
   })
-  async findAll(@Query("sort") sort?: string): Promise<ArtistListResponseDto> {
+  async findAll(
+    @Query("sort") sort?: string,
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+  ): Promise<ArtistListResponseDto> {
     const sortOption = isArtistSortOption(sort) ? sort : DEFAULT_ARTIST_SORT;
-    const artists = await this.artistsService.findAll(sortOption);
-    return ApiResponse.success(artists, "아티스트 목록 조회 성공");
+    const pageNumber = page ? Math.max(1, parseInt(page, 10)) : 1;
+    const limitNumber = limit ? Math.max(1, parseInt(limit, 10)) : 20;
+
+    const { artists, total } = await this.artistsService.findAll(
+      sortOption,
+      pageNumber,
+      limitNumber,
+    );
+
+    return ApiResponse.success(artists, "아티스트 목록 조회 성공", {
+      total,
+      page: pageNumber,
+      limit: limitNumber,
+      hasMore: pageNumber * limitNumber < total,
+    });
   }
 
   @Get("details")
@@ -85,12 +114,39 @@ export class ArtistsController {
     description:
       "정렬 기준 (id_desc, name_asc, name_desc, subscriber_desc, subscriber_asc, song_count_asc, song_count_desc)",
   })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    description: "페이지 번호 (기본값: 1)",
+    example: 1,
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    description: "페이지당 항목 수 (기본값: 20)",
+    example: 20,
+  })
   async findAllDetails(
     @Query("sort") sort?: string,
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
   ): Promise<ArtistDetailsListResponseDto> {
     const sortOption = isArtistSortOption(sort) ? sort : DEFAULT_ARTIST_SORT;
-    const artists = await this.artistsService.findAllDetails(sortOption);
-    return ApiResponse.success(artists, "아티스트 상세 목록 조회 성공");
+    const pageNumber = page ? Math.max(1, parseInt(page, 10)) : 1;
+    const limitNumber = limit ? Math.max(1, parseInt(limit, 10)) : 20;
+
+    const { artists, total } = await this.artistsService.findAllDetails(
+      sortOption,
+      pageNumber,
+      limitNumber,
+    );
+
+    return ApiResponse.success(artists, "아티스트 상세 목록 조회 성공", {
+      total,
+      page: pageNumber,
+      limit: limitNumber,
+      hasMore: pageNumber * limitNumber < total,
+    });
   }
 
   @Get(":identifier")
