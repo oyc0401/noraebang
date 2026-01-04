@@ -1,4 +1,4 @@
-import { YOUTUBE_KEYS } from "./keys";
+import { YOUTUBE_KEYS } from "./keys.js";
 
 export class YoutubeKeyManager {
   private readonly keys: string[];
@@ -50,4 +50,3 @@ export function getYoutubeKeyManager(): YoutubeKeyManager {
   }
   return cachedManager;
 }
-

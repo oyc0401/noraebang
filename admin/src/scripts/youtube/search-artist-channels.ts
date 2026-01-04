@@ -6,7 +6,7 @@ import { pathToFileURL } from "url";
 import {
   fetchYoutubeChannel,
   searchYoutubeChannels,
-} from "../../lib/thirdparty/youtube";
+} from "../../thirdparty/youtube/index.ts";
 
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts
 // pnpm ts-node src/scripts/youtube/search-artist-channels.ts [startId] [limit]
