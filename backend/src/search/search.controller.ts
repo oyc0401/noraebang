@@ -13,17 +13,14 @@ import {
 } from "@nestjs/swagger";
 import { ErrorResponseDto } from "../dto";
 import { ApiResponse } from "../dto/api-response.dto";
-import { SongsService } from "../songs/songs.service";
-import { YoutubeService } from "../youtube/youtube.service";
+import { fetchYoutubeOembed } from "../thirdparty/youtube/oembed.js";
 import { YoutubeSongSearchResponseDto } from "./dto/youtube-song-search-response.dto";
+import { SearchService } from "./search.service";
 
 @ApiTags("Search")
 @Controller("search")
 export class SearchController {
-  constructor(
-    private readonly youtubeService: YoutubeService,
-    private readonly songsService: SongsService,
-  ) {}
+  constructor(private readonly searchService: SearchService) {}
 
   @Get("youtube")
   @ApiOperation({
@@ -52,44 +49,33 @@ export class SearchController {
     description: "서버 오류",
     type: ErrorResponseDto,
   })
-  async getSongByYoutubeUrl(
+  async searchSongByYoutubeUrl(
     @Query("url") url: string,
   ): Promise<YoutubeSongSearchResponseDto> {
+    // URL 파라미터 유효성 검사
     if (!url) {
       throw new BadRequestException("URL parameter is required");
     }
 
-    const youtube = await this.youtubeService.getOembedData(url);
-    const songs = await this.songsService.findAll();
+    // 유튜브 정보 얻어오기
+    const youtube = await fetchYoutubeOembed(url);
 
-    const normalizedTitle = youtube.title?.toLowerCase() ?? "";
-    console.log("[YouTube Search] oEmbed title:", youtube.title);
-    console.log("[YouTube Search] normalized title:", normalizedTitle);
+    // 제목과 아티스트명으로 곡 검색
+    const matchedSongs =
+      await this.searchService.searchSongsByTitleAndArtistName({
+        title: youtube.title,
+        authorName: youtube.author_name,
+      });
 
-    const matchedSong = songs.find((song) => {
-      const songTitle = song.title.toLowerCase();
-      const matchesTitle =
-        songTitle.includes(normalizedTitle) ||
-        normalizedTitle.includes(songTitle);
-
-      const titleKo = song.titleKo?.toLowerCase();
-      const matchesTitleKo = titleKo
-        ? normalizedTitle.includes(titleKo)
-        : false;
-      if (matchesTitle || matchesTitleKo) {
-        console.log(
-          `[YouTube Search] matched song: #${song.id} ${song.title} (${song.titleKo ?? "-"})`,
-        );
-      }
-
-      return matchesTitle || matchesTitleKo;
-    });
-
-    if (!matchedSong) {
+    // 매칭된 곡이 없으면 404 에러 반환
+    if (matchedSongs.length === 0) {
       throw new NotFoundException(
         `No song found matching YouTube title: ${youtube.title}`,
       );
     }
+
+    // 가장 첫 번째 곡을 선택
+    const matchedSong = matchedSongs[0];
 
     return ApiResponse.success(matchedSong, youtube.title);
   }
