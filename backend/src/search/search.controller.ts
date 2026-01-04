@@ -14,6 +14,7 @@ import {
 import { ErrorResponseDto } from "../dto";
 import { ApiResponse } from "../dto/api-response.dto";
 import { fetchYoutubeOembed } from "../thirdparty/youtube/oembed.js";
+import { SearchResponseDto } from "./dto/search-response.dto";
 import { YoutubeSongSearchResponseDto } from "./dto/youtube-song-search-response.dto";
 import { SearchService } from "./search.service";
 
@@ -21,6 +22,69 @@ import { SearchService } from "./search.service";
 @Controller("search")
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
+
+  @Get()
+  @ApiOperation({
+    summary: "통합 검색",
+    description: "아티스트와 곡을 통합 검색합니다.",
+  })
+  @ApiQuery({ name: "query", description: "검색어" })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    description: "페이지 번호 (기본값: 1)",
+    example: 1,
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    description: "페이지당 항목 수 (기본값: 20)",
+    example: 20,
+  })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "검색 결과",
+    type: SearchResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 400,
+    description: "검색어 필요",
+    type: ErrorResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 500,
+    description: "서버 오류",
+    type: ErrorResponseDto,
+  })
+  async search(
+    @Query("query") query: string,
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+  ): Promise<SearchResponseDto> {
+    if (!query) {
+      throw new BadRequestException("Query parameter is required");
+    }
+
+    const pageNumber = page ? Math.max(1, parseInt(page, 10)) : 1;
+    const limitNumber = limit ? Math.max(1, parseInt(limit, 10)) : 20;
+
+    const { results, total } = await this.searchService.searchUnified(
+      query,
+      pageNumber,
+      limitNumber,
+    );
+
+    return {
+      data: results,
+      message: "검색 성공",
+      meta: {
+        total,
+        page: pageNumber,
+        limit: limitNumber,
+        hasMore: pageNumber * limitNumber < total,
+      },
+    };
+  }
 
   @Get("youtube")
   @ApiOperation({

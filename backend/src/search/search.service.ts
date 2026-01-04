@@ -1,7 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { Provider } from "@prisma/client";
-import { ArtistDto, KaraokeSongDto, SongDto } from "../dto";
+import { ArtistDetailsDto, ArtistDto, KaraokeSongDto, SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
+import { SearchResultDto } from "./dto/search-response.dto";
 
 type SongWithRelations = {
   id: number;
@@ -244,5 +245,143 @@ export class SearchService {
         thumbnailHigh: artist.thumbnailHigh ?? undefined,
         tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
       }));
+  }
+
+  // 통합 검색 (아티스트 + 곡)
+  async searchUnified(
+    query: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{ results: SearchResultDto[]; total: number }> {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      return { results: [], total: 0 };
+    }
+
+    const normalizedQuery = normalizeForMatching(trimmedQuery);
+    const skip = (page - 1) * limit;
+
+    // 아티스트 검색
+    const artists = await this.prisma.artist.findMany({
+      where: {
+        OR: [
+          { name: { contains: trimmedQuery, mode: "insensitive" } },
+          { nameKo: { contains: trimmedQuery, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        nameKo: true,
+        alias: true,
+        homeCatalog: true,
+        thumbnailDefault: true,
+        thumbnailMedium: true,
+        thumbnailHigh: true,
+        youtubeChannels: {
+          select: {
+            type: true,
+            channelId: true,
+            title: true,
+            description: true,
+            customUrl: true,
+            subscriberCount: true,
+            videoCount: true,
+            thumbnailDefault: true,
+            thumbnailMedium: true,
+            thumbnailHigh: true,
+          },
+        },
+        _count: {
+          select: {
+            artistSongs: true,
+          },
+        },
+      },
+      orderBy: { id: "desc" },
+    });
+
+    // 곡 검색
+    const songs = await this.prisma.song.findMany({
+      where: {
+        OR: [
+          { title: { contains: trimmedQuery, mode: "insensitive" } },
+          { titleKo: { contains: trimmedQuery, mode: "insensitive" } },
+        ],
+      },
+      select: SONG_SEARCH_SELECT,
+      orderBy: { id: "desc" },
+    });
+
+    // 아티스트 필터링 (정규화 매칭)
+    const filteredArtists = artists.filter((artist) => {
+      const normalizedName = normalizeForMatching(artist.name);
+      const normalizedNameKo = artist.nameKo
+        ? normalizeForMatching(artist.nameKo)
+        : "";
+
+      return (
+        includesMatch(normalizedQuery, normalizedName) ||
+        includesMatch(normalizedQuery, normalizedNameKo)
+      );
+    });
+
+    // 곡 필터링 (정규화 매칭)
+    const filteredSongs = this.filterSongsByTitleMatch(songs, normalizedQuery);
+
+    // 아티스트 결과 매핑
+    const artistResults: SearchResultDto[] = filteredArtists.map(
+      (artist) => {
+        const mainChannel =
+          artist.youtubeChannels.find((ch) => ch.type === "MAIN") ??
+          artist.youtubeChannels.find((ch) => ch.type === "TOPIC");
+
+        const artistDetails: ArtistDetailsDto = {
+          id: artist.id,
+          name: artist.name,
+          nameKo: artist.nameKo,
+          alias: artist.alias ?? undefined,
+          homeCatalog: artist.homeCatalog ?? undefined,
+          thumbnailDefault: artist.thumbnailDefault ?? undefined,
+          thumbnailMedium: artist.thumbnailMedium ?? undefined,
+          thumbnailHigh: artist.thumbnailHigh ?? undefined,
+          songCount: artist._count.artistSongs,
+          youtube: mainChannel
+            ? {
+                channelId: mainChannel.channelId,
+                title: mainChannel.title ?? undefined,
+                description: mainChannel.description ?? undefined,
+                customUrl: mainChannel.customUrl ?? undefined,
+                subscriberCount: mainChannel.subscriberCount ?? undefined,
+                videoCount: mainChannel.videoCount ?? undefined,
+                thumbnailDefault: mainChannel.thumbnailDefault ?? undefined,
+                thumbnailMedium: mainChannel.thumbnailMedium ?? undefined,
+                thumbnailHigh: mainChannel.thumbnailHigh ?? undefined,
+              }
+            : undefined,
+        };
+
+        return {
+          type: "artist" as const,
+          artist: artistDetails,
+        };
+      },
+    );
+
+    // 곡 결과 매핑
+    const tjSongMap = await this.buildTjSongMap(filteredSongs);
+    const songResults: SearchResultDto[] = filteredSongs.map((song) => ({
+      type: "song" as const,
+      song: this.mapSongToDto(song, tjSongMap),
+    }));
+
+    // 아티스트 우선, 그 다음 곡
+    const allResults = [...artistResults, ...songResults];
+    const total = allResults.length;
+
+    // 페이지네이션 적용
+    const paginatedResults = allResults.slice(skip, skip + limit);
+
+    return { results: paginatedResults, total };
   }
 }
