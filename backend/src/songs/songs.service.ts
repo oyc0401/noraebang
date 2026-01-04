@@ -1,7 +1,22 @@
+import { Provider } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
 import { getArtistAliases } from "../config/artist-aliases";
-import { SongDto } from "../dto";
+import { KaraokeSongDto, SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
+
+type SongWithRelations = {
+  id: number;
+  title: string;
+  titleKo: string | null;
+  catalog: string | null;
+  thumbnailDefault: string | null;
+  thumbnailMedium: string | null;
+  thumbnailHigh: string | null;
+  karaokeSongs: { provider: Provider; karaokeNo: string }[];
+  artistSongs: { artistId: number; role: string | null }[];
+};
+
+type TjSongMap = Record<string, { title: string; artist: string | null }>;
 
 @Injectable()
 export class SongsService {
@@ -29,17 +44,32 @@ export class SongsService {
     },
   };
 
-  private mapToDto(song: {
-    id: number;
-    title: string;
-    titleKo: string | null;
-    catalog: string | null;
-    thumbnailDefault: string | null;
-    thumbnailMedium: string | null;
-    thumbnailHigh: string | null;
-    karaokeSongs: { provider: string; karaokeNo: string }[];
-    artistSongs: { artistId: number; role: string | null }[];
-  }): SongDto {
+  private async buildTjSongMap(songs: SongWithRelations[]): Promise<TjSongMap> {
+    const tjKaraokeNos = Array.from(
+      new Set(
+        songs
+          .flatMap((song) => song.karaokeSongs)
+          .filter((karaokeSong) => karaokeSong.provider === Provider.TJ)
+          .map((karaokeSong) => karaokeSong.karaokeNo),
+      ),
+    );
+
+    if (!tjKaraokeNos.length) {
+      return {};
+    }
+
+    const tjSongs = await this.prisma.tjSong.findMany({
+      where: { id: { in: tjKaraokeNos } },
+      select: { id: true, title: true, artist: true },
+    });
+
+    return tjSongs.reduce<TjSongMap>((acc, tjSong) => {
+      acc[tjSong.id] = { title: tjSong.title, artist: tjSong.artist ?? null };
+      return acc;
+    }, {});
+  }
+
+  private mapToDto(song: SongWithRelations, tjSongMap: TjSongMap): SongDto {
     return {
       id: song.id,
       title: song.title,
@@ -49,7 +79,20 @@ export class SongsService {
         artistId: as.artistId,
         role: as.role ?? undefined,
       })),
-      karaokeSongs: song.karaokeSongs,
+      karaokeSongs: song.karaokeSongs.map((karaokeSong) => {
+        const dto: KaraokeSongDto = {
+          provider: karaokeSong.provider,
+          karaokeNo: karaokeSong.karaokeNo,
+        };
+
+        if (karaokeSong.provider === Provider.TJ) {
+          const details = tjSongMap[karaokeSong.karaokeNo];
+          dto.title = details?.title ?? null;
+          dto.artist = details?.artist ?? null;
+        }
+
+        return dto;
+      }),
       thumbnailDefault: song.thumbnailDefault ?? undefined,
       thumbnailMedium: song.thumbnailMedium ?? undefined,
       thumbnailHigh: song.thumbnailHigh ?? undefined,
@@ -62,7 +105,8 @@ export class SongsService {
       orderBy: { id: "asc" },
     });
 
-    return songs.map((song) => this.mapToDto(song));
+    const tjSongMap = await this.buildTjSongMap(songs);
+    return songs.map((song) => this.mapToDto(song, tjSongMap));
   }
 
   async findById(id: number): Promise<SongDto | null> {
@@ -73,7 +117,8 @@ export class SongsService {
 
     if (!song) return null;
 
-    return this.mapToDto(song);
+    const tjSongMap = await this.buildTjSongMap([song]);
+    return this.mapToDto(song, tjSongMap);
   }
 
   async searchByTitle(query: string): Promise<SongDto[]> {
@@ -94,7 +139,8 @@ export class SongsService {
       orderBy: { id: "asc" },
     });
 
-    return songs.map((song) => this.mapToDto(song));
+    const tjSongMap = await this.buildTjSongMap(songs);
+    return songs.map((song) => this.mapToDto(song, tjSongMap));
   }
 
   async findByArtistId(artistId: number): Promise<SongDto[]> {
@@ -132,6 +178,7 @@ export class SongsService {
     });
 
     // 4. DTO로 변환
-    return songs.map((song) => this.mapToDto(song));
+    const tjSongMap = await this.buildTjSongMap(songs);
+    return songs.map((song) => this.mapToDto(song, tjSongMap));
   }
 }

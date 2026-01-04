@@ -15,6 +15,13 @@ export class ArtistDto {
   alias?: string;
 
   @ApiProperty({
+    example: "KR",
+    required: false,
+    description: "아티스트의 대표 카탈로그",
+  })
+  homeCatalog?: string;
+
+  @ApiProperty({
     example: "https://yt3.googleusercontent.com/default.jpg",
     required: false,
   })
@@ -60,6 +67,13 @@ export class ArtistDetailsDto {
 
   @ApiProperty({ example: "tayori", required: false })
   alias?: string;
+
+  @ApiProperty({
+    example: "POP",
+    required: false,
+    description: "아티스트의 대표 카탈로그",
+  })
+  homeCatalog?: string;
 
   @ApiProperty({
     example: "https://yt3.googleusercontent.com/default.jpg",
