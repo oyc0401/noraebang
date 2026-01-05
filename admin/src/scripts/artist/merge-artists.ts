@@ -37,7 +37,7 @@ type ArtistSummary = {
   id: number;
   name: string;
   nameKo: string | null;
-  alias: string | null;
+  slug: string | null;
   songCount: number;
   channelCount: number;
 };
@@ -49,7 +49,7 @@ async function fetchArtistSummary(id: number): Promise<ArtistSummary | null> {
       id: true,
       name: true,
       nameKo: true,
-      alias: true,
+      slug: true,
       _count: {
         select: {
           artistSongs: true,
@@ -65,7 +65,7 @@ async function fetchArtistSummary(id: number): Promise<ArtistSummary | null> {
     id: artist.id,
     name: artist.name,
     nameKo: artist.nameKo,
-    alias: artist.alias,
+    slug: artist.slug,
     songCount: artist._count.artistSongs,
     channelCount: artist._count.youtubeChannels,
   };

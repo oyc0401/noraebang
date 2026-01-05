@@ -100,7 +100,7 @@ export async function getRealArtists(search?: string) {
           OR: [
             { name: { contains: term, mode: 'insensitive' } },
             { nameKo: { contains: term, mode: 'insensitive' } },
-            { alias: { contains: term, mode: 'insensitive' } }
+            { slug: { contains: term, mode: 'insensitive' } }
           ]
         }
       : undefined,
@@ -116,7 +116,7 @@ export async function getRealArtists(search?: string) {
     id: artist.id,
     name: artist.name,
     nameKo: artist.nameKo,
-    alias: artist.alias ?? undefined,
+    slug: artist.slug ?? undefined,
     songCount: artist._count.artistSongs
   }))
 }

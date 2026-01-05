@@ -184,7 +184,7 @@ export async function searchArtists(keyword: string) {
       OR: [
         { name: { contains: term, mode: 'insensitive' } },
         { nameKo: { contains: term, mode: 'insensitive' } },
-        { alias: { contains: term, mode: 'insensitive' } }
+        { slug: { contains: term, mode: 'insensitive' } }
       ]
     },
     orderBy: { nameKo: 'asc' },
@@ -195,7 +195,7 @@ export async function searchArtists(keyword: string) {
     id: artist.id,
     name: artist.name,
     nameKo: artist.nameKo,
-    alias: artist.alias ?? undefined
+    slug: artist.slug ?? undefined
   }))
 }
 

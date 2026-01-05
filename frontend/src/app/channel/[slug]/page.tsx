@@ -1,4 +1,4 @@
-import { artistsControllerFindByIdOrAlias } from "@/api/model/artists/artists";
+import { artistsControllerFindByIdOrSlug } from "@/api/model/artists/artists";
 import { SongList } from "@/components/song/SongList";
 import { CircleThumbnail } from "@/components/common/CircleThumbnail";
 import Link from "next/link";
@@ -6,10 +6,10 @@ import Link from "next/link";
 export default async function ChannelPage({
   params,
 }: {
-  params: Promise<{ alias: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { alias } = await params;
-  const artist = await artistsControllerFindByIdOrAlias(alias);
+  const { slug } = await params;
+  const artist = await artistsControllerFindByIdOrSlug(slug);
 
   if (!artist.data) {
     return <div>아티스트를 찾을 수 없습니다</div>;

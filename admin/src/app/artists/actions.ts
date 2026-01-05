@@ -32,7 +32,7 @@ export async function getArtists(sort: SortOption = DEFAULT_SORT, take = 100, cu
     where.push(
       { name: { contains: trimmedSearch, mode: 'insensitive' } },
       { nameKo: { contains: trimmedSearch, mode: 'insensitive' } },
-      { alias: { contains: trimmedSearch, mode: 'insensitive' } }
+      { slug: { contains: trimmedSearch, mode: 'insensitive' } }
     )
     if (idFilter) {
       where.push({ id: idFilter })
@@ -75,13 +75,13 @@ export async function getArtists(sort: SortOption = DEFAULT_SORT, take = 100, cu
     id: a.id,
     name: a.name,
     nameKo: a.nameKo,
-    alias: a.alias ?? undefined,
+    slug: a.slug ?? undefined,
     homeCatalog: a.homeCatalog ?? undefined,
     thumbnailDefault: a.thumbnailDefault ?? undefined,
     thumbnailMedium: a.thumbnailMedium ?? undefined,
     thumbnailHigh: a.thumbnailHigh ?? undefined,
     songCount: a._count.artistSongs,
-    aliasGroup: undefined
+    slugGroup: undefined
   })),
     hasMore,
     nextCursor: hasMore ? filtered[filtered.length - 1].id : undefined
@@ -104,13 +104,13 @@ export async function getArtistById(artistId: number) {
     id: artist.id,
     name: artist.name,
     nameKo: artist.nameKo,
-    alias: artist.alias ?? undefined,
+    slug: artist.slug ?? undefined,
     homeCatalog: artist.homeCatalog ?? undefined,
     thumbnailDefault: artist.thumbnailDefault ?? undefined,
     thumbnailMedium: artist.thumbnailMedium ?? undefined,
     thumbnailHigh: artist.thumbnailHigh ?? undefined,
     songCount: artist._count.artistSongs,
-    aliasGroup: undefined
+    slugGroup: undefined
   }
 }
 
@@ -149,22 +149,22 @@ export async function getSongsByArtist(artistId: number) {
   }))
 }
 
-export async function updateArtistAlias(artistId: number, alias: string) {
-  const sanitizedAlias = alias.trim().replace(/^@/, '')
+export async function updateArtistSlug(artistId: number, slug: string) {
+  const sanitizedSlug = slug.trim().replace(/^@/, '')
 
-  if (!sanitizedAlias) {
+  if (!sanitizedSlug) {
     throw new Error('별칭을 입력해주세요.')
   }
 
   try {
     const updated = await prisma.artist.update({
       where: { id: artistId },
-      data: { alias: sanitizedAlias },
-      select: { id: true, alias: true }
+      data: { slug: sanitizedSlug },
+      select: { id: true, slug: true }
     })
 
     return {
-      alias: updated.alias ?? undefined
+      slug: updated.slug ?? undefined
     }
   } catch (error: any) {
     if (

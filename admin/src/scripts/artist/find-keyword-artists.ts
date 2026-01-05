@@ -34,7 +34,7 @@ async function findKeywordArtists() {
         id: true,
         name: true,
         nameKo: true,
-        alias: true,
+        slug: true,
       },
       orderBy: { id: "asc" },
     });
@@ -42,7 +42,7 @@ async function findKeywordArtists() {
     let matchCount = 0;
 
     for (const artist of artists) {
-      const haystack = [artist.name, artist.nameKo, artist.alias]
+      const haystack = [artist.name, artist.nameKo, artist.slug]
         .map((value) => value?.toLowerCase() ?? "")
         .join(" ");
 
@@ -55,7 +55,7 @@ async function findKeywordArtists() {
       console.log(
         `⚠️  [${matchedKeyword}] ${artist.name} (ID: ${artist.id}) - nameKo: ${
           artist.nameKo ?? "-"
-        }, alias: ${artist.alias ?? "-"}`,
+        }, slug: ${artist.slug ?? "-"}`,
       );
     }
 

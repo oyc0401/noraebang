@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface ArtistAliasGroupDto {
+export interface ArtistSlugGroupDto {
   groupId: string;
-  aliases: string[];
+  slugs: string[];
 }

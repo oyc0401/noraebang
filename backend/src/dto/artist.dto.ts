@@ -11,8 +11,8 @@ export class ArtistDto {
   @ApiProperty({ example: "요아소비" })
   nameKo: string;
 
-  @ApiProperty({ example: "yoasobi", required: false })
-  alias?: string;
+  @ApiProperty({ example: "yoasobi", required: false, description: "아티스트 슬러그" })
+  slug?: string;
 
   @ApiProperty({
     example: "KPOP",
@@ -47,12 +47,12 @@ export class ArtistDto {
   tjSongRequestUrl?: string;
 }
 
-export class ArtistAliasGroupDto {
+export class ArtistSlugGroupDto {
   @ApiProperty({ example: "tayori-islet" })
   groupId: string;
 
   @ApiProperty({ example: ["tayori", "islet"], type: [String] })
-  aliases: string[];
+  slugs: string[];
 }
 
 export class ArtistDetailsDto {
@@ -65,8 +65,8 @@ export class ArtistDetailsDto {
   @ApiProperty({ example: "타요리" })
   nameKo: string;
 
-  @ApiProperty({ example: "tayori", required: false })
-  alias?: string;
+  @ApiProperty({ example: "tayori", required: false, description: "아티스트 슬러그" })
+  slug?: string;
 
   @ApiProperty({
     example: "JPOP",
@@ -103,8 +103,8 @@ export class ArtistDetailsDto {
   })
   tjSongRequestUrl?: string;
 
-  @ApiProperty({ type: ArtistAliasGroupDto, required: false })
-  aliasGroup?: ArtistAliasGroupDto;
+  @ApiProperty({ type: ArtistSlugGroupDto, required: false })
+  slugGroup?: ArtistSlugGroupDto;
 
   @ApiProperty({ type: YoutubeInfoDto, required: false })
   youtube?: YoutubeInfoDto;

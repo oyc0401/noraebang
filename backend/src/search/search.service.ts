@@ -190,7 +190,7 @@ export class SearchService {
         id: true,
         name: true,
         nameKo: true,
-        alias: true,
+        slug: true,
         homeCatalog: true,
         thumbnailDefault: true,
         thumbnailMedium: true,
@@ -213,8 +213,8 @@ export class SearchService {
         const normalizedArtistNameKo = artist.nameKo
           ? normalizeForMatching(artist.nameKo)
           : "";
-        const normalizedAlias = artist.alias
-          ? normalizeForMatching(artist.alias)
+        const normalizedSlug = artist.slug
+          ? normalizeForMatching(artist.slug)
           : "";
 
         if (includesMatch(normalizedName, normalizedArtistName)) {
@@ -228,7 +228,7 @@ export class SearchService {
           return true;
         }
 
-        if (normalizedAlias && includesMatch(normalizedName, normalizedAlias)) {
+        if (normalizedSlug && includesMatch(normalizedName, normalizedSlug)) {
           return true;
         }
 
@@ -238,7 +238,7 @@ export class SearchService {
         id: artist.id,
         name: artist.name,
         nameKo: artist.nameKo,
-        alias: artist.alias ?? undefined,
+        slug: artist.slug ?? undefined,
         homeCatalog: artist.homeCatalog ?? undefined,
         thumbnailDefault: artist.thumbnailDefault ?? undefined,
         thumbnailMedium: artist.thumbnailMedium ?? undefined,
@@ -273,7 +273,7 @@ export class SearchService {
         id: true,
         name: true,
         nameKo: true,
-        alias: true,
+        slug: true,
         homeCatalog: true,
         thumbnailDefault: true,
         thumbnailMedium: true,
@@ -340,7 +340,7 @@ export class SearchService {
           id: artist.id,
           name: artist.name,
           nameKo: artist.nameKo,
-          alias: artist.alias ?? undefined,
+          slug: artist.slug ?? undefined,
           homeCatalog: artist.homeCatalog ?? undefined,
           thumbnailDefault: artist.thumbnailDefault ?? undefined,
           thumbnailMedium: artist.thumbnailMedium ?? undefined,

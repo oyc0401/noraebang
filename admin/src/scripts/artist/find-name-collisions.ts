@@ -1,6 +1,6 @@
 /**
  * 아티스트 이름으로 검색했을 때 다른 아티스트가 함께 나타나는지 검사하는 스크립트
- * JSON 형식으로 출력 (name만 포함, nameKo/alias 제외)
+ * JSON 형식으로 출력 (name만 포함, nameKo/slug 제외)
  *
  * pnpm ts-node src/scripts/artist/find-name-collisions.ts
  * pnpm ts-node src/scripts/artist/find-name-collisions.ts --output=admin/data/name-collisions.json

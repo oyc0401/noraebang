@@ -806,9 +806,9 @@ export default function TjArtistPage() {
                       <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                         {artist.name} · ID {artist.id}
                       </p>
-                      {artist.alias && (
+                      {artist.slug && (
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                          @{artist.alias}
+                          @{artist.slug}
                         </p>
                       )}
                     </button>
@@ -840,8 +840,8 @@ export default function TjArtistPage() {
                 <p>영문명: {selectedRealArtist.name}</p>
                 <p>ID: {selectedRealArtist.id}</p>
                 <p>곡 수: {selectedRealArtist.songCount}</p>
-                {selectedRealArtist.alias && (
-                  <p>별칭: @{selectedRealArtist.alias}</p>
+                {selectedRealArtist.slug && (
+                  <p>별칭: @{selectedRealArtist.slug}</p>
                 )}
               </div>
             </div>

@@ -11,14 +11,14 @@ export class ArtistDto {
   name: string;
 
   @ApiProperty({ example: "yoasobi", required: false })
-  alias?: string;  // ✅ 좋은 예
+  slug?: string;  // ✅ 좋은 예
 }
 ```
 
 ### ❌ `| null` 사용 금지
 ```typescript
 export class ArtistDto {
-  alias?: string | null;  // ❌ 나쁜 예
+  slug?: string | null;  // ❌ 나쁜 예
 }
 ```
 
