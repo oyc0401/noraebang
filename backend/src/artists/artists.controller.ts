@@ -151,13 +151,13 @@ export class ArtistsController {
 
   @Get(":identifier")
   @ApiOperation({
-    summary: "아티스트 상세 조회 (ID 또는 alias)",
+    summary: "아티스트 상세 조회 (ID 또는 slug)",
     description:
-      "숫자는 ID로, 문자열은 alias 로 판단하여 해당 아티스트 정보를 반환합니다.",
+      "숫자는 ID로, 문자열은 slug 로 판단하여 해당 아티스트 정보를 반환합니다.",
   })
   @ApiParam({
     name: "identifier",
-    description: "아티스트 ID 또는 alias",
+    description: "아티스트 ID 또는 slug",
   })
   @SwaggerApiResponse({
     status: 200,
@@ -174,11 +174,11 @@ export class ArtistsController {
     description: "서버 오류",
     type: ErrorResponseDto,
   })
-  async findByIdOrAlias(
+  async findByIdOrSlug(
     @Param("identifier") identifier: string,
   ): Promise<ArtistDetailResponseDto> {
     const artist: ArtistDetailsDto | null =
-      await this.artistsService.findByIdOrAlias(identifier);
+      await this.artistsService.findByIdOrSlug(identifier);
     if (!artist) {
       throw new NotFoundException("Artist not found");
     }

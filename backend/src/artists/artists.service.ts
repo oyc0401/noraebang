@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import {
-  ARTIST_ALIAS_GROUPS,
-  getArtistAliases,
-} from "../config/artist-aliases";
+  ARTIST_SLUG_GROUPS,
+  getArtistSlugs,
+} from "../config/artist-slug-groups";
 import { ArtistDetailsDto, ArtistDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -56,7 +56,7 @@ export class ArtistsService {
         id: true,
         name: true,
         nameKo: true,
-        alias: true,
+        slug: true,
         homeCatalog: true,
         thumbnailDefault: true,
         thumbnailMedium: true,
@@ -84,7 +84,7 @@ export class ArtistsService {
       id: artist.id,
       name: artist.name,
       nameKo: artist.nameKo,
-      alias: artist.alias ?? undefined,
+      slug: artist.slug ?? undefined,
       homeCatalog: artist.homeCatalog ?? undefined,
       thumbnailDefault: artist.thumbnailDefault ?? undefined,
       thumbnailMedium: artist.thumbnailMedium ?? undefined,
@@ -165,7 +165,7 @@ export class ArtistsService {
         id: true,
         name: true,
         nameKo: true,
-        alias: true,
+        slug: true,
         homeCatalog: true,
         thumbnailDefault: true,
         thumbnailMedium: true,
@@ -196,19 +196,19 @@ export class ArtistsService {
     });
 
     const mappedArtists = artists.map((artist) => {
-      let aliasGroup: { groupId: string; aliases: string[] } | undefined;
+      let slugGroup: { groupId: string; slugs: string[] } | undefined;
 
-      const artistAlias = artist.alias;
-      if (artistAlias) {
-        const aliases = getArtistAliases(artistAlias);
-        if (aliases.length > 1) {
-          const group = ARTIST_ALIAS_GROUPS.find((item) =>
-            item.aliases.includes(artistAlias),
+      const artistSlug = artist.slug;
+      if (artistSlug) {
+        const slugs = getArtistSlugs(artistSlug);
+        if (slugs.length > 1) {
+          const group = ARTIST_SLUG_GROUPS.find((item) =>
+            item.slugs.includes(artistSlug),
           );
           if (group) {
-            aliasGroup = {
+            slugGroup = {
               groupId: group.groupId,
-              aliases,
+              slugs,
             };
           }
         }
@@ -222,13 +222,13 @@ export class ArtistsService {
         id: artist.id,
         name: artist.name,
         nameKo: artist.nameKo,
-        alias: artist.alias ?? undefined,
+        slug: artist.slug ?? undefined,
         homeCatalog: artist.homeCatalog ?? undefined,
         thumbnailDefault: artist.thumbnailDefault ?? undefined,
         thumbnailMedium: artist.thumbnailMedium ?? undefined,
         thumbnailHigh: artist.thumbnailHigh ?? undefined,
         songCount: artist._count.artistSongs,
-        aliasGroup,
+        slugGroup,
         youtube: mainChannel
           ? {
               channelId: mainChannel.channelId,
@@ -301,7 +301,7 @@ export class ArtistsService {
         id: true,
         name: true,
         nameKo: true,
-        alias: true,
+        slug: true,
         homeCatalog: true,
         thumbnailDefault: true,
         thumbnailMedium: true,
@@ -316,7 +316,7 @@ export class ArtistsService {
       id: artist.id,
       name: artist.name,
       nameKo: artist.nameKo,
-      alias: artist.alias ?? undefined,
+      slug: artist.slug ?? undefined,
       homeCatalog: artist.homeCatalog ?? undefined,
       thumbnailDefault: artist.thumbnailDefault ?? undefined,
       thumbnailMedium: artist.thumbnailMedium ?? undefined,
@@ -325,14 +325,14 @@ export class ArtistsService {
     };
   }
 
-  async findByAlias(alias: string): Promise<ArtistDto | null> {
+  async findBySlug(slug: string): Promise<ArtistDto | null> {
     const artist = await this.prisma.artist.findUnique({
-      where: { alias },
+      where: { slug },
       select: {
         id: true,
         name: true,
         nameKo: true,
-        alias: true,
+        slug: true,
         homeCatalog: true,
         thumbnailDefault: true,
         thumbnailMedium: true,
@@ -347,7 +347,7 @@ export class ArtistsService {
       id: artist.id,
       name: artist.name,
       nameKo: artist.nameKo,
-      alias: artist.alias ?? undefined,
+      slug: artist.slug ?? undefined,
       homeCatalog: artist.homeCatalog ?? undefined,
       thumbnailDefault: artist.thumbnailDefault ?? undefined,
       thumbnailMedium: artist.thumbnailMedium ?? undefined,
@@ -356,30 +356,30 @@ export class ArtistsService {
     };
   }
 
-  async findByAliases(aliases: string[]) {
+  async findBySlugs(slugs: string[]) {
     return this.prisma.artist.findMany({
-      where: { alias: { in: aliases } },
+      where: { slug: { in: slugs } },
       orderBy: { id: "asc" },
     });
   }
 
   /**
-   * ID 또는 alias로 아티스트 상세 조회 (YouTube 정보 포함)
+   * ID 또는 slug로 아티스트 상세 조회 (YouTube 정보 포함)
    * - 숫자면 ID로 조회
-   * - 문자열이면 alias로 조회
+   * - 문자열이면 slug로 조회
    */
-  async findByIdOrAlias(identifier: string): Promise<ArtistDetailsDto | null> {
+  async findByIdOrSlug(identifier: string): Promise<ArtistDetailsDto | null> {
     // 숫자인지 체크
     const parsedId = parseInt(identifier, 10);
     const isId = !Number.isNaN(parsedId) && parsedId.toString() === identifier;
 
     const artist = await this.prisma.artist.findUnique({
-      where: isId ? { id: parsedId } : { alias: identifier },
+      where: isId ? { id: parsedId } : { slug: identifier },
       select: {
         id: true,
         name: true,
         nameKo: true,
-        alias: true,
+        slug: true,
         homeCatalog: true,
         thumbnailDefault: true,
         thumbnailMedium: true,
@@ -413,7 +413,7 @@ export class ArtistsService {
       id: artist.id,
       name: artist.name,
       nameKo: artist.nameKo,
-      alias: artist.alias ?? undefined,
+      slug: artist.slug ?? undefined,
       homeCatalog: artist.homeCatalog ?? undefined,
       thumbnailDefault: artist.thumbnailDefault ?? undefined,
       thumbnailMedium: artist.thumbnailMedium ?? undefined,

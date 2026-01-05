@@ -39,7 +39,7 @@ export async function getYoutubeArtists() {
     id: artist.id,
     name: artist.name,
     nameKo: artist.nameKo,
-    alias: artist.alias ?? undefined,
+    slug: artist.slug ?? undefined,
     thumbnailDefault: artist.thumbnailDefault ?? undefined,
     thumbnailMedium: artist.thumbnailMedium ?? undefined,
     thumbnailHigh: artist.thumbnailHigh ?? undefined,

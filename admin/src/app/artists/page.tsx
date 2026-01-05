@@ -12,7 +12,7 @@ import {
   getArtistById,
   getSongsByArtist,
   addSongOwnership,
-  updateArtistAlias,
+  updateArtistSlug,
   updateArtistName,
   updateArtistNameKo,
   updateKaraokeSong,
@@ -68,8 +68,8 @@ export default function AdminArtistsPage() {
   const nameKoMenuRef = useRef<HTMLDivElement | null>(null);
   const [nameMenuOpen, setNameMenuOpen] = useState(false);
   const nameMenuRef = useRef<HTMLDivElement | null>(null);
-  const [aliasMenuOpen, setAliasMenuOpen] = useState(false);
-  const aliasMenuRef = useRef<HTMLDivElement | null>(null);
+  const [slugMenuOpen, setSlugMenuOpen] = useState(false);
+  const slugMenuRef = useRef<HTMLDivElement | null>(null);
   const [catalogMenuOpen, setCatalogMenuOpen] = useState(false);
   const catalogMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -83,10 +83,10 @@ export default function AdminArtistsPage() {
   const [nameSaving, setNameSaving] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
 
-  const [showAliasDialog, setShowAliasDialog] = useState(false);
-  const [aliasInput, setAliasInput] = useState("");
-  const [aliasSaving, setAliasSaving] = useState(false);
-  const [aliasError, setAliasError] = useState<string | null>(null);
+  const [showSlugDialog, setShowSlugDialog] = useState(false);
+  const [slugInput, setSlugInput] = useState("");
+  const [slugSaving, setSlugSaving] = useState(false);
+  const [slugError, setSlugError] = useState<string | null>(null);
 
   // 곡 편집 관련
   const [editingSong, setEditingSong] = useState<Song | null>(null);
@@ -167,18 +167,18 @@ export default function AdminArtistsPage() {
   useEffect(() => {
     setNameKoMenuOpen(false);
     setNameMenuOpen(false);
-    setAliasMenuOpen(false);
+    setSlugMenuOpen(false);
     setCatalogMenuOpen(false);
     setCatalogSaving(false);
     setShowNameKoDialog(false);
     setShowNameDialog(false);
-    setShowAliasDialog(false);
+    setShowSlugDialog(false);
     setNameKoError(null);
     setNameError(null);
-    setAliasError(null);
+    setSlugError(null);
     setNameKoInput(selectedArtist?.nameKo ?? "");
     setNameInput(selectedArtist?.name ?? "");
-    setAliasInput(selectedArtist?.alias ?? "");
+    setSlugInput(selectedArtist?.slug ?? "");
   }, [selectedArtist]);
 
   const isFilteringArtists = debouncedSearch.trim().length > 0;
@@ -301,20 +301,20 @@ export default function AdminArtistsPage() {
   }, [nameMenuOpen]);
 
   useEffect(() => {
-    if (!aliasMenuOpen) return;
+    if (!slugMenuOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        aliasMenuRef.current &&
-        !aliasMenuRef.current.contains(event.target as Node)
+        slugMenuRef.current &&
+        !slugMenuRef.current.contains(event.target as Node)
       ) {
-        setAliasMenuOpen(false);
+        setSlugMenuOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [aliasMenuOpen]);
+  }, [slugMenuOpen]);
 
   useEffect(() => {
     if (!catalogMenuOpen) return;
@@ -443,28 +443,28 @@ export default function AdminArtistsPage() {
     }
   };
 
-  const handleAliasSave = async () => {
+  const handleSlugSave = async () => {
     if (!selectedArtist) return;
 
-    const sanitizedAlias = aliasInput.trim().replace(/^@/, "");
-    if (!sanitizedAlias) {
-      setAliasError("별칭을 입력해주세요.");
+    const sanitizedSlug = slugInput.trim().replace(/^@/, "");
+    if (!sanitizedSlug) {
+      setSlugError("별칭을 입력해주세요.");
       return;
     }
 
-    setAliasSaving(true);
-    setAliasError(null);
+    setSlugSaving(true);
+    setSlugError(null);
 
     try {
-      const response = await updateArtistAlias(
+      const response = await updateArtistSlug(
         selectedArtist.id,
-        sanitizedAlias,
+        sanitizedSlug,
       );
 
       setMessage({
         type: "success",
         text: `✅ ${selectedArtist.nameKo}: @${
-          response.alias ?? sanitizedAlias
+          response.slug ?? sanitizedSlug
         }로 저장되었습니다.`,
       });
 
@@ -485,12 +485,12 @@ export default function AdminArtistsPage() {
         setSelectedArtist(updatedArtist);
       }
 
-      setShowAliasDialog(false);
-      setAliasMenuOpen(false);
+      setShowSlugDialog(false);
+      setSlugMenuOpen(false);
     } catch (error: any) {
-      setAliasError(error.message ?? "별칭 저장 중 오류가 발생했습니다.");
+      setSlugError(error.message ?? "별칭 저장 중 오류가 발생했습니다.");
     } finally {
-      setAliasSaving(false);
+      setSlugSaving(false);
     }
   };
 
@@ -1144,20 +1144,20 @@ export default function AdminArtistsPage() {
                           </div>
                         )}
                       </span>
-                      {selectedArtist.alias && (
+                      {selectedArtist.slug && (
                         <>
                           {" • "}
                           <span
                             className="relative inline-block"
-                            ref={aliasMenuRef}
+                            ref={slugMenuRef}
                           >
                             <button
                               type="button"
-                              onClick={() => setAliasMenuOpen((prev) => !prev)}
+                              onClick={() => setSlugMenuOpen((prev) => !prev)}
                               className="inline-flex items-center gap-1 text-blue-600 hover:underline dark:text-blue-400"
                               style={{ cursor: "pointer" }}
                             >
-                              @{selectedArtist.alias}
+                              @{selectedArtist.slug}
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 viewBox="0 0 20 20"
@@ -1172,13 +1172,13 @@ export default function AdminArtistsPage() {
                                 />
                               </svg>
                             </button>
-                            {aliasMenuOpen && (
+                            {slugMenuOpen && (
                               <div className="absolute right-0 mt-2 w-48 rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 z-20">
                                 <a
-                                  href={`/channel/${selectedArtist.alias}`}
+                                  href={`/channel/${selectedArtist.slug}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  onClick={() => setAliasMenuOpen(false)}
+                                  onClick={() => setSlugMenuOpen(false)}
                                   className="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                                   style={{ cursor: "pointer" }}
                                 >
@@ -1187,10 +1187,10 @@ export default function AdminArtistsPage() {
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setAliasMenuOpen(false);
-                                    setShowAliasDialog(true);
-                                    setAliasError(null);
-                                    setAliasInput(selectedArtist.alias ?? "");
+                                    setSlugMenuOpen(false);
+                                    setShowSlugDialog(true);
+                                    setSlugError(null);
+                                    setSlugInput(selectedArtist.slug ?? "");
                                   }}
                                   className="block w-full px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                                   style={{ cursor: "pointer" }}
@@ -1784,7 +1784,7 @@ export default function AdminArtistsPage() {
           </div>
         )}
 
-        {showAliasDialog && (
+        {showSlugDialog && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
             <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
               <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
@@ -1795,23 +1795,23 @@ export default function AdminArtistsPage() {
               </p>
               <div className="mt-4">
                 <label
-                  htmlFor="alias-input"
+                  htmlFor="slug-input"
                   className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
                 >
                   새 별칭
                 </label>
                 <input
-                  id="alias-input"
+                  id="slug-input"
                   type="text"
-                  value={aliasInput}
+                  value={slugInput}
                   onChange={(e) => {
-                    setAliasInput(e.target.value);
-                    if (aliasError) setAliasError(null);
+                    setSlugInput(e.target.value);
+                    if (slugError) setSlugError(null);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      handleAliasSave();
+                      handleSlugSave();
                     }
                   }}
                   placeholder="yuika"
@@ -1821,9 +1821,9 @@ export default function AdminArtistsPage() {
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                   '@' 없이 입력하세요. 예) yuika
                 </p>
-                {aliasError && (
+                {slugError && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                    {aliasError}
+                    {slugError}
                   </p>
                 )}
               </div>
@@ -1831,8 +1831,8 @@ export default function AdminArtistsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setShowAliasDialog(false);
-                    setAliasError(null);
+                    setShowSlugDialog(false);
+                    setSlugError(null);
                   }}
                   className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
                   style={{ cursor: "pointer" }}
@@ -1841,12 +1841,12 @@ export default function AdminArtistsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={handleAliasSave}
-                  disabled={aliasSaving}
+                  onClick={handleSlugSave}
+                  disabled={slugSaving}
                   className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:disabled:bg-zinc-700"
                   style={{ cursor: "pointer" }}
                 >
-                  {aliasSaving ? "저장 중..." : "저장"}
+                  {slugSaving ? "저장 중..." : "저장"}
                 </button>
               </div>
             </div>

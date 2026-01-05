@@ -173,7 +173,7 @@ export default function YoutubeAdminPage() {
       }
 
       if (normalizedQuery.length > 0) {
-        const haystack = [artist.name, artist.nameKo, artist.alias ?? ""]
+        const haystack = [artist.name, artist.nameKo, artist.slug ?? ""]
           .join(" ")
           .toLowerCase();
 

@@ -28,7 +28,7 @@ type ArtistRow = {
   id: number;
   name: string;
   name_ko: string | null;
-  alias: string | null;
+  slug: string | null;
   song_count: bigint;
 };
 
@@ -43,11 +43,11 @@ async function findArtistsBySongCount() {
         a.id,
         a.name,
         a.name_ko,
-        a.alias,
+        a.slug,
         COUNT(asg.song_id) AS song_count
       FROM artist a
       LEFT JOIN artist_song asg ON a.id = asg.artist_id
-      GROUP BY a.id, a.name, a.name_ko, a.alias
+      GROUP BY a.id, a.name, a.name_ko, a.slug
       HAVING COUNT(asg.song_id) = ${requestedCount}
       ORDER BY a.id ASC
     `;
@@ -62,7 +62,7 @@ async function findArtistsBySongCount() {
       console.log(
         `🎵 ${artist.name} (ID: ${artist.id}) - nameKo: ${
           artist.name_ko ?? "-"
-        }, alias: ${artist.alias ?? "-"}, songs: ${songCount}`,
+        }, slug: ${artist.slug ?? "-"}, songs: ${songCount}`,
       );
     }
 

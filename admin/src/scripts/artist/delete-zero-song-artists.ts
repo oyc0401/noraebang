@@ -29,7 +29,7 @@ async function deleteZeroSongArtists() {
   try {
     const zeroSongArtists = await prisma.artist.findMany({
       where: { artistSongs: { none: {} } },
-      select: { id: true, name: true, nameKo: true, alias: true },
+      select: { id: true, name: true, nameKo: true, slug: true },
       orderBy: { id: "asc" },
     });
 
@@ -42,7 +42,7 @@ async function deleteZeroSongArtists() {
       console.log(
         `🗑️  ${artist.name} (ID: ${artist.id}) - nameKo: ${
           artist.nameKo ?? "-"
-        }, alias: ${artist.alias ?? "-"}`,
+        }, slug: ${artist.slug ?? "-"}`,
       );
     }
 

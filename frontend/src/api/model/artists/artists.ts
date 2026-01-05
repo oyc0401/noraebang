@@ -223,10 +223,10 @@ export function useArtistsControllerFindAllDetails<TData = Awaited<ReturnType<ty
 
 
 /**
- * 숫자는 ID로, 문자열은 alias 로 판단하여 해당 아티스트 정보를 반환합니다.
- * @summary 아티스트 상세 조회 (ID 또는 alias)
+ * 숫자는 ID로, 문자열은 slug 로 판단하여 해당 아티스트 정보를 반환합니다.
+ * @summary 아티스트 상세 조회 (ID 또는 slug)
  */
-export const artistsControllerFindByIdOrAlias = (
+export const artistsControllerFindByIdOrSlug = (
     identifier: string,
  signal?: AbortSignal
 ) => {
@@ -241,69 +241,69 @@ export const artistsControllerFindByIdOrAlias = (
 
 
 
-export const getArtistsControllerFindByIdOrAliasQueryKey = (identifier?: string,) => {
+export const getArtistsControllerFindByIdOrSlugQueryKey = (identifier?: string,) => {
     return [
     `/artists/${identifier}`
     ] as const;
     }
 
     
-export const getArtistsControllerFindByIdOrAliasQueryOptions = <TData = Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError = ErrorResponseDto>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError, TData>>, }
+export const getArtistsControllerFindByIdOrSlugQueryOptions = <TData = Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError = ErrorResponseDto>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getArtistsControllerFindByIdOrAliasQueryKey(identifier);
+  const queryKey =  queryOptions?.queryKey ?? getArtistsControllerFindByIdOrSlugQueryKey(identifier);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>> = ({ signal }) => artistsControllerFindByIdOrAlias(identifier, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>> = ({ signal }) => artistsControllerFindByIdOrSlug(identifier, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(identifier), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(identifier), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ArtistsControllerFindByIdOrAliasQueryResult = NonNullable<Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>>
-export type ArtistsControllerFindByIdOrAliasQueryError = ErrorResponseDto
+export type ArtistsControllerFindByIdOrSlugQueryResult = NonNullable<Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>>
+export type ArtistsControllerFindByIdOrSlugQueryError = ErrorResponseDto
 
 
-export function useArtistsControllerFindByIdOrAlias<TData = Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError = ErrorResponseDto>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError, TData>> & Pick<
+export function useArtistsControllerFindByIdOrSlug<TData = Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError = ErrorResponseDto>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>,
+          Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>,
           TError,
-          Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>
+          Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtistsControllerFindByIdOrAlias<TData = Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError = ErrorResponseDto>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError, TData>> & Pick<
+export function useArtistsControllerFindByIdOrSlug<TData = Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError = ErrorResponseDto>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>,
+          Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>,
           TError,
-          Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>
+          Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtistsControllerFindByIdOrAlias<TData = Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError = ErrorResponseDto>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError, TData>>, }
+export function useArtistsControllerFindByIdOrSlug<TData = Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError = ErrorResponseDto>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 아티스트 상세 조회 (ID 또는 alias)
+ * @summary 아티스트 상세 조회 (ID 또는 slug)
  */
 
-export function useArtistsControllerFindByIdOrAlias<TData = Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError = ErrorResponseDto>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrAlias>>, TError, TData>>, }
+export function useArtistsControllerFindByIdOrSlug<TData = Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError = ErrorResponseDto>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindByIdOrSlug>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getArtistsControllerFindByIdOrAliasQueryOptions(identifier,options)
+  const queryOptions = getArtistsControllerFindByIdOrSlugQueryOptions(identifier,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

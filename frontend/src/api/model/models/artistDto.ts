@@ -10,7 +10,7 @@ export interface ArtistDto {
   id: number;
   name: string;
   nameKo: string;
-  alias?: string;
+  slug?: string;
   /** 아티스트의 대표 카탈로그 */
   homeCatalog?: string;
   thumbnailDefault?: string;

@@ -1534,7 +1534,7 @@ export default function AdminSongPage() {
                           </p>
                           <p className="text-sm text-zinc-500 dark:text-zinc-400">
                             {artist.name}
-                            {artist.alias ? ` · @${artist.alias}` : ""}
+                            {artist.slug ? ` · @${artist.slug}` : ""}
                           </p>
                         </div>
                         <button
