@@ -47,14 +47,6 @@ export class ArtistDto {
   tjSongRequestUrl?: string;
 }
 
-export class ArtistSlugGroupDto {
-  @ApiProperty({ example: "tayori-islet" })
-  groupId: string;
-
-  @ApiProperty({ example: ["tayori", "islet"], type: [String] })
-  slugs: string[];
-}
-
 export class ArtistDetailsDto {
   @ApiProperty({ example: 1 })
   id: number;
@@ -102,9 +94,6 @@ export class ArtistDetailsDto {
     description: "TJ 노래방 곡 추가 요청 URL",
   })
   tjSongRequestUrl?: string;
-
-  @ApiProperty({ type: ArtistSlugGroupDto, required: false })
-  slugGroup?: ArtistSlugGroupDto;
 
   @ApiProperty({ type: YoutubeInfoDto, required: false })
   youtube?: YoutubeInfoDto;

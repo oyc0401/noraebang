@@ -7,7 +7,6 @@
  */
 
 export * from './apiResponseMeta';
-export * from './artistSlugGroupDto';
 export * from './artistDetailResponseDto';
 export * from './artistDetailsDto';
 export * from './artistDetailsListResponseDto';

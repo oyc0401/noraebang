@@ -5,13 +5,13 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-import type { ArtistSlugGroupDto } from './artistSlugGroupDto';
 import type { YoutubeInfoDto } from './youtubeInfoDto';
 
 export interface ArtistDetailsDto {
   id: number;
   name: string;
   nameKo: string;
+  /** 아티스트 슬러그 */
   slug?: string;
   /** 아티스트의 대표 카탈로그 */
   homeCatalog?: string;
@@ -21,6 +21,5 @@ export interface ArtistDetailsDto {
   songCount: number;
   /** TJ 노래방 곡 추가 요청 URL */
   tjSongRequestUrl?: string;
-  slugGroup?: ArtistSlugGroupDto;
   youtube?: YoutubeInfoDto;
 }

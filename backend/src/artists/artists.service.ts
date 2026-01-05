@@ -1,9 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
-import {
-  ARTIST_SLUG_GROUPS,
-  getArtistSlugs,
-} from "../config/artist-slug-groups";
 import { ArtistDetailsDto, ArtistDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -196,24 +192,6 @@ export class ArtistsService {
     });
 
     const mappedArtists = artists.map((artist) => {
-      let slugGroup: { groupId: string; slugs: string[] } | undefined;
-
-      const artistSlug = artist.slug;
-      if (artistSlug) {
-        const slugs = getArtistSlugs(artistSlug);
-        if (slugs.length > 1) {
-          const group = ARTIST_SLUG_GROUPS.find((item) =>
-            item.slugs.includes(artistSlug),
-          );
-          if (group) {
-            slugGroup = {
-              groupId: group.groupId,
-              slugs,
-            };
-          }
-        }
-      }
-
       const mainChannel =
         artist.youtubeChannels.find((ch) => ch.type === "MAIN") ??
         artist.youtubeChannels.find((ch) => ch.type === "TOPIC");
@@ -228,7 +206,6 @@ export class ArtistsService {
         thumbnailMedium: artist.thumbnailMedium ?? undefined,
         thumbnailHigh: artist.thumbnailHigh ?? undefined,
         songCount: artist._count.artistSongs,
-        slugGroup,
         youtube: mainChannel
           ? {
               channelId: mainChannel.channelId,
