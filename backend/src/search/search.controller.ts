@@ -15,6 +15,8 @@ import { ErrorResponseDto } from "../dto";
 import { ApiResponse } from "../dto/api-response.dto";
 import { fetchYoutubeOembed } from "../thirdparty/youtube/oembed.js";
 import { SearchResponseDto } from "./dto/search-response.dto";
+import { SearchSuggestionsQueryDto } from "./dto/search-suggestions-query.dto";
+import { SearchSuggestionsResponseDto } from "./dto/search-suggestions-response.dto";
 import { YoutubeSongSearchResponseDto } from "./dto/youtube-song-search-response.dto";
 import { SearchService } from "./search.service";
 
@@ -83,6 +85,35 @@ export class SearchController {
         limit: limitNumber,
         hasMore: pageNumber * limitNumber < total,
       },
+    };
+  }
+
+  @Get("suggestions")
+  @ApiOperation({
+    summary: "검색 추천어 조회",
+    description: "검색 중 노출될 추천 검색어와 추천 아티스트/곡을 반환합니다.",
+  })
+  @ApiQuery({ name: "query", description: "검색어" })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "추천 검색어 결과",
+    type: SearchSuggestionsResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 400,
+    description: "검색어 필요",
+    type: ErrorResponseDto,
+  })
+  async getSearchSuggestions(
+    @Query() queryDto: SearchSuggestionsQueryDto,
+  ): Promise<SearchSuggestionsResponseDto> {
+    const { query } = queryDto;
+
+    return {
+      data: {
+        cards: [],
+      },
+      message: "추천 검색어 조회 성공",
     };
   }
 
