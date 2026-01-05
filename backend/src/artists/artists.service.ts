@@ -39,9 +39,10 @@ export class ArtistsService {
     limit: number = 20,
   ): Promise<{ artists: ArtistDto[]; total: number }> {
     const skip = (page - 1) * limit;
+    const slugFilter: Prisma.ArtistWhereInput = { slug: { not: null } };
 
     // 전체 개수 조회
-    const total = await this.prisma.artist.count();
+    const total = await this.prisma.artist.count({ where: slugFilter });
 
     // 구독자순 정렬의 경우 전체를 가져와서 정렬 후 페이지네이션
     const isSubscriberSort =
@@ -71,6 +72,7 @@ export class ArtistsService {
           take: 1,
         },
       },
+      where: slugFilter,
       orderBy: ARTIST_SORT_ORDER_MAP[sort],
       // 구독자순 정렬이면 전체 가져오기, 아니면 페이지네이션 적용
       ...(isSubscriberSort ? {} : { take: limit, skip }),
@@ -148,9 +150,10 @@ export class ArtistsService {
     limit: number = 20,
   ): Promise<{ artists: ArtistDetailsDto[]; total: number }> {
     const skip = (page - 1) * limit;
+    const slugFilter: Prisma.ArtistWhereInput = { slug: { not: null } };
 
     // 전체 개수 조회
-    const total = await this.prisma.artist.count();
+    const total = await this.prisma.artist.count({ where: slugFilter });
 
     // 구독자순 정렬의 경우 전체를 가져와서 정렬 후 페이지네이션
     const isSubscriberSort =
@@ -186,6 +189,7 @@ export class ArtistsService {
           },
         },
       },
+      where: slugFilter,
       orderBy: ARTIST_SORT_ORDER_MAP[sort],
       // 구독자순 정렬이면 전체 가져오기, 아니면 페이지네이션 적용
       ...(isSubscriberSort ? {} : { take: limit, skip }),
@@ -341,17 +345,11 @@ export class ArtistsService {
   }
 
   /**
-   * ID 또는 slug로 아티스트 상세 조회 (YouTube 정보 포함)
-   * - 숫자면 ID로 조회
-   * - 문자열이면 slug로 조회
+   * slug로 아티스트 상세 조회 (YouTube 정보 포함)
    */
-  async findByIdOrSlug(identifier: string): Promise<ArtistDetailsDto | null> {
-    // 숫자인지 체크
-    const parsedId = parseInt(identifier, 10);
-    const isId = !Number.isNaN(parsedId) && parsedId.toString() === identifier;
-
+  async findByIdOrSlug(slug: string): Promise<ArtistDetailsDto | null> {
     const artist = await this.prisma.artist.findUnique({
-      where: isId ? { id: parsedId } : { slug: identifier },
+      where: { slug },
       select: {
         id: true,
         name: true,
