@@ -5,7 +5,6 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { SearchModule } from "./search/search.module";
 import { SongsModule } from "./songs/songs.module";
 import { TypesenseModule } from "./typesense/typesense.module";
-import { YoutubeModule } from "./youtube/youtube.module";
 
 @Module({
   imports: [
@@ -17,7 +16,6 @@ import { YoutubeModule } from "./youtube/youtube.module";
     SearchModule,
     ArtistsModule,
     SongsModule,
-    YoutubeModule,
   ],
   controllers: [],
   providers: [],
