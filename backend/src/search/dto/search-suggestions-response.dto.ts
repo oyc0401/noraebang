@@ -1,15 +1,14 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export type SearchSuggestionCardType =
   | "query"
   | "artist"
   | "song"
-  | "recentQuery"
   | "playlist";
 
 export class SearchSuggestionCardDto {
   @ApiProperty({
-    enum: ["query", "recentQuery","artist", "song",  "playlist"],
+    enum: ["query", "artist", "song",  "playlist"],
     description: "카드 타입",
     example: "query",
   })
@@ -27,13 +26,6 @@ export class SearchSuggestionCardDto {
     example: 42,
   })
   id?: number;
-
-  @ApiProperty({
-    description: "리소스를 구분하기 위한 복합 ID (예: type:id)",
-    required: false,
-    example: "artist:42",
-  })
-  resourceId?: string;
 
   @ApiProperty({
     description: "보조 텍스트 (있을 경우)",
@@ -56,6 +48,13 @@ export class SearchSuggestionCardDto {
   })
   slug?: string;
 
+  @ApiPropertyOptional({
+    enum: ["recent", "suggested"],
+    example: "recent",
+    description: "type=query일 때만 사용",
+  })
+  source?: "recent" | "suggested"
+
 }
 
 class SearchSuggestionsDataDto {
@@ -66,10 +65,12 @@ class SearchSuggestionsDataDto {
       {
         type: "query",
         title: "아이유",
+        source: "suggested"
       },
       {
-        type: "recentQuery",
+        type: "query",
         title: "아이유 콘서트 일정",
+        source: "recent" ,
       },
       {
         type: "artist",
