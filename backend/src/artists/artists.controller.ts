@@ -173,11 +173,11 @@ export class ArtistsController {
     description: "서버 오류",
     type: ErrorResponseDto,
   })
-  async findByIdOrSlug(
+  async findBySlug(
     @Param("slug") slug: string,
   ): Promise<ArtistDetailResponseDto> {
     const artist: ArtistDetailsDto | null =
-      await this.artistsService.findByIdOrSlug(slug);
+      await this.artistsService.findBySlug(slug);
     if (!artist) {
       throw new NotFoundException("Artist not found");
     }
