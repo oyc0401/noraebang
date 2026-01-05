@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import { Provider } from "@prisma/client";
-import { getArtistSlugs } from "../config/artist-slug-groups";
 import { KaraokeSongDto, SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -155,18 +154,7 @@ export class SongsService {
 
     let targetArtistIds: number[] = [artistId];
 
-    // 2. slug가 있고 그룹에 속한 경우, 모든 슬러그의 아티스트 ID 가져오기
-    if (artist?.slug) {
-      const allSlugs = getArtistSlugs(artist.slug);
-      if (allSlugs.length > 1) {
-        const slugArtists = await this.prisma.artist.findMany({
-          where: { slug: { in: allSlugs } },
-          select: { id: true },
-          orderBy: { id: "asc" },
-        });
-        targetArtistIds = slugArtists.map((a) => a.id);
-      }
-    }
+    // slug는 한 개만 허용하므로 추가 매핑 없음
 
     const skip = (page - 1) * limit;
 

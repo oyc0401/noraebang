@@ -72,17 +72,16 @@ export async function getArtists(sort: SortOption = DEFAULT_SORT, take = 100, cu
   const filtered = useSearch ? artists : hasMore ? artists.slice(0, take) : artists
   return {
     artists: filtered.map(a => ({
-    id: a.id,
-    name: a.name,
-    nameKo: a.nameKo,
-    slug: a.slug ?? undefined,
-    homeCatalog: a.homeCatalog ?? undefined,
-    thumbnailDefault: a.thumbnailDefault ?? undefined,
-    thumbnailMedium: a.thumbnailMedium ?? undefined,
-    thumbnailHigh: a.thumbnailHigh ?? undefined,
-    songCount: a._count.artistSongs,
-    slugGroup: undefined
-  })),
+      id: a.id,
+      name: a.name,
+      nameKo: a.nameKo,
+      slug: a.slug ?? undefined,
+      homeCatalog: a.homeCatalog ?? undefined,
+      thumbnailDefault: a.thumbnailDefault ?? undefined,
+      thumbnailMedium: a.thumbnailMedium ?? undefined,
+      thumbnailHigh: a.thumbnailHigh ?? undefined,
+      songCount: a._count.artistSongs
+    })),
     hasMore,
     nextCursor: hasMore ? filtered[filtered.length - 1].id : undefined
   }
@@ -109,8 +108,7 @@ export async function getArtistById(artistId: number) {
     thumbnailDefault: artist.thumbnailDefault ?? undefined,
     thumbnailMedium: artist.thumbnailMedium ?? undefined,
     thumbnailHigh: artist.thumbnailHigh ?? undefined,
-    songCount: artist._count.artistSongs,
-    slugGroup: undefined
+    songCount: artist._count.artistSongs
   }
 }
 
