@@ -306,48 +306,10 @@ export class ArtistsService {
     };
   }
 
-  async findBySlug(slug: string): Promise<ArtistDto | null> {
-    const artist = await this.prisma.artist.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        name: true,
-        nameKo: true,
-        slug: true,
-        homeCatalog: true,
-        thumbnailDefault: true,
-        thumbnailMedium: true,
-        thumbnailHigh: true,
-        tjSongRequestUrl: true,
-      },
-    });
-
-    if (!artist) return null;
-
-    return {
-      id: artist.id,
-      name: artist.name,
-      nameKo: artist.nameKo,
-      slug: artist.slug ?? undefined,
-      homeCatalog: artist.homeCatalog ?? undefined,
-      thumbnailDefault: artist.thumbnailDefault ?? undefined,
-      thumbnailMedium: artist.thumbnailMedium ?? undefined,
-      thumbnailHigh: artist.thumbnailHigh ?? undefined,
-      tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
-    };
-  }
-
-  async findBySlugs(slugs: string[]) {
-    return this.prisma.artist.findMany({
-      where: { slug: { in: slugs } },
-      orderBy: { id: "asc" },
-    });
-  }
-
   /**
    * slug로 아티스트 상세 조회 (YouTube 정보 포함)
    */
-  async findByIdOrSlug(slug: string): Promise<ArtistDetailsDto | null> {
+  async findBySlug(slug: string): Promise<ArtistDetailsDto | null> {
     const artist = await this.prisma.artist.findUnique({
       where: { slug },
       select: {
