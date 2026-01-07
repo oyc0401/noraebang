@@ -142,27 +142,42 @@ export function LinkPasteCard() {
         )}
 
         {/* 하단: 아이콘과 버튼 (항상 표시) */}
-        <div className="flex items-end justify-between mt-2">
+        <div className="flex items-end justify-between mt-3">
           <div className="flex items-center">
-            <div className="  flex items-center justify-center pr-2">
+            <a
+              href="https://music.youtube.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center pr-2 hover:opacity-80 transition-opacity active:scale-95"
+            >
               <Image
                 src={YoutubeMusicIcon}
                 alt="YouTube Music"
                 width={44}
                 height={44}
               />
-            </div>
-            <div className=" flex items-center justify-center  pr-2">
+            </a>
+            <a
+              href="https://open.spotify.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center pr-2 hover:opacity-80 transition-opacity active:scale-95"
+            >
               <Image src={SpotifyIcon} alt="Spotify" width={44} height={44} />
-            </div>
-            <div className=" flex items-center justify-center">
+            </a>
+            <a
+              href="https://music.apple.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
+            >
               <Image
                 src={AppleMusicIcon}
                 alt="Apple Music"
                 width={44}
                 height={44}
               />
-            </div>
+            </a>
           </div>
           <button
             type="button"
