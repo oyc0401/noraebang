@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useSearchStore } from "@/store/searchStore";
-import { SearchBar } from "@/components/home/SearchBar";
 import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/search";
+import { SearchBar } from "@/components/home/SearchBar";
 
 export function SearchOverlay() {
   const router = useRouter();
@@ -31,6 +31,7 @@ export function SearchOverlay() {
     <div className="min-h-screen bg-background-dark flex flex-col">
       <header className="flex items-center gap-2 p-4 pt-12 pb-4 sticky top-0 z-20 bg-background-dark backdrop-blur-md transition-colors">
         <button
+          type="button"
           onClick={clearSearch}
           className="text-gray-400 hover:text-white transition-colors"
         >
@@ -48,15 +49,14 @@ export function SearchOverlay() {
           <div className="space-y-2">
             {suggestions.data.map((item, index) => (
               <button
+                type="button"
                 key={index}
                 onClick={() => handleSelect(item)}
                 className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left"
               >
                 {item.type === "artist" && item.artist && (
                   <div>
-                    <div className="text-xs text-gray-400 mb-1">
-                      아티스트
-                    </div>
+                    <div className="text-xs text-gray-400 mb-1">아티스트</div>
                     <div className="font-semibold text-white">
                       {item.artist.nameKo}
                     </div>
@@ -67,9 +67,7 @@ export function SearchOverlay() {
                 )}
                 {item.type === "song" && item.song && (
                   <div>
-                    <div className="text-xs text-gray-400 mb-1">
-                      곡
-                    </div>
+                    <div className="text-xs text-gray-400 mb-1">곡</div>
                     <div className="font-semibold text-white">
                       {item.song.titleKo || item.song.title}
                     </div>

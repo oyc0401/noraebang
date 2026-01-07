@@ -15,15 +15,11 @@ const config: Config = {
         "background-dark": "#1c1022",
         "surface-dark": "#2a1b32",
         "surface-light": "#ffffff",
+        "surface-border": "#302437",
+        "surface-text": "#8A8F9C",
       },
       fontFamily: {
         display: ["'Be Vietnam Pro'", "'Noto Sans KR'", "sans-serif"],
-      },
-      borderRadius: {
-        DEFAULT: "1rem",
-        lg: "2rem",
-        xl: "3rem",
-        full: "9999px",
       },
     },
   },

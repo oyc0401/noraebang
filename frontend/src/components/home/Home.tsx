@@ -5,7 +5,7 @@ import { LinkPasteCard } from "@/components/home/LinkPasteCard";
 import { PopularSongs } from "@/components/home/PopularSongs";
 import { RecentlyPlayed } from "@/components/home/RecentlyPlayed";
 import { RecentlyReleased } from "@/components/home/RecentlyReleased";
-import { SearchBar } from "@/components/home/SearchBar";
+import { HomeSearchBar } from "@/components/home/HomeSearchBar";
 
 export function Home() {
   return (
@@ -19,19 +19,19 @@ export function Home() {
             <span className="text-primary">부르시겠어요?</span>
           </h1>
         </div>
-        <div className="px-5 py-2">
-          <SearchBar />
+        <div className="px-4 py-2">
+          <HomeSearchBar />
         </div>
-        <div className="px-5 pt-4 pb-6">
+        <div className="px-4 py-4">
           <LinkPasteCard />
         </div>
         <div className="w-full mb-6">
           <RecentlyPlayed />
         </div>
-        <div className="w-full px-5 mb-2">
+        <div className="w-full px-4 mb-2">
           <RecentlyReleased />
         </div>
-        <div className="w-full px-5 py-4 mb-8">
+        <div className="w-full px-4 py-4 mb-8">
           <PopularSongs />
         </div>
       </main>

@@ -197,7 +197,6 @@ export class OembedDataDto {
 )} />
 ```
 
----
 
 ## 8. Exceptions (예외)
 
@@ -207,11 +206,6 @@ export class OembedDataDto {
   * **이유:** (왜 필요한지)
   * **범위:** (어느 파일/레이어까지 허용인지)
   * **대체안:** (장기적으로 제거할 방법)
-
----
-
-원하시면 이 문서를 그대로 **`STYLEGUIDE.md` 형태로 저장하기 좋은 포맷**(링크 가능한 목차/체크리스트/PR 템플릿 포함)으로 한 번 더 다듬어드리겠습니다.
-
 
 
 # 아키텍쳐 규칙 (필수)
@@ -282,10 +276,14 @@ export class OembedDataDto {
 
 백엔드는 NestJS로 구현되어 있으며, 모든 API는 `http://localhost:3001`에서 제공됩니다.
 
-#### 블로그 크롤링 참고사항
 
-- 노래방 번호가 `-`인 경우 해당 필드는 포함되지 않습니다
-- 광고나 불필요한 행은 자동으로 필터링됩니다
+# 디자인 규칙
+
+- 아이콘: lucide 사용
+
+
+
+
 
 # 기술스택
 
@@ -298,6 +296,7 @@ nest.js
 - tailwind + cn()
 - Zustand
 - React-hook-form + Zod
+
 
 
 ### 포맷팅&문서
