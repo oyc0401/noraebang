@@ -16,6 +16,8 @@ export interface SearchSuggestionSongDto {
   titleKo?: string;
   /** 곡의 대표 아티스트명 */
   artistName: string;
+  /** 곡의 대표 아티스트 slug */
+  artistSlug?: string;
   /** 노래방 곡 정보 목록 */
   karaokeSongs?: KaraokeSongDto[];
   /** 곡 썸네일 */

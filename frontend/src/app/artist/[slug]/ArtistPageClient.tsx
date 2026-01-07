@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ArtistDetailsDto, SongDto } from "@/api/model/models";
+import { CircleThumbnail } from "@/components/common/CircleThumbnail";
+import { SongCard } from "@/components/song/SongCard";
+import { Youtube, Music, MicVocal } from "lucide-react";
 
 interface ArtistPageClientProps {
   artist: ArtistDetailsDto;
@@ -17,13 +20,11 @@ export default function ArtistPageClient({
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [songs] = useState<SongDto[]>(initialSongs);
 
-  // Handle hash navigation on mount
   useEffect(() => {
-    const hash = window.location.hash;
+    const hash = window.location.hash.replace("#", "");
     if (hash) {
-      const songId = hash.replace("#", "");
-      setSelectedSongId(songId);
-      const element = document.getElementById(songId);
+      setSelectedSongId(hash);
+      const element = document.getElementById(hash);
       if (element) {
         setTimeout(() => {
           element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -32,7 +33,6 @@ export default function ArtistPageClient({
     }
   }, []);
 
-  // Filter songs based on search query
   const filteredSongs = searchQuery.trim()
     ? songs.filter(
         (song) =>
@@ -44,27 +44,66 @@ export default function ArtistPageClient({
     : songs;
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      <div className="mx-auto max-w-4xl px-4 py-12">
-        <div className="mb-8">
+    <div className="min-h-screen">
+      <header className="bg-gradient-to-b from-zinc-900 to-black px-4 pt-8 pb-12">
+        <div className="max-w-5xl mx-auto">
           <Link
             href="/"
-            className="inline-flex items-center text-sm text-zinc-400 hover:text-zinc-50 transition-colors"
+            className="text-zinc-400 hover:text-white mb-6 inline-block"
           >
-            ← 아티스트 목록으로
+            ← 홈으로
           </Link>
+
+          <div className="flex flex-col sm:flex-row items-center gap-6 mt-4">
+            <CircleThumbnail
+              src={artist.thumbnailMedium || artist.thumbnailDefault}
+              alt={artist.nameKo}
+              size="w-32 h-32"
+            />
+            <div className="text-center sm:text-left">
+              <h1 className="text-4xl font-bold text-white mb-2">
+                {artist.nameKo}
+              </h1>
+              <p className="text-xl text-zinc-400">{artist.name}</p>
+              <div className="flex items-center gap-4 mt-3 text-zinc-400 justify-center sm:justify-start">
+                {artist.songCount !== undefined && artist.songCount !== null && (
+                  <span className="flex items-center gap-1.5">
+                    <Music size={14} />
+                    <span>곡 {artist.songCount}개</span>
+                  </span>
+                )}
+                <div className="flex gap-3">
+                  {artist.youtube?.channelId && (
+                    <a
+                      href={`https://youtube.com/channel/${artist.youtube.channelId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 hover:text-red-500"
+                      aria-label="YouTube channel"
+                    >
+                      <Youtube size={18} />
+                    </a>
+                  )}
+                  {artist.tjSongRequestUrl && (
+                    <a
+                      href={artist.tjSongRequestUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 hover:text-blue-500"
+                      aria-label="TJ Karaoke song request"
+                    >
+                      <MicVocal size={18} />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </header>
 
-        <header className="mb-12">
-          <h1 className="mb-2 text-4xl font-bold text-zinc-50">
-            {artist.name}
-          </h1>
-          <p className="text-xl text-zinc-400">
-            {artist.nameKo}
-          </p>
-        </header>
-
-        <div className="mb-8 space-y-4">
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        <div className="mb-6">
           <input
             type="text"
             placeholder="곡명으로 검색..."
@@ -72,154 +111,37 @@ export default function ArtistPageClient({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-500/30"
           />
-          <div className="flex flex-wrap gap-3">
-            {artist.youtube && (
-              <a
-                href={`https://www.youtube.com/channel/${artist.youtube.channelId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-xl border border-red-900 bg-gradient-to-br from-red-950 to-red-900 px-5 py-2.5 text-sm font-semibold text-red-300 shadow-sm transition-all hover:border-red-800 hover:shadow-md active:scale-[0.98]"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-4 w-4"
-                  role="img"
-                  aria-label="YouTube"
-                >
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                </svg>
-                유튜브 채널
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="h-3.5 w-3.5 opacity-50 transition-opacity group-hover:opacity-100"
-                  role="img"
-                  aria-label="External link"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-                  />
-                </svg>
-              </a>
-            )}
-            {artist.tjSongRequestUrl && (
-              <a
-                href={artist.tjSongRequestUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-xl border border-blue-900 bg-gradient-to-br from-blue-950 to-blue-900 px-5 py-2.5 text-sm font-semibold text-blue-300 shadow-sm transition-all hover:border-blue-800 hover:shadow-md active:scale-[0.98]"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  stroke="currentColor"
-                  className="h-4 w-4 transition-transform group-hover:rotate-90"
-                  role="img"
-                  aria-label="Plus"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 4.5v15m7.5-7.5h-15"
-                  />
-                </svg>
-                노래 추가하기
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="h-3.5 w-3.5 opacity-50 transition-opacity group-hover:opacity-100"
-                  role="img"
-                  aria-label="External link"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-                  />
-                </svg>
-              </a>
-            )}
-          </div>
         </div>
 
-        <div className="space-y-4">
-          {filteredSongs.length === 0 ? (
-            <div className="text-center text-zinc-400">
-              검색 결과가 없습니다
-            </div>
-          ) : (
-            filteredSongs.map((song) => {
-              const isSelected = selectedSongId === song.id.toString();
-
-              return (
-                <button
-                  type="button"
-                  key={song.id}
-                  id={song.id.toString()}
-                  onClick={(e) => {
-                    e.preventDefault();
+        {filteredSongs.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-zinc-400 text-lg">검색 결과가 없습니다.</p>
+            <p className="text-zinc-500 mt-2">
+              다른 검색어를 입력해 보세요.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredSongs.map((song) => (
+              <div
+                key={song.id}
+                id={song.id.toString()}
+                className="scroll-mt-4"
+              >
+                <SongCard
+                  song={song}
+                  isSelected={selectedSongId === song.id.toString()}
+                  onClick={() => {
                     const newHash = `#${song.id}`;
                     window.history.replaceState(null, "", newHash);
                     setSelectedSongId(song.id.toString());
                   }}
-                  className={`w-full text-left rounded-lg border p-6 shadow-sm transition-all scroll-mt-8 cursor-pointer ${
-                    isSelected
-                      ? "border-blue-400 bg-blue-950 shadow-lg ring-2 ring-blue-400 ring-opacity-50"
-                      : "border-zinc-800 bg-zinc-900 hover:border-zinc-700 hover:shadow-md"
-                  }`}
-                >
-                  <div className="mb-4">
-                    <h2 className="text-xl font-semibold text-zinc-50">
-                      {song.title}
-                    </h2>
-                    {song.titleKo && (
-                      <p className="mt-1 text-zinc-400">
-                        {song.titleKo}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {song.karaokeSongs?.map((karaoke) => (
-                      <div
-                        key={`${karaoke.provider}-${karaoke.karaokeNo}`}
-                        className="inline-flex items-center gap-2 rounded-full bg-zinc-800 px-3 py-1 text-sm"
-                      >
-                        <span
-                          className={`font-semibold ${
-                            karaoke.provider === "TJ"
-                              ? "text-blue-400"
-                              : karaoke.provider === "KY"
-                                ? "text-green-400"
-                                : "text-purple-400"
-                          }`}
-                        >
-                          {karaoke.provider}
-                        </span>
-                        <span className="text-zinc-300">
-                          {karaoke.karaokeNo}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </button>
-              );
-            })
-          )}
-        </div>
-      </div>
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 }
