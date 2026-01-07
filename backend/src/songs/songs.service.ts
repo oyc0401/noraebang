@@ -12,7 +12,11 @@ type SongWithRelations = {
   thumbnailMedium: string | null;
   thumbnailHigh: string | null;
   karaokeSongs: { provider: Provider; karaokeNo: string }[];
-  artistSongs: { artistId: number; role: string | null }[];
+  artistSongs: {
+    artistId: number;
+    role: string | null;
+    artist: { name: string; nameKo: string; slug: string | null };
+  }[];
 };
 
 type TjSongMap = Record<string, { title: string; artist: string | null }>;
@@ -39,6 +43,13 @@ export class SongsService {
       select: {
         artistId: true,
         role: true,
+        artist: {
+          select: {
+            name: true,
+            nameKo: true,
+            slug: true,
+          },
+        },
       },
     },
   };
@@ -76,7 +87,10 @@ export class SongsService {
       catalog: song.catalog ?? undefined,
       artists: song.artistSongs.map((as) => ({
         artistId: as.artistId,
+        name: as.artist.name,
+        nameKo: as.artist.nameKo,
         role: as.role ?? undefined,
+        slug: as.artist.slug ?? undefined,
       })),
       karaokeSongs: song.karaokeSongs.map((karaokeSong) => {
         const dto: KaraokeSongDto = {

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SearchResultDto } from "@/api/model";
+import type { SearchResultDto } from "@/api/model/models";
 
 interface SearchState {
   query: string;
