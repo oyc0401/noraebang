@@ -5,6 +5,7 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
+import { Provider } from "@prisma/client";
 import { ErrorResponseDto } from "../dto";
 import { fetchYoutubeOembed } from "../thirdparty/youtube/oembed.js";
 import { SearchResponseDto } from "./dto/search-response.dto";
@@ -102,7 +103,67 @@ export class SearchController {
   ): Promise<SearchSuggestionsResponseDto> {
     return {
       data: {
-        cards: [],
+        cards: [
+          // 최근 검색어 2개
+          {
+            suggestion: {
+              title: "요아소비",
+              source: "recent",
+            },
+          },
+          {
+            suggestion: {
+              title: "아이유",
+              source: "recent",
+            },
+          },
+          // 추천 검색어 3개
+          {
+            suggestion: {
+              title: "뉴진스",
+              source: "trending",
+            },
+          },
+          {
+            suggestion: {
+              title: "아이브",
+              source: "trending",
+            },
+          },
+          {
+            suggestion: {
+              title: "세븐틴",
+              source: "popular",
+            },
+          },
+          // 곡 1개
+          {
+            song: {
+              id: 1,
+              title: "夜に駆ける",
+              titleKo: "밤을 달리다",
+              artistName: "YOASOBI",
+              artistSlug: "yoasobi",
+              karaokeSongs: [
+                {
+                  provider: Provider.TJ,
+                  karaokeNo: "12345",
+                },
+              ],
+              thumbnail: "https://i.ytimg.com/vi/x8VYWazR5mE/default.jpg",
+            },
+          },
+          // 아티스트 1개
+          {
+            artist: {
+              id: 15509,
+              slug: "yoasobi",
+              title: "YOASOBI",
+              titleKo: "요아소비",
+              thumbnail: "https://yt3.googleusercontent.com/yoasobi.jpg",
+            },
+          },
+        ],
       },
       message: "추천 검색어 조회 성공",
     };

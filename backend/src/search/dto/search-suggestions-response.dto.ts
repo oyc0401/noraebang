@@ -63,6 +63,13 @@ export class SearchSuggestionSongDto {
   artistName: string;
 
   @ApiProperty({
+    description: "곡의 대표 아티스트 slug",
+    example: "yoasobi",
+    required: false,
+  })
+  artistSlug?: string;
+
+  @ApiProperty({
     type: [KaraokeSongDto],
     required: false,
     description: "노래방 곡 정보 목록"
