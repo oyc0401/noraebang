@@ -44,22 +44,22 @@ export default function ArtistPageClient({
     : songs;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-950">
       <div className="mx-auto max-w-4xl px-4 py-12">
         <div className="mb-8">
           <Link
             href="/"
-            className="inline-flex items-center text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+            className="inline-flex items-center text-sm text-zinc-400 hover:text-zinc-50 transition-colors"
           >
             ← 아티스트 목록으로
           </Link>
         </div>
 
         <header className="mb-12">
-          <h1 className="mb-2 text-4xl font-bold text-zinc-900 dark:text-zinc-50">
+          <h1 className="mb-2 text-4xl font-bold text-zinc-50">
             {artist.name}
           </h1>
-          <p className="text-xl text-zinc-600 dark:text-zinc-400">
+          <p className="text-xl text-zinc-400">
             {artist.nameKo}
           </p>
         </header>
@@ -70,7 +70,7 @@ export default function ArtistPageClient({
             placeholder="곡명으로 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:border-zinc-400"
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-500/30"
           />
           <div className="flex flex-wrap gap-3">
             {artist.youtube && (
@@ -78,7 +78,7 @@ export default function ArtistPageClient({
                 href={`https://www.youtube.com/channel/${artist.youtube.channelId}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-red-100 px-5 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition-all hover:border-red-300 hover:shadow-md active:scale-[0.98] dark:border-red-900 dark:from-red-950 dark:to-red-900 dark:text-red-300 dark:hover:border-red-800"
+                className="group inline-flex items-center gap-2 rounded-xl border border-red-900 bg-gradient-to-br from-red-950 to-red-900 px-5 py-2.5 text-sm font-semibold text-red-300 shadow-sm transition-all hover:border-red-800 hover:shadow-md active:scale-[0.98]"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -114,7 +114,7 @@ export default function ArtistPageClient({
                 href={artist.tjSongRequestUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 px-5 py-2.5 text-sm font-semibold text-blue-700 shadow-sm transition-all hover:border-blue-300 hover:shadow-md active:scale-[0.98] dark:border-blue-900 dark:from-blue-950 dark:to-blue-900 dark:text-blue-300 dark:hover:border-blue-800"
+                className="group inline-flex items-center gap-2 rounded-xl border border-blue-900 bg-gradient-to-br from-blue-950 to-blue-900 px-5 py-2.5 text-sm font-semibold text-blue-300 shadow-sm transition-all hover:border-blue-800 hover:shadow-md active:scale-[0.98]"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -156,7 +156,7 @@ export default function ArtistPageClient({
 
         <div className="space-y-4">
           {filteredSongs.length === 0 ? (
-            <div className="text-center text-zinc-600 dark:text-zinc-400">
+            <div className="text-center text-zinc-400">
               검색 결과가 없습니다
             </div>
           ) : (
@@ -176,16 +176,16 @@ export default function ArtistPageClient({
                   }}
                   className={`w-full text-left rounded-lg border p-6 shadow-sm transition-all scroll-mt-8 cursor-pointer ${
                     isSelected
-                      ? "border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-500 ring-opacity-50 dark:border-blue-400 dark:bg-blue-950 dark:ring-blue-400"
-                      : "border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+                      ? "border-blue-400 bg-blue-950 shadow-lg ring-2 ring-blue-400 ring-opacity-50"
+                      : "border-zinc-800 bg-zinc-900 hover:border-zinc-700 hover:shadow-md"
                   }`}
                 >
                   <div className="mb-4">
-                    <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+                    <h2 className="text-xl font-semibold text-zinc-50">
                       {song.title}
                     </h2>
                     {song.titleKo && (
-                      <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+                      <p className="mt-1 text-zinc-400">
                         {song.titleKo}
                       </p>
                     )}
@@ -195,20 +195,20 @@ export default function ArtistPageClient({
                     {song.karaokeSongs?.map((karaoke) => (
                       <div
                         key={`${karaoke.provider}-${karaoke.karaokeNo}`}
-                        className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-sm dark:bg-zinc-800"
+                        className="inline-flex items-center gap-2 rounded-full bg-zinc-800 px-3 py-1 text-sm"
                       >
                         <span
                           className={`font-semibold ${
                             karaoke.provider === "TJ"
-                              ? "text-blue-600 dark:text-blue-400"
+                              ? "text-blue-400"
                               : karaoke.provider === "KY"
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-purple-600 dark:text-purple-400"
+                                ? "text-green-400"
+                                : "text-purple-400"
                           }`}
                         >
                           {karaoke.provider}
                         </span>
-                        <span className="text-zinc-700 dark:text-zinc-300">
+                        <span className="text-zinc-300">
                           {karaoke.karaokeNo}
                         </span>
                       </div>

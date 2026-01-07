@@ -1,13 +1,13 @@
 export function LinkPasteCard() {
   return (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-2xl p-5 shadow-sm ring-1 ring-black/5 dark:ring-white/5 relative overflow-hidden">
+    <div className="bg-surface-dark rounded-2xl p-5 shadow-sm ring-1 ring-white/5 relative overflow-hidden">
       <div className="relative z-10">
-        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-snug mb-4">
-          <span className="text-gray-900 dark:text-white font-bold">
+        <p className="text-sm font-medium text-gray-400 leading-snug mb-4">
+          <span className="text-white font-bold">
             유튜브
           </span>
           ,{" "}
-          <span className="text-gray-900 dark:text-white font-bold">
+          <span className="text-white font-bold">
             스포티파이
           </span>{" "}
           링크를
@@ -16,7 +16,7 @@ export function LinkPasteCard() {
         </p>
         <div className="flex items-center justify-between">
           <div className="flex items-center -space-x-2 pl-1">
-            <div className="relative z-30 size-9 rounded-full bg-white dark:bg-surface-dark shadow-sm ring-2 ring-white dark:ring-[#2a1b32] flex items-center justify-center p-2">
+            <div className="relative z-30 size-9 rounded-full bg-white/10 shadow-sm ring-2 ring-white/20 flex items-center justify-center p-2">
               <svg
                 className="w-full h-full fill-[#FF0000]"
                 viewBox="0 0 24 24"
@@ -25,7 +25,7 @@ export function LinkPasteCard() {
                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
               </svg>
             </div>
-            <div className="relative z-20 size-9 rounded-full bg-white dark:bg-surface-dark shadow-sm ring-2 ring-white dark:ring-[#2a1b32] flex items-center justify-center p-2">
+            <div className="relative z-20 size-9 rounded-full bg-white/10 shadow-sm ring-2 ring-white/20 flex items-center justify-center p-2">
               <svg
                 className="w-full h-full fill-[#FF0000]"
                 viewBox="0 0 24 24"
@@ -34,7 +34,7 @@ export function LinkPasteCard() {
                 <path d="M12 24c6.627 0 12-5.373 12-12S18.627 0 12 0 0 5.373 0 12s5.373 12 12 12zm0-22.5c5.799 0 10.5 4.701 10.5 10.5S17.799 22.5 12 22.5 1.5 17.799 1.5 12 6.201 1.5 12 1.5zM9.5 8.5v7l6-3.5-6-3.5z" />
               </svg>
             </div>
-            <div className="relative z-10 size-9 rounded-full bg-white dark:bg-surface-dark shadow-sm ring-2 ring-white dark:ring-[#2a1b32] flex items-center justify-center p-2">
+            <div className="relative z-10 size-9 rounded-full bg-white/10 shadow-sm ring-2 ring-white/20 flex items-center justify-center p-2">
               <svg
                 className="w-full h-full fill-[#1DB954]"
                 viewBox="0 0 24 24"

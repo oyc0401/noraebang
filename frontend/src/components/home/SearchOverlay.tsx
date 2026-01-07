@@ -28,11 +28,11 @@ export function SearchOverlay() {
   };
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col">
+    <div className="min-h-screen bg-background-dark flex flex-col">
       <header className="flex items-center gap-2 p-4 pt-12 pb-4 sticky top-0 z-20 bg-background-dark backdrop-blur-md transition-colors">
         <button
           onClick={clearSearch}
-          className="text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="text-gray-400 hover:text-white transition-colors"
         >
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
@@ -42,9 +42,7 @@ export function SearchOverlay() {
       </header>
       <main className="flex-1 flex flex-col w-full max-w-md mx-auto overflow-y-auto px-5 py-4">
         {isLoading && (
-          <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-            검색 중...
-          </div>
+          <div className="text-center text-gray-400 py-8">검색 중...</div>
         )}
         {suggestions?.data && suggestions.data.length > 0 && (
           <div className="space-y-2">
@@ -52,30 +50,30 @@ export function SearchOverlay() {
               <button
                 key={index}
                 onClick={() => handleSelect(item)}
-                className="w-full p-4 rounded-lg bg-surface-light dark:bg-surface-dark hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors text-left"
+                className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left"
               >
                 {item.type === "artist" && item.artist && (
                   <div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    <div className="text-xs text-gray-400 mb-1">
                       아티스트
                     </div>
-                    <div className="font-semibold text-gray-900 dark:text-white">
+                    <div className="font-semibold text-white">
                       {item.artist.nameKo}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-sm text-gray-400">
                       {item.artist.name}
                     </div>
                   </div>
                 )}
                 {item.type === "song" && item.song && (
                   <div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    <div className="text-xs text-gray-400 mb-1">
                       곡
                     </div>
-                    <div className="font-semibold text-gray-900 dark:text-white">
+                    <div className="font-semibold text-white">
                       {item.song.titleKo || item.song.title}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-sm text-gray-400">
                       {item.song.artists.map((a) => a.nameKo).join(", ")}
                     </div>
                   </div>
@@ -87,7 +85,7 @@ export function SearchOverlay() {
         {!isLoading &&
           query &&
           (!suggestions?.data || suggestions.data.length === 0) && (
-            <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+            <div className="text-center text-gray-400 py-8">
               검색 결과가 없습니다
             </div>
           )}
