@@ -142,25 +142,25 @@ export function LinkPasteCard() {
         )}
 
         {/* 하단: 아이콘과 버튼 (항상 표시) */}
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between mt-2">
           <div className="flex items-center">
             <div className="  flex items-center justify-center pr-1.5">
               <Image
                 src={YoutubeMusicIcon}
                 alt="YouTube Music"
-                width={32}
-                height={32}
+                width={40}
+                height={40}
               />
             </div>
             <div className=" flex items-center justify-center  pr-1.5">
-              <Image src={SpotifyIcon} alt="Spotify" width={32} height={32} />
+              <Image src={SpotifyIcon} alt="Spotify" width={40} height={40} />
             </div>
             <div className=" flex items-center justify-center">
               <Image
                 src={AppleMusicIcon}
                 alt="Apple Music"
-                width={32}
-                height={32}
+                width={40}
+                height={40}
               />
             </div>
           </div>
