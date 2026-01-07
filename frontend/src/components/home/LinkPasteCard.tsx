@@ -38,26 +38,37 @@ export function LinkPasteCard() {
     },
   });
 
-  const handlePaste = async () => {
-    // iOS Safari를 위한 폴백: 숨겨진 input에 포커스
-    if (inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-
-    try {
-      const text = await navigator.clipboard.readText();
-
-      if (!text.trim()) {
-        return;
+  const handlePaste = () => {
+    // 먼저 Clipboard API 시도
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard
+        .readText()
+        .then((text) => {
+          if (text.trim() && isYoutubeUrl(text)) {
+            youtubeMutation.mutate(text);
+          }
+        })
+        .catch((err) => {
+          // iOS Safari 폴백: 숨겨진 input 사용
+          console.error("Clipboard API failed, using fallback:", err);
+          if (inputRef.current) {
+            inputRef.current.value = "";
+            inputRef.current.focus();
+            // 사용자에게 붙여넣기 유도
+            setTimeout(() => {
+              if (inputRef.current && !inputRef.current.value) {
+                alert("클립보드에서 링크를 붙여넣어주세요 (Cmd+V 또는 길게 눌러서 붙여넣기)");
+              }
+            }, 100);
+          }
+        });
+    } else {
+      // Clipboard API 미지원: input 폴백
+      if (inputRef.current) {
+        inputRef.current.value = "";
+        inputRef.current.focus();
+        alert("클립보드에서 링크를 붙여넣어주세요");
       }
-
-      if (isYoutubeUrl(text)) {
-        youtubeMutation.mutate(text);
-      }
-    } catch (err) {
-      // iOS에서 clipboard API 실패 시, input의 paste 이벤트로 처리
-      console.error("Clipboard error (will use paste event instead):", err);
     }
   };
 
