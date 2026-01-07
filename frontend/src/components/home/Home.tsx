@@ -11,9 +11,9 @@ export function Home() {
   return (
     <>
       <Header />
-      <main className="flex-1 flex flex-col w-full max-w-md mx-auto overflow-x-hidden">
+      <main className="flex-1 flex flex-col w-full mx-auto overflow-x-hidden">
         <div className="px-5 pt-6 pb-4">
-          <h1 className="text-gray-900 dark:text-white text-[32px] font-bold leading-tight">
+          <h1 className="text-white text-[32px] font-bold leading-tight">
             어떤 노래를
             <br />
             <span className="text-primary">부르시겠어요?</span>
