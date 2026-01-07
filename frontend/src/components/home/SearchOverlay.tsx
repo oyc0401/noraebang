@@ -128,7 +128,9 @@ export function SearchOverlay() {
                         {card.song.artistName}
                       </div>
                       {card.song.karaokeSongs &&
-                        card.song.karaokeSongs.length > 0 && (
+                        card.song.karaokeSongs.length > 0 &&
+                        (card.song.karaokeSongs[0].provider === "TJ" ||
+                          card.song.karaokeSongs[0].provider === "KY") && (
                           <KaraokeBadge
                             provider={card.song.karaokeSongs[0].provider}
                             number={card.song.karaokeSongs[0].karaokeNo}

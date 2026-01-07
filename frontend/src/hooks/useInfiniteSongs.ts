@@ -7,7 +7,7 @@ export const useInfiniteSongs = (artistId: number) => {
   return useInfiniteQuery({
     queryKey: ["songs", "artist", artistId, "infinite"],
     queryFn: ({ pageParam }) =>
-      songsControllerFindByArtistId(artistId.toString(), {
+      songsControllerFindByArtistId(artistId, {
         page: pageParam.toString(),
         limit: "20",
       }),

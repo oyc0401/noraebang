@@ -1,7 +1,7 @@
 import { CircleThumbnail } from "@/components/common/CircleThumbnail";
-import { KaraokeBadge } from "@/components/karaoke/KaraokeBadge";
+import { KaraokeBadge } from "@/components/common/KaraokeBadge";
 import { cn } from "@/lib/cn";
-import type { SongDto } from "@/api/model";
+import type { SongDto } from "@/api/model/models";
 
 interface Props {
   song: SongDto;
@@ -33,15 +33,18 @@ export const SongCard = ({ song, isSelected, onClick }: Props) => (
         <p className="text-sm text-zinc-400 truncate">{song.title}</p>
       )}
       <div className="flex gap-2 mt-2 flex-wrap">
-        {song.karaokeSongs?.map((k, idx) => (
-          <KaraokeBadge
-            key={`${k.provider}-${k.karaokeNo}-${idx}`}
-            provider={k.provider as any}
-            karaokeNo={k.karaokeNo}
-            title={k.title}
-            artist={k.artist}
-          />
-        ))}
+        {song.karaokeSongs
+          ?.filter(
+            (k): k is typeof k & { provider: "TJ" | "KY" } =>
+              k.provider === "TJ" || k.provider === "KY"
+          )
+          .map((k, idx) => (
+            <KaraokeBadge
+              key={`${k.provider}-${k.karaokeNo}-${idx}`}
+              provider={k.provider}
+              number={k.karaokeNo}
+            />
+          ))}
       </div>
     </div>
   </button>

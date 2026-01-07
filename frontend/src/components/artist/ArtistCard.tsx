@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CircleThumbnail } from "@/components/common/CircleThumbnail";
-import type { ArtistDetailsDto } from "@/api/model";
+import type { ArtistDetailsDto } from "@/api/model/models";
 
 interface Props {
   artist: ArtistDetailsDto;
