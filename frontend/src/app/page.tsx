@@ -1,34 +1,39 @@
 "use client";
 
-import { SearchBar } from "@/components/search/SearchBar";
-import { SearchResults } from "@/components/search/SearchResults";
-import { ArtistList } from "@/components/artist/ArtistList";
-import { useSearchStore } from "@/store/searchStore";
+import { Header } from "@/components/common/Header";
+import { LinkPasteCard } from "@/components/home/LinkPasteCard";
+import { PopularSongs } from "@/components/home/PopularSongs";
+import { RecentlyPlayed } from "@/components/home/RecentlyPlayed";
+import { RecentlyReleased } from "@/components/home/RecentlyReleased";
+import { SearchBar } from "@/components/home/SearchBar";
 
 export default function HomePage() {
-  const { results } = useSearchStore();
-  const hasSearchResults = results.length > 0;
-
   return (
-    <div className="min-h-screen bg-black">
-      {/* YouTube Music 스타일 큰 헤더 */}
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-lg border-b border-zinc-800 px-4 py-8">
-        <h1 className="text-5xl font-bold text-white mb-6">노래방 검색</h1>
-        <SearchBar />
-      </header>
-
-      {/* 검색 결과 또는 아티스트 목록 */}
-      <main className="px-4 py-8">
-        {hasSearchResults ? (
-          <SearchResults />
-        ) : (
-          <>
-            <h2 className="text-2xl font-semibold text-white mb-6">
-              아티스트
-            </h2>
-            <ArtistList />
-          </>
-        )}
+    <div className="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col antialiased">
+      <Header />
+      <main className="flex-1 flex flex-col w-full max-w-md mx-auto overflow-x-hidden">
+        <div className="px-5 pt-6 pb-4">
+          <h1 className="text-gray-900 dark:text-white text-[32px] font-bold leading-tight">
+            어떤 노래를
+            <br />
+            <span className="text-primary">부르시겠어요?</span>
+          </h1>
+        </div>
+        <div className="px-5 py-2">
+          <SearchBar />
+        </div>
+        <div className="px-5 pt-4 pb-6">
+          <LinkPasteCard />
+        </div>
+        <div className="w-full mb-6">
+          <RecentlyPlayed />
+        </div>
+        <div className="w-full px-5 mb-2">
+          <RecentlyReleased />
+        </div>
+        <div className="w-full px-5 py-4 mb-8">
+          <PopularSongs />
+        </div>
       </main>
     </div>
   );
