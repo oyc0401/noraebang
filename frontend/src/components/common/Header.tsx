@@ -1,13 +1,32 @@
+import { MicVocal, Search } from "lucide-react";
+
 export function Header() {
   return (
-    <header className="flex items-center justify-between p-4 pt-12 pb-2 sticky top-0 z-20 bg-background-dark/95 backdrop-blur-md transition-colors">
-      <div className="text-primary flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-        <span className="material-symbols-outlined text-2xl">music_note</span>
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-between bg-background-dark/95 px-4 backdrop-blur-md">
+      <div className="flex items-center gap-4">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#A855F7]">
+          <MicVocal className="size-6 text-white" />
+        </div>
+        <h1 className="text-lg font-semibold tracking-[-0.015em] text-white">
+          Sing It!
+        </h1>
       </div>
-      <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">
-        Sing It!
-      </h2>
-      <div className="size-10" />
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          className="text-white/80 transition-colors hover:text-white"
+          aria-label="검색"
+        >
+          <Search className="size-6" />
+        </button>
+        <button
+          type="button"
+          aria-label="프로필"
+          className="flex size-6 items-center justify-center rounded-full bg-white/20 text-[10px] font-semibold text-white"
+        >
+          SJ
+        </button>
+      </div>
     </header>
   );
 }
