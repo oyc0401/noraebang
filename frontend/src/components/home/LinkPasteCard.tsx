@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { Link } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ export function LinkPasteCard() {
   const router = useRouter();
   const { setQuery, setSearchActive } = useSearchStore();
   const [foundSong, setFoundSong] = useState<SongDto | undefined>(undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const youtubeMutation = useMutation({
     mutationFn: async (url: string) => {
@@ -38,6 +39,12 @@ export function LinkPasteCard() {
   });
 
   const handlePaste = async () => {
+    // iOS Safari를 위한 폴백: 숨겨진 input에 포커스
+    if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+
     try {
       const text = await navigator.clipboard.readText();
 
@@ -49,7 +56,19 @@ export function LinkPasteCard() {
         youtubeMutation.mutate(text);
       }
     } catch (err) {
-      console.error("Clipboard error:", err);
+      // iOS에서 clipboard API 실패 시, input의 paste 이벤트로 처리
+      console.error("Clipboard error (will use paste event instead):", err);
+    }
+  };
+
+  const handleInputPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData("text");
+    if (text && isYoutubeUrl(text)) {
+      e.preventDefault();
+      youtubeMutation.mutate(text);
+      if (inputRef.current) {
+        inputRef.current.blur();
+      }
     }
   };
 
@@ -71,6 +90,15 @@ export function LinkPasteCard() {
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-surface-dark p-4 shadow-sm ring-1 ring-surface-border">
+      {/* iOS Safari를 위한 숨겨진 input */}
+      <input
+        ref={inputRef}
+        type="text"
+        onPaste={handleInputPaste}
+        className="absolute opacity-0 pointer-events-none"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
       <div className="relative z-10">
         {/* 곡을 찾은 경우 곡 정보 표시 */}
         {foundSong ? (
