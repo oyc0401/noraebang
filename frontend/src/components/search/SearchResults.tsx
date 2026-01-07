@@ -20,6 +20,7 @@ export const SearchResults = () => {
           "{query}" 검색 결과
         </h2>
         <button
+          type="button"
           onClick={clearSearch}
           className="text-sm text-zinc-400 hover:text-white"
         >

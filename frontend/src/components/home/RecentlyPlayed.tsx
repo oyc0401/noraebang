@@ -1,7 +1,7 @@
 export function RecentlyPlayed() {
   return (
     <>
-      <div className="flex items-center justify-between px-5 pb-3 pt-2">
+      <div className="flex items-center justify-between p-4">
         <h3 className="text-white text-lg font-bold leading-tight">
           최근 들었던 곡
         </h3>
@@ -35,9 +35,7 @@ export function RecentlyPlayed() {
             <span className="text-sm font-bold text-white truncate">
               Hype Boy
             </span>
-            <span className="text-xs text-gray-400 truncate">
-              NewJeans
-            </span>
+            <span className="text-xs text-gray-400 truncate">NewJeans</span>
             <div className="mt-1 flex gap-1">
               <span className="text-[10px] font-bold bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded">
                 TJ 81523
@@ -66,9 +64,7 @@ export function RecentlyPlayed() {
             <span className="text-sm font-bold text-white truncate">
               사건의 지평선
             </span>
-            <span className="text-xs text-gray-400 truncate">
-              윤하
-            </span>
+            <span className="text-xs text-gray-400 truncate">윤하</span>
             <div className="mt-1 flex gap-1">
               <span className="text-[10px] font-bold bg-red-900/30 text-red-400 px-1.5 py-0.5 rounded">
                 KY 49122
@@ -94,12 +90,8 @@ export function RecentlyPlayed() {
             </button>
           </div>
           <div className="flex flex-col px-1">
-            <span className="text-sm font-bold text-white truncate">
-              Seven
-            </span>
-            <span className="text-xs text-gray-400 truncate">
-              Jungkook
-            </span>
+            <span className="text-sm font-bold text-white truncate">Seven</span>
+            <span className="text-xs text-gray-400 truncate">Jungkook</span>
             <div className="mt-1 flex gap-1">
               <span className="text-[10px] font-bold bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded">
                 TJ 98311
@@ -128,9 +120,7 @@ export function RecentlyPlayed() {
             <span className="text-sm font-bold text-white truncate">
               Love wins all
             </span>
-            <span className="text-xs text-gray-400 truncate">
-              아이유 (IU)
-            </span>
+            <span className="text-xs text-gray-400 truncate">아이유 (IU)</span>
             <div className="mt-1 flex gap-1">
               <span className="text-[10px] font-bold bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded">
                 TJ 87291

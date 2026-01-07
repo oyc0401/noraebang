@@ -11,6 +11,7 @@ interface Props {
 
 export const SongCard = ({ song, isSelected, onClick }: Props) => (
   <button
+    type="button"
     onClick={onClick}
     className={cn(
       "w-full flex gap-4 p-4 rounded-lg transition-all text-left",
