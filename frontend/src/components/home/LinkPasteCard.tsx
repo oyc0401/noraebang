@@ -39,8 +39,8 @@ export function LinkPasteCard() {
   });
 
   const handlePaste = () => {
-    // 먼저 Clipboard API 시도
-    if (navigator.clipboard && navigator.clipboard.readText) {
+    // Clipboard API 시도
+    if (navigator.clipboard?.readText) {
       navigator.clipboard
         .readText()
         .then((text) => {
@@ -48,26 +48,18 @@ export function LinkPasteCard() {
             youtubeMutation.mutate(text);
           }
         })
-        .catch((err) => {
-          // iOS Safari 폴백: 숨겨진 input 사용
-          console.error("Clipboard API failed, using fallback:", err);
+        .catch(() => {
+          // iOS Safari 등에서 실패 시 input 폴백
           if (inputRef.current) {
             inputRef.current.value = "";
             inputRef.current.focus();
-            // 사용자에게 붙여넣기 유도
-            setTimeout(() => {
-              if (inputRef.current && !inputRef.current.value) {
-                alert("클립보드에서 링크를 붙여넣어주세요 (Cmd+V 또는 길게 눌러서 붙여넣기)");
-              }
-            }, 100);
           }
         });
     } else {
-      // Clipboard API 미지원: input 폴백
+      // Clipboard API 미지원 시 input 폴백
       if (inputRef.current) {
         inputRef.current.value = "";
         inputRef.current.focus();
-        alert("클립보드에서 링크를 붙여넣어주세요");
       }
     }
   };
