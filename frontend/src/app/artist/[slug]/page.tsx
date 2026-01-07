@@ -19,7 +19,7 @@ export default async function ChannelPage({
   }
 
   const songsResponse = await songsControllerFindByArtistId(
-    artist.data.id.toString(),
+    artist.data.id,
     {
       limit: "1000", // Fetch all songs
     },
