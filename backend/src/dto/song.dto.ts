@@ -18,12 +18,25 @@ export class ArtistSongDto {
   @ApiProperty({ example: 1 })
   artistId: number;
 
+  @ApiProperty({ example: "YOASOBI" })
+  name: string;
+
+  @ApiProperty({ example: "요아소비" })
+  nameKo: string;
+
   @ApiProperty({
     example: "MAIN",
     required: false,
     enum: ["MAIN", "FEATURING", "PRODUCER"],
   })
   role?: string;
+
+  @ApiProperty({
+    example: "yoasobi",
+    required: false,
+    description: "아티스트 슬러그",
+  })
+  slug?: string;
 }
 
 export class SongDto {

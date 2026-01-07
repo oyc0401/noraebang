@@ -1,14 +1,19 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { artistsControllerFindAllDetails } from "@/api/model/artists/artists";
+import {
+  artistsControllerFindAllDetails,
+  type ArtistsControllerFindAllDetailsParams,
+} from "@/api/model/artists/artists";
 
-export const useInfiniteArtists = (sort = "subscriber_desc") => {
+export const useInfiniteArtists = (
+  sort: ArtistsControllerFindAllDetailsParams["sort"] = "subscriber_desc"
+) => {
   return useInfiniteQuery({
     queryKey: ["artists", "infinite", sort],
     queryFn: ({ pageParam }) =>
       artistsControllerFindAllDetails({
-        sort: sort as any,
+        sort,
         page: pageParam.toString(),
         limit: "20",
       }),

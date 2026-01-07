@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { searchSongByYoutubeUrl } from "@/api/custom/searchSongByYoutubeUrl";
-import { searchControllerSearch } from "@/api/model/search/search";
+import {
+  searchControllerSearch,
+  searchControllerSearchSongByYoutubeUrl,
+} from "@/api/model/search/search";
 import { isYoutubeUrl } from "@/lib/youtube";
 import { useSearchStore } from "@/store/searchStore";
 
@@ -20,7 +22,9 @@ export const useUnifiedSearch = () => {
     try {
       if (isYoutubeUrl(query)) {
         // YouTube URL 검색
-        const response = await searchSongByYoutubeUrl({ url: query });
+        const response = await searchControllerSearchSongByYoutubeUrl({
+          url: query,
+        });
         const song = response.data;
 
         if (!song) {
@@ -28,9 +32,9 @@ export const useUnifiedSearch = () => {
           return;
         }
 
-        const artistId = song.artists[0]?.artistId;
-        if (artistId) {
-          router.push(`/channel/${artistId}#${song.id}`);
+        const artistSlug = song.artists[0]?.slug;
+        if (artistSlug) {
+          router.push(`/channel/${artistSlug}#${song.id}`);
         }
       } else {
         // 일반 검색 - 통합 검색 API 사용

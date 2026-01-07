@@ -9,5 +9,9 @@ import type { ArtistSongDtoRole } from './artistSongDtoRole';
 
 export interface ArtistSongDto {
   artistId: number;
+  name: string;
+  nameKo: string;
   role?: ArtistSongDtoRole;
+  /** 아티스트 슬러그 */
+  slug?: string;
 }
