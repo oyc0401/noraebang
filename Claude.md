@@ -281,7 +281,14 @@ export class OembedDataDto {
 
 - 아이콘: lucide 사용
 
+사진 넣을때 무조건 Next/image 쓰고,
+svg라면 무조건 임포트해서, src={Icon} 으로 사용하세요.
 
+클릭 이벤트 만들때 무조건 button 태그 쓰고 타입까지 넣으세요.
+``` tsx
+          <button
+            type="button"
+```
 
 
 
