@@ -133,7 +133,7 @@ export function LinkPasteCard() {
           </button>
         ) : (
           /* 기본 텍스트 */
-          <p className="text-sm font-medium text-surface-text leading-snug">
+          <p className="text-md font-medium text-surface-text leading-snug">
             <span className="text-white font-bold">음악 플랫폼 링크</span>
             를
             <br />
@@ -144,23 +144,23 @@ export function LinkPasteCard() {
         {/* 하단: 아이콘과 버튼 (항상 표시) */}
         <div className="flex items-end justify-between mt-2">
           <div className="flex items-center">
-            <div className="  flex items-center justify-center pr-1.5">
+            <div className="  flex items-center justify-center pr-2">
               <Image
                 src={YoutubeMusicIcon}
                 alt="YouTube Music"
-                width={40}
-                height={40}
+                width={44}
+                height={44}
               />
             </div>
-            <div className=" flex items-center justify-center  pr-1.5">
-              <Image src={SpotifyIcon} alt="Spotify" width={40} height={40} />
+            <div className=" flex items-center justify-center  pr-2">
+              <Image src={SpotifyIcon} alt="Spotify" width={44} height={44} />
             </div>
             <div className=" flex items-center justify-center">
               <Image
                 src={AppleMusicIcon}
                 alt="Apple Music"
-                width={40}
-                height={40}
+                width={44}
+                height={44}
               />
             </div>
           </div>
@@ -172,7 +172,14 @@ export function LinkPasteCard() {
           >
             <Link className="size-4" />
             <span>
-              {youtubeMutation.isPending ? "검색 중..." : "링크 붙여넣기"}
+              {youtubeMutation.isPending ? (
+                "검색 중..."
+              ) : (
+                <>
+                  <span className="hidden min-[375px]:inline">링크 </span>
+                  붙여넣기
+                </>
+              )}
             </span>
           </button>
         </div>
