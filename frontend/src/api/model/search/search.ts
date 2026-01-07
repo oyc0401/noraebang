@@ -224,7 +224,7 @@ export function useSearchControllerGetSearchSuggestions<TData = Awaited<ReturnTy
 
 
 /**
- * YouTube 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다.
+ * YouTube 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다. DB에서 곡을 찾지 못한 경우 유튜브 정보를 반환합니다.
  * @summary 유튜브 URL로 단일곡 검색
  */
 export const searchControllerSearchSongByYoutubeUrl = (

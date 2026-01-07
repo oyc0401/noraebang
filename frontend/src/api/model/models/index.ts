@@ -39,4 +39,5 @@ export * from './songDto';
 export * from './songListResponseDto';
 export * from './songsControllerFindByArtistIdParams';
 export * from './youtubeInfoDto';
+export * from './youtubeOembedDataDto';
 export * from './youtubeSongSearchResponseDto';

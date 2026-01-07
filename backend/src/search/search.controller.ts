@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  NotFoundException,
-  Query,
-} from "@nestjs/common";
+import { BadRequestException, Controller, Get, Query } from "@nestjs/common";
 import {
   ApiOperation,
   ApiQuery,
@@ -12,7 +6,6 @@ import {
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
 import { ErrorResponseDto } from "../dto";
-import { ApiResponse } from "../dto/api-response.dto";
 import { fetchYoutubeOembed } from "../thirdparty/youtube/oembed.js";
 import { SearchResponseDto } from "./dto/search-response.dto";
 import { SearchSuggestionsQueryDto } from "./dto/search-suggestions-query.dto";
@@ -121,22 +114,17 @@ export class SearchController {
   @ApiOperation({
     summary: "유튜브 URL로 단일곡 검색",
     description:
-      "YouTube 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다.",
+      "YouTube 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다. DB에서 곡을 찾지 못한 경우 유튜브 정보를 반환합니다.",
   })
   @ApiQuery({ name: "url", description: "YouTube 동영상 URL" })
   @SwaggerApiResponse({
     status: 200,
-    description: "YouTube 정보와 매칭된 곡 데이터",
+    description: "YouTube 정보와 매칭된 곡 데이터 또는 유튜브 정보만",
     type: YoutubeSongSearchResponseDto,
   })
   @SwaggerApiResponse({
     status: 400,
     description: "URL 파라미터 필요",
-    type: ErrorResponseDto,
-  })
-  @SwaggerApiResponse({
-    status: 404,
-    description: "곡을 찾을 수 없음",
     type: ErrorResponseDto,
   })
   @SwaggerApiResponse({
@@ -162,16 +150,22 @@ export class SearchController {
         authorName: youtube.author_name,
       });
 
-    // 매칭된 곡이 없으면 404 에러 반환
-    if (matchedSongs.length === 0) {
-      throw new NotFoundException(
-        `No song found matching YouTube title: ${youtube.title}`,
-      );
+    // 매칭된 곡이 있으면 곡 정보 반환
+    if (matchedSongs.length > 0) {
+      const matchedSong = matchedSongs[0];
+      return {
+        song: matchedSong,
+        message: "DB에서 곡을 찾았습니다",
+      };
     }
 
-    // 가장 첫 번째 곡을 선택
-    const matchedSong = matchedSongs[0];
-
-    return ApiResponse.success(matchedSong, youtube.title);
+    // 매칭된 곡이 없으면 유튜브 정보만 반환
+    return {
+      youtube: {
+        title: youtube.title,
+        authorName: youtube.author_name,
+      },
+      message: "DB에서 곡을 찾지 못했습니다",
+    };
   }
 }
