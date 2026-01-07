@@ -98,10 +98,8 @@ export class SearchController {
     type: ErrorResponseDto,
   })
   async getSearchSuggestions(
-    @Query() queryDto: SearchSuggestionsQueryDto,
+    @Query() _queryDto: SearchSuggestionsQueryDto,
   ): Promise<SearchSuggestionsResponseDto> {
-    const { query } = queryDto;
-
     return {
       data: {
         cards: [],
