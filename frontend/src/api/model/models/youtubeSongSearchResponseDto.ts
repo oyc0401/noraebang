@@ -6,8 +6,12 @@
  * OpenAPI spec version: 1.0
  */
 import type { SongDto } from './songDto';
+import type { YoutubeOembedDataDto } from './youtubeOembedDataDto';
 
 export interface YoutubeSongSearchResponseDto {
-  data?: SongDto;
-  message?: string;
+  /** DB에서 찾은 곡 정보 */
+  song?: SongDto;
+  /** 유튜브 oEmbed 데이터 (DB에서 곡을 찾지 못한 경우) */
+  youtube?: YoutubeOembedDataDto;
+  message: string;
 }
