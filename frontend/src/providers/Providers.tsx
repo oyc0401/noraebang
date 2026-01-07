@@ -9,7 +9,9 @@ export function Providers({ children }: PropsWithChildren) {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="dark">
-      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      <QueryClientProvider client={client}>
+        {children}
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }
