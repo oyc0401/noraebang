@@ -22,7 +22,7 @@ export function SearchBar() {
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="flex-1 bg-transparent border-none text-white placeholder:text-[#6B7280] px-3 h-full focus:ring-0 text-base"
+        className="flex-1 bg-transparent border-none text-white placeholder:text-[#6B7280] px-3 h-full focus:ring-0 outline-none text-base"
         placeholder="제목, 가수, 번호 검색..."
       />
       <button

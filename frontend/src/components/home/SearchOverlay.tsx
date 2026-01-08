@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Clock, TrendingUp } from "lucide-react";
+import { ArrowLeft, Clock, ArrowRight, Search } from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
 import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/search";
 import { SearchBar } from "@/components/home/SearchBar";
@@ -15,12 +15,12 @@ export function SearchOverlay() {
   const { data: suggestions, isLoading } =
     useSearchControllerGetSearchSuggestions(
       { query },
-      { query: { enabled: true } }
+      { query: { enabled: true } },
     );
 
   return (
-    <div className="min-h-screen bg-background-dark flex flex-col">
-      <header className="flex items-center gap-2 p-4 pt-12 pb-4 sticky top-0 z-20 bg-background-dark backdrop-blur-md">
+    <div className="bg-background-dark flex flex-col">
+      <header className="flex items-center gap-2 p-4 sticky bg-background-dark backdrop-blur-md">
         <button
           type="button"
           onClick={clearSearch}
@@ -28,11 +28,11 @@ export function SearchOverlay() {
         >
           <ArrowLeft className="size-6" />
         </button>
-        <div className="flex-1 max-w-md">
+        <div className="flex-1">
           <SearchBar />
         </div>
       </header>
-      <main className="flex-1 flex flex-col w-full max-w-md mx-auto overflow-y-auto px-5 py-4">
+      <main className="flex-1 flex flex-col w-full mx-auto overflow-y-auto px-5 py-4">
         {isLoading && (
           <div className="text-center text-gray-400 py-8">검색 중...</div>
         )}
@@ -53,7 +53,7 @@ export function SearchOverlay() {
                     {card.suggestion.source === "recent" ? (
                       <Clock className="size-5 text-gray-400" />
                     ) : (
-                      <TrendingUp className="size-5 text-gray-400" />
+                      <Search className="size-5 text-gray-400" />
                     )}
                     <span className="text-white">{card.suggestion.title}</span>
                   </button>
@@ -104,7 +104,9 @@ export function SearchOverlay() {
                     type="button"
                     onClick={() => {
                       if (card.song?.artistSlug) {
-                        router.push(`/artist/${card.song.artistSlug}#${card.song.id}`);
+                        router.push(
+                          `/artist/${card.song.artistSlug}#${card.song.id}`,
+                        );
                         clearSearch();
                       }
                     }}
