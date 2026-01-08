@@ -1,0 +1,84 @@
+import type { CollectionCreateSchema } from "typesense/lib/Typesense/Collections";
+
+export const SONGS_COLLECTION_NAME = "songs";
+
+/**
+ * Songs Collection 스키마
+ *
+ * README.md 참고:
+ * - q_* 필드: 검색용 토큰 (P/A/A2/F 티어)
+ * - karaokeNos*: 표시용만 (검색 안 함)
+ * - locale: KO, JA_KANA, JA_KANJI, LATIN
+ */
+export const songsCollectionSchema: CollectionCreateSchema = {
+  name: SONGS_COLLECTION_NAME,
+  fields: [
+    // ===== 메타 정보 =====
+    { name: "id", type: "string" },
+    { name: "catalog", type: "string", optional: true }, // "JPOP", "KPOP", etc.
+
+    // ===== 표시용 제목 (검색 안 함) =====
+    { name: "titleKo", type: "string", optional: true, index: false },
+    { name: "titleJaKanji", type: "string", optional: true, index: false },
+    { name: "titleJaKana", type: "string", optional: true, index: false },
+    { name: "titleLatin", type: "string", optional: true, index: false },
+
+    // ===== 아티스트 ID (필터링용) =====
+    { name: "artistIds", type: "string[]" },
+
+    // ===== 노래방 번호 (표시용만, 검색 안 함) =====
+    { name: "karaokeNosTj", type: "string[]", optional: true, index: false },
+    { name: "karaokeNosKy", type: "string[]", optional: true, index: false },
+
+    // ===== 정렬/랭킹 필드 =====
+    { name: "popularity", type: "float", optional: true }, // Spotify track popularity
+    { name: "artistPopularity", type: "float", optional: true }, // 메인 아티스트 인기도
+    { name: "updatedAt", type: "int64" }, // Unix timestamp
+
+    // ===== 검색 필드: 곡명 =====
+    { name: "q_song_ko_p", type: "string[]", optional: true },
+    { name: "q_song_ko_a", type: "string[]", optional: true },
+    { name: "q_song_ko_a2", type: "string[]", optional: true },
+    { name: "q_song_ko_f", type: "string[]", optional: true },
+
+    { name: "q_song_latin_p", type: "string[]", optional: true },
+    { name: "q_song_latin_a", type: "string[]", optional: true },
+    { name: "q_song_latin_a2", type: "string[]", optional: true },
+    { name: "q_song_latin_f", type: "string[]", optional: true },
+
+    { name: "q_song_ja_kanji_p", type: "string[]", optional: true },
+    { name: "q_song_ja_kanji_a", type: "string[]", optional: true },
+    { name: "q_song_ja_kanji_a2", type: "string[]", optional: true },
+    { name: "q_song_ja_kanji_f", type: "string[]", optional: true },
+
+    { name: "q_song_ja_kana_p", type: "string[]", optional: true },
+    { name: "q_song_ja_kana_a", type: "string[]", optional: true },
+    { name: "q_song_ja_kana_a2", type: "string[]", optional: true },
+    { name: "q_song_ja_kana_f", type: "string[]", optional: true },
+
+    // ===== 검색 필드: 아티스트명 =====
+    { name: "q_artist_ko_p", type: "string[]", optional: true },
+    { name: "q_artist_ko_a", type: "string[]", optional: true },
+    { name: "q_artist_ko_a2", type: "string[]", optional: true },
+    { name: "q_artist_ko_f", type: "string[]", optional: true },
+
+    { name: "q_artist_raw_p", type: "string[]", optional: true },
+    { name: "q_artist_raw_a", type: "string[]", optional: true },
+    { name: "q_artist_raw_a2", type: "string[]", optional: true },
+    { name: "q_artist_raw_f", type: "string[]", optional: true },
+
+    { name: "q_artist_ja_kanji_p", type: "string[]", optional: true },
+    { name: "q_artist_ja_kanji_a", type: "string[]", optional: true },
+    { name: "q_artist_ja_kanji_a2", type: "string[]", optional: true },
+    { name: "q_artist_ja_kanji_f", type: "string[]", optional: true },
+
+    { name: "q_artist_ja_kana_p", type: "string[]", optional: true },
+    { name: "q_artist_ja_kana_a", type: "string[]", optional: true },
+    { name: "q_artist_ja_kana_a2", type: "string[]", optional: true },
+    { name: "q_artist_ja_kana_f", type: "string[]", optional: true },
+
+    // ===== 조합 검색 (곡+아티스트) =====
+    { name: "q_combo_a", type: "string[]", optional: true },
+  ],
+  default_sorting_field: "updatedAt",
+};
