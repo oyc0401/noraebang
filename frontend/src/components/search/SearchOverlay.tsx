@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Clock, ArrowRight, Search } from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
 import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/search";
-import { SearchBar } from "@/components/common/SearchBar";
+import { SearchBar } from "@/components/search/SearchBar";
 import { KaraokeBadge } from "@/components/common/KaraokeBadge";
 
 export function SearchOverlay() {
