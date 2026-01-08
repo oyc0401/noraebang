@@ -1,15 +1,16 @@
-// pnpm ts-node src/typesense/scripts/index-songs.ts
+// pnpm ts-node typesense/scripts/index-songs.ts
 //
-// 이 스크립트는 DB의 모든 곡 데이터를 Typesense에 인덱싱합니다.
+// 이 스크립트는 DB의 곡 데이터를 Typesense에 인덱싱합니다.
 // SongAlias, ArtistAlias 테이블을 활용하여 q_* 검색 필드를 생성합니다.
 //
 // 사용법:
 // 1. Typesense 서버가 실행 중인지 확인 (docker compose up -d typesense)
 // 2. 환경 변수 설정 (.env 파일)
-// 3. 스크립트 실행
+// 3. cd backend && pnpm ts-node typesense/scripts/index-songs.ts
 //
 // 주의:
 // - 기존 songs Collection을 삭제하고 새로 만듭니다
+// - 현재는 artistId < 272인 아티스트의 곡만 인덱싱합니다
 // - 인덱싱 시간은 데이터 양에 따라 다릅니다 (100개 = ~1초)
 
 import "dotenv/config";
@@ -39,9 +40,18 @@ async function main() {
   console.log("Step 1: Recreating collection...");
   await recreateCollection(client, songsCollectionSchema);
 
-  // 3. DB에서 데이터 가져오기
+  // 3. DB에서 데이터 가져오기 (artistId < 272만)
   console.log("\nStep 2: Fetching songs from database...");
   const songs = await prisma.song.findMany({
+    where: {
+      artistSongs: {
+        some: {
+          artistId: {
+            lt: 272,
+          },
+        },
+      },
+    },
     include: {
       aliases: true,
       artistSongs: {

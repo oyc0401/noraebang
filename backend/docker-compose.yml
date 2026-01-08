@@ -13,6 +13,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
+      TYPESENSE_HOST: typesense
     depends_on:
       - typesense
 
