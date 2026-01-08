@@ -18,12 +18,10 @@ export default async function ChannelPage({
     );
   }
 
-  const songsResponse = await songsControllerFindByArtistId(
-    artist.data.id,
-    {
-      limit: "1000", // Fetch all songs
-    },
-  );
+  const songsResponse = await songsControllerFindByArtistId(artist.data.id, {
+    limit: "20",
+    offset: "0",
+  });
   const songs = songsResponse.data ?? [];
 
   return <ArtistPageClient artist={artist.data} initialSongs={songs} />;
