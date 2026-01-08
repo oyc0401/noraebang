@@ -37,7 +37,7 @@ TYPESENSE_PROTOCOL=http
 ### 3. 인덱싱 실행
 
 ```bash
-cd admin
+cd backend
 pnpm ts-node src/typesense/scripts/index-songs.ts
 ```
 

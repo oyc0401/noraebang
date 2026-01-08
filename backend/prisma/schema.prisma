@@ -20,6 +20,7 @@ model Artist {
 
   artistSongs      ArtistSong[]
   youtubeChannels  YoutubeChannel[]
+  spotifyArtist    SpotifyArtist?
   aliases          ArtistAlias[]
 
   createdAt        DateTime         @default(now()) @map("created_at")
@@ -45,6 +46,7 @@ model Song {
 
   karaokeSongs     KaraokeSong[]
   artistSongs      ArtistSong[]
+  spotifyTrack     SpotifyTrack?
   aliases          SongAlias[]
 
   @@map("song")
@@ -129,6 +131,48 @@ model YoutubeChannel {
   @@unique([artistId, type])
   @@index([subscriberCount(sort: Desc)]) // 정렬 인덱스 없어도 될 텐데
   @@map("youtube_channel")
+}
+
+model SpotifyArtist {
+  id                Int      @id @default(autoincrement())
+  artistId          Int      @unique @map("artist_id")
+  spotifyId         String   @unique @map("spotify_id")
+  spotifyUrl        String?  @map("spotify_url")
+  name              String
+  popularity        Int?
+  followers         Int?
+  genres            String[] @default([])
+  thumbnailDefault  String?  @map("thumbnail_default")
+  thumbnailMedium   String?  @map("thumbnail_medium")
+  thumbnailHigh     String?  @map("thumbnail_high")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@map("spotify_artist")
+}
+
+model SpotifyTrack {
+  id               Int      @id @default(autoincrement())
+  songId           Int      @unique @map("song_id")
+  spotifyId        String   @unique @map("spotify_id")
+  spotifyUrl       String?  @map("spotify_url")
+  name             String
+  popularity       Int?
+  previewUrl       String?  @map("preview_url")
+  isrc             String?
+  durationMs       Int?     @map("duration_ms")
+  releaseDate      String?  @map("release_date")
+  thumbnailDefault String?  @map("thumbnail_default")
+  thumbnailMedium  String?  @map("thumbnail_medium")
+  thumbnailHigh    String?  @map("thumbnail_high")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@map("spotify_track")
 }
 
 
