@@ -15,7 +15,7 @@ export function SearchPageContent() {
   const query = searchParams.get("q") || "";
   const { setSearchActive, setQuery, clearSearch } = useSearchStore();
 
-  const { data: results, isLoading } = useSearchControllerSearch(
+  const { data: searchResponse, isLoading } = useSearchControllerSearch(
     { query },
     { query: { enabled: !!query } },
   );
@@ -25,6 +25,11 @@ export function SearchPageContent() {
   }, [query, setQuery]);
 
   const hasQuery = query.trim().length > 0;
+
+  // Filter the data into artists and songs
+  const artists = searchResponse?.data?.filter(item => item.type === 'artist').map(item => item.artist);
+  const songs = searchResponse?.data?.filter(item => item.type === 'song').map(item => item.song);
+
 
   return (
     <div className="bg-background-dark flex flex-col min-h-screen">
@@ -47,12 +52,12 @@ export function SearchPageContent() {
           <div className="text-center text-gray-400 py-8">검색 중...</div>
         )}
         {hasQuery &&
-          results?.data.artists &&
-          results.data.artists.length > 0 && (
+          artists &&
+          artists.length > 0 && ( // Use the new 'artists' array
             <div>
               <h2 className="text-xl font-bold mb-4">아티스트</h2>
               <div className="space-y-2">
-                {results.data.artists.map((artist) => (
+                {artists.map((artist) => artist && ( // Ensure artist is not undefined
                   <button
                     key={`artist-${artist.id}`}
                     type="button"
@@ -64,10 +69,10 @@ export function SearchPageContent() {
                     }}
                     className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-4"
                   >
-                    {artist.thumbnail && (
+                    {artist.thumbnailDefault && ( // Changed from thumbnail to thumbnailDefault based on ArtistDetailsDto
                       <Image
-                        src={artist.thumbnail}
-                        alt={artist.title}
+                        src={artist.thumbnailDefault}
+                        alt={artist.name || artist.nameKo}
                         width={48}
                         height={48}
                         className="rounded-full shrink-0"
@@ -75,10 +80,10 @@ export function SearchPageContent() {
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-white truncate">
-                        {artist.titleKo || artist.title}
+                        {artist.nameKo || artist.name}
                       </div>
                       <div className="text-sm text-gray-400 truncate">
-                        {artist.title}
+                        {artist.name}
                       </div>
                     </div>
                   </button>
@@ -86,25 +91,25 @@ export function SearchPageContent() {
               </div>
             </div>
           )}
-        {hasQuery && results?.data.songs && results.data.songs.length > 0 && (
+        {hasQuery && songs && songs.length > 0 && ( // Use the new 'songs' array
           <div>
             <h2 className="text-xl font-bold mb-4">곡</h2>
             <div className="space-y-2">
-              {results.data.songs.map((song) => (
+              {songs.map((song) => song && ( // Ensure song is not undefined
                 <button
                   key={`song-${song.id}`}
                   type="button"
                   onClick={() => {
-                      if (song?.artistSlug) {
-                        router.push(`/artist/${song.artistSlug}#${song.id}`);
+                      if (song?.artists && song.artists.length > 0 && song.artists[0].slug) {
+                        router.push(`/artist/${song.artists[0].slug}#${song.id}`);
                         clearSearch();
                       }
                     }}
                   className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-4"
                 >
-                  {song.thumbnail && (
+                  {song.thumbnailDefault && ( // Changed from thumbnail to thumbnailDefault based on SongDto
                     <Image
-                      src={song.thumbnail}
+                      src={song.thumbnailDefault}
                       alt={song.title}
                       width={48}
                       height={48}
@@ -116,7 +121,7 @@ export function SearchPageContent() {
                       {song.titleKo || song.title}
                     </div>
                     <div className="text-sm text-gray-400 truncate mb-1">
-                      {song.artistName}
+                      {song.artists && song.artists.length > 0 ? song.artists[0].nameKo || song.artists[0].name : ''}
                     </div>
                     {song.karaokeSongs &&
                       song.karaokeSongs.length > 0 &&
@@ -135,8 +140,8 @@ export function SearchPageContent() {
         )}
         {hasQuery &&
           !isLoading &&
-          (!results?.data.artists || results.data.artists.length === 0) &&
-          (!results?.data.songs || results.data.songs.length === 0) && (
+          (!artists || artists.length === 0) && // Check new arrays
+          (!songs || songs.length === 0) && ( // Check new arrays
             <div className="text-center text-gray-400 py-8">
               검색 결과가 없습니다.
             </div>
