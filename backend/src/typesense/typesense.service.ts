@@ -2,7 +2,10 @@ import { Injectable, type OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Client } from "typesense";
 import type { SearchResponse } from "typesense/lib/Typesense/Documents";
-import type { TypesenseArtistDocument, TypesenseSongDocument } from "./transformer";
+import type {
+  TypesenseArtistDocument,
+  TypesenseSongDocument,
+} from "./transformer";
 
 export interface TypesenseSearchParams {
   query: string;
@@ -58,21 +61,24 @@ export class TypesenseService implements OnModuleInit {
   ): Promise<SearchResponse<TypesenseArtistDocument>> {
     const { query, page = 1, perPage = 20 } = params;
 
-    return this.client.collections("artists").documents().search({
-      q: query,
-      query_by: [
-        "q_name_ko_p",
-        "q_name_ko_a",
-        "q_name_latin_p",
-        "q_name_latin_a",
-        "q_name_ja_kanji_p",
-        "q_name_ja_kanji_a",
-        "q_name_ja_kana_p",
-        "q_name_ja_kana_a",
-      ].join(","),
-      page,
-      per_page: perPage,
-    });
+    return this.client
+      .collections<TypesenseArtistDocument>("artists")
+      .documents()
+      .search({
+        q: query,
+        query_by: [
+          "q_name_ko_p",
+          "q_name_ko_a",
+          "q_name_latin_p",
+          "q_name_latin_a",
+          "q_name_ja_kanji_p",
+          "q_name_ja_kanji_a",
+          "q_name_ja_kana_p",
+          "q_name_ja_kana_a",
+        ].join(","),
+        page,
+        per_page: perPage,
+      });
   }
 
   /**
@@ -83,33 +89,36 @@ export class TypesenseService implements OnModuleInit {
   ): Promise<SearchResponse<TypesenseSongDocument>> {
     const { query, page = 1, perPage = 20 } = params;
 
-    return this.client.collections("songs").documents().search({
-      q: query,
-      query_by: [
-        // 곡 제목
-        "q_song_ko_p",
-        "q_song_ko_a",
-        "q_song_latin_p",
-        "q_song_latin_a",
-        "q_song_ja_kanji_p",
-        "q_song_ja_kanji_a",
-        "q_song_ja_kana_p",
-        "q_song_ja_kana_a",
-        // 아티스트 이름
-        "q_artist_ko_p",
-        "q_artist_ko_a",
-        "q_artist_raw_p",
-        "q_artist_raw_a",
-        "q_artist_ja_kanji_p",
-        "q_artist_ja_kanji_a",
-        "q_artist_ja_kana_p",
-        "q_artist_ja_kana_a",
-        // 조합 검색
-        "q_combo_a",
-      ].join(","),
-      sort_by: "hasKaraokeNo:desc,_text_match:desc",
-      page,
-      per_page: perPage,
-    });
+    return this.client
+      .collections<TypesenseSongDocument>("songs")
+      .documents()
+      .search({
+        q: query,
+        query_by: [
+          // 곡 제목
+          "q_song_ko_p",
+          "q_song_ko_a",
+          "q_song_latin_p",
+          "q_song_latin_a",
+          "q_song_ja_kanji_p",
+          "q_song_ja_kanji_a",
+          "q_song_ja_kana_p",
+          "q_song_ja_kana_a",
+          // 아티스트 이름
+          "q_artist_ko_p",
+          "q_artist_ko_a",
+          "q_artist_raw_p",
+          "q_artist_raw_a",
+          "q_artist_ja_kanji_p",
+          "q_artist_ja_kanji_a",
+          "q_artist_ja_kana_p",
+          "q_artist_ja_kana_a",
+          // 조합 검색
+          "q_combo_a",
+        ].join(","),
+        sort_by: "hasKaraokeNo:desc,_text_match:desc",
+        page,
+        per_page: perPage,
+      });
   }
 }
