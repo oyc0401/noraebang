@@ -1,6 +1,7 @@
 import type { CollectionCreateSchema } from "typesense/lib/Typesense/Collections";
 
 export const SONGS_COLLECTION_NAME = "songs";
+export const ARTISTS_COLLECTION_NAME = "artists";
 
 /**
  * Songs Collection 스키마
@@ -79,6 +80,57 @@ export const songsCollectionSchema: CollectionCreateSchema = {
 
     // ===== 조합 검색 (곡+아티스트) =====
     { name: "q_combo_a", type: "string[]", optional: true },
+  ],
+  default_sorting_field: "updatedAt",
+};
+
+/**
+ * Artists Collection 스키마
+ *
+ * README.md 참고:
+ * - q_name_* 필드: 검색용 토큰 (P/A/A2/F 티어)
+ * - locale: KO, JA_KANA, JA_KANJI, LATIN (아티스트는 raw로 표기)
+ */
+export const artistsCollectionSchema: CollectionCreateSchema = {
+  name: ARTISTS_COLLECTION_NAME,
+  fields: [
+    // ===== 메타 정보 =====
+    { name: "id", type: "string" },
+    { name: "homeCatalog", type: "string", optional: true }, // "JPOP", "KPOP", etc.
+
+    // ===== 표시용 이름 (검색 안 함) =====
+    { name: "nameKo", type: "string", optional: true, index: false },
+    { name: "nameJaKanji", type: "string", optional: true, index: false },
+    { name: "nameJaKana", type: "string", optional: true, index: false },
+    { name: "nameLatin", type: "string", optional: true, index: false },
+
+    // ===== 정렬/랭킹 필드 =====
+    { name: "popularity", type: "float", optional: true }, // Spotify artist popularity
+    { name: "updatedAt", type: "int64" }, // Unix timestamp
+
+    // ===== 검색 필드: 아티스트명 (한국어) =====
+    { name: "q_name_ko_p", type: "string[]", optional: true },
+    { name: "q_name_ko_a", type: "string[]", optional: true },
+    { name: "q_name_ko_a2", type: "string[]", optional: true },
+    { name: "q_name_ko_f", type: "string[]", optional: true },
+
+    // ===== 검색 필드: 아티스트명 (라틴/원어) =====
+    { name: "q_name_latin_p", type: "string[]", optional: true },
+    { name: "q_name_latin_a", type: "string[]", optional: true },
+    { name: "q_name_latin_a2", type: "string[]", optional: true },
+    { name: "q_name_latin_f", type: "string[]", optional: true },
+
+    // ===== 검색 필드: 아티스트명 (일본어 한자) =====
+    { name: "q_name_ja_kanji_p", type: "string[]", optional: true },
+    { name: "q_name_ja_kanji_a", type: "string[]", optional: true },
+    { name: "q_name_ja_kanji_a2", type: "string[]", optional: true },
+    { name: "q_name_ja_kanji_f", type: "string[]", optional: true },
+
+    // ===== 검색 필드: 아티스트명 (일본어 가나) =====
+    { name: "q_name_ja_kana_p", type: "string[]", optional: true },
+    { name: "q_name_ja_kana_a", type: "string[]", optional: true },
+    { name: "q_name_ja_kana_a2", type: "string[]", optional: true },
+    { name: "q_name_ja_kana_f", type: "string[]", optional: true },
   ],
   default_sorting_field: "updatedAt",
 };

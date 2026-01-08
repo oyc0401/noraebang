@@ -34,7 +34,21 @@ type SongWithRelations = Awaited<
   } | null;
 };
 
-export interface TypesenseDocument {
+type ArtistWithRelations = Awaited<
+  ReturnType<PrismaClient["artist"]["findMany"]>
+>[number] & {
+  aliases: Array<{
+    alias: string;
+    locale: string;
+    kind: string;
+    source: string;
+  }>;
+  spotifyArtist?: {
+    popularity: number | null;
+  } | null;
+};
+
+export interface TypesenseSongDocument {
   id: string;
   catalog?: string;
 
@@ -95,12 +109,48 @@ export interface TypesenseDocument {
   q_combo_a?: string[];
 }
 
+export interface TypesenseArtistDocument {
+  id: string;
+  homeCatalog?: string;
+
+  nameKo?: string;
+  nameJaKanji?: string;
+  nameJaKana?: string;
+  nameLatin?: string;
+
+  popularity?: number;
+  updatedAt: number;
+
+  q_name_ko_p?: string[];
+  q_name_ko_a?: string[];
+  q_name_ko_a2?: string[];
+  q_name_ko_f?: string[];
+
+  q_name_latin_p?: string[];
+  q_name_latin_a?: string[];
+  q_name_latin_a2?: string[];
+  q_name_latin_f?: string[];
+
+  q_name_ja_kanji_p?: string[];
+  q_name_ja_kanji_a?: string[];
+  q_name_ja_kanji_a2?: string[];
+  q_name_ja_kanji_f?: string[];
+
+  q_name_ja_kana_p?: string[];
+  q_name_ja_kana_a?: string[];
+  q_name_ja_kana_a2?: string[];
+  q_name_ja_kana_f?: string[];
+}
+
+// Backward compatibility
+export type TypesenseDocument = TypesenseSongDocument;
+
 /**
  * 별칭을 locale/kind/source에 따라 q_* 필드로 그룹화
  */
 function groupAliases(
   aliases: Array<{ alias: string; locale: string; kind: string; source: string }>,
-  prefix: "q_song" | "q_artist",
+  prefix: "q_song" | "q_artist" | "q_name",
 ) {
   const result: Record<string, string[]> = {};
 
@@ -114,7 +164,12 @@ function groupAliases(
     } else if (locale === "JA_KANJI") {
       localeKey = "ja_kanji";
     } else if (locale === "LATIN") {
-      localeKey = prefix === "q_artist" ? "raw" : "latin";
+      localeKey = (prefix === "q_artist" || prefix === "q_name") ? "latin" : "latin";
+      // q_artist는 songs 컬렉션의 아티스트 필드용 (raw 사용)
+      // q_name은 artists 컬렉션의 이름 필드용 (latin 사용)
+      if (prefix === "q_artist") {
+        localeKey = "raw";
+      }
     } else {
       continue; // 알 수 없는 locale은 스킵
     }
@@ -256,5 +311,59 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
 
     // Combo 필드
     q_combo_a: q_combo_a.length > 0 ? q_combo_a : undefined,
+  };
+}
+
+/**
+ * DB Artist → Typesense Artist Document 변환
+ */
+export function transformArtistToDocument(artist: ArtistWithRelations): TypesenseArtistDocument {
+  // 별칭 그룹화
+  const nameAliases = groupAliases(artist.aliases, "q_name");
+
+  // 표시용 이름 (검색에는 사용 안 함)
+  const nameKo = artist.nameKo ?? artist.aliases.find((a) => a.locale === "KO")?.alias;
+  const nameJaKanji = artist.name; // 원제는 보통 JA_KANJI
+  const nameJaKana = artist.aliases.find((a) => a.locale === "JA_KANA")?.alias;
+  const nameLatin = artist.aliases.find((a) => a.locale === "LATIN")?.alias;
+
+  // 인기도
+  const popularity = artist.spotifyArtist?.popularity ?? undefined;
+
+  return {
+    id: artist.id.toString(),
+    homeCatalog: artist.homeCatalog ?? undefined,
+
+    nameKo,
+    nameJaKanji,
+    nameJaKana,
+    nameLatin,
+
+    popularity,
+    updatedAt: Math.floor(artist.updatedAt.getTime() / 1000),
+
+    // 이름 별칭 필드 (한국어)
+    q_name_ko_p: nameAliases.q_name_ko_p,
+    q_name_ko_a: nameAliases.q_name_ko_a,
+    q_name_ko_a2: nameAliases.q_name_ko_a2,
+    q_name_ko_f: nameAliases.q_name_ko_f,
+
+    // 이름 별칭 필드 (라틴)
+    q_name_latin_p: nameAliases.q_name_latin_p,
+    q_name_latin_a: nameAliases.q_name_latin_a,
+    q_name_latin_a2: nameAliases.q_name_latin_a2,
+    q_name_latin_f: nameAliases.q_name_latin_f,
+
+    // 이름 별칭 필드 (일본어 한자)
+    q_name_ja_kanji_p: nameAliases.q_name_ja_kanji_p,
+    q_name_ja_kanji_a: nameAliases.q_name_ja_kanji_a,
+    q_name_ja_kanji_a2: nameAliases.q_name_ja_kanji_a2,
+    q_name_ja_kanji_f: nameAliases.q_name_ja_kanji_f,
+
+    // 이름 별칭 필드 (일본어 가나)
+    q_name_ja_kana_p: nameAliases.q_name_ja_kana_p,
+    q_name_ja_kana_a: nameAliases.q_name_ja_kana_a,
+    q_name_ja_kana_a2: nameAliases.q_name_ja_kana_a2,
+    q_name_ja_kana_f: nameAliases.q_name_ja_kana_f,
   };
 }
