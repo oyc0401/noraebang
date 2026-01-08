@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Clock, ArrowRight, Search } from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
 import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/search";
-import { SearchBar } from "@/components/home/SearchBar";
+import { SearchBar } from "@/components/common/SearchBar";
 import { KaraokeBadge } from "@/components/common/KaraokeBadge";
 
 export function SearchOverlay() {
@@ -46,7 +46,10 @@ export function SearchOverlay() {
                     key={`suggestion-${card.suggestion.title}-${index}`}
                     type="button"
                     onClick={() => {
-                      setQuery(card.suggestion?.title || "");
+                      if (card.suggestion?.title) {
+                        router.push(`/search?q=${card.suggestion.title}`);
+                        clearSearch();
+                      }
                     }}
                     className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
                   >
