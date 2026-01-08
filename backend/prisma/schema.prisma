@@ -17,8 +17,10 @@ model Artist {
   thumbnailDefault String?          @map("thumbnail_default")
   thumbnailMedium  String?          @map("thumbnail_medium")
   thumbnailHigh    String?          @map("thumbnail_high")
+
   artistSongs      ArtistSong[]
   youtubeChannels  YoutubeChannel[]
+  aliases          ArtistAlias[]
 
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
@@ -33,13 +35,17 @@ model Song {
   catalog          String? // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
   youtubeVideoId   String?       @map("youtube_video_id")
   youtubeFetchedAt DateTime?     @map("youtube_fetched_at")
+
   thumbnailDefault String?       @map("thumbnail_default")
   thumbnailMedium  String?       @map("thumbnail_medium")
   thumbnailHigh    String?       @map("thumbnail_high")
+
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
+
   karaokeSongs     KaraokeSong[]
   artistSongs      ArtistSong[]
+  aliases          SongAlias[]
 
   @@map("song")
 }
@@ -141,4 +147,40 @@ enum Provider {
 enum ChannelType {
   MAIN
   TOPIC
+}
+
+// 검색 전처리용 별칭 테이블
+model ArtistAlias {
+  id        Int      @id @default(autoincrement())
+  artistId  Int      @map("artist_id")
+  alias     String
+  locale    String // "KO", "JA_KANA", "JA_KANJI", "LATIN"
+  kind      String // "SPOTIFY", "YOUTUBE", "ROMANIZATION", "TRANSLATION", "TJ_NAME", "NICKNAME"
+  source    String // "OPERATOR", "SYSTEM", "AI", "AUTO"
+  createdAt DateTime @default(now()) @map("created_at")
+
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([artistId,alias, locale, kind])
+  @@index([artistId])
+  @@index([alias])
+  @@map("artist_alias")
+}
+
+model SongAlias {
+  id        Int      @id @default(autoincrement())
+  songId    Int      @map("song_id")
+  alias     String
+  locale    String // "KO", "JA_KANA", "JA_KANJI", "LATIN"
+  kind      String // "SPOTIFY", "YOUTUBE", "ROMANIZATION", "TRANSLATION", "TJ_NAME", "NICKNAME"
+  source    String // "OPERATOR", "SYSTEM", "AI", "AUTO"
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([songId, alias, locale, kind])
+  @@index([songId])  
+  @@index([alias])
+  @@map("song_alias")
 }

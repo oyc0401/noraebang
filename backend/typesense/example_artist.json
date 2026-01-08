@@ -1,0 +1,24 @@
+{
+  "id": "142",
+  "homeCatalog": "JPOP",
+
+  "nameKo": "요아소비",
+  "nameJaKanji": "夜遊び",
+  "nameJaKana": "よあそび",
+  "nameLatin": "YOASOBI",
+
+  "popularity": 80.0,
+  "updatedAt": 1736419200,
+
+  "q_name_ko_p": ["요아소비"],
+  "q_name_ko_a": ["밤놀이"],
+
+  "q_name_latin_p": ["YOASOBI"],
+  "q_name_latin_a": ["yoasobi"],
+
+  "q_name_ja_kanji_p": ["夜遊び"],
+  "q_name_ja_kanji_a": [],
+
+  "q_name_ja_kana_p": ["よあそび"],
+  "q_name_ja_kana_a": ["ヨアソビ"]
+}

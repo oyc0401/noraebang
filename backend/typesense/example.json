@@ -1,0 +1,44 @@
+{
+  "id": "1",
+  "catalog": "JPOP",
+
+  "titleKo": "밤을 달리다",
+  "titleJaKanji": "夜に駆ける",
+  "titleJaKana": "よるにかける",
+  "titleLatin": "Yoru ni Kakeru",
+
+  "artistIds": ["15509"],
+
+  "karaokeNosTj": ["12345"],
+  "karaokeNosKy": [],
+
+  "popularity": 90.0,
+  "artistPopularity": 80.0,
+  "updatedAt": 1736419200,
+
+  "q_song_ko_p": ["밤을 달리다"],
+  "q_song_ko_a": ["밤을달리다", "밤달", "요루니카케루"],
+
+  "q_song_latin_p": ["Yoru ni Kakeru"],
+  "q_song_latin_a": ["yorunikakeru"],
+
+  "q_song_ja_kanji_p": ["夜に駆ける"],
+  "q_song_ja_kanji_a": ["夜に駈ける"],
+
+  "q_song_ja_kana_p": ["よるにかける"],
+  "q_song_ja_kana_a": ["ヨルニカケル"],
+
+  "q_artist_ko_p": ["요아소비"],
+  "q_artist_ko_a": ["밤놀이"],
+
+  "q_artist_raw_p": ["YOASOBI"],
+  "q_artist_raw_a": ["yoasobi"],
+
+  "q_artist_ja_kanji_p": ["夜遊び"],
+  "q_artist_ja_kanji_a": [],
+
+  "q_artist_ja_kana_p": ["よあそび"],
+  "q_artist_ja_kana_a": ["ヨアソビ"],
+
+  "q_combo_a": ["밤을달리다요아소비", "요루니카케루요아소비"]
+}
