@@ -1,13 +1,17 @@
 "use client";
 
-import { Header } from "@/components/common/Header";
-import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { useEffect, useState } from "react";
 import type { ArtistDetailsDto, SongDto } from "@/api/model/models";
-import { CircleThumbnail } from "@/components/common/CircleThumbnail";
-import { SongCard } from "@/components/song/SongCard";
-import { Youtube, Music, MicVocal } from "lucide-react";
-import { useSearchStore } from "@/store/searchStore";
+import { TopAppBar } from "./TopAppBar";
+import { ProfileHeader } from "./ProfileHeader";
+import { ActionButtons } from "./ActionButtons";
+import { SongListItem } from "./SongListItem";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
+import { useInView } from "react-intersection-observer";
+import { Loader2 } from "lucide-react";
+
+const SONG_LIMIT = 20;
 
 interface ArtistPageClientProps {
   artist: ArtistDetailsDto;
@@ -19,97 +23,110 @@ export default function ArtistPageClient({
   initialSongs,
 }: ArtistPageClientProps) {
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
-  const [songs] = useState<SongDto[]>(initialSongs);
-  const { isSearchActive } = useSearchStore();
+  const [targetSongId, setTargetSongId] = useState<string | null>(null);
 
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: ["artist-songs", artist.id],
+    queryFn: ({ pageParam = 0 }) =>
+      songsControllerFindByArtistId(artist.id, {
+        limit: `${SONG_LIMIT}`,
+        offset: `${pageParam * SONG_LIMIT}`,
+      }),
+    getNextPageParam: (lastPage, allPages) => {
+      if ((lastPage.data?.length ?? 0) < SONG_LIMIT) {
+        return undefined;
+      }
+      return allPages.length;
+    },
+    initialData: {
+      pages: [{ data: initialSongs }],
+      pageParams: [0],
+    },
+    initialPageParam: 0,
+  });
+
+  const { ref, inView } = useInView();
+
+  // Set initial target from hash on component mount
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
     if (hash) {
       setSelectedSongId(hash);
-      const element = document.getElementById(hash);
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 100);
-      }
+      setTargetSongId(hash);
     }
   }, []);
 
-  if (isSearchActive) {
-    return <SearchOverlay />;
-  }
+  const songs = data?.pages.flatMap((page) => page.data ?? []) ?? [];
+
+  // Effect for handling scrolling to a target song from a hash
+  useEffect(() => {
+    if (targetSongId) {
+      const songExists = songs.some((s) => s.id.toString() === targetSongId);
+      if (songExists) {
+        // If song is found in the list, scroll to it and clear the target
+        const element = document.getElementById(targetSongId);
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            setTargetSongId(null);
+          }, 100);
+        }
+      } else if (hasNextPage && !isFetchingNextPage) {
+        // If song is not found, fetch the next page
+        fetchNextPage();
+      }
+    }
+  }, [songs, targetSongId, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Effect for standard infinite scrolling when user scrolls to the bottom
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage && !targetSongId) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage, targetSongId]);
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      <header className="bg-gradient-to-b from-zinc-900 to-black px-4 pt-8 pb-12">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center gap-6 mt-4">
-            <CircleThumbnail
-              src={artist.thumbnailMedium || artist.thumbnailDefault}
-              alt={artist.nameKo}
-              size="w-32 h-32"
-            />
-            <div className="text-center sm:text-left">
-              <h1 className="text-4xl font-bold text-white mb-2">
-                {artist.nameKo}
-              </h1>
-              <p className="text-xl text-zinc-400">{artist.name}</p>
-              <div className="flex items-center gap-4 mt-3 text-zinc-400 justify-center sm:justify-start">
-                {artist.songCount !== undefined &&
-                  artist.songCount !== null && (
-                    <span className="flex items-center gap-1.5">
-                      <Music size={14} />
-                      <span>곡 {artist.songCount}개</span>
-                    </span>
-                  )}
-                <div className="flex gap-3">
-                  {artist.youtube?.channelId && (
-                    <a
-                      href={`https://youtube.com/channel/${artist.youtube.channelId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 hover:text-red-500"
-                      aria-label="YouTube channel"
-                    >
-                      <Youtube size={18} />
-                    </a>
-                  )}
-                  {artist.tjSongRequestUrl && (
-                    <a
-                      href={artist.tjSongRequestUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 hover:text-blue-500"
-                      aria-label="TJ Karaoke song request"
-                    >
-                      <MicVocal size={18} />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto bg-background-light dark:bg-background-dark shadow-xl">
+      <TopAppBar />
+      <ProfileHeader artist={artist} />
+      <ActionButtons />
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        <div className="space-y-2">
-          {songs.map((song) => (
-            <div key={song.id} id={song.id.toString()} className="scroll-mt-4">
-              <SongCard
-                song={song}
-                isSelected={selectedSongId === song.id.toString()}
-                onClick={() => {
-                  const newHash = `#${song.id}`;
-                  window.history.replaceState(null, "", newHash);
-                  setSelectedSongId(song.id.toString());
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      </main>
+      <div className="flex items-end justify-between px-6 pt-6 pb-3">
+        <h3 className="text-slate-900 dark:text-white tracking-tight text-xl font-bold leading-tight">
+          곡 목록
+        </h3>
+        <span className="text-slate-400 dark:text-slate-500 text-xs font-medium mb-1">
+          인기순
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-1 pb-10">
+        {songs.map((song) => (
+          <SongListItem
+            key={song.id}
+            song={song}
+            isSelected={selectedSongId === song.id.toString()}
+            onClick={() => {
+              const newHash = `#${song.id}`;
+              window.history.replaceState(null, "", newHash);
+              setSelectedSongId(song.id.toString());
+            }}
+          />
+        ))}
+      </div>
+
+      <div ref={ref} className="h-20 flex items-center justify-center">
+        {isFetchingNextPage && <Loader2 className="animate-spin" />}
+        {!hasNextPage && !isLoading && songs.length > 0 && (
+          <p className="text-sm text-slate-500">모든 곡을 불러왔습니다.</p>
+        )}
+      </div>
     </div>
   );
 }
