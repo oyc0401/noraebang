@@ -20,11 +20,11 @@ export function SearchOverlay() {
 
   return (
     <div className="bg-background-dark flex flex-col">
-      <header className="flex items-center gap-2 p-4 sticky bg-background-dark backdrop-blur-md">
+      <header className="sticky top-0 z-20 flex items-center pl-2 pr-4 gap-2 bg-background-dark backdrop-blur-md pt-4">
         <button
           type="button"
           onClick={clearSearch}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-gray-400 hover:text-white transition-colors size-11 flex items-center justify-center"
         >
           <ArrowLeft className="size-6" />
         </button>
