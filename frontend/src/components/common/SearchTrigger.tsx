@@ -23,7 +23,7 @@ export function SearchTrigger({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full items-center rounded-xl h-14 bg-surface-dark shadow-sm ring-1 ring-white/10 overflow-hidden transition-all hover:ring-2 hover:ring-primary cursor-pointer",
+        "flex w-full items-center rounded-xl h-11 bg-surface-dark shadow-sm ring-1 ring-white/10 overflow-hidden transition-all hover:ring-2 hover:ring-primary cursor-pointer",
         className,
       )}
     >
