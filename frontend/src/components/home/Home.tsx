@@ -11,7 +11,7 @@ export function Home() {
   return (
     <>
       <Header />
-      <main className="flex-1 flex flex-col w-full mx-auto overflow-x-hidden">
+      <main className="flex-1 flex flex-col w-full overflow-x-hidden">
         <div className="px-4 pt-4 pb-4">
           <h1 className="text-white text-[32px] font-bold leading-tight">
             어떤 노래를
