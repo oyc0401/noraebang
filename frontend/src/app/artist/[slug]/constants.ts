@@ -1,0 +1,1 @@
+export const ARTIST_SONGS_PAGE_SIZE = 20;

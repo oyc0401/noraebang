@@ -1,8 +1,9 @@
 import { artistsControllerFindBySlug } from "@/api/model/artists/artists";
 import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
 import ArtistPageClient from "./ArtistPageClient";
+import { ARTIST_SONGS_PAGE_SIZE } from "./constants";
 
-export default async function ChannelPage({
+export default async function ArtistPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -12,17 +13,21 @@ export default async function ChannelPage({
 
   if (!artist.data) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-white">
+      <div className="flex items-center justify-center min-h-screen bg-background-dark text-white">
         아티스트를 찾을 수 없습니다
       </div>
     );
   }
 
   const songsResponse = await songsControllerFindByArtistId(artist.data.id, {
-    limit: "20",
-    offset: "0",
+    page: "1",
+    limit: `${ARTIST_SONGS_PAGE_SIZE}`,
   });
-  const songs = songsResponse.data ?? [];
 
-  return <ArtistPageClient artist={artist.data} initialSongs={songs} />;
+  return (
+    <ArtistPageClient
+      artist={artist.data}
+      initialSongsResponse={songsResponse}
+    />
+  );
 }

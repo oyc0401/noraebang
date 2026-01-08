@@ -1,5 +1,6 @@
 "use client";
 
+import { CircleThumbnail } from "@/components/common/CircleThumbnail";
 import type { ArtistDetailsDto } from "@/api/model/models";
 import { Library } from "lucide-react";
 
@@ -8,28 +9,26 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ artist }: ProfileHeaderProps) {
+  const thumbnailSrc = artist.thumbnailMedium ?? artist.thumbnailDefault;
+
   return (
-    <div className="flex flex-col p-6 w-full items-center">
+    <div className="flex flex-col p-6 w-full items-center text-white">
       <div className="flex flex-col gap-5 items-center w-full">
-        {/* Artist Thumbnail */}
-        <div
-          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-32 w-32 shadow-2xl ring-4 ring-primary/20"
-          style={{
-            backgroundImage: `url("${
-              artist.thumbnailMedium || artist.thumbnailDefault
-            }")`,
-          }}
-        />
-        {/* Artist Info */}
-        <div className="flex flex-col items-center justify-center gap-1">
-          <h1 className="text-slate-900 dark:text-white text-[26px] font-bold leading-tight tracking-tight text-center">
+        <div className="rounded-full ring-4 ring-primary/25 p-1 shadow-2xl">
+          <CircleThumbnail
+            src={thumbnailSrc}
+            alt={`${artist.nameKo} 썸네일`}
+            size="w-32 h-32"
+            className="shadow-lg"
+          />
+        </div>
+        <div className="flex flex-col items-center justify-center gap-2 text-center">
+          <h1 className="text-[26px] font-bold leading-tight tracking-tight">
             {artist.nameKo} ({artist.name})
           </h1>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 dark:bg-primary/20">
-            <Library className="size-4 text-primary" />
-            <p className="text-primary text-sm font-semibold leading-normal">
-              총 {artist.songCount}곡
-            </p>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 text-primary text-sm font-semibold leading-normal">
+            <Library className="size-4" />
+            <p>총 {artist.songCount ?? 0}곡</p>
           </div>
         </div>
       </div>

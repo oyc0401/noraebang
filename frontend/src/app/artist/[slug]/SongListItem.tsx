@@ -1,8 +1,9 @@
 "use client";
 
-import type { SongDto } from "@/api/model/models";
+import Image from "next/image";
+import type { KaraokeSongDto, SongDto } from "@/api/model/models";
 import { cn } from "@/lib/cn";
-import { MoreVert } from "@/icons";
+import { MoreVertical } from "lucide-react";
 
 interface SongListItemProps {
   song: SongDto;
@@ -10,58 +11,79 @@ interface SongListItemProps {
   onClick: () => void;
 }
 
+const getKaraokeNumbers = (
+  karaokeSongs?: KaraokeSongDto[],
+): KaraokeSongDto[] =>
+  karaokeSongs?.filter(
+    (item): item is KaraokeSongDto & { provider: "TJ" | "KY" } =>
+      item.provider === "TJ" || item.provider === "KY",
+  ) ?? [];
+
 export function SongListItem({
   song,
   isSelected,
   onClick,
 }: SongListItemProps) {
+  const thumbnailSrc = song.thumbnailMedium ?? song.thumbnailDefault;
+  const karaokeNumbers = getKaraokeNumbers(song.karaokeSongs);
+
   return (
-    <div
+    <button
+      type="button"
       id={song.id.toString()}
-      className={cn(
-        "flex gap-4 px-4 py-3 items-center transition-colors rounded-xl mx-2 cursor-pointer group",
-        isSelected
-          ? "bg-primary/10 dark:bg-primary/20"
-          : "hover:bg-black/5 dark:hover:bg-white/5",
-      )}
       onClick={onClick}
+      className={cn(
+        "mx-2 flex items-center gap-4 rounded-xl border px-4 py-3 text-left transition-colors",
+        "bg-zinc-900/70 border-transparent hover:border-white/10",
+        isSelected && "border-primary/60 bg-primary/20",
+      )}
     >
-      <div
-        className="bg-center bg-no-repeat aspect-square bg-cover rounded-lg w-[72px] h-[72px] shadow-sm shrink-0"
-        style={{ backgroundImage: `url("${song.thumbnailSmall}")` }}
-      />
-      <div className="flex flex-1 flex-col justify-center min-w-0">
-        <p className="text-slate-900 dark:text-white text-base font-bold leading-normal truncate mb-0.5">
+      <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-lg bg-zinc-800">
+        {thumbnailSrc ? (
+          <Image
+            src={thumbnailSrc}
+            alt={song.titleKo ?? song.title}
+            fill
+            sizes="72px"
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-2xl text-white/40">
+            🎵
+          </div>
+        )}
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+        <p className="truncate text-base font-bold leading-normal text-white">
           {song.title}
         </p>
-        <p className="text-slate-500 dark:text-[#b792c9] text-xs font-normal leading-normal truncate mb-2">
-          {song.titleKo}
-        </p>
-        <div className="flex gap-2">
-          {song.tj && (
-            <div className="flex items-center gap-1.5 bg-primary/10 dark:bg-primary/20 px-2 py-0.5 rounded text-primary border border-primary/20">
-              <span className="text-[10px] font-bold uppercase tracking-wider">
-                TJ
-              </span>
-              <span className="text-xs font-bold font-mono">{song.tj}</span>
-            </div>
-          )}
-          {song.ky && (
-            <div className="flex items-center gap-1.5 bg-blue-500/10 dark:bg-blue-400/20 px-2 py-0.5 rounded text-blue-600 dark:text-blue-300 border border-blue-500/20">
-              <span className="text-[10px] font-bold uppercase tracking-wider">
-                KY
-              </span>
-              <span className="text-xs font-bold font-mono">{song.ky}</span>
-            </div>
-          )}
-        </div>
+        {song.titleKo && (
+          <p className="truncate text-xs text-white/60">{song.titleKo}</p>
+        )}
+        {karaokeNumbers.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {karaokeNumbers.map((entry) => (
+              <div
+                key={`${entry.provider}-${entry.karaokeNo}`}
+                className={cn(
+                  "flex items-center gap-1.5 rounded px-2 py-0.5 border text-xs font-bold font-mono",
+                  entry.provider === "TJ"
+                    ? "border-primary/30 bg-primary/15 text-primary"
+                    : "border-blue-500/40 bg-blue-500/10 text-blue-200",
+                )}
+              >
+                <span className="text-[10px] uppercase tracking-widest">
+                  {entry.provider}
+                </span>
+                <span>{entry.karaokeNo}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <button
-        type="button"
-        className="shrink-0 flex items-center justify-center size-10 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-slate-400 dark:text-slate-500 transition-colors"
-      >
-        <MoreVert className="size-6" />
-      </button>
-    </div>
+      <span className="flex size-10 items-center justify-center rounded-full text-white/60">
+        <MoreVertical className="size-5" />
+      </span>
+    </button>
   );
 }
