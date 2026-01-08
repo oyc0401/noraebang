@@ -30,7 +30,7 @@ export class TypesenseService implements OnModuleInit {
         },
       ],
       apiKey: this.configService.get<string>("TYPESENSE_API_KEY", ""),
-      connectionTimeoutSeconds: 2,
+      connectionTimeoutSeconds: 10,
     });
   }
 

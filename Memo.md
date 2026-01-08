@@ -50,3 +50,10 @@ pnpm --filter admin exec prisma generate
 
 
 동방신기 해외편 -> 687 東方神起
+
+
+## 타입센스 인덱싱하기
+curl -X POST "https://backend-production-eaa8.up.railway.app/typesense/reindex" \
+-H "Content-Type: application/json" \
+-H "x-internal-token: $INTERNAL_API_TOKEN" \
+-d '{"target":"all"}'
