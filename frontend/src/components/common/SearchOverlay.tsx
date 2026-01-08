@@ -20,22 +20,19 @@ export function SearchOverlay() {
 
   return (
     <div className="bg-background-dark flex flex-col">
-      <header className="sticky top-0 z-20 flex items-center pl-2 pr-4 gap-2 bg-background-dark backdrop-blur-md py-4">
-        <button
-          type="button"
-          onClick={clearSearch}
-          className="text-gray-400 hover:text-white transition-colors size-11 flex items-center justify-center"
-        >
-          <ArrowLeft className="size-6" />
-        </button>
+      <header className="sticky top-0 z-20 flex items-center pl-4 pr-2 gap-2 bg-background-dark backdrop-blur-md py-4">
         <div className="flex-1">
           <SearchBar />
         </div>
+        <button
+          type="button"
+          onClick={clearSearch}
+          className="text-gray-400 hover:text-white transition-colors size-11 flex items-center justify-center text-sm"
+        >
+          취소
+        </button>
       </header>
-      <main className="flex-1 flex flex-col w-full mx-auto overflow-y-auto px-5 py-4">
-        {isLoading && (
-          <div className="text-center text-gray-400 py-8">검색 중...</div>
-        )}
+      <main className="flex-1 flex flex-col w-full mx-auto overflow-y-auto px-4 py-4">
         {suggestions?.data.cards && suggestions.data.cards.length > 0 && (
           <div className="space-y-2">
             {suggestions.data.cards.map((card, index) => {
