@@ -1,12 +1,13 @@
 "use client";
 
 import { Header } from "@/components/common/Header";
-import Link from "next/link";
+import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { useEffect, useState } from "react";
 import type { ArtistDetailsDto, SongDto } from "@/api/model/models";
 import { CircleThumbnail } from "@/components/common/CircleThumbnail";
 import { SongCard } from "@/components/song/SongCard";
 import { Youtube, Music, MicVocal } from "lucide-react";
+import { useSearchStore } from "@/store/searchStore";
 
 interface ArtistPageClientProps {
   artist: ArtistDetailsDto;
@@ -19,6 +20,7 @@ export default function ArtistPageClient({
 }: ArtistPageClientProps) {
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [songs] = useState<SongDto[]>(initialSongs);
+  const { isSearchActive } = useSearchStore();
 
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
@@ -32,6 +34,10 @@ export default function ArtistPageClient({
       }
     }
   }, []);
+
+  if (isSearchActive) {
+    return <SearchOverlay />;
+  }
 
   return (
     <div className="min-h-screen">
@@ -90,11 +96,7 @@ export default function ArtistPageClient({
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="space-y-2">
           {songs.map((song) => (
-            <div
-              key={song.id}
-              id={song.id.toString()}
-              className="scroll-mt-4"
-            >
+            <div key={song.id} id={song.id.toString()} className="scroll-mt-4">
               <SongCard
                 song={song}
                 isSelected={selectedSongId === song.id.toString()}

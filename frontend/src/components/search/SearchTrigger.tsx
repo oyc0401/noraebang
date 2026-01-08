@@ -20,40 +20,39 @@ export function SearchTrigger({
 }: SearchTriggerProps) {
   const hasValue = !!value && value.trim().length > 0;
 
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onClear?.();
-  };
-
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
       className={cn(
-        "flex w-full items-center rounded-xl h-11 bg-surface-dark shadow-sm ring-1 ring-white/10 overflow-hidden transition-all  hover:ring-primary cursor-pointer",
+        "flex w-full items-center rounded-xl h-11 bg-surface-dark shadow-sm ring-1 ring-white/10 overflow-hidden",
         className,
       )}
     >
-      <div className="flex items-center justify-center pl-4 text-[#6B7280]">
-        <SearchIcon className="size-5" />
-      </div>
-      <div
-        className={cn(
-          "flex-1 text-left px-3 text-base truncate",
-          hasValue ? "text-white" : "text-[#6B7280]",
-        )}
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex flex-1 items-center transition-all hover:ring-primary cursor-pointer"
       >
-        {hasValue ? value : placeholder}
-      </div>
+        <div className="flex items-center justify-center pl-4 text-[#6B7280]">
+          <SearchIcon className="size-5" />
+        </div>
+        <div
+          className={cn(
+            "flex-1 text-left px-3 text-base truncate",
+            hasValue ? "text-white" : "text-[#6B7280]",
+          )}
+        >
+          {hasValue ? value : placeholder}
+        </div>
+      </button>
       {hasValue && onClear && (
         <button
           type="button"
-          onClick={handleClear}
+          onClick={onClear}
           className="flex items-center justify-center pr-4 text-[#6B7280] hover:text-white transition-colors"
         >
           <X className="size-5" />
         </button>
       )}
-    </button>
+    </div>
   );
 }

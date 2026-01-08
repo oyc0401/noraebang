@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchStore } from "@/store/searchStore";
-import { SearchOverlay } from "@/components/search/SearchOverlay";
+import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { Suspense } from "react";
 import { SearchPageContent } from "./SearchPageContent";
 
