@@ -87,7 +87,7 @@ export default function ArtistPageClient({
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage, targetSongId]);
 
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto bg-background-dark text-white shadow-xl">
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-dark text-white">
       <Header />
       <ProfileHeader artist={artist} />
       <ActionButtons />
