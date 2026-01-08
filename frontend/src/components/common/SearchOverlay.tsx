@@ -20,7 +20,7 @@ export function SearchOverlay() {
 
   return (
     <div className="bg-background-dark flex flex-col">
-      <header className="sticky top-0 z-20 flex items-center pl-2 pr-4 gap-2 bg-background-dark backdrop-blur-md pt-4">
+      <header className="sticky top-0 z-20 flex items-center pl-2 pr-4 gap-2 bg-background-dark backdrop-blur-md py-4">
         <button
           type="button"
           onClick={clearSearch}

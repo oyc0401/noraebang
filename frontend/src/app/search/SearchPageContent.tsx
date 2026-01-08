@@ -95,46 +95,63 @@ export function SearchPageContent() {
           <div>
             <h2 className="text-xl font-bold mb-4">곡</h2>
             <div className="space-y-2">
-              {songs.map((song) => song && ( // Ensure song is not undefined
-                <button
-                  key={`song-${song.id}`}
-                  type="button"
-                  onClick={() => {
-                      if (song?.artists && song.artists.length > 0 && song.artists[0].slug) {
-                        router.push(`/artist/${song.artists[0].slug}#${song.id}`);
+              {songs.map((song) => {
+                if (!song) {
+                  return null;
+                }
+
+                const primaryArtistWithSlug = song.artists?.find(
+                  (artist) => !!artist.slug,
+                );
+                const fallbackArtist = song.artists?.[0];
+                const artistForDisplay =
+                  primaryArtistWithSlug ?? fallbackArtist ?? null;
+
+                return (
+                  <button
+                    key={`song-${song.id}`}
+                    type="button"
+                    onClick={() => {
+                      if (primaryArtistWithSlug?.slug) {
+                        router.push(
+                          `/artist/${primaryArtistWithSlug.slug}#${song.id}`,
+                        );
                         clearSearch();
                       }
                     }}
-                  className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-4"
-                >
-                  {song.thumbnailDefault && ( // Changed from thumbnail to thumbnailDefault based on SongDto
-                    <Image
-                      src={song.thumbnailDefault}
-                      alt={song.title}
-                      width={48}
-                      height={48}
-                      className="rounded-lg shrink-0"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-white truncate">
-                      {song.titleKo || song.title}
+                    className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-4"
+                  >
+                    {song.thumbnailDefault && ( // Changed from thumbnail to thumbnailDefault based on SongDto
+                      <Image
+                        src={song.thumbnailDefault}
+                        alt={song.title}
+                        width={48}
+                        height={48}
+                        className="rounded-lg shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-white truncate">
+                        {song.titleKo || song.title}
+                      </div>
+                      <div className="text-sm text-gray-400 truncate mb-1">
+                        {artistForDisplay
+                          ? artistForDisplay.nameKo || artistForDisplay.name
+                          : ""}
+                      </div>
+                      {song.karaokeSongs &&
+                        song.karaokeSongs.length > 0 &&
+                        (song.karaokeSongs[0].provider === "TJ" ||
+                          song.karaokeSongs[0].provider === "KY") && (
+                          <KaraokeBadge
+                            provider={song.karaokeSongs[0].provider}
+                            number={song.karaokeSongs[0].karaokeNo}
+                          />
+                        )}
                     </div>
-                    <div className="text-sm text-gray-400 truncate mb-1">
-                      {song.artists && song.artists.length > 0 ? song.artists[0].nameKo || song.artists[0].name : ''}
-                    </div>
-                    {song.karaokeSongs &&
-                      song.karaokeSongs.length > 0 &&
-                      (song.karaokeSongs[0].provider === "TJ" ||
-                        song.karaokeSongs[0].provider === "KY") && (
-                        <KaraokeBadge
-                          provider={song.karaokeSongs[0].provider}
-                          number={song.karaokeSongs[0].karaokeNo}
-                        />
-                      )}
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
