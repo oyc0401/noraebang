@@ -2,7 +2,7 @@
 
 import { useSearchStore } from "@/store/searchStore";
 import { Home } from "@/components/home/Home";
-import { SearchOverlay } from "@/components/home/SearchOverlay";
+import { SearchOverlay } from "@/components/common/SearchOverlay";
 
 export default function HomePage() {
   const { isSearchActive } = useSearchStore();
