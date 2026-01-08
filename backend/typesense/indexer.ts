@@ -1,6 +1,6 @@
 import type { Client } from "typesense";
 import type { CollectionCreateSchema } from "typesense/lib/Typesense/Collections";
-import type { TypesenseDocument } from "./transformer";
+import type { TypesenseArtistDocument, TypesenseSongDocument } from "./transformer";
 
 /**
  * Collection 재생성 (기존 삭제 → 새로 생성)
@@ -28,7 +28,7 @@ export async function recreateCollection(
 export async function indexDocuments(
   client: Client,
   collectionName: string,
-  documents: TypesenseDocument[],
+  documents: TypesenseSongDocument[] | TypesenseArtistDocument[],
   batchSize = 100,
 ): Promise<void> {
   console.log(`\nIndexing ${documents.length} documents...`);
