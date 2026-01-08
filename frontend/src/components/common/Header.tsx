@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MicVocal, Search } from "lucide-react";
 import { useSearchStore } from "@/store/searchStore";
+import { Logo } from "./Logo";
 
 export function Header() {
   const { setSearchActive } = useSearchStore();
@@ -11,12 +12,8 @@ export function Header() {
         href="/"
         className="flex items-center gap-4 text-white transition-opacity hover:opacity-80"
       >
-        <div className="flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#A855F7]">
-          <MicVocal className="size-6 text-white" />
-        </div>
-        <h1 className="text-lg font-semibold tracking-[-0.015em]">
-          Sing It!
-        </h1>
+        <Logo />
+        <h1 className="text-lg font-semibold tracking-[-0.015em]">Sing It!</h1>
       </Link>
       <div className="flex items-center gap-4">
         <button
@@ -24,7 +21,7 @@ export function Header() {
           className="text-white/80 transition-colors hover:text-white"
           aria-label="검색"
           onClick={() => setSearchActive(true)}
-          >
+        >
           <Search className="size-6" />
         </button>
         <button
