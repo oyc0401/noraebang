@@ -1,4 +1,10 @@
-import { BadRequestException, Controller, Get, Query } from "@nestjs/common";
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Logger,
+  Query,
+} from "@nestjs/common";
 import {
   ApiOperation,
   ApiQuery,
@@ -17,6 +23,8 @@ import { SearchService } from "./search.service";
 @ApiTags("Search")
 @Controller("search")
 export class SearchController {
+  private readonly logger = new Logger(SearchController.name);
+
   constructor(private readonly searchService: SearchService) {}
 
   @Get()
@@ -201,6 +209,9 @@ export class SearchController {
 
     // 유튜브 정보 얻어오기
     const youtube = await fetchYoutubeOembed(url);
+    // this.logger.log(
+    //   `YouTube oEmbed fetched: title="${youtube.title}", author="${youtube.author_name}"`,
+    // );
 
     // 제목과 아티스트명으로 곡 검색
     const matchedSongs =
@@ -208,6 +219,7 @@ export class SearchController {
         title: youtube.title,
         authorName: youtube.author_name,
       });
+    // this.logger.log(`YouTube search result count=${matchedSongs.length}`);
 
     // 매칭된 곡이 있으면 곡 정보 반환
     if (matchedSongs.length > 0) {

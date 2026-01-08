@@ -1,9 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Provider } from "@prisma/client";
 import { ArtistDetailsDto, KaraokeSongDto, SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { TypesenseService } from "../typesense/typesense.service";
 import { SearchResultDto } from "./dto/search-response.dto";
+import { sanitizeSearchText } from "./utils/sanitize-query.util";
 
 type SongWithRelations = {
   id: number;
@@ -80,6 +81,8 @@ const SONG_SEARCH_SELECT = {
 
 @Injectable()
 export class SearchService {
+  private readonly logger = new Logger(SearchService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly typesenseService: TypesenseService,
@@ -148,14 +151,17 @@ export class SearchService {
     title: string;
     authorName?: string;
   }): Promise<SongDto[]> {
-    const trimmedTitle = query.title?.trim() ?? "";
-    const trimmedAuthorName = query.authorName?.trim() ?? "";
-    const typesenseQuery = [trimmedTitle, trimmedAuthorName]
+    const sanitizedTitle = sanitizeSearchText(query.title);
+    const sanitizedAuthorName = sanitizeSearchText(query.authorName);
+    const typesenseQuery = [sanitizedTitle, sanitizedAuthorName]
       .filter(Boolean)
       .join(" ")
       .trim();
 
     if (!typesenseQuery) {
+      this.logger.warn(
+        `searchSongsByTitleAndArtistName received empty query (title="${sanitizedTitle}", author="${sanitizedAuthorName}")`,
+      );
       return [];
     }
 
@@ -164,6 +170,9 @@ export class SearchService {
       page: 1,
       perPage: 20,
     });
+    // this.logger.log(
+    //   `Typesense song search query="${typesenseQuery}" hits=${songsResponse.hits?.length ?? 0}`,
+    // );
 
     const songIds = Array.from(
       new Set(
@@ -206,7 +215,9 @@ export class SearchService {
       return { results: [], total: 0 };
     }
 
-    return this.searchUnifiedWithTypesense(trimmedQuery, page, limit);
+    const sanitizedQuery = sanitizeSearchText(trimmedQuery) || trimmedQuery;
+
+    return this.searchUnifiedWithTypesense(sanitizedQuery, page, limit);
   }
 
   // Typesense 기반 통합 검색
@@ -349,5 +360,4 @@ export class SearchService {
 
     return { results: paginatedResults, total };
   }
-
 }
