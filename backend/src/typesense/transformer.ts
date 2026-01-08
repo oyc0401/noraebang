@@ -64,6 +64,7 @@ export interface TypesenseSongDocument {
 
   popularity?: number;
   artistPopularity?: number;
+  hasKaraokeNo?: boolean;
   updatedAt: number;
 
   q_song_ko_p?: string[];
@@ -206,6 +207,13 @@ function removeSpaces(text: string): string {
 }
 
 /**
+ * 괄호 제거 (검색 개선용)
+ */
+function removeBrackets(text: string): string {
+  return text.replace(/[『』「」【】［］()（）\[\]<>《》{}]/g, "").trim();
+}
+
+/**
  * 카타카나 → 히라가나 변환
  */
 function katakanaToHiragana(text: string): string {
@@ -291,6 +299,70 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
     ? [...artistBasicNames.filter((a) => a.name).map((a) => a.name), ...(artistAliases.q_artist_raw_p || [])]
     : artistAliases.q_artist_raw_p;
 
+  // 아티스트 이름 (원본 + 괄호 제거 버전)을 _a 필드에 추가
+  let q_artist_ko_a = artistAliases.q_artist_ko_a || [];
+  let q_artist_raw_a = artistAliases.q_artist_raw_a || [];
+  let q_artist_ja_kanji_a = artistAliases.q_artist_ja_kanji_a || [];
+  let q_artist_ja_kana_a = artistAliases.q_artist_ja_kana_a || [];
+
+  for (const artist of artists) {
+    // 한국어 이름: 원본 + 괄호 제거
+    if (artist.nameKo) {
+      if (!q_artist_ko_a.includes(artist.nameKo)) {
+        q_artist_ko_a = [artist.nameKo, ...q_artist_ko_a];
+      }
+      const noBrackets = removeBrackets(artist.nameKo);
+      if (artist.nameKo !== noBrackets && !q_artist_ko_a.includes(noBrackets)) {
+        q_artist_ko_a = [noBrackets, ...q_artist_ko_a];
+      }
+    }
+
+    // 원본 이름(name): 원본 + 괄호 제거
+    if (artist.name) {
+      const artistNameType = detectJapaneseType(artist.name);
+      const noBrackets = removeBrackets(artist.name);
+
+      if (artistNameType === "kanji" || artistNameType === "mixed") {
+        // 한자/혼합 → ja_kanji_a
+        if (!q_artist_ja_kanji_a.includes(artist.name)) {
+          q_artist_ja_kanji_a = [artist.name, ...q_artist_ja_kanji_a];
+        }
+        if (artist.name !== noBrackets && !q_artist_ja_kanji_a.includes(noBrackets)) {
+          q_artist_ja_kanji_a = [noBrackets, ...q_artist_ja_kanji_a];
+        }
+      } else if (artistNameType === "kana") {
+        // 가나 → ja_kana_a (원본 + 괄호 제거 + 히라가나 변환)
+        if (!q_artist_ja_kana_a.includes(artist.name)) {
+          q_artist_ja_kana_a = [artist.name, ...q_artist_ja_kana_a];
+        }
+        if (artist.name !== noBrackets && !q_artist_ja_kana_a.includes(noBrackets)) {
+          q_artist_ja_kana_a = [noBrackets, ...q_artist_ja_kana_a];
+        }
+        // 카타카나면 히라가나 변환도 추가 (원본과 괄호 제거 버전 둘 다)
+        if (/[\u30a0-\u30ff]/.test(artist.name)) {
+          const hiraganaOriginal = katakanaToHiragana(artist.name);
+          if (!q_artist_ja_kana_a.includes(hiraganaOriginal)) {
+            q_artist_ja_kana_a = [hiraganaOriginal, ...q_artist_ja_kana_a];
+          }
+        }
+        if (/[\u30a0-\u30ff]/.test(noBrackets) && artist.name !== noBrackets) {
+          const hiragana = katakanaToHiragana(noBrackets);
+          if (!q_artist_ja_kana_a.includes(hiragana)) {
+            q_artist_ja_kana_a = [hiragana, ...q_artist_ja_kana_a];
+          }
+        }
+      } else {
+        // 일본어가 아님 → raw_a
+        if (!q_artist_raw_a.includes(artist.name)) {
+          q_artist_raw_a = [artist.name, ...q_artist_raw_a];
+        }
+        if (artist.name !== noBrackets && !q_artist_raw_a.includes(noBrackets)) {
+          q_artist_raw_a = [noBrackets, ...q_artist_raw_a];
+        }
+      }
+    }
+  }
+
   return {
     id: song.id.toString(),
     catalog: song.catalog ?? undefined,
@@ -307,6 +379,7 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
 
     popularity,
     artistPopularity,
+    hasKaraokeNo: karaokeNosTj.length > 0 || karaokeNosKy.length > 0 || undefined,
     updatedAt: Math.floor(song.updatedAt.getTime() / 1000),
 
     // 곡 별칭 필드
@@ -332,22 +405,22 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
 
     // 아티스트 별칭 필드
     q_artist_ko_p,
-    q_artist_ko_a: artistAliases.q_artist_ko_a,
+    q_artist_ko_a: q_artist_ko_a.length > 0 ? q_artist_ko_a : undefined,
     q_artist_ko_a2: artistAliases.q_artist_ko_a2,
     q_artist_ko_f: artistAliases.q_artist_ko_f,
 
     q_artist_raw_p,
-    q_artist_raw_a: artistAliases.q_artist_raw_a,
+    q_artist_raw_a: q_artist_raw_a.length > 0 ? q_artist_raw_a : undefined,
     q_artist_raw_a2: artistAliases.q_artist_raw_a2,
     q_artist_raw_f: artistAliases.q_artist_raw_f,
 
     q_artist_ja_kanji_p: artistAliases.q_artist_ja_kanji_p,
-    q_artist_ja_kanji_a: artistAliases.q_artist_ja_kanji_a,
+    q_artist_ja_kanji_a: q_artist_ja_kanji_a.length > 0 ? q_artist_ja_kanji_a : undefined,
     q_artist_ja_kanji_a2: artistAliases.q_artist_ja_kanji_a2,
     q_artist_ja_kanji_f: artistAliases.q_artist_ja_kanji_f,
 
     q_artist_ja_kana_p: artistAliases.q_artist_ja_kana_p,
-    q_artist_ja_kana_a: artistAliases.q_artist_ja_kana_a,
+    q_artist_ja_kana_a: q_artist_ja_kana_a.length > 0 ? q_artist_ja_kana_a : undefined,
     q_artist_ja_kana_a2: artistAliases.q_artist_ja_kana_a2,
     q_artist_ja_kana_f: artistAliases.q_artist_ja_kana_f,
 
@@ -379,22 +452,80 @@ export function transformArtistToDocument(artist: ArtistWithRelations): Typesens
   const q_name_ko_p = nameKo ? [nameKo, ...(nameAliases.q_name_ko_p || [])] : nameAliases.q_name_ko_p;
   const q_name_latin_p = nameLatin ? [nameLatin, ...(nameAliases.q_name_latin_p || [])] : nameAliases.q_name_latin_p;
 
+  // 원본 + 괄호 제거 버전 추가 (검색 개선)
+  let q_name_ko_a = nameAliases.q_name_ko_a || [];
+  let q_name_latin_a = nameAliases.q_name_latin_a || [];
+
+  if (nameKo) {
+    if (!q_name_ko_a.includes(nameKo)) {
+      q_name_ko_a = [nameKo, ...q_name_ko_a];
+    }
+    const noBrackets = removeBrackets(nameKo);
+    if (nameKo !== noBrackets && !q_name_ko_a.includes(noBrackets)) {
+      q_name_ko_a = [noBrackets, ...q_name_ko_a];
+    }
+  }
+  if (nameLatin) {
+    if (!q_name_latin_a.includes(nameLatin)) {
+      q_name_latin_a = [nameLatin, ...q_name_latin_a];
+    }
+    const noBrackets = removeBrackets(nameLatin);
+    if (nameLatin !== noBrackets && !q_name_latin_a.includes(noBrackets)) {
+      q_name_latin_a = [noBrackets, ...q_name_latin_a];
+    }
+  }
+
   // 일본어 처리
   let q_name_ja_kanji_p = nameAliases.q_name_ja_kanji_p;
+  let q_name_ja_kanji_a = nameAliases.q_name_ja_kanji_a || [];
   let q_name_ja_kana_p = nameAliases.q_name_ja_kana_p;
-  let q_name_ja_kana_a = nameAliases.q_name_ja_kana_a;
+  let q_name_ja_kana_a = nameAliases.q_name_ja_kana_a || [];
 
   if (nameType === "kanji" || nameType === "mixed") {
     // 한자가 포함된 경우 → ja_kanji_p에 추가
     q_name_ja_kanji_p = nameJaKanji ? [nameJaKanji, ...(nameAliases.q_name_ja_kanji_p || [])] : nameAliases.q_name_ja_kanji_p;
+
+    // 원본 + 괄호 제거 버전 추가
+    if (nameJaKanji) {
+      if (!q_name_ja_kanji_a.includes(nameJaKanji)) {
+        q_name_ja_kanji_a = [nameJaKanji, ...q_name_ja_kanji_a];
+      }
+      const noBrackets = removeBrackets(nameJaKanji);
+      if (nameJaKanji !== noBrackets && !q_name_ja_kanji_a.includes(noBrackets)) {
+        q_name_ja_kanji_a = [noBrackets, ...q_name_ja_kanji_a];
+      }
+    }
   } else if (nameType === "kana") {
     // 가나만 있는 경우 → ja_kana_p에 추가 + 히라가나 변환도 ja_kana_a에 추가
     q_name_ja_kana_p = nameJaKana ? [nameJaKana, ...(nameAliases.q_name_ja_kana_p || [])] : nameAliases.q_name_ja_kana_p;
 
-    // 카타카나면 히라가나 버전도 추가
+    // 원본 추가
+    if (nameJaKana && !q_name_ja_kana_a.includes(nameJaKana)) {
+      q_name_ja_kana_a = [nameJaKana, ...q_name_ja_kana_a];
+    }
+
+    // 카타카나면 히라가나 버전도 추가 (원본)
     if (nameJaKana && /[\u30a0-\u30ff]/.test(nameJaKana)) {
       const hiragana = katakanaToHiragana(nameJaKana);
-      q_name_ja_kana_a = [hiragana, ...(nameAliases.q_name_ja_kana_a || [])];
+      if (!q_name_ja_kana_a.includes(hiragana)) {
+        q_name_ja_kana_a = [hiragana, ...q_name_ja_kana_a];
+      }
+    }
+
+    // 괄호 제거 버전 추가
+    if (nameJaKana) {
+      const noBrackets = removeBrackets(nameJaKana);
+      if (nameJaKana !== noBrackets && !q_name_ja_kana_a.includes(noBrackets)) {
+        q_name_ja_kana_a = [noBrackets, ...q_name_ja_kana_a];
+      }
+
+      // 괄호 제거 버전의 히라가나도 추가
+      if (nameJaKana !== noBrackets && /[\u30a0-\u30ff]/.test(noBrackets)) {
+        const hiragana = katakanaToHiragana(noBrackets);
+        if (!q_name_ja_kana_a.includes(hiragana)) {
+          q_name_ja_kana_a = [hiragana, ...q_name_ja_kana_a];
+        }
+      }
     }
   }
 
@@ -412,25 +543,25 @@ export function transformArtistToDocument(artist: ArtistWithRelations): Typesens
 
     // 이름 별칭 필드 (한국어)
     q_name_ko_p,
-    q_name_ko_a: nameAliases.q_name_ko_a,
+    q_name_ko_a: q_name_ko_a.length > 0 ? q_name_ko_a : undefined,
     q_name_ko_a2: nameAliases.q_name_ko_a2,
     q_name_ko_f: nameAliases.q_name_ko_f,
 
     // 이름 별칭 필드 (라틴)
     q_name_latin_p,
-    q_name_latin_a: nameAliases.q_name_latin_a,
+    q_name_latin_a: q_name_latin_a.length > 0 ? q_name_latin_a : undefined,
     q_name_latin_a2: nameAliases.q_name_latin_a2,
     q_name_latin_f: nameAliases.q_name_latin_f,
 
     // 이름 별칭 필드 (일본어 한자)
     q_name_ja_kanji_p,
-    q_name_ja_kanji_a: nameAliases.q_name_ja_kanji_a,
+    q_name_ja_kanji_a: q_name_ja_kanji_a.length > 0 ? q_name_ja_kanji_a : undefined,
     q_name_ja_kanji_a2: nameAliases.q_name_ja_kanji_a2,
     q_name_ja_kanji_f: nameAliases.q_name_ja_kanji_f,
 
     // 이름 별칭 필드 (일본어 가나)
     q_name_ja_kana_p,
-    q_name_ja_kana_a,
+    q_name_ja_kana_a: q_name_ja_kana_a.length > 0 ? q_name_ja_kana_a : undefined,
     q_name_ja_kana_a2: nameAliases.q_name_ja_kana_a2,
     q_name_ja_kana_f: nameAliases.q_name_ja_kana_f,
   };

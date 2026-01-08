@@ -34,6 +34,7 @@ export const songsCollectionSchema: CollectionCreateSchema = {
     // ===== 정렬/랭킹 필드 =====
     { name: "popularity", type: "float", optional: true }, // Spotify track popularity
     { name: "artistPopularity", type: "float", optional: true }, // 메인 아티스트 인기도
+    { name: "hasKaraokeNo", type: "bool", optional: true }, // 노래방 번호 유무 (정렬용)
     { name: "updatedAt", type: "int64" }, // Unix timestamp
 
     // ===== 검색 필드: 곡명 =====

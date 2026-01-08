@@ -1,7 +1,9 @@
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Provider } from "@prisma/client";
 import { ArtistDetailsDto, ArtistDto, KaraokeSongDto, SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
+import { TypesenseService } from "../typesense/typesense.service";
 import { SearchResultDto } from "./dto/search-response.dto";
 
 type SongWithRelations = {
@@ -63,7 +65,16 @@ const includesMatch = (target: string, candidate: string): boolean => {
 
 @Injectable()
 export class SearchService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly useTypesense: boolean;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly typesenseService: TypesenseService,
+    private readonly configService: ConfigService,
+  ) {
+    this.useTypesense =
+      this.configService.get<string>("TYPESENSE_ENABLED", "true") === "true";
+  }
 
   private filterSongsByTitleMatch<
     T extends { title: string; titleKo?: string | null },
@@ -272,7 +283,160 @@ export class SearchService {
       return { results: [], total: 0 };
     }
 
-    const normalizedQuery = normalizeForMatching(trimmedQuery);
+    // Typesense 사용 여부에 따라 분기
+    if (this.useTypesense) {
+      return this.searchUnifiedWithTypesense(trimmedQuery, page, limit);
+    }
+
+    return this.searchUnifiedWithPrisma(trimmedQuery, page, limit);
+  }
+
+  // Typesense 기반 통합 검색
+  private async searchUnifiedWithTypesense(
+    query: string,
+    page: number,
+    limit: number,
+  ): Promise<{ results: SearchResultDto[]; total: number }> {
+    // Typesense에서 아티스트와 곡 병렬 검색
+    const [artistsResponse, songsResponse] = await Promise.all([
+      this.typesenseService.searchArtists({
+        query,
+        page: 1,
+        perPage: 100, // 충분히 가져옴
+      }),
+      this.typesenseService.searchSongs({
+        query,
+        page: 1,
+        perPage: 100,
+      }),
+    ]);
+
+    // Typesense 결과에서 ID 추출
+    const artistIds = artistsResponse.hits?.map((hit) =>
+      parseInt(hit.document.id, 10),
+    ) ?? [];
+    const songIds = songsResponse.hits?.map((hit) =>
+      parseInt(hit.document.id, 10),
+    ) ?? [];
+
+    // DB에서 상세 정보 조회 (병렬)
+    const [artists, songs] = await Promise.all([
+      artistIds.length > 0
+        ? this.prisma.artist.findMany({
+            where: { id: { in: artistIds } },
+            select: {
+              id: true,
+              name: true,
+              nameKo: true,
+              slug: true,
+              homeCatalog: true,
+              thumbnailDefault: true,
+              thumbnailMedium: true,
+              thumbnailHigh: true,
+              youtubeChannels: {
+                select: {
+                  type: true,
+                  channelId: true,
+                  title: true,
+                  description: true,
+                  customUrl: true,
+                  subscriberCount: true,
+                  videoCount: true,
+                  thumbnailDefault: true,
+                  thumbnailMedium: true,
+                  thumbnailHigh: true,
+                },
+              },
+              _count: {
+                select: {
+                  artistSongs: true,
+                },
+              },
+            },
+          })
+        : [],
+      songIds.length > 0
+        ? this.prisma.song.findMany({
+            where: { id: { in: songIds } },
+            select: SONG_SEARCH_SELECT,
+          })
+        : [],
+    ]);
+
+    // ID 순서 맵 생성 (Typesense 결과 순서 유지)
+    const artistOrderMap = new Map(artistIds.map((id, index) => [id, index]));
+    const songOrderMap = new Map(songIds.map((id, index) => [id, index]));
+
+    // 순서대로 정렬
+    const sortedArtists = artists.sort(
+      (a, b) => (artistOrderMap.get(a.id) ?? 0) - (artistOrderMap.get(b.id) ?? 0),
+    );
+    const sortedSongs = songs.sort(
+      (a, b) => (songOrderMap.get(a.id) ?? 0) - (songOrderMap.get(b.id) ?? 0),
+    );
+
+    // 아티스트 결과 매핑
+    const artistResults: SearchResultDto[] = sortedArtists.map((artist) => {
+      const mainChannel =
+        artist.youtubeChannels.find((ch) => ch.type === "MAIN") ??
+        artist.youtubeChannels.find((ch) => ch.type === "TOPIC");
+
+      const artistDetails: ArtistDetailsDto = {
+        id: artist.id,
+        name: artist.name,
+        nameKo: artist.nameKo,
+        slug: artist.slug ?? undefined,
+        homeCatalog: artist.homeCatalog ?? undefined,
+        thumbnailDefault: artist.thumbnailDefault ?? undefined,
+        thumbnailMedium: artist.thumbnailMedium ?? undefined,
+        thumbnailHigh: artist.thumbnailHigh ?? undefined,
+        songCount: artist._count.artistSongs,
+        youtube: mainChannel
+          ? {
+              channelId: mainChannel.channelId,
+              title: mainChannel.title ?? undefined,
+              description: mainChannel.description ?? undefined,
+              customUrl: mainChannel.customUrl ?? undefined,
+              subscriberCount: mainChannel.subscriberCount ?? undefined,
+              videoCount: mainChannel.videoCount ?? undefined,
+              thumbnailDefault: mainChannel.thumbnailDefault ?? undefined,
+              thumbnailMedium: mainChannel.thumbnailMedium ?? undefined,
+              thumbnailHigh: mainChannel.thumbnailHigh ?? undefined,
+            }
+          : undefined,
+      };
+
+      return {
+        type: "artist" as const,
+        artist: artistDetails,
+      };
+    });
+
+    // 곡 결과 매핑
+    const tjSongMap = await this.buildTjSongMap(sortedSongs);
+    const songResults: SearchResultDto[] = sortedSongs.map((song) => ({
+      type: "song" as const,
+      song: this.mapSongToDto(song, tjSongMap),
+    }));
+
+    // 아티스트 우선, 그 다음 곡
+    const allResults = [...artistResults, ...songResults];
+    const total = allResults.length;
+
+    // 페이지네이션 적용
+    const skip = (page - 1) * limit;
+    const paginatedResults = allResults.slice(skip, skip + limit);
+
+    return { results: paginatedResults, total };
+  }
+
+  // Prisma 기반 통합 검색 (기존 로직)
+  private async searchUnifiedWithPrisma(
+    query: string,
+    page: number,
+    limit: number,
+  ): Promise<{ results: SearchResultDto[]; total: number }> {
+    const normalizedQuery = normalizeForMatching(query);
     const skip = (page - 1) * limit;
 
     // 아티스트 검색

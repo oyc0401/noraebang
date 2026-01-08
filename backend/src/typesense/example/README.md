@@ -14,7 +14,13 @@
 ### 티어 정의 (이거 고정)
 
 ### P(Primary)
- SPOTIFY 공식 표기 , titleor titleKo (한국어/영어/일본어 구분해서 넣기. title이 영어면 영어의 primary에만 추가.) 
+
+SPOTIFY 공식 표기
+
+titleor titleKo (한국어/영어/일본어 구분해서 넣기. title이 영어면 영어의 primary에만 추가.) 
+
+primary의 괄호제거 버전도 넣기. ("『ユイカ』"와 "ユイカ" 둘 다 primary에 넣기.)
+
 
 **KO는 필수**
 
