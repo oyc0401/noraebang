@@ -5,13 +5,16 @@
  * pnpm tsx src/scripts/youtube-music/verify-artist-songs.ts --artist-id=1
  * pnpm tsx src/scripts/youtube-music/verify-artist-songs.ts --artist-name="아이유"
  * pnpm tsx src/scripts/youtube-music/verify-artist-songs.ts --batch --limit=10
+ *
+ * 환경변수:
+ * YOUTUBE_MUSIC_COOKIE - YouTube Music 쿠키 (필수)
  */
 
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
-import * as ytmusic from "node-youtube-music";
+import YouTubeMusic from "youtube-music-ts-api";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -77,6 +80,33 @@ function normalizeTitle(title: string): string {
 }
 
 /**
+ * YouTube Music API 인스턴스 (싱글톤)
+ */
+let ytmusicInstance: YouTubeMusic | null = null;
+
+async function getYTMusicInstance(): Promise<YouTubeMusic> {
+  if (!ytmusicInstance) {
+    const cookie = process.env.YOUTUBE_MUSIC_COOKIE;
+    if (!cookie) {
+      throw new Error(
+        "YOUTUBE_MUSIC_COOKIE 환경변수가 설정되지 않았습니다.\n" +
+        "설정 방법:\n" +
+        "1. YouTube Music (https://music.youtube.com) 접속\n" +
+        "2. 개발자 도구 열기 (F12)\n" +
+        "3. Network 탭에서 '/browse' 요청 찾기\n" +
+        "4. Request Headers에서 'cookie' 값 복사\n" +
+        "5. .env 파일에 YOUTUBE_MUSIC_COOKIE=<복사한값> 추가"
+      );
+    }
+
+    ytmusicInstance = new YouTubeMusic();
+    await ytmusicInstance.initialize({ cookies: cookie });
+  }
+
+  return ytmusicInstance;
+}
+
+/**
  * 단일 아티스트 검증
  */
 async function verifyArtist(artistId: number) {
@@ -104,21 +134,21 @@ async function verifyArtist(artistId: number) {
   // 1. YouTube Music에서 아티스트 검색
   console.log(`\n🔍 YouTube Music 검색 중...`);
 
-  const searchResults = await ytmusic.searchMusics(artist.name);
-  const ytArtists = searchResults.filter((item: any) => item.type === "artist");
+  const ytmusic = await getYTMusicInstance();
+  const searchResults = await ytmusic.searchArtists(artist.name);
 
-  if (ytArtists.length === 0) {
+  if (!searchResults || searchResults.length === 0) {
     console.log(`⚠️  YouTube Music에서 아티스트를 찾을 수 없습니다.`);
     return { artist, verified: 0, total: artist.artistSongs.length };
   }
 
-  const ytArtist = ytArtists[0];
+  const ytArtist = searchResults[0];
   console.log(`✅ YouTube Music 아티스트: ${ytArtist.name}`);
 
   // 2. 아티스트의 YouTube Music 곡 목록 가져오기
   console.log(`\n⏳ YouTube Music 곡 목록 가져오는 중...`);
 
-  const artistData = await ytmusic.getArtist(ytArtist.artistId);
+  const artistData = await ytmusic.getArtist(ytArtist.id);
 
   if (!artistData) {
     console.log(`⚠️  아티스트 데이터를 가져올 수 없습니다.`);
@@ -128,14 +158,12 @@ async function verifyArtist(artistId: number) {
   // YouTube Music 곡 목록
   const ytSongs: any[] = [];
 
-  if (artistData.topReleases) {
-    ytSongs.push(
-      ...artistData.topReleases.filter((item: any) => item.type === "song"),
-    );
+  if (artistData.topSongs) {
+    ytSongs.push(...artistData.topSongs);
   }
 
-  if (artistData.songs) {
-    ytSongs.push(...artistData.songs);
+  if (artistData.songs && artistData.songs.products) {
+    ytSongs.push(...artistData.songs.products);
   }
 
   console.log(`✅ YouTube Music 곡 개수: ${ytSongs.length}개`);
@@ -157,7 +185,7 @@ async function verifyArtist(artistId: number) {
     let bestScore = 0;
 
     for (const ytSong of ytSongs) {
-      const ytTitle = ytSong.title || ytSong.name;
+      const ytTitle = ytSong.name;
       const normalizedYtTitle = normalizeTitle(ytTitle);
 
       const score = calculateSimilarity(normalizedTjTitle, normalizedYtTitle);
