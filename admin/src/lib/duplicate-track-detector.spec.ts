@@ -163,7 +163,7 @@ describe("isDuplicateTrack", () => {
     });
   });
 
-  describe("실제 데이터 예시 (사용자 제공)", () => {
+  describe("실제 데이터 예시 (사용자 제공 - 배치 1)", () => {
     it("残機 - Live", () => {
       expect(isDuplicateTrack("残機 - Live")).toBe(true);
     });
@@ -200,6 +200,56 @@ describe("isDuplicateTrack", () => {
 
     it("Endless Summer [with FIRE HORNS]", () => {
       expect(isDuplicateTrack("Endless Summer [with FIRE HORNS]")).toBe(true);
+    });
+  });
+
+  describe("실제 데이터 예시 (사용자 제공 - 배치 2)", () => {
+    it("SUNRISE - Remix", () => {
+      expect(isDuplicateTrack("SUNRISE - Remix")).toBe(true);
+    });
+
+    it("UCHIDA1 - Laos Remix", () => {
+      expect(isDuplicateTrack("UCHIDA1 - Laos Remix")).toBe(true);
+    });
+
+    it("UCHIDA 1 - Vietnam Remix", () => {
+      expect(isDuplicateTrack("UCHIDA 1 - Vietnam Remix")).toBe(true);
+    });
+
+    it("ブループリント - Sasuke Haraguchi Remix", () => {
+      expect(isDuplicateTrack("ブループリント - Sasuke Haraguchi Remix")).toBe(
+        true,
+      );
+    });
+
+    it("リードコントロール - せっかち Ver.", () => {
+      expect(isDuplicateTrack("リードコントロール - せっかち Ver.")).toBe(true);
+    });
+
+    it("UNFAIR - TV Size", () => {
+      expect(isDuplicateTrack("UNFAIR - TV Size")).toBe(true);
+    });
+  });
+
+  describe("짧은 버전 패턴", () => {
+    it("- TV Size 패턴은 중복으로 판단해야 함", () => {
+      expect(isDuplicateTrack("Song Title - TV Size")).toBe(true);
+    });
+
+    it("(TV Size) 패턴은 중복으로 판단해야 함", () => {
+      expect(isDuplicateTrack("Song Title (TV Size)")).toBe(true);
+    });
+
+    it("- Short Ver. 패턴은 중복으로 판단해야 함", () => {
+      expect(isDuplicateTrack("Song Title - Short Ver.")).toBe(true);
+    });
+
+    it("- Radio Edit 패턴은 중복으로 판단해야 함", () => {
+      expect(isDuplicateTrack("Song Title - Radio Edit")).toBe(true);
+    });
+
+    it("(Radio Edit) 패턴은 중복으로 판단해야 함", () => {
+      expect(isDuplicateTrack("Song Title (Radio Edit)")).toBe(true);
     });
   });
 });

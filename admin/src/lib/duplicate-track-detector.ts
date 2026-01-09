@@ -2,13 +2,14 @@
  * 스포티파이 트랙 제목이 중복 트랙인지 판단하는 함수
  *
  * 중복으로 판단하는 패턴:
- * - (alt ver.), (Ver.), (Version) 등 버전 표시
+ * - (alt ver.), (Ver.), (Version), - XX Ver. 등 버전 표시
  * - - Live, (Live), - Live at, Live ver. 등 라이브 버전
  * - - Instrumental, (Instrumental), - Inst., -instrumental- 등 인스트루멘탈
  * - - Remix, (Remix), - XX Remix 등 리믹스
  * - - OFF VOCAL, (OFF VOCAL) 등 보컬 제거 버전
  * - - from "...", (from ...) 등 출처 표시
  * - [with ...], (with ...), - with ... 등 특별 편곡
+ * - - TV Size, (TV Size), - Short Ver., - Radio Edit 등 짧은 버전
  *
  * @param trackName - 스포티파이 트랙 제목
  * @returns 중복 트랙이면 true, 아니면 false
@@ -24,6 +25,7 @@ export function isDuplicateTrack(trackName: string): boolean {
     /\(ver\.?\)/i,
     /\(version\)/i,
     /- alternate version/i,
+    /- .+ ver\.?$/i, // "- XX Ver." 패턴 (일본 곡)
   ];
 
   // 라이브 버전 패턴
@@ -48,10 +50,10 @@ export function isDuplicateTrack(trackName: string): boolean {
 
   // 리믹스 패턴
   const remixPatterns = [
-    /- remix/i,
-    /\(remix\)/i,
-    /- \w+ remix/i,
-    /\(\w+ remix\)/i,
+    /- remix($|\s)/i, // "- Remix"
+    /\(remix\)/i, // "(Remix)"
+    /- .+ remix/i, // "- XX Remix", "- Sasuke Haraguchi Remix"
+    /\(.+ remix\)/i, // "(XX Remix)"
   ];
 
   // 보컬 제거 패턴
@@ -75,6 +77,17 @@ export function isDuplicateTrack(trackName: string): boolean {
     /- with\s/i,
   ];
 
+  // 짧은 버전 패턴
+  const shortVersionPatterns = [
+    /- tv size/i,
+    /\(tv size\)/i,
+    /\[tv size\]/i,
+    /- short ver\.?/i,
+    /\(short ver\.?\)/i,
+    /- radio edit/i,
+    /\(radio edit\)/i,
+  ];
+
   // 모든 패턴 결합
   const allPatterns = [
     ...versionPatterns,
@@ -84,6 +97,7 @@ export function isDuplicateTrack(trackName: string): boolean {
     ...offVocalPatterns,
     ...fromPatterns,
     ...withPatterns,
+    ...shortVersionPatterns,
   ];
 
   // 하나라도 매칭되면 중복으로 판단
