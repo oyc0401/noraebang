@@ -30,17 +30,8 @@ const prisma = new PrismaClient({ adapter });
 // 여기에 매핑할 아티스트 ID와 Spotify ID를 입력하세요
 // ========================================
 const ARTIST_MAPPINGS: Array<{ artistId: number; spotifyId: string }> = [
-  { artistId: 71, spotifyId: "1WmnQSoQxUa4x14IWgHCiD" }, // BAK
-  { artistId: 73, spotifyId: "6rs1KAoQnFalSqSU4LTh8g" }, // back number
-  { artistId: 131, spotifyId: "3JjGQRskRjFJMpBESBtSum" }, // ASA (Asa, 일본)
-  { artistId: 139, spotifyId: "7daQrggyaKUgqUf6odCALL" }, // AiRI (UR@N)
-  { artistId: 148, spotifyId: "2Qqrew4ZcEwf9NY7UqWGfU" }, // ALI (일본 밴드)
-  { artistId: 153, spotifyId: "2xZeyR38yb0Wru7qwAeT1g" }, // Yumcha
-  { artistId: 154, spotifyId: "0HajkTlreHDUAVVFx72ci7" }, // 808 (ヤオヤ / YAOYA)
-  { artistId: 160, spotifyId: "3x621ItlHMtX7mrJ8QnEjM" }, // HY (오키나와 밴드)
-  { artistId: 166, spotifyId: "0KvyTAf3LiFMWOxA4FctDD" }, // 織重 夕
-  { artistId: 178, spotifyId: "4R14J6FzaAM6gWBcidVFt4" }, // ヨーメイ
-  { artistId: 186, spotifyId: "0ixzjrK1wkN2zWBXt3VW3W" }, // 優里 (Yuuri)
+  { artistId: 60, spotifyId: "4WgGn0neagCUyjQExpUBX7" }, // 百足 (무카데)
+  { artistId: 272, spotifyId: "5KUOSKYLz09CFEp79nLJW5" }, // 韻マン (인만)
 ];
 
 // Spotify Access Token 가져오기
@@ -70,15 +61,23 @@ async function getSpotifyAccessToken(): Promise<string> {
 }
 
 // Spotify에서 아티스트 정보 가져오기
-async function getSpotifyArtist(spotifyId: string, accessToken: string): Promise<any> {
-  const response = await fetch(`https://api.spotify.com/v1/artists/${spotifyId}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
+async function getSpotifyArtist(
+  spotifyId: string,
+  accessToken: string,
+): Promise<any> {
+  const response = await fetch(
+    `https://api.spotify.com/v1/artists/${spotifyId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
-    throw new Error(`Failed to get artist from Spotify: ${response.statusText}`);
+    throw new Error(
+      `Failed to get artist from Spotify: ${response.statusText}`,
+    );
   }
 
   return await response.json();
@@ -96,7 +95,9 @@ async function main() {
 
   if (ARTIST_MAPPINGS.length === 0) {
     console.log("⚠️  ARTIST_MAPPINGS 배열이 비어있습니다.");
-    console.log("스크립트 파일을 열어서 매핑할 아티스트 정보를 입력해주세요.\n");
+    console.log(
+      "스크립트 파일을 열어서 매핑할 아티스트 정보를 입력해주세요.\n",
+    );
     return;
   }
 
@@ -117,7 +118,9 @@ async function main() {
   for (let i = 0; i < ARTIST_MAPPINGS.length; i++) {
     const { artistId, spotifyId } = ARTIST_MAPPINGS[i];
 
-    console.log(`\n[${i + 1}/${ARTIST_MAPPINGS.length}] Processing Artist ID ${artistId}...`);
+    console.log(
+      `\n[${i + 1}/${ARTIST_MAPPINGS.length}] Processing Artist ID ${artistId}...`,
+    );
 
     try {
       // 2.1. Artist 확인
@@ -138,7 +141,9 @@ async function main() {
       console.log(`  Artist: [${artist.id}] ${artist.name} (${artist.nameKo})`);
 
       if (artist.spotifyId) {
-        console.log(`  ⚠️  이미 Spotify ID가 설정되어 있습니다: ${artist.spotifyId}`);
+        console.log(
+          `  ⚠️  이미 Spotify ID가 설정되어 있습니다: ${artist.spotifyId}`,
+        );
         console.log(`  → 새로운 ID로 덮어씁니다: ${spotifyId}`);
       }
 
@@ -159,7 +164,9 @@ async function main() {
       };
 
       console.log(`  Spotify Artist: ${spotifyData.name}`);
-      console.log(`    Popularity: ${spotifyData.popularity}, Followers: ${spotifyData.followers?.toLocaleString()}`);
+      console.log(
+        `    Popularity: ${spotifyData.popularity}, Followers: ${spotifyData.followers?.toLocaleString()}`,
+      );
 
       if (!isDryRun) {
         // 2.3. SpotifyArtist 생성 또는 업데이트
@@ -206,7 +213,9 @@ async function main() {
   }
 
   if (isDryRun) {
-    console.log(`\n💡 DRY RUN 모드: 실제 업데이트를 수행하려면 --dry-run 없이 다시 실행하세요.`);
+    console.log(
+      `\n💡 DRY RUN 모드: 실제 업데이트를 수행하려면 --dry-run 없이 다시 실행하세요.`,
+    );
   } else {
     console.log(`\n✅ 매핑 완료!`);
   }
