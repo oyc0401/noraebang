@@ -97,7 +97,12 @@ model TjSong {
   composerList     String[] @map("composer_list")
   thumbnailImg     String?  @map("thumbnail_img")
   publishdate      String?  @map("publishdate")
+  youtubeLink      String?  @map("youtube_link")
   saved            Boolean  @default(false) // 지워도 됌
+  isMR             Boolean  @default(false) @map("is_mr")
+  isMV             Boolean  @default(false) @map("is_mv")
+  isOver60         Boolean  @default(false) @map("is_over_60")
+  realArtist       String[] @default([]) @map("real_artist")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
