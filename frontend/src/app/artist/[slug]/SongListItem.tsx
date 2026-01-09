@@ -1,9 +1,11 @@
 "use client";
 
+import { MoreVertical } from "lucide-react";
 import Image from "next/image";
 import type { KaraokeSongDto, SongDto } from "@/api/model/models";
+import { KaraokeBadge } from "@/components/common/KaraokeBadge";
+import { RecommendationBadge } from "@/components/common/RecommendationBadge";
 import { cn } from "@/lib/cn";
-import { MoreVertical } from "lucide-react";
 
 interface SongListItemProps {
   song: SongDto;
@@ -11,21 +13,19 @@ interface SongListItemProps {
   onClick: () => void;
 }
 
-const getKaraokeNumbers = (
+const RECOMMENDATION_COUNT = 0;
+
+const getTJKaraokeNumbers = (
   karaokeSongs?: KaraokeSongDto[],
 ): KaraokeSongDto[] =>
   karaokeSongs?.filter(
-    (item): item is KaraokeSongDto & { provider: "TJ" | "KY" } =>
-      item.provider === "TJ" || item.provider === "KY",
+    (item): item is KaraokeSongDto & { provider: "TJ" } =>
+      item.provider === "TJ",
   ) ?? [];
 
-export function SongListItem({
-  song,
-  isSelected,
-  onClick,
-}: SongListItemProps) {
+export function SongListItem({ song, isSelected, onClick }: SongListItemProps) {
   const thumbnailSrc = song.thumbnailMedium ?? song.thumbnailDefault;
-  const karaokeNumbers = getKaraokeNumbers(song.karaokeSongs);
+  const karaokeNumbers = getTJKaraokeNumbers(song.karaokeSongs);
 
   return (
     <button
@@ -38,7 +38,7 @@ export function SongListItem({
         isSelected && "border-primary/60 bg-primary/20",
       )}
     >
-      <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-lg bg-zinc-800">
+      <div className="relative h-18 w-18 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
         {thumbnailSrc ? (
           <Image
             src={thumbnailSrc}
@@ -60,26 +60,21 @@ export function SongListItem({
         {song.titleKo && (
           <p className="truncate text-xs text-white/60">{song.titleKo}</p>
         )}
-        {karaokeNumbers.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            {karaokeNumbers.map((entry) => (
-              <div
+        <div className="flex flex-wrap gap-2 pt-1">
+          {karaokeNumbers.length > 0 ? (
+            karaokeNumbers.map((entry) => (
+              <KaraokeBadge
                 key={`${entry.provider}-${entry.karaokeNo}`}
-                className={cn(
-                  "flex items-center gap-1.5 rounded px-2 py-0.5 border text-xs font-bold font-mono",
-                  entry.provider === "TJ"
-                    ? "border-primary/30 bg-primary/15 text-primary"
-                    : "border-blue-500/40 bg-blue-500/10 text-blue-200",
-                )}
-              >
-                <span className="text-[10px] uppercase tracking-widest">
-                  {entry.provider}
-                </span>
-                <span>{entry.karaokeNo}</span>
-              </div>
-            ))}
-          </div>
-        )}
+                provider={entry.provider as "TJ" | "KY"}
+                number={entry.karaokeNo}
+                isMR={false}
+                isMV={false}
+              />
+            ))
+          ) : (
+            <RecommendationBadge count={RECOMMENDATION_COUNT} />
+          )}
+        </div>
       </div>
       <span className="flex size-10 items-center justify-center rounded-full text-white/60">
         <MoreVertical className="size-5" />

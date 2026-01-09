@@ -1,20 +1,22 @@
 "use client";
 
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useInView } from "react-intersection-observer";
 import type {
   ArtistDetailsDto,
   SongDto,
   SongListResponseDto,
 } from "@/api/model/models";
-import { ProfileHeader } from "./ProfileHeader";
-import { ActionButtons } from "./ActionButtons";
-import { SongListItem } from "./SongListItem";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
-import { useInView } from "react-intersection-observer";
-import { Loader2 } from "lucide-react";
-import { ARTIST_SONGS_PAGE_SIZE } from "./constants";
 import { Header } from "@/components/common/Header";
+import { ActionButtons } from "./ActionButtons";
+import { ARTIST_SONGS_PAGE_SIZE } from "./constants";
+import { ProfileHeader } from "./ProfileHeader";
+import { SongListItem } from "./SongListItem";
+
+const RECOMMENDATION_COUNT = 0;
 
 interface ArtistPageClientProps {
   artist: ArtistDetailsDto;
@@ -57,7 +59,18 @@ export default function ArtistPageClient({
     }
   }, []);
 
-  const songs = data?.pages.flatMap<SongDto>((page) => page.data ?? []) ?? [];
+  const allSongs =
+    data?.pages.flatMap<SongDto>((page) => page.data ?? []) ?? [];
+
+  // TJ 곡이 있는 곡을 먼저 정렬
+  const songs = [...allSongs].sort((a, b) => {
+    const aHasTJ = a.karaokeSongs?.some((k) => k.provider === "TJ") ?? false;
+    const bHasTJ = b.karaokeSongs?.some((k) => k.provider === "TJ") ?? false;
+
+    if (aHasTJ && !bHasTJ) return -1;
+    if (!aHasTJ && bHasTJ) return 1;
+    return 0;
+  });
 
   // Effect for handling scrolling to a target song from a hash
   useEffect(() => {
@@ -86,6 +99,8 @@ export default function ArtistPageClient({
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage, targetSongId]);
 
+  const showRecommendationButton = !isLoading && songs.length === 0;
+
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-dark text-white">
       <Header />
@@ -99,20 +114,35 @@ export default function ArtistPageClient({
         <span className="text-slate-400 text-xs font-medium mb-1">인기순</span>
       </div>
 
-      <div className="flex flex-col gap-1 pb-10">
-        {songs.map((song) => (
-          <SongListItem
-            key={song.id}
-            song={song}
-            isSelected={selectedSongId === song.id.toString()}
-            onClick={() => {
-              const newHash = `#${song.id}`;
-              window.history.replaceState(null, "", newHash);
-              setSelectedSongId(song.id.toString());
-            }}
-          />
-        ))}
-      </div>
+      {songs.length > 0 && (
+        <div className="flex flex-col gap-1 pb-10">
+          {songs.map((song) => (
+            <SongListItem
+              key={song.id}
+              song={song}
+              isSelected={selectedSongId === song.id.toString()}
+              onClick={() => {
+                const newHash = `#${song.id}`;
+                window.history.replaceState(null, "", newHash);
+                setSelectedSongId(song.id.toString());
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {showRecommendationButton && (
+        <div className="flex flex-col items-center gap-4 px-6 pt-8 pb-12 text-center text-white/70">
+          <p className="text-sm">등록된 TJ 곡이 없어요.</p>
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/15 px-4 py-2 text-sm font-semibold text-primary"
+          >
+            <span>추천하기</span>
+            <span>{RECOMMENDATION_COUNT}</span>
+          </button>
+        </div>
+      )}
 
       <div ref={ref} className="h-20 flex items-center justify-center">
         {isFetchingNextPage && (
