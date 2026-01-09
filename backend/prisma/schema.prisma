@@ -22,6 +22,7 @@ model Artist {
   youtubeChannels  YoutubeChannel[]
   spotifyArtist    SpotifyArtist?
   aliases          ArtistAlias[]
+  tjSongs          ArtistTjSong[]
 
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
@@ -85,26 +86,27 @@ model KaraokeSong {
 }
 
 model TjSong {
-  id               String   @id
+  id               String          @id
   title            String
   artist           String?
-  artistList       String[] @map("artist_list")
-  featureList      String[] @map("feature_list")
-  producerList     String[] @map("producer_list")
+  artistList       String[]        @map("artist_list")
+  featureList      String[]        @map("feature_list")
+  producerList     String[]        @map("producer_list")
   lyricist         String?
-  lyricistList     String[] @map("lyricist_list")
+  lyricistList     String[]        @map("lyricist_list")
   composer         String?
-  composerList     String[] @map("composer_list")
-  thumbnailImg     String?  @map("thumbnail_img")
-  publishdate      String?  @map("publishdate")
-  youtubeLink      String?  @map("youtube_link")
-  saved            Boolean  @default(false) // 지워도 됌
-  isMR             Boolean  @default(false) @map("is_mr")
-  isMV             Boolean  @default(false) @map("is_mv")
-  isOver60         Boolean  @default(false) @map("is_over_60")
-  realArtist       String[] @default([]) @map("real_artist")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  composerList     String[]        @map("composer_list")
+  thumbnailImg     String?         @map("thumbnail_img")
+  publishdate      String?         @map("publishdate")
+  youtubeLink      String?         @map("youtube_link")
+  saved            Boolean         @default(false) // 지워도 됌
+  isMR             Boolean         @default(false) @map("is_mr")
+  isMV             Boolean         @default(false) @map("is_mv")
+  isOver60         Boolean         @default(false) @map("is_over_60")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  artists          ArtistTjSong[]
 
   @@map("tj_song")
 }
@@ -229,7 +231,22 @@ model SongAlias {
   song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
 
   @@unique([songId, alias, locale, kind])
-  @@index([songId])  
+  @@index([songId])
   @@index([alias])
   @@map("song_alias")
+}
+
+model ArtistTjSong {
+  id        Int      @id @default(autoincrement())
+  artistId  Int      @map("artist_id")
+  tjSongId  String   @map("tj_song_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tjSong TjSong @relation(fields: [tjSongId], references: [id], onDelete: Cascade)
+
+  @@unique([artistId, tjSongId])
+  @@index([artistId])
+  @@index([tjSongId])
+  @@map("artist_tj_song")
 }

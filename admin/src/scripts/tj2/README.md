@@ -30,21 +30,24 @@ npx tsx src/scripts/tj2/1-fetch-artist.ts "아이유"
 
 ### 2단계: DB 업데이트
 
-1단계에서 생성된 JSON 파일을 읽어서 TjSong 테이블을 업데이트합니다.
+1단계에서 생성된 JSON 파일을 읽어서 TjSong 테이블을 업데이트하고 Artist-TjSong 매핑을 생성합니다.
 
 **주의: 먼저 dry-run으로 확인하세요!**
 
 ```bash
 # Dry-run (실제 업데이트 없이 미리보기)
-npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --dry-run
+npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --artist-id=45 --dry-run
 
 # 실제 업데이트
-npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json"
+npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --artist-id=45
 ```
 
+**필수 파라미터:**
+- `--artist-id=<id>`: 매핑할 Artist의 ID (필수)
+
 **업데이트되는 내용:**
-- `realArtist` 배열에 가수명 추가 (중복 방지)
-- `isMR`, `isMV`, `isOver60` 필드 업데이트
+- `isMR`, `isMV`, `isOver60`, `youtubeLink` 필드 업데이트
+- `ArtistTjSong` 테이블에 Artist-TjSong 매핑 생성 (중복 방지)
 - 존재하지 않는 곡번호는 경고 출력
 
 ## 필수 요구사항
@@ -55,12 +58,25 @@ DB 스키마에 다음 필드가 있어야 합니다:
 model TjSong {
   // ... 기존 필드들 ...
 
-  isMR        Boolean  @default(false) @map("is_mr")
-  isMV        Boolean  @default(false) @map("is_mv")
-  isOver60    Boolean  @default(false) @map("is_over_60")
-  realArtist  String[] @map("real_artist")
+  youtubeLink      String?  @map("youtube_link")
+  isMR             Boolean  @default(false) @map("is_mr")
+  isMV             Boolean  @default(false) @map("is_mv")
+  isOver60         Boolean  @default(false) @map("is_over_60")
 
   // ...
+}
+
+model ArtistTjSong {
+  id        Int      @id @default(autoincrement())
+  artistId  Int      @map("artist_id")
+  tjSongId  String   @map("tj_song_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tjSong TjSong @relation(fields: [tjSongId], references: [id], onDelete: Cascade)
+
+  @@unique([artistId, tjSongId])
+  @@map("artist_tj_song")
 }
 ```
 
@@ -71,11 +87,14 @@ model TjSong {
 npx tsx src/scripts/tj2/1-fetch-artist.ts "아이유"
 # 출력: 아이유-2026-01-09T12-30-45.json
 
-# 2. Dry-run으로 확인
-npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --dry-run
+# 2. Artist ID 확인 (예: 아이유 = 45)
+# DB에서 확인하거나 웹사이트에서 확인
 
-# 3. 문제없으면 실제 업데이트
-npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json"
+# 3. Dry-run으로 확인
+npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --artist-id=45 --dry-run
+
+# 4. 문제없으면 실제 업데이트
+npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --artist-id=45
 ```
 
 ## 주의사항
@@ -83,4 +102,5 @@ npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json"
 - TJ 미디어 웹사이트 구조가 변경되면 스크래핑이 실패할 수 있습니다
 - 대량 스크래핑 시 서버 부하를 고려하세요
 - DB 업데이트 전 반드시 백업하세요
-- `realArtist` 배열은 중복을 허용하지 않으므로 같은 JSON을 여러 번 실행해도 안전합니다
+- Artist-TjSong 매핑은 중복을 허용하지 않으므로 같은 JSON을 여러 번 실행해도 안전합니다
+- 같은 TJ 곡을 여러 Artist에 매핑할 수 있습니다 (예: 듀엣곡)
