@@ -142,42 +142,60 @@ model YoutubeChannel {
 }
 
 model SpotifyArtist {
-  id               Int      @id @default(autoincrement())
-  spotifyId        String   @unique @map("spotify_id")
-  spotifyUrl       String?  @map("spotify_url")
+  id               Int                    @id @default(autoincrement())
+  spotifyId        String                 @unique @map("spotify_id")
+  spotifyUrl       String?                @map("spotify_url")
   name             String
   popularity       Int?
   followers        Int?
-  genres           String[] @default([])
-  thumbnailDefault String?  @map("thumbnail_default")
-  thumbnailMedium  String?  @map("thumbnail_medium")
-  thumbnailHigh    String?  @map("thumbnail_high")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  genres           String[]               @default([])
+  thumbnailDefault String?                @map("thumbnail_default")
+  thumbnailMedium  String?                @map("thumbnail_medium")
+  thumbnailHigh    String?                @map("thumbnail_high")
+  createdAt        DateTime               @default(now()) @map("created_at")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
 
   artist Artist?
+  tracks SpotifyArtistTrack[]
 
   @@map("spotify_artist")
 }
 
+model SpotifyArtistTrack {
+  id               Int           @id @default(autoincrement())
+  spotifyArtistId  Int           @map("spotify_artist_id")
+  spotifyTrackId   Int           @map("spotify_track_id")
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  spotifyArtist SpotifyArtist @relation(fields: [spotifyArtistId], references: [id], onDelete: Cascade)
+  spotifyTrack  SpotifyTrack  @relation(fields: [spotifyTrackId], references: [id], onDelete: Cascade)
+
+  @@unique([spotifyArtistId, spotifyTrackId])
+  @@index([spotifyArtistId])
+  @@index([spotifyTrackId])
+  @@map("spotify_artist_track")
+}
+
+
 model SpotifyTrack {
-  id               Int      @id @default(autoincrement())
-  songId           Int      @unique @map("song_id")
-  spotifyId        String   @unique @map("spotify_id")
-  spotifyUrl       String?  @map("spotify_url")
+  id               Int                    @id @default(autoincrement())
+  songId           Int                    @unique @map("song_id")
+  spotifyId        String                 @unique @map("spotify_id")
+  spotifyUrl       String?                @map("spotify_url")
   name             String
   popularity       Int?
-  previewUrl       String?  @map("preview_url")
+  previewUrl       String?                @map("preview_url")
   isrc             String?
-  durationMs       Int?     @map("duration_ms")
-  releaseDate      String?  @map("release_date")
-  thumbnailDefault String?  @map("thumbnail_default")
-  thumbnailMedium  String?  @map("thumbnail_medium")
-  thumbnailHigh    String?  @map("thumbnail_high")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  durationMs       Int?                   @map("duration_ms")
+  releaseDate      String?                @map("release_date")
+  thumbnailDefault String?                @map("thumbnail_default")
+  thumbnailMedium  String?                @map("spotify_medium")
+  thumbnailHigh    String?                @map("thumbnail_high")
+  createdAt        DateTime               @default(now()) @map("created_at")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
 
-  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+  song    Song                   @relation(fields: [songId], references: [id], onDelete: Cascade)
+  artists SpotifyArtistTrack[]
 
   @@map("spotify_track")
 }
@@ -250,3 +268,4 @@ model ArtistTjSong {
   @@index([tjSongId])
   @@map("artist_tj_song")
 }
+
