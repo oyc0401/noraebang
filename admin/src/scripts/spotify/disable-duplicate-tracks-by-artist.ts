@@ -1,8 +1,9 @@
 /**
- * 특정 아티스트의 중복 트랙을 비활성화하는 스크립트
+ * 여러 아티스트의 중복 트랙을 비활성화하는 스크립트
  *
  * 기능:
- * - 특정 아티스트의 SpotifyTrack들을 조회
+ * - ID가 300 미만인 모든 아티스트 조회
+ * - 각 아티스트의 SpotifyTrack들을 조회
  * - 같은 제목(name)을 가진 트랙들 중 가장 오래된 것만 남기고 나머지 disabled
  * - releaseDate가 없는 트랙은 disabled 처리
  *
@@ -11,17 +12,13 @@
  * - releaseDate가 가장 오래된 것만 원본으로 간주
  *
  * 사용법:
- * pnpm ts-node src/scripts/spotify/disable-duplicate-tracks-by-artist.ts 1 --dry-run
- * pnpm ts-node src/scripts/spotify/disable-duplicate-tracks-by-artist.ts 1
- *
- * 주의:
- * - artistId는 필수 인자입니다
- * - SpotifyArtist가 존재해야 합니다
+ * pnpm ts-node src/scripts/spotify/disable-duplicate-tracks-by-artist.ts --dry-run
+ * pnpm ts-node src/scripts/spotify/disable-duplicate-tracks-by-artist.ts
  */
 
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
+import { type Artist, PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 
 const pool = new Pool({
@@ -38,73 +35,32 @@ interface TrackInfo {
   disabled: boolean;
 }
 
-async function main() {
-  const isDryRun = process.argv.includes("--dry-run");
-  const artistIdArg = process.argv[2];
-
-  if (!artistIdArg || artistIdArg.includes("--")) {
-    console.error("❌ artistId는 필수 인자입니다.");
-    console.error("\n사용법:");
-    console.error(
-      "  pnpm ts-node src/scripts/spotify/disable-duplicate-tracks-by-artist.ts <artistId> [--dry-run]",
-    );
-    console.error("\n예시:");
-    console.error(
-      "  pnpm ts-node src/scripts/spotify/disable-duplicate-tracks-by-artist.ts 1 --dry-run",
-    );
-    process.exit(1);
-  }
-
-  const artistId = Number.parseInt(artistIdArg, 10);
-  if (Number.isNaN(artistId)) {
-    console.error("❌ artistId는 숫자여야 합니다.");
-    process.exit(1);
-  }
-
+async function processArtist(
+  artist: Pick<Artist, "id" | "name" | "nameKo" | "spotifyId">,
+  isDryRun: boolean,
+) {
+  const { id: artistId, name, nameKo, spotifyId } = artist;
   console.log(
-    `\n=== 아티스트 ${artistId}의 중복 트랙 비활성화 ${isDryRun ? "(DRY RUN)" : ""} ===\n`,
+    `\n=== [${artistId}] ${name} (${nameKo || ""}) 처리 중 ===\n`,
   );
 
-  // 1. Artist 정보 조회
-  console.log("Step 1: Artist 정보 조회 중...");
-  const artist = await prisma.artist.findUnique({
-    where: { id: artistId },
-    select: {
-      id: true,
-      name: true,
-      nameKo: true,
-      spotifyId: true,
-    },
-  });
-
-  if (!artist) {
-    console.error(`❌ Artist ${artistId}를 찾을 수 없습니다.`);
-    process.exit(1);
+  if (!spotifyId) {
+    console.error(`❌ Artist ${artistId} (${name})의 spotifyId가 없습니다.`);
+    return;
   }
 
-  if (!artist.spotifyId) {
-    console.error(`❌ Artist ${artistId} (${artist.name})의 spotifyId가 없습니다.`);
-    process.exit(1);
-  }
-
-  console.log(`✓ Artist: ${artist.name} (${artist.nameKo || ""})\n`);
-
-  // 2. SpotifyArtist 조회
-  console.log("Step 2: SpotifyArtist 조회 중...");
+  // 1. SpotifyArtist 조회
   const spotifyArtist = await prisma.spotifyArtist.findUnique({
-    where: { spotifyId: artist.spotifyId },
+    where: { spotifyId },
     select: { id: true },
   });
 
   if (!spotifyArtist) {
-    console.error(`❌ SpotifyArtist를 찾을 수 없습니다.`);
-    process.exit(1);
+    console.error(`❌ SpotifyArtist를 찾을 수 없습니다. (Spotify ID: ${spotifyId})`);
+    return;
   }
 
-  console.log(`✓ SpotifyArtist ID: ${spotifyArtist.id}\n`);
-
-  // 3. 해당 아티스트의 모든 트랙 조회
-  console.log("Step 3: 트랙 조회 중...");
+  // 2. 해당 아티스트의 모든 트랙 조회
   const artistTracks = await prisma.spotifyArtistTrack.findMany({
     where: { spotifyArtistId: spotifyArtist.id },
     include: {
@@ -128,90 +84,55 @@ async function main() {
     disabled: at.spotifyTrack.disabled,
   }));
 
-  console.log(`✓ 총 ${tracks.length}개의 트랙을 찾았습니다.\n`);
+  console.log(`✓ 총 ${tracks.length}개의 트랙을 찾았습니다.`);
 
-  // 4. name으로 그룹화
-  console.log("Step 4: 중복 트랙 분석 중...");
+  // 3. name으로 그룹화
   const tracksByName = new Map<string, TrackInfo[]>();
-
   for (const track of tracks) {
     const existing = tracksByName.get(track.name) || [];
     existing.push(track);
     tracksByName.set(track.name, existing);
   }
 
-  // 중복이 있는 그룹만 필터링
   const duplicateGroups = Array.from(tracksByName.entries()).filter(
     ([_, tracks]) => tracks.length > 1,
   );
-
-  console.log(`✓ ${duplicateGroups.length}개의 중복 그룹을 찾았습니다.\n`);
 
   if (duplicateGroups.length === 0) {
     console.log("✅ 중복 트랙이 없습니다.");
     return;
   }
+  console.log(`✓ ${duplicateGroups.length}개의 중복 그룹을 찾았습니다.`);
 
-  // 5. 각 그룹에서 비활성화할 트랙 결정
+  // 4. 각 그룹에서 비활성화할 트랙 결정
   const tracksToDisable: TrackInfo[] = [];
 
   for (const [name, groupTracks] of duplicateGroups) {
-    // releaseDate가 있는 트랙들과 없는 트랙들 분리
     const tracksWithDate = groupTracks.filter((t) => t.releaseDate);
     const tracksWithoutDate = groupTracks.filter((t) => !t.releaseDate);
 
-    // releaseDate가 없는 트랙들은 모두 비활성화 대상
     tracksToDisable.push(...tracksWithoutDate.filter((t) => !t.disabled));
 
-    // releaseDate가 있는 트랙들 중 가장 오래된 것만 남기고 나머지 비활성화
-    if (tracksWithDate.length > 0) {
-      // releaseDate로 정렬 (오래된 순)
+    if (tracksWithDate.length > 1) {
       tracksWithDate.sort((a, b) => {
         if (!a.releaseDate) return 1;
         if (!b.releaseDate) return -1;
         return a.releaseDate.localeCompare(b.releaseDate);
       });
-
-      // 첫 번째(가장 오래된 것)를 제외한 나머지 비활성화
       const toDisable = tracksWithDate.slice(1).filter((t) => !t.disabled);
       tracksToDisable.push(...toDisable);
     }
   }
 
-  // 6. 통계 출력
-  console.log("=== 통계 ===");
-  console.log(`📊 전체 트랙: ${tracks.length}개`);
-  console.log(`🔍 중복 그룹: ${duplicateGroups.length}개`);
-  console.log(`🚫 비활성화 필요: ${tracksToDisable.length}개\n`);
-
   if (tracksToDisable.length === 0) {
-    console.log("✅ 비활성화할 트랙이 없습니다.");
+    console.log("✅ 새로 비활성화할 트랙이 없습니다.");
     return;
   }
+  console.log(`🚫 비활성화 필요: ${tracksToDisable.length}개`);
 
-  // 7. 샘플 출력
-  console.log("=== 중복 그룹 샘플 (최대 5개) ===");
-  duplicateGroups.slice(0, 5).forEach(([name, groupTracks], index) => {
-    console.log(`\n${index + 1}. "${name}" (${groupTracks.length}개)`);
-
-    groupTracks.forEach((track) => {
-      const status = !track.releaseDate
-        ? "❌ 날짜 없음"
-        : tracksToDisable.some((t) => t.id === track.id)
-          ? "🚫 비활성화 예정"
-          : "✅ 유지";
-      const date = track.releaseDate || "N/A";
-      console.log(`   [${track.id}] ${date} - ${status}`);
-    });
-  });
-  console.log();
-
-  // 8. 비활성화 실행
-  if (!isDryRun && tracksToDisable.length > 0) {
-    console.log("Step 5: 트랙 비활성화 중...");
-
+  // 5. 비활성화 실행
+  if (!isDryRun) {
     const trackIdsToDisable = tracksToDisable.map((t) => t.id);
-
     const result = await prisma.spotifyTrack.updateMany({
       where: {
         id: {
@@ -222,24 +143,73 @@ async function main() {
         disabled: true,
       },
     });
+    console.log(`✓ ${result.count}개의 트랙을 비활성화했습니다.`);
+  } else {
+    console.log(
+      `💡 DRY RUN: ${tracksToDisable.length}개의 트랙을 비활성화할 예정입니다.`,
+    );
+    // 드라이런 시 샘플 출력
+    duplicateGroups.slice(0, 5).forEach(([name, groupTracks], index) => {
+      console.log(`\n  샘플 ${index + 1}: "${name}" (${groupTracks.length}개)`);
+      groupTracks.forEach((track) => {
+        const status = !track.releaseDate
+          ? "❌ 날짜 없음"
+          : tracksToDisable.some((t) => t.id === track.id)
+            ? "🚫 비활성화 예정"
+            : "✅ 유지";
+        const date = track.releaseDate || "N/A";
+        console.log(`     [${track.id}] ${date} - ${status}`);
+      });
+    });
+  }
+}
 
-    console.log(`✓ ${result.count}개의 트랙을 비활성화했습니다.\n`);
+async function main() {
+  const isDryRun = process.argv.includes("--dry-run");
+
+  console.log(
+    `\n=== ID < 300 아티스트 중복 트랙 비활성화 ${isDryRun ? "(DRY RUN)" : ""} ===\n`,
+  );
+
+  // 1. ID < 300 아티스트 정보 조회
+  console.log("Step 1: 대상 아티스트 조회 중 (ID < 300)...");
+  const artists = await prisma.artist.findMany({
+    where: { id: { lt: 300 } },
+    select: {
+      id: true,
+      name: true,
+      nameKo: true,
+      spotifyId: true,
+    },
+    orderBy: { id: "asc" },
+  });
+
+  console.log(`✓ 총 ${artists.length}명의 아티스트를 처리합니다.\n`);
+
+  // 2. 각 아티스트에 대해 중복 처리 실행
+  for (const artist of artists) {
+    try {
+      await processArtist(artist, isDryRun);
+    } catch (e) {
+      console.error(
+        `\n❌ [${artist.id}] ${artist.name} 처리 중 오류 발생:`,
+        e,
+      );
+    }
   }
 
-  // 9. 결과 출력
-  console.log("=== 결과 ===");
+  console.log("\n\n✅ 모든 아티스트 처리가 완료되었습니다.");
+
   if (isDryRun) {
     console.log(
-      `💡 실제 업데이트를 수행하려면 --dry-run 없이 다시 실행하세요.`,
+      `\n💡 실제 업데이트를 수행하려면 --dry-run 없이 다시 실행하세요.`,
     );
-  } else {
-    console.log(`✅ ${tracksToDisable.length}개의 중복 트랙을 비활성화했습니다!`);
   }
 }
 
 main()
   .catch((error) => {
-    console.error("\n❌ 오류 발생:", error);
+    console.error("\n❌ 스크립트 실행 중 심각한 오류 발생:", error);
     process.exit(1);
   })
   .finally(async () => {
