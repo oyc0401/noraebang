@@ -3,16 +3,16 @@
  *
  * 기능:
  * - 1-fetch-artist.ts로 생성된 JSON 파일을 읽어서 TjSong 테이블 업데이트
- * - realArtist 배열에 가수명 추가 (중복 방지)
  * - isMR, isMV, isOver60, youtubeLink 필드 업데이트
+ * - artistId로 지정한 Artist의 Song들과 TJ 곡 자동 매핑 (SongTjSong 테이블)
  * - 존재하지 않는 곡번호는 경고 출력
  *
  * 사용법:
- * npx tsx src/scripts/tj2/2-update-db.ts "admin/src/scripts/tj2/아이유-2026-01-09T12-30-45.json"
- * npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json"
+ * npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --artist-id=45 --dry-run
+ * npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --artist-id=45
  *
  * 주의:
- * - DB 스키마에 isMR, isMV, isOver60, youtubeLink, realArtist 필드가 있어야 합니다
+ * - DB 스키마에 isMR, isMV, isOver60, youtubeLink 필드가 있어야 합니다
  * - 실제 업데이트 전에 dry-run 모드로 먼저 확인하세요
  */
 
@@ -33,11 +33,22 @@ async function main() {
   const jsonPath = process.argv[2];
   const isDryRun = process.argv.includes("--dry-run");
 
+  // --artist-id=45 형식 파싱
+  const artistIdArg = process.argv.find((arg) => arg.startsWith("--artist-id="));
+  const artistId = artistIdArg ? Number.parseInt(artistIdArg.split("=")[1], 10) : undefined;
+
   if (!jsonPath) {
-    console.error("❌ Usage: npx tsx src/scripts/tj2/2-update-db.ts <json-file-path> [--dry-run]");
-    console.error('   Example: npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json"');
+    console.error("❌ Usage: npx tsx src/scripts/tj2/2-update-db.ts <json-file-path> --artist-id=<id> [--dry-run]");
+    console.error('   Example: npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --artist-id=45');
     console.error("\n옵션:");
-    console.error("  --dry-run  실제 업데이트 없이 미리보기만 수행");
+    console.error("  --artist-id=<id>  매핑할 Artist ID (필수)");
+    console.error("  --dry-run         실제 업데이트 없이 미리보기만 수행");
+    process.exit(1);
+  }
+
+  if (!artistId || Number.isNaN(artistId)) {
+    console.error("❌ --artist-id 옵션이 필요합니다.");
+    console.error('   Example: --artist-id=45');
     process.exit(1);
   }
 
@@ -54,11 +65,28 @@ async function main() {
     console.log(`\n=== TJ 곡 정보 DB 업데이트 ${isDryRun ? "(DRY RUN)" : ""} ===`);
     console.log(`가수명: ${data.artistName}`);
     console.log(`곡 수: ${data.totalSongs}`);
-    console.log(`스크래핑 시각: ${data.fetchedAt}\n`);
+    console.log(`스크래핑 시각: ${data.fetchedAt}`);
+    console.log(`Artist ID: ${artistId}\n`);
+
+    // Artist 확인
+    const artist = await prisma.artist.findUnique({
+      where: { id: artistId },
+      select: { id: true, name: true, nameKo: true },
+    });
+
+    if (!artist) {
+      console.error(`❌ Artist ID ${artistId}를 찾을 수 없습니다.`);
+      process.exit(1);
+    }
+
+    console.log(`Artist: ${artist.name} (${artist.nameKo})`);
+
 
     let updatedCount = 0;
     let notFoundCount = 0;
     let errorCount = 0;
+    let mappedCount = 0;
+    let alreadyMappedCount = 0;
     const notFoundSongs: string[] = [];
 
     // 각 곡에 대해 업데이트
@@ -77,14 +105,8 @@ async function main() {
           continue;
         }
 
-        // realArtist 배열에 가수명 추가 (중복 방지)
-        const currentRealArtist = existingSong.realArtist || [];
-        const newRealArtist = currentRealArtist.includes(data.artistName)
-          ? currentRealArtist
-          : [...currentRealArtist, data.artistName];
-
         if (!isDryRun) {
-          // DB 업데이트
+          // DB 업데이트 (메타데이터만)
           await prisma.tjSong.update({
             where: { id: tjSongId },
             data: {
@@ -92,12 +114,37 @@ async function main() {
               isMV: song.isMV,
               isOver60: song.isOver60,
               youtubeLink: song.youtubeLink,
-              realArtist: newRealArtist,
             },
           });
         }
 
         updatedCount++;
+
+        // Artist-TjSong 매핑 생성
+        // 이미 매핑되어 있는지 확인
+        const existingMapping = await prisma.artistTjSong.findUnique({
+          where: {
+            artistId_tjSongId: {
+              artistId,
+              tjSongId,
+            },
+          },
+        });
+
+        if (existingMapping) {
+          alreadyMappedCount++;
+        } else if (!isDryRun) {
+          // 새 매핑 생성
+          await prisma.artistTjSong.create({
+            data: {
+              artistId,
+              tjSongId,
+            },
+          });
+          mappedCount++;
+        } else {
+          mappedCount++;
+        }
 
         // 진행상황 출력 (100개마다)
         if (updatedCount % 100 === 0) {
@@ -111,7 +158,9 @@ async function main() {
 
     // 결과 출력
     console.log(`\n=== 결과 ===`);
-    console.log(`✅ 업데이트 성공: ${updatedCount}개`);
+    console.log(`✅ TjSong 업데이트: ${updatedCount}개`);
+    console.log(`✅ Artist-TjSong 매핑 생성: ${mappedCount}개`);
+    console.log(`ℹ️  이미 매핑됨: ${alreadyMappedCount}개`);
     console.log(`⚠️  DB에 없는 곡: ${notFoundCount}개`);
     console.log(`❌ 업데이트 실패: ${errorCount}개`);
 
