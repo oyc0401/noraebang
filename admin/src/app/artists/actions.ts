@@ -555,7 +555,7 @@ export async function getSpotifyTracksByArtist(artistId: number) {
             },
             orderBy: {
               spotifyTrack: {
-                releaseDate: "desc",
+                popularity: "desc",
               },
             },
           },
@@ -567,6 +567,7 @@ export async function getSpotifyTracksByArtist(artistId: number) {
   if (!artist?.spotifyArtist) {
     return [];
   }
+  console.log(artist.spotifyArtist.tracks);
 
   return artist.spotifyArtist.tracks.map(({ spotifyTrack }) => ({
     id: spotifyTrack.id,
@@ -578,5 +579,6 @@ export async function getSpotifyTracksByArtist(artistId: number) {
     durationMs: spotifyTrack.durationMs ?? undefined,
     previewUrl: spotifyTrack.previewUrl ?? undefined,
     popularity: spotifyTrack.popularity ?? undefined,
+    disabled: spotifyTrack.disabled ?? undefined,
   }));
 }
