@@ -36,7 +36,9 @@ export function SpotifyTracksSection() {
                 {spotifyTracks.map((track) => (
                   <div
                     key={track.id}
-                    className="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                    className={`p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors ${
+                      track.disabled ? "opacity-50" : ""
+                    }`}
                   >
                     <div className="flex gap-3">
                       {track.thumbnails[0] ? (
@@ -51,7 +53,11 @@ export function SpotifyTracksSection() {
                         <div className="h-12 w-12 rounded bg-zinc-200 dark:bg-zinc-700" />
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm text-zinc-900 dark:text-zinc-50 truncate">
+                        <div
+                          className={`font-medium text-sm text-zinc-900 dark:text-zinc-50 truncate ${
+                            track.disabled ? "line-through" : ""
+                          }`}
+                        >
                           {track.name}
                         </div>
                         {track.releaseDate && (
