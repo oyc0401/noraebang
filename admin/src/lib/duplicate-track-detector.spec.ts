@@ -229,6 +229,12 @@ describe("isDuplicateTrack", () => {
     it("UNFAIR - TV Size", () => {
       expect(isDuplicateTrack("UNFAIR - TV Size")).toBe(true);
     });
+
+    it("脳裏上のクラッカー - 本格中華喫茶・愛のペガサス ~羅武の香辛龍~ 2024 / LIVE", () => {
+      expect(isDuplicateTrack("脳裏上のクラッカー - 本格中華喫茶・愛のペガサス ~羅武の香辛龍~ 2024 / LIVE")).toBe(
+        true,
+      );
+    });
   });
 
   describe("짧은 버전 패턴", () => {

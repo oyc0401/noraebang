@@ -54,7 +54,7 @@ export function SpotifyTracksSection() {
                       )}
                       <div className="flex-1 min-w-0">
                         <div
-                          className={`font-medium text-sm text-zinc-900 dark:text-zinc-50 truncate ${
+                          className={`font-medium text-sm text-zinc-900 dark:text-zinc-50 ${
                             track.disabled ? "line-through" : ""
                           }`}
                         >
