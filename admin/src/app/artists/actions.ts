@@ -499,3 +499,41 @@ export async function updateArtistCatalog(artistId: number, catalog: ArtistCatal
     updatedSongCount
   }
 }
+
+export async function getSpotifyTracksByArtist(artistId: number) {
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    include: {
+      spotifyArtist: {
+        include: {
+          tracks: {
+            include: {
+              spotifyTrack: true
+            },
+            orderBy: {
+              spotifyTrack: {
+                releaseDate: 'desc'
+              }
+            }
+          }
+        }
+      }
+    }
+  })
+
+  if (!artist?.spotifyArtist) {
+    return []
+  }
+
+  return artist.spotifyArtist.tracks.map(({ spotifyTrack }) => ({
+    id: spotifyTrack.id,
+    spotifyId: spotifyTrack.spotifyId,
+    spotifyUrl: spotifyTrack.spotifyUrl ?? undefined,
+    name: spotifyTrack.name,
+    thumbnails: spotifyTrack.thumbnails,
+    releaseDate: spotifyTrack.releaseDate ?? undefined,
+    durationMs: spotifyTrack.durationMs ?? undefined,
+    previewUrl: spotifyTrack.previewUrl ?? undefined,
+    popularity: spotifyTrack.popularity ?? undefined
+  }))
+}
