@@ -30,8 +30,8 @@ const prisma = new PrismaClient({ adapter });
 // 여기에 매핑할 아티스트 ID와 Spotify ID를 입력하세요
 // ========================================
 const ARTIST_MAPPINGS: Array<{ artistId: number; spotifyId: string }> = [
-  { artistId: 60, spotifyId: "4WgGn0neagCUyjQExpUBX7" }, // 百足 (무카데)
-  { artistId: 272, spotifyId: "5KUOSKYLz09CFEp79nLJW5" }, // 韻マン (인만)
+  { artistId: 37, spotifyId: "22wa94PJF9zyFJMTp2BYus" }, // ReN (일본 싱어송라이터)
+  { artistId: 270, spotifyId: "6UANXRxys3n1xkNv8dLRUp" }, // ヒバナ(HIBANA)
 ];
 
 // Spotify Access Token 가져오기

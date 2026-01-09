@@ -3,19 +3,19 @@
  *
  * 기능:
  * - artistId < 300인 Artist들의 Spotify 트랙을 Spotify API에서 가져오기
- * - 각 Artist의 모든 앨범 → 모든 트랙 조회
+ * - 앨범을 20개씩 묶어서 한 번에 조회 (API 호출 최적화)
  * - SpotifyTrack 테이블에 저장 (songId는 null로 저장, 나중에 수동 매핑)
  * - SpotifyArtistTrack 매핑 생성 (트랙의 모든 아티스트)
  *
  * 사용법:
  * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts --dry-run
  * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts
+ * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts 9
+ * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts 9 --dry-run
  *
  * 주의:
  * - SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET 환경변수 필요
  * - Artist.spotifyId가 설정되어 있어야 함
- * - Rate limit 고려하여 딜레이 추가
- * - 시간이 오래 걸릴 수 있음
  */
 
 import "dotenv/config";
@@ -55,12 +55,12 @@ async function getSpotifyAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-// Spotify에서 아티스트의 모든 앨범 가져오기
-async function getArtistAlbums(
+// Spotify에서 아티스트의 모든 앨범 ID 목록 가져오기
+async function getArtistAlbumIds(
   spotifyArtistId: string,
   accessToken: string,
-): Promise<any[]> {
-  const albums: any[] = [];
+): Promise<string[]> {
+  const albumIds: string[] = [];
   let url = `https://api.spotify.com/v1/artists/${spotifyArtistId}/albums?limit=50&include_groups=album,single`;
 
   while (url) {
@@ -69,64 +69,73 @@ async function getArtistAlbums(
     });
 
     if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error("RATE_LIMIT_EXCEEDED");
+      }
       console.error(`  ⚠️  Failed to get albums: ${response.statusText}`);
       break;
     }
 
     const data = await response.json();
-    albums.push(...(data.items || []));
-    url = data.next; // 다음 페이지
-
-    // Rate limit 방지
-    if (url) await delay(100);
-  }
-
-  return albums;
-}
-
-// 앨범의 모든 트랙 가져오기
-async function getAlbumTracks(
-  albumId: string,
-  accessToken: string,
-): Promise<any[]> {
-  const tracks: any[] = [];
-  let url = `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`;
-
-  while (url) {
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    if (!response.ok) {
-      console.error(`  ⚠️  Failed to get album tracks: ${response.statusText}`);
-      break;
-    }
-
-    const data = await response.json();
-    tracks.push(...(data.items || []));
+    albumIds.push(...(data.items || []).map((item: any) => item.id));
     url = data.next;
 
-    if (url) await delay(100);
+    if (url) await delay(10);
   }
 
-  return tracks;
+  return albumIds;
 }
 
-// 트랙 상세 정보 가져오기 (앨범 정보 포함)
-async function getTrackDetails(
-  trackId: string,
+// 여러 앨범의 트랙을 한 번에 가져오기 (최대 20개)
+async function getBulkAlbums(
+  albumIds: string[],
   accessToken: string,
-): Promise<any> {
-  const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+): Promise<any[]> {
+  if (albumIds.length === 0) return [];
+
+  const response = await fetch(
+    `https://api.spotify.com/v1/albums?ids=${albumIds.join(",")}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
 
   if (!response.ok) {
-    console.error(`  ⚠️  Failed to get track details: ${response.statusText}`);
-    return null;
+    if (response.status === 429) {
+      throw new Error("RATE_LIMIT_EXCEEDED");
+    }
+    console.error(`  ⚠️  Failed to get bulk albums: ${response.statusText}`);
+    return [];
   }
 
-  return await response.json();
+  const data = await response.json();
+  return data.albums || [];
+}
+
+// 여러 트랙을 한 번에 조회 (최대 50개)
+async function getSeveralTracks(
+  trackIds: string[],
+  accessToken: string,
+): Promise<any[]> {
+  if (trackIds.length === 0) return [];
+
+  const response = await fetch(
+    `https://api.spotify.com/v1/tracks?ids=${trackIds.join(",")}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error("RATE_LIMIT_EXCEEDED");
+    }
+    console.error(`  ⚠️  Failed to get several tracks: ${response.statusText}`);
+    return [];
+  }
+
+  const data = await response.json();
+  return data.tracks || [];
 }
 
 // 딜레이 함수
@@ -134,12 +143,93 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function processTrackBatch(
+  trackIds: string[],
+  accessToken: string,
+  isDryRun: boolean,
+): Promise<number> {
+  if (trackIds.length === 0) {
+    return 0;
+  }
+
+  const trackDetailsList = await getSeveralTracks(trackIds, accessToken);
+  let processedCount = 0;
+
+  for (const trackDetails of trackDetailsList) {
+    if (!trackDetails) continue;
+
+    if (!isDryRun) {
+      const thumbnails = (trackDetails.album?.images || [])
+        .map((img: any) => img.url)
+        .filter((url: string) => url);
+
+      const spotifyTrack = await prisma.spotifyTrack.upsert({
+        where: { spotifyId: trackDetails.id },
+        create: {
+          spotifyId: trackDetails.id,
+          spotifyUrl: trackDetails.external_urls?.spotify,
+          name: trackDetails.name,
+          popularity: trackDetails.popularity,
+          previewUrl: trackDetails.preview_url,
+          isrc: trackDetails.external_ids?.isrc,
+          durationMs: trackDetails.duration_ms,
+          releaseDate: trackDetails.album?.release_date,
+          thumbnails,
+        },
+        update: {
+          name: trackDetails.name,
+          popularity: trackDetails.popularity,
+          previewUrl: trackDetails.preview_url,
+          releaseDate: trackDetails.album?.release_date,
+          thumbnails,
+        },
+      });
+
+      for (const trackArtist of trackDetails.artists || []) {
+        const trackSpotifyArtist = await prisma.spotifyArtist.findUnique({
+          where: { spotifyId: trackArtist.id },
+        });
+
+        if (trackSpotifyArtist) {
+          await prisma.spotifyArtistTrack.upsert({
+            where: {
+              spotifyArtistId_spotifyTrackId: {
+                spotifyArtistId: trackSpotifyArtist.id,
+                spotifyTrackId: spotifyTrack.id,
+              },
+            },
+            create: {
+              spotifyArtistId: trackSpotifyArtist.id,
+              spotifyTrackId: spotifyTrack.id,
+            },
+            update: {},
+          });
+        }
+      }
+
+      processedCount++;
+    }
+  }
+
+  return processedCount;
+}
+
 async function main() {
   const isDryRun = process.argv.includes("--dry-run");
+  // process.argv[2]가 숫자면 시작 아티스트 ID로 사용
+  const startArtistIdArg = process.argv[2];
+  const startArtistId =
+    startArtistIdArg && !startArtistIdArg.includes("--")
+      ? Number.parseInt(startArtistIdArg, 10)
+      : undefined;
 
   console.log(
     `\n=== Spotify Tracks 가져오기 ${isDryRun ? "(DRY RUN)" : ""} ===\n`,
   );
+
+  if (startArtistId) {
+    console.log(`Starting from Artist ID: ${startArtistId}\n`);
+  }
 
   // 1. Access Token
   console.log("Step 1: Getting Spotify access token...");
@@ -150,7 +240,10 @@ async function main() {
   console.log("Step 2: Fetching artists (id < 300)...");
   const artists = await prisma.artist.findMany({
     where: {
-      id: { lt: 300 },
+      id: {
+        lt: 300,
+        ...(startArtistId ? { gte: startArtistId } : {}),
+      },
       spotifyId: { not: null },
     },
     select: {
@@ -170,11 +263,15 @@ async function main() {
   let totalTracks = 0;
   let createdTracks = 0;
   let errorCount = 0;
+  let lastProcessedArtist: { id: number; name: string } | null = null;
 
   for (let i = 0; i < artists.length; i++) {
     const artist = artists[i];
+    lastProcessedArtist = { id: artist.id, name: artist.name };
 
-    console.log(`\n[${i + 1}/${artists.length}] Processing ${artist.name}...`);
+    console.log(
+      `\n[${i + 1}/${artists.length}] Processing ${artist.name} (${artist.id})...`,
+    );
 
     try {
       // SpotifyArtist 찾기
@@ -187,87 +284,68 @@ async function main() {
         continue;
       }
 
-      // 앨범들 가져오기
-      console.log(`  Fetching albums...`);
-      const albums = await getArtistAlbums(artist.spotifyId!, accessToken);
-      console.log(`  ✓ Found ${albums.length} albums`);
+      // 앨범 ID 목록 가져오기
+      console.log(`  Fetching album IDs...`);
+      const albumIds = await getArtistAlbumIds(artist.spotifyId!, accessToken);
+      console.log(`  ✓ Found ${albumIds.length} albums`);
 
-      // 각 앨범의 트랙 가져오기
+      // 앨범을 20개씩 묶어서 가져오기
       let artistTrackCount = 0;
       const processedTrackIds = new Set<string>();
 
-      for (const album of albums) {
-        const albumTracks = await getAlbumTracks(album.id, accessToken);
+      for (let j = 0; j < albumIds.length; j += 20) {
+        const batchIds = albumIds.slice(j, j + 20);
+        const albums = await getBulkAlbums(batchIds, accessToken);
 
-        for (const track of albumTracks) {
-          // 중복 방지
-          if (processedTrackIds.has(track.id)) continue;
-          processedTrackIds.add(track.id);
+        console.log(
+          `  Processing albums ${j + 1}-${Math.min(j + 20, albumIds.length)}...`,
+        );
 
-          totalTracks++;
-          artistTrackCount++;
+        let trackIdsToProcess: string[] = [];
 
-          // 트랙 상세 정보 가져오기
-          const trackDetails = await getTrackDetails(track.id, accessToken);
-          if (!trackDetails) continue;
+        for (const album of albums) {
+          if (!album || !album.tracks || !album.tracks.items) continue;
 
-          if (!isDryRun) {
-            // SpotifyTrack 생성/업데이트 (songId 없이)
-            const thumbnails = (trackDetails.album?.images || [])
-              .map((img: any) => img.url)
-              .filter((url: string) => url);
+          for (const track of album.tracks.items) {
+            // 중복 방지
+            if (processedTrackIds.has(track.id)) continue;
+            processedTrackIds.add(track.id);
 
-            const spotifyTrack = await prisma.spotifyTrack.upsert({
-              where: { spotifyId: trackDetails.id },
-              create: {
-                spotifyId: trackDetails.id,
-                spotifyUrl: trackDetails.external_urls?.spotify,
-                name: trackDetails.name,
-                popularity: trackDetails.popularity,
-                previewUrl: trackDetails.preview_url,
-                isrc: trackDetails.external_ids?.isrc,
-                durationMs: trackDetails.duration_ms,
-                releaseDate: trackDetails.album?.release_date,
-                thumbnails,
-              },
-              update: {
-                name: trackDetails.name,
-                popularity: trackDetails.popularity,
-                previewUrl: trackDetails.preview_url,
-                releaseDate: trackDetails.album?.release_date,
-                thumbnails,
-              },
-            });
+            totalTracks++;
+            artistTrackCount++;
 
-            // SpotifyArtistTrack 매핑 생성 (트랙의 모든 아티스트)
-            for (const trackArtist of trackDetails.artists) {
-              const trackSpotifyArtist = await prisma.spotifyArtist.findUnique({
-                where: { spotifyId: trackArtist.id },
-              });
+            trackIdsToProcess.push(track.id);
 
-              if (trackSpotifyArtist) {
-                await prisma.spotifyArtistTrack.upsert({
-                  where: {
-                    spotifyArtistId_spotifyTrackId: {
-                      spotifyArtistId: trackSpotifyArtist.id,
-                      spotifyTrackId: spotifyTrack.id,
-                    },
-                  },
-                  create: {
-                    spotifyArtistId: trackSpotifyArtist.id,
-                    spotifyTrackId: spotifyTrack.id,
-                  },
-                  update: {},
-                });
+            if (trackIdsToProcess.length === 50) {
+              const processedInBatch = await processTrackBatch(
+                trackIdsToProcess,
+                accessToken,
+                isDryRun,
+              );
+              if (!isDryRun) {
+                createdTracks += processedInBatch;
               }
+              trackIdsToProcess = [];
             }
 
-            createdTracks++;
+            // Rate limit 방지
+            // await delay(10);
           }
-
-          // Rate limit 방지
-          await delay(50);
         }
+
+        if (trackIdsToProcess.length > 0) {
+          const processedInBatch = await processTrackBatch(
+            trackIdsToProcess,
+            accessToken,
+            isDryRun,
+          );
+          if (!isDryRun) {
+            createdTracks += processedInBatch;
+          }
+        }
+
+        // 배치 간 딜레이
+        // await delay(20);
       }
 
       console.log(
@@ -275,8 +353,13 @@ async function main() {
       );
 
       // 아티스트 간 딜레이
-      await delay(200);
-    } catch (error) {
+      // await delay(20);
+    } catch (error: any) {
+      if (error.message === "RATE_LIMIT_EXCEEDED") {
+        console.error(`\n❌ Rate limit exceeded. Stopping at ${artist.name} (${artist.id})`);
+        console.error(`   Please wait a few minutes and restart from: ${artist.id}\n`);
+        break;
+      }
       errorCount++;
       console.error(`  ❌ Error processing ${artist.name}:`, error);
     }
@@ -287,6 +370,9 @@ async function main() {
   console.log(`📊 총 트랙 수: ${totalTracks}개`);
   console.log(`✅ SpotifyTrack 생성: ${createdTracks}개`);
   console.log(`❌ 오류 발생: ${errorCount}개`);
+  if (lastProcessedArtist) {
+    console.log(`🎵 마지막 처리: ${lastProcessedArtist.name} (ID: ${lastProcessedArtist.id})`);
+  }
 
   if (isDryRun) {
     console.log(

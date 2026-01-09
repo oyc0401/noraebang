@@ -2,7 +2,7 @@
  * Artist의 Spotify 정보를 가져와서 SpotifyArtist를 생성하고 매핑하는 스크립트
  *
  * 기능:
- * - artistId < 272인 Artist들의 Spotify 정보를 Spotify API에서 검색
+ * - artistId < 300인 Artist들의 Spotify 정보를 Spotify API에서 검색
  * - SpotifyArtist 테이블에 저장 (없으면 생성, 있으면 업데이트)
  * - Artist.spotifyId에 매핑
  *
@@ -87,19 +87,21 @@ function delay(ms: number) {
 async function main() {
   const isDryRun = process.argv.includes("--dry-run");
 
-  console.log(`\n=== Spotify Artist 생성 및 매핑 ${isDryRun ? "(DRY RUN)" : ""} ===\n`);
+  console.log(
+    `\n=== Spotify Artist 생성 및 매핑 ${isDryRun ? "(DRY RUN)" : ""} ===\n`,
+  );
 
   // 1. Spotify Access Token 가져오기
   console.log("Step 1: Getting Spotify access token...");
   const accessToken = await getSpotifyAccessToken();
   console.log("✓ Access token acquired\n");
 
-  // 2. artistId < 272인 Artist들 가져오기
-  console.log("Step 2: Fetching artists (id < 272)...");
+  // 2. artistId < 300인 Artist들 가져오기
+  console.log("Step 2: Fetching artists (id < 300)...");
   const artists = await prisma.artist.findMany({
     where: {
       id: {
-        lt: 272,
+        lt: 300,
       },
     },
     select: {
@@ -131,7 +133,9 @@ async function main() {
     // 이미 spotifyId가 설정되어 있으면 스킵
     if (artist.spotifyId) {
       alreadyLinkedCount++;
-      console.log(`  [${i + 1}/${artists.length}] [${artist.id}] ${artist.name} - Already linked`);
+      console.log(
+        `  [${i + 1}/${artists.length}] [${artist.id}] ${artist.name} - Already linked`,
+      );
       continue;
     }
 
@@ -141,8 +145,12 @@ async function main() {
 
       if (!spotifyArtist) {
         notFoundCount++;
-        notFoundArtists.push(`[${artist.id}] ${artist.name} (${artist.nameKo})`);
-        console.log(`  [${i + 1}/${artists.length}] [${artist.id}] ${artist.name} - Not found`);
+        notFoundArtists.push(
+          `[${artist.id}] ${artist.name} (${artist.nameKo})`,
+        );
+        console.log(
+          `  [${i + 1}/${artists.length}] [${artist.id}] ${artist.name} - Not found`,
+        );
         continue;
       }
 
@@ -187,7 +195,9 @@ async function main() {
       await delay(100);
     } catch (error) {
       errorCount++;
-      console.error(`  [${i + 1}/${artists.length}] ❌ [${artist.id}] ${artist.name} - Error: ${error}`);
+      console.error(
+        `  [${i + 1}/${artists.length}] ❌ [${artist.id}] ${artist.name} - Error: ${error}`,
+      );
     }
   }
 
@@ -209,7 +219,9 @@ async function main() {
   }
 
   if (isDryRun) {
-    console.log(`\n💡 실제 업데이트를 수행하려면 --dry-run 없이 다시 실행하세요.`);
+    console.log(
+      `\n💡 실제 업데이트를 수행하려면 --dry-run 없이 다시 실행하세요.`,
+    );
   } else {
     console.log(`\n✅ 동기화 완료!`);
   }
