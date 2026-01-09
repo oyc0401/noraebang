@@ -1144,7 +1144,7 @@ export default function AdminArtistsPage() {
                           </div>
                         )}
                       </span>
-                      {selectedArtist.slug && (
+                      {selectedArtist.slug ? (
                         <>
                           {" • "}
                           <span
@@ -1200,6 +1200,22 @@ export default function AdminArtistsPage() {
                               </div>
                             )}
                           </span>
+                        </>
+                      ) : (
+                        <>
+                          {" • "}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowSlugDialog(true);
+                              setSlugError(null);
+                              setSlugInput("");
+                            }}
+                            className="inline-flex items-center gap-1 text-blue-600 hover:underline dark:text-blue-400"
+                            style={{ cursor: "pointer" }}
+                          >
+                            별칭 설정
+                          </button>
                         </>
                       )}
                     </p>

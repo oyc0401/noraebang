@@ -29,23 +29,14 @@ const prisma = new PrismaClient({ adapter });
 // ========================================
 // 여기에 제거할 아티스트 ID를 입력하세요
 // ========================================
-const ARTIST_IDS = [
-  60, // 百足 & 韻マン (잘못 매칭: Yuuri/優里)
-  71, // BAK (잘못 매칭: back number)
-  131, // ASA (잘못 매칭: A$AP Rocky)
-  139, // AiRI (잘못 매칭: AIRI KANNA)
-  148, // ALI (잘못 매칭: Alice In Chains)
-  153, // Yumcha (잘못 매칭: Yunchan Lim)
-  154, // 808 (잘못 매칭: 808 State)
-  160, // HY (잘못 매칭: HYBS)
-  166, // 織重 夕 (잘못 매칭: 阿悠悠)
-  178, // ヨーメイ (잘못 매칭: Yomiuri Nippon Symphony Orchestra)
-];
+const ARTIST_IDS = [];
 
 async function main() {
   const isDryRun = process.argv.includes("--dry-run");
 
-  console.log(`\n=== Spotify ID 제거 스크립트 ${isDryRun ? "(DRY RUN)" : ""} ===\n`);
+  console.log(
+    `\n=== Spotify ID 제거 스크립트 ${isDryRun ? "(DRY RUN)" : ""} ===\n`,
+  );
 
   if (ARTIST_IDS.length === 0) {
     console.log("⚠️  ARTIST_IDS 배열이 비어있습니다.");
@@ -82,7 +73,9 @@ async function main() {
   console.log("─".repeat(80));
   for (const artist of artists) {
     const status = artist.spotifyId ? `✓ ${artist.spotifyId}` : "✗ (없음)";
-    console.log(`ID ${artist.id.toString().padEnd(5)} | ${artist.name.padEnd(30)} | ${status}`);
+    console.log(
+      `ID ${artist.id.toString().padEnd(5)} | ${artist.name.padEnd(30)} | ${status}`,
+    );
   }
   console.log("─".repeat(80));
   console.log();
@@ -95,7 +88,9 @@ async function main() {
     return;
   }
 
-  console.log(`${artistsWithSpotifyId.length}개 아티스트의 Spotify ID를 제거합니다.\n`);
+  console.log(
+    `${artistsWithSpotifyId.length}개 아티스트의 Spotify ID를 제거합니다.\n`,
+  );
 
   // 4. Spotify ID 제거
   if (!isDryRun) {
@@ -110,7 +105,9 @@ async function main() {
           where: { id: artist.id },
           data: { spotifyId: null },
         });
-        console.log(`  ✓ ID ${artist.id} (${artist.name}): Spotify ID 제거 완료`);
+        console.log(
+          `  ✓ ID ${artist.id} (${artist.name}): Spotify ID 제거 완료`,
+        );
         successCount++;
       } catch (error) {
         console.error(`  ❌ ID ${artist.id} (${artist.name}): 실패 -`, error);
