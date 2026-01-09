@@ -21,7 +21,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { isDuplicateTrack } from "../../lib/duplicate-track-detector";
+import { isDuplicateTrack } from "../../lib/duplicate-track-detector.ts";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
