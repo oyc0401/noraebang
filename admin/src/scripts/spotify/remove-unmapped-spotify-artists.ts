@@ -2,8 +2,9 @@
  * 아티스트에 매핑되지 않은 SpotifyArtist를 제거하는 스크립트
  *
  * 기능:
- * - Artist 테이블에서 참조되지 않는 SpotifyArtist 레코드 조회
- * - 해당 SpotifyArtist와 관련된 SpotifyArtistTrack 매핑도 함께 삭제
+ * - Artist 테이블에서 참조되지 않는 SpotifyArtist 레코드 조회 및 삭제
+ * - SpotifyArtistTrack 매핑도 함께 삭제됨 (cascade)
+ * - SpotifyTrack(곡 데이터)은 유지됨
  *
  * 사용법:
  * pnpm ts-node src/scripts/spotify/remove-unmapped-spotify-artists.ts --dry-run
