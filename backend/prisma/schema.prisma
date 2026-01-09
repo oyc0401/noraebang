@@ -11,6 +11,7 @@ model Artist {
   slug             String?          @unique // 아티스트의 경로이지만, null이라면 userId로 접근가능.
   name             String
   nameKo           String           @map("name_ko")
+  spotifyId        String?          @unique @map("spotify_id")
   homeCatalog      String?          @map("home_catalog") // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
   tjSongRequestUrl String?          @map("tj_song_request_url") // 이거보단 가장 많이등록된 tj아티스트명이 낫지 않을까?
 
@@ -20,7 +21,7 @@ model Artist {
 
   artistSongs      ArtistSong[]
   youtubeChannels  YoutubeChannel[]
-  spotifyArtist    SpotifyArtist?
+  spotifyArtist    SpotifyArtist?   @relation(fields: [spotifyId], references: [spotifyId])
   aliases          ArtistAlias[]
   tjSongs          ArtistTjSong[]
 
@@ -141,21 +142,20 @@ model YoutubeChannel {
 }
 
 model SpotifyArtist {
-  id                Int      @id @default(autoincrement())
-  artistId          Int      @unique @map("artist_id")
-  spotifyId         String   @unique @map("spotify_id")
-  spotifyUrl        String?  @map("spotify_url")
-  name              String
-  popularity        Int?
-  followers         Int?
-  genres            String[] @default([])
-  thumbnailDefault  String?  @map("thumbnail_default")
-  thumbnailMedium   String?  @map("thumbnail_medium")
-  thumbnailHigh     String?  @map("thumbnail_high")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  id               Int      @id @default(autoincrement())
+  spotifyId        String   @unique @map("spotify_id")
+  spotifyUrl       String?  @map("spotify_url")
+  name             String
+  popularity       Int?
+  followers        Int?
+  genres           String[] @default([])
+  thumbnailDefault String?  @map("thumbnail_default")
+  thumbnailMedium  String?  @map("thumbnail_medium")
+  thumbnailHigh    String?  @map("thumbnail_high")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
-  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artist Artist?
 
   @@map("spotify_artist")
 }
