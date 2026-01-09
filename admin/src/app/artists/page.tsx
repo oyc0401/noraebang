@@ -15,6 +15,7 @@ export default function AdminArtistsPage() {
     artists,
     pendingArtistId,
     message,
+    sort,
     setSearchQuery,
     setDebouncedSearch,
     setSelectedArtist,
@@ -37,7 +38,7 @@ export default function AdminArtistsPage() {
   // Load artists when debounced search or sort changes
   useEffect(() => {
     loadArtists();
-  }, [debouncedSearch, loadArtists]);
+  }, [debouncedSearch, sort, loadArtists]);
 
   // Load songs when selected artist changes
   useEffect(() => {
