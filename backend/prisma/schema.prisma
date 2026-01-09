@@ -48,7 +48,7 @@ model Song {
 
   karaokeSongs     KaraokeSong[]
   artistSongs      ArtistSong[]
-  spotifyTrack     SpotifyTrack?
+  spotifyTracks    SpotifyTrack[]
   aliases          SongAlias[]
 
   @@map("song")
@@ -142,18 +142,16 @@ model YoutubeChannel {
 }
 
 model SpotifyArtist {
-  id               Int                    @id @default(autoincrement())
-  spotifyId        String                 @unique @map("spotify_id")
-  spotifyUrl       String?                @map("spotify_url")
-  name             String
-  popularity       Int?
-  followers        Int?
-  genres           String[]               @default([])
-  thumbnailDefault String?                @map("thumbnail_default")
-  thumbnailMedium  String?                @map("thumbnail_medium")
-  thumbnailHigh    String?                @map("thumbnail_high")
-  createdAt        DateTime               @default(now()) @map("created_at")
-  updatedAt        DateTime               @updatedAt @map("updated_at")
+  id         Int                    @id @default(autoincrement())
+  spotifyId  String                 @unique @map("spotify_id")
+  spotifyUrl String?                @map("spotify_url")
+  name       String
+  popularity Int?
+  followers  Int?
+  genres     String[]               @default([])
+  thumbnails String[]               @default([])
+  createdAt  DateTime               @default(now()) @map("created_at")
+  updatedAt  DateTime               @updatedAt @map("updated_at")
 
   artist Artist?
   tracks SpotifyArtistTrack[]
@@ -178,23 +176,21 @@ model SpotifyArtistTrack {
 
 
 model SpotifyTrack {
-  id               Int                    @id @default(autoincrement())
-  songId           Int                    @unique @map("song_id")
-  spotifyId        String                 @unique @map("spotify_id")
-  spotifyUrl       String?                @map("spotify_url")
-  name             String
-  popularity       Int?
-  previewUrl       String?                @map("preview_url")
-  isrc             String?
-  durationMs       Int?                   @map("duration_ms")
-  releaseDate      String?                @map("release_date")
-  thumbnailDefault String?                @map("thumbnail_default")
-  thumbnailMedium  String?                @map("spotify_medium")
-  thumbnailHigh    String?                @map("thumbnail_high")
-  createdAt        DateTime               @default(now()) @map("created_at")
-  updatedAt        DateTime               @updatedAt @map("updated_at")
+  id          Int                    @id @default(autoincrement())
+  songId      Int?                   @map("song_id")
+  spotifyId   String                 @unique @map("spotify_id")
+  spotifyUrl  String?                @map("spotify_url")
+  name        String
+  popularity  Int?
+  previewUrl  String?                @map("preview_url")
+  isrc        String?
+  durationMs  Int?                   @map("duration_ms")
+  releaseDate String?                @map("release_date")
+  thumbnails  String[]               @default([])
+  createdAt   DateTime               @default(now()) @map("created_at")
+  updatedAt   DateTime               @updatedAt @map("updated_at")
 
-  song    Song                   @relation(fields: [songId], references: [id], onDelete: Cascade)
+  song    Song?                  @relation(fields: [songId], references: [id], onDelete: Cascade)
   artists SpotifyArtistTrack[]
 
   @@map("spotify_track")
