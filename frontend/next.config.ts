@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "www.tjmedia.com",
       },
+      {
+        protocol: "https",
+        hostname: "i.scdn.co",
+      },
     ],
   },
 };

@@ -18,6 +18,10 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'i.ytimg.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.scdn.co',
+      },
     ],
   },
 };

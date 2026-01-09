@@ -69,7 +69,7 @@ async function main() {
         },
       },
       karaokeSongs: true,
-      spotifyTrack: {
+      spotifyTracks: {
         select: {
           popularity: true,
         },
