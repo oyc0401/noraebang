@@ -151,6 +151,10 @@ async function main() {
       console.log(`  Fetching Spotify data...`);
       const spotifyArtist = await getSpotifyArtist(spotifyId, accessToken);
 
+      const thumbnails = (spotifyArtist.images || [])
+        .map((img: any) => img.url)
+        .filter((url: string) => url);
+
       const spotifyData = {
         spotifyId: spotifyArtist.id,
         spotifyUrl: spotifyArtist.external_urls?.spotify,
@@ -158,9 +162,7 @@ async function main() {
         popularity: spotifyArtist.popularity,
         followers: spotifyArtist.followers?.total,
         genres: spotifyArtist.genres || [],
-        thumbnailDefault: spotifyArtist.images?.[2]?.url,
-        thumbnailMedium: spotifyArtist.images?.[1]?.url,
-        thumbnailHigh: spotifyArtist.images?.[0]?.url,
+        thumbnails,
       };
 
       console.log(`  Spotify Artist: ${spotifyData.name}`);

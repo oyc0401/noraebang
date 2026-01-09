@@ -1,16 +1,15 @@
 /**
- * Artist의 Spotify 트랙을 모두 가져와서 SpotifyTrack과 매핑하는 스크립트
+ * Artist의 Spotify 트랙을 모두 가져와서 SpotifyTrack에 저장하는 스크립트
  *
  * 기능:
- * - artistId < 272인 Artist들의 Spotify 트랙을 Spotify API에서 가져오기
+ * - artistId < 300인 Artist들의 Spotify 트랙을 Spotify API에서 가져오기
  * - 각 Artist의 모든 앨범 → 모든 트랙 조회
- * - SpotifyTrack 테이블에 저장
- * - Song과 제목으로 매칭 시도
+ * - SpotifyTrack 테이블에 저장 (songId는 null로 저장, 나중에 수동 매핑)
  * - SpotifyArtistTrack 매핑 생성 (트랙의 모든 아티스트)
  *
  * 사용법:
- * npx tsx src/scripts/spotify/fetch-artist-tracks.ts --dry-run
- * npx tsx src/scripts/spotify/fetch-artist-tracks.ts
+ * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts --dry-run
+ * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts
  *
  * 주의:
  * - SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET 환경변수 필요
@@ -57,7 +56,10 @@ async function getSpotifyAccessToken(): Promise<string> {
 }
 
 // Spotify에서 아티스트의 모든 앨범 가져오기
-async function getArtistAlbums(spotifyArtistId: string, accessToken: string): Promise<any[]> {
+async function getArtistAlbums(
+  spotifyArtistId: string,
+  accessToken: string,
+): Promise<any[]> {
   const albums: any[] = [];
   let url = `https://api.spotify.com/v1/artists/${spotifyArtistId}/albums?limit=50&include_groups=album,single`;
 
@@ -83,7 +85,10 @@ async function getArtistAlbums(spotifyArtistId: string, accessToken: string): Pr
 }
 
 // 앨범의 모든 트랙 가져오기
-async function getAlbumTracks(albumId: string, accessToken: string): Promise<any[]> {
+async function getAlbumTracks(
+  albumId: string,
+  accessToken: string,
+): Promise<any[]> {
   const tracks: any[] = [];
   let url = `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`;
 
@@ -108,7 +113,10 @@ async function getAlbumTracks(albumId: string, accessToken: string): Promise<any
 }
 
 // 트랙 상세 정보 가져오기 (앨범 정보 포함)
-async function getTrackDetails(trackId: string, accessToken: string): Promise<any> {
+async function getTrackDetails(
+  trackId: string,
+  accessToken: string,
+): Promise<any> {
   const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -126,31 +134,12 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// 제목으로 Song 찾기
-async function findSongByTitle(trackName: string, artistId: number): Promise<any | null> {
-  // 해당 아티스트의 곡 중에서 제목이 유사한 것 찾기
-  const songs = await prisma.song.findMany({
-    where: {
-      artistSongs: {
-        some: { artistId },
-      },
-      OR: [
-        { title: trackName },
-        { titleKo: trackName },
-        { title: { contains: trackName } },
-        { titleKo: { contains: trackName } },
-      ],
-    },
-    take: 1,
-  });
-
-  return songs[0] || null;
-}
-
 async function main() {
   const isDryRun = process.argv.includes("--dry-run");
 
-  console.log(`\n=== Spotify Tracks 가져오기 ${isDryRun ? "(DRY RUN)" : ""} ===\n`);
+  console.log(
+    `\n=== Spotify Tracks 가져오기 ${isDryRun ? "(DRY RUN)" : ""} ===\n`,
+  );
 
   // 1. Access Token
   console.log("Step 1: Getting Spotify access token...");
@@ -158,10 +147,10 @@ async function main() {
   console.log("✓ Access token acquired\n");
 
   // 2. Artist들 가져오기 (spotifyId가 있는 것만)
-  console.log("Step 2: Fetching artists (id < 272)...");
+  console.log("Step 2: Fetching artists (id < 300)...");
   const artists = await prisma.artist.findMany({
     where: {
-      id: { lt: 272 },
+      id: { lt: 300 },
       spotifyId: { not: null },
     },
     select: {
@@ -180,7 +169,6 @@ async function main() {
 
   let totalTracks = 0;
   let createdTracks = 0;
-  let matchedSongs = 0;
   let errorCount = 0;
 
   for (let i = 0; i < artists.length; i++) {
@@ -223,42 +211,33 @@ async function main() {
           const trackDetails = await getTrackDetails(track.id, accessToken);
           if (!trackDetails) continue;
 
-          // Song 매칭 시도
-          const matchedSong = await findSongByTitle(trackDetails.name, artist.id);
-
           if (!isDryRun) {
-            // SpotifyTrack 생성/업데이트
-            let spotifyTrack;
-            if (matchedSong) {
-              spotifyTrack = await prisma.spotifyTrack.upsert({
-                where: { spotifyId: trackDetails.id },
-                create: {
-                  songId: matchedSong.id,
-                  spotifyId: trackDetails.id,
-                  spotifyUrl: trackDetails.external_urls?.spotify,
-                  name: trackDetails.name,
-                  popularity: trackDetails.popularity,
-                  previewUrl: trackDetails.preview_url,
-                  isrc: trackDetails.external_ids?.isrc,
-                  durationMs: trackDetails.duration_ms,
-                  releaseDate: trackDetails.album?.release_date,
-                  thumbnailDefault: trackDetails.album?.images?.[2]?.url,
-                  thumbnailMedium: trackDetails.album?.images?.[1]?.url,
-                  thumbnailHigh: trackDetails.album?.images?.[0]?.url,
-                },
-                update: {
-                  name: trackDetails.name,
-                  popularity: trackDetails.popularity,
-                  previewUrl: trackDetails.preview_url,
-                  releaseDate: trackDetails.album?.release_date,
-                },
-              });
-              matchedSongs++;
-            } else {
-              // Song이 없으면 SpotifyTrack만 저장 (songId 없이는 불가능하므로 스킵)
-              // console.log(`    ⚠️  No matching song: ${trackDetails.name}`);
-              continue;
-            }
+            // SpotifyTrack 생성/업데이트 (songId 없이)
+            const thumbnails = (trackDetails.album?.images || [])
+              .map((img: any) => img.url)
+              .filter((url: string) => url);
+
+            const spotifyTrack = await prisma.spotifyTrack.upsert({
+              where: { spotifyId: trackDetails.id },
+              create: {
+                spotifyId: trackDetails.id,
+                spotifyUrl: trackDetails.external_urls?.spotify,
+                name: trackDetails.name,
+                popularity: trackDetails.popularity,
+                previewUrl: trackDetails.preview_url,
+                isrc: trackDetails.external_ids?.isrc,
+                durationMs: trackDetails.duration_ms,
+                releaseDate: trackDetails.album?.release_date,
+                thumbnails,
+              },
+              update: {
+                name: trackDetails.name,
+                popularity: trackDetails.popularity,
+                previewUrl: trackDetails.preview_url,
+                releaseDate: trackDetails.album?.release_date,
+                thumbnails,
+              },
+            });
 
             // SpotifyArtistTrack 매핑 생성 (트랙의 모든 아티스트)
             for (const trackArtist of trackDetails.artists) {
@@ -291,7 +270,9 @@ async function main() {
         }
       }
 
-      console.log(`  ✓ Processed ${artistTrackCount} tracks for ${artist.name}`);
+      console.log(
+        `  ✓ Processed ${artistTrackCount} tracks for ${artist.name}`,
+      );
 
       // 아티스트 간 딜레이
       await delay(200);
@@ -305,11 +286,12 @@ async function main() {
   console.log(`\n=== 결과 ===`);
   console.log(`📊 총 트랙 수: ${totalTracks}개`);
   console.log(`✅ SpotifyTrack 생성: ${createdTracks}개`);
-  console.log(`🔗 Song 매칭 성공: ${matchedSongs}개`);
   console.log(`❌ 오류 발생: ${errorCount}개`);
 
   if (isDryRun) {
-    console.log(`\n💡 실제 업데이트를 수행하려면 --dry-run 없이 다시 실행하세요.`);
+    console.log(
+      `\n💡 실제 업데이트를 수행하려면 --dry-run 없이 다시 실행하세요.`,
+    );
   } else {
     console.log(`\n✅ 동기화 완료!`);
   }
