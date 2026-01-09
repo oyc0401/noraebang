@@ -18,7 +18,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "typesense": "^2.1.0",
-    "youtube-music-ts-api": "^1.8.4"
+    "youtube-music-ts-api": "^1.8.4",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
