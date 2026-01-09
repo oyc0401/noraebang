@@ -1,4 +1,4 @@
-// pnpm ts-node typesense/scripts/index-artists.ts
+// pnpm ts-node src/typesense/scripts/index-artists.ts
 //
 // 이 스크립트는 DB의 아티스트 데이터를 Typesense에 인덱싱합니다.
 // ArtistAlias 테이블을 활용하여 q_name_* 검색 필드를 생성합니다.
@@ -6,7 +6,7 @@
 // 사용법:
 // 1. Typesense 서버가 실행 중인지 확인 (docker compose up -d typesense)
 // 2. 환경 변수 설정 (.env 파일)
-// 3. cd backend && pnpm ts-node typesense/scripts/index-artists.ts
+// 3. cd backend && pnpm ts-node src/typesense/scripts/index-artists.ts
 //
 // 주의:
 // - 기존 artists Collection을 삭제하고 새로 만듭니다

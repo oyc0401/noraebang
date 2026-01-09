@@ -1,4 +1,4 @@
-// pnpm ts-node typesense/scripts/index-songs.ts
+// pnpm ts-node src/typesense/scripts/index-songs.ts
 //
 // 이 스크립트는 DB의 곡 데이터를 Typesense에 인덱싱합니다.
 // SongAlias, ArtistAlias 테이블을 활용하여 q_* 검색 필드를 생성합니다.
@@ -6,7 +6,7 @@
 // 사용법:
 // 1. Typesense 서버가 실행 중인지 확인 (docker compose up -d typesense)
 // 2. 환경 변수 설정 (.env 파일)
-// 3. cd backend && pnpm ts-node typesense/scripts/index-songs.ts
+// 3. cd backend && pnpm ts-node src/typesense/scripts/index-songs.ts
 //
 // 주의:
 // - 기존 songs Collection을 삭제하고 새로 만듭니다
