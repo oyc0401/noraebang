@@ -17,7 +17,8 @@
     "pg": "^8.16.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "typesense": "^2.1.0"
+    "typesense": "^2.1.0",
+    "youtube-music-ts-api": "^1.8.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
