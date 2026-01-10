@@ -52,11 +52,13 @@ model Song {
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
-  karaokeSongs     KaraokeSong[]
-  artistSongs      ArtistSong[]
-  spotifyTrack     SongSpotifyTrack?
-  aliases          SongAlias[]
+  karaokeSongs       KaraokeSong[]
+  artistSongs        ArtistSong[]
+  spotifyTrackGroup  SpotifyTrackGroup?
+  aliases            SongAlias[]
 
+  @@index([youtubeVideoId])
+  @@index([catalog])
   @@map("song")
 }
 
@@ -82,13 +84,10 @@ model KaraokeSong {
   songId          Int       @map("song_id")
   provider        Provider
   karaokeNo       String    @map("karaoke_no")
-  providerSongUrl String?   @map("provider_song_url") // 왜있지?
-  lastSeenAt      DateTime? @map("last_seen_at") // 지워도 됌
-  ingestedAt      DateTime? @map("ingested_at") // 지워도 됌
-  ingestedFrom    String?   @map("ingested_from") // 지워도  됌
   song            Song      @relation(fields: [songId], references: [id])
 
   @@unique([provider, karaokeNo])
+  @@index([songId])
   @@map("karaoke_song")
 }
 
@@ -143,6 +142,7 @@ model YoutubeChannel {
   artist                Artist      @relation(fields: [artistId], references: [id], onDelete: Cascade)
 
   @@unique([artistId, type])
+  @@index([channelId])
   @@index([subscriberCount(sort: Desc)]) // 정렬 인덱스 없어도 될 텐데
   @@map("youtube_channel")
 }
@@ -180,6 +180,24 @@ model SpotifyArtistTrack {
   @@map("spotify_artist_track")
 }
 
+model SpotifyTrackGroup {
+  id                     Int           @id @default(autoincrement())
+  songId                 Int           @unique @map("song_id")
+  primarySpotifyTrackId  Int?          @unique @map("primary_spotify_track_id")
+  titleKo          String?       @map("title_ko")
+  titleLatin       String?       @map("title_latin")
+  titleJaKana      String?       @map("title_ja_kana")
+  titleJaKanji     String?       @map("title_ja_kanji")
+  createdAt              DateTime      @default(now()) @map("created_at")
+  updatedAt              DateTime      @updatedAt @map("updated_at")
+
+  song          Song          @relation(fields: [songId], references: [id], onDelete: Cascade)
+  primaryTrack  SpotifyTrack? @relation("PrimaryTrack", fields: [primarySpotifyTrackId], references: [id], onDelete: SetNull)
+  tracks        SpotifyTrack[] @relation("GroupTracks")
+
+  @@map("spotify_track_group")
+}
+
 
 model SpotifyTrack {
   id          Int                    @id @default(autoincrement())
@@ -197,12 +215,16 @@ model SpotifyTrack {
   releaseDate String?                @map("release_date")
   thumbnails  String[]               @default([])
   disabled    Boolean                @default(false)
+  groupId     Int?                   @map("group_id")
   createdAt   DateTime               @default(now()) @map("created_at")
   updatedAt   DateTime               @updatedAt @map("updated_at")
 
-  songs   SongSpotifyTrack[]
-  artists SpotifyArtistTrack[]
+  group           SpotifyTrackGroup? @relation("GroupTracks", fields: [groupId], references: [id], onDelete: SetNull)
+  primaryForGroup SpotifyTrackGroup? @relation("PrimaryTrack")
+  artists         SpotifyArtistTrack[]
 
+  @@index([groupId])
+  @@index([isrc])
   @@map("spotify_track")
 }
 
@@ -275,16 +297,5 @@ model ArtistTjSong {
   @@map("artist_tj_song")
 }
 
-model SongSpotifyTrack {
-  id              Int           @id @default(autoincrement())
-  songId          Int           @unique @map("song_id")
-  spotifyTrackId  Int           @map("spotify_track_id")
-  createdAt       DateTime      @default(now()) @map("created_at")
 
-  song          Song          @relation(fields: [songId], references: [id], onDelete: Cascade)
-  spotifyTrack  SpotifyTrack  @relation(fields: [spotifyTrackId], references: [id], onDelete: Cascade)
-
-  @@index([spotifyTrackId])
-  @@map("song_spotify_track")
-}
 
