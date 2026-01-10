@@ -53,10 +53,7 @@
   "overrides": [
     {
       "includes": [
-        "backend/src/**/*.controller.ts",
-        "backend/src/**/*.service.ts",
-        "backend/src/**/*.module.ts",
-        "backend/src/**/*.repository.ts"
+        "backend/src/**/*.ts"
       ],
       "linter": {
         "rules": {
