@@ -32,7 +32,7 @@ export class TypesenseIndexingService {
     this.logger.log("Recreating artists collection...");
     await recreateCollection(client, artistsCollectionSchema);
 
-    const maxArtistId = options?.maxArtistId ?? 272;
+    const maxArtistId = options?.maxArtistId ?? 300;
 
     this.logger.log("Fetching artists from database...");
     const artists = await this.prisma.artist.findMany({
@@ -67,7 +67,7 @@ export class TypesenseIndexingService {
     this.logger.log("Recreating songs collection...");
     await recreateCollection(client, songsCollectionSchema);
 
-    const maxArtistId = options?.maxArtistId ?? 272;
+    const maxArtistId = options?.maxArtistId ?? 300;
 
     this.logger.log("Fetching songs from database...");
     const songs = await this.prisma.song.findMany({
