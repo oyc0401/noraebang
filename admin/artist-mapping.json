@@ -1,464 +1,779 @@
 [
   {
     "spotifyTrack": {
-      "id": 6639,
-      "name": "The City Where Whales Fall"
+      "id": 3852,
+      "name": "青"
     },
     "songs": [],
     "candidateSong": []
   },
   {
     "spotifyTrack": {
-      "id": 6641,
-      "name": "Happiness Umbrella"
+      "id": 3853,
+      "name": "畢竟"
+    },
+    "songs": [
+      {
+        "id": 10592,
+        "name": "畢竟"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3854,
+      "name": "音楽"
     },
     "songs": [],
     "candidateSong": []
   },
   {
     "spotifyTrack": {
-      "id": 6644,
-      "name": "End Roll"
+      "id": 3855,
+      "name": "憂いの化け物"
     },
     "songs": [],
     "candidateSong": []
   },
   {
     "spotifyTrack": {
-      "id": 6645,
-      "name": "Replay"
+      "id": 3856,
+      "name": "SCAPEGOAT"
     },
     "songs": [],
     "candidateSong": []
   },
   {
     "spotifyTrack": {
-      "id": 6654,
-      "name": "Restless Mind"
+      "id": 3858,
+      "name": "いちばんぼし"
     },
     "songs": [],
     "candidateSong": []
   },
   {
     "spotifyTrack": {
-      "id": 6656,
-      "name": "心の奥"
-    },
-    "songs": [
-      {
-        "id": 2859,
-        "name": "心の奥"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6657,
-      "name": "草々不一"
-    },
-    "songs": [
-      {
-        "id": 2839,
-        "name": "草々不一"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6658,
-      "name": "花泡沫"
-    },
-    "songs": [
-      {
-        "id": 2846,
-        "name": "花泡沫"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6659,
-      "name": "言の刃"
-    },
-    "songs": [
-      {
-        "id": 2843,
-        "name": "言の刃"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6660,
-      "name": "アルビレオ"
-    },
-    "songs": [
-      {
-        "id": 2836,
-        "name": "アルビレオ"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6661,
-      "name": "ユリイカ"
-    },
-    "songs": [
-      {
-        "id": 2840,
-        "name": "ユリイカ"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6662,
-      "name": "あやふや"
-    },
-    "songs": [
-      {
-        "id": 2849,
-        "name": "あやふや"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6663,
-      "name": "流星の声"
-    },
-    "songs": [
-      {
-        "id": 2850,
-        "name": "流星の声"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6664,
-      "name": "眼差し"
-    },
-    "songs": [
-      {
-        "id": 2844,
-        "name": "眼差し"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6665,
-      "name": "星寂夜"
-    },
-    "songs": [
-      {
-        "id": 2845,
-        "name": "星寂夜"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6666,
-      "name": "僕らの在り処"
-    },
-    "songs": [
-      {
-        "id": 2860,
-        "name": "僕らの在り処"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6668,
-      "name": "スピカ"
-    },
-    "songs": [
-      {
-        "id": 2835,
-        "name": "スピカ"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6669,
-      "name": "Slowly"
-    },
-    "songs": [
-      {
-        "id": 2863,
-        "name": "Slowly"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6670,
-      "name": "愛が灯る"
-    },
-    "songs": [
-      {
-        "id": 2833,
-        "name": "愛が灯る"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6671,
-      "name": "リインカーネーション"
-    },
-    "songs": [
-      {
-        "id": 2851,
-        "name": "リインカーネーション"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6672,
-      "name": "ばいばいまたあした"
-    },
-    "songs": [
-      {
-        "id": 2861,
-        "name": "ばいばいまたあした"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6673,
-      "name": "子供騙し"
-    },
-    "songs": [
-      {
-        "id": 2854,
-        "name": "子供騙し"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6675,
-      "name": "アマネゾラ"
-    },
-    "songs": [
-      {
-        "id": 2855,
-        "name": "アマネゾラ"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6676,
-      "name": "カロン"
-    },
-    "songs": [
-      {
-        "id": 2838,
-        "name": "カロン"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6677,
-      "name": "イオ"
-    },
-    "songs": [
-      {
-        "id": 2842,
-        "name": "イオ"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6678,
-      "name": "雨景色"
-    },
-    "songs": [
-      {
-        "id": 2837,
-        "name": "雨景色"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6680,
-      "name": "息継ぎ"
-    },
-    "songs": [
-      {
-        "id": 2856,
-        "name": "息継ぎ"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6681,
-      "name": "夏を書き留める"
-    },
-    "songs": [
-      {
-        "id": 2853,
-        "name": "夏を書き留める"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6682,
-      "name": "沁み込む"
-    },
-    "songs": [
-      {
-        "id": 2858,
-        "name": "沁み込む"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6683,
-      "name": "遠心力"
-    },
-    "songs": [
-      {
-        "id": 2857,
-        "name": "遠心力"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6684,
-      "name": "脈拍"
-    },
-    "songs": [
-      {
-        "id": 2847,
-        "name": "脈拍"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6689,
-      "name": "About You"
-    },
-    "songs": [
-      {
-        "id": 2848,
-        "name": "About You"
-      }
-    ],
-    "candidateSong": []
-  },
-  {
-    "spotifyTrack": {
-      "id": 6690,
-      "name": "Dawn and Fireflies (Rokudenashi cover.)"
+      "id": 3859,
+      "name": "ブルーマーブル"
     },
     "songs": [],
     "candidateSong": []
   },
   {
     "spotifyTrack": {
-      "id": 6698,
-      "name": "ブリザード"
+      "id": 3861,
+      "name": "後書き"
+    },
+    "songs": [],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3863,
+      "name": "GAUZE"
+    },
+    "songs": [],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3864,
+      "name": "Nighthawk"
     },
     "songs": [
       {
-        "id": 2862,
-        "name": "ブリザード"
+        "id": 10595,
+        "name": "Nighthawk feat. たなか"
       }
     ],
     "candidateSong": []
   },
   {
     "spotifyTrack": {
-      "id": 6699,
-      "name": "知らないままで"
+      "id": 3865,
+      "name": "FRAGILE"
     },
     "songs": [
       {
-        "id": 2852,
-        "name": "知らないままで"
+        "id": 10600,
+        "name": "FRAGILE"
       }
     ],
     "candidateSong": []
   },
   {
     "spotifyTrack": {
-      "id": 6700,
-      "name": "ただ声一つ"
+      "id": 3869,
+      "name": "無垢"
+    },
+    "songs": [],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3870,
+      "name": "雨の植物園"
+    },
+    "songs": [],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3871,
+      "name": "帰りの会"
+    },
+    "songs": [],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3872,
+      "name": "Caffeine"
     },
     "songs": [
       {
-        "id": 2832,
-        "name": "ただ声一つ"
+        "id": 10585,
+        "name": "Caffeine"
       }
     ],
     "candidateSong": []
   },
   {
     "spotifyTrack": {
-      "id": 6701,
-      "name": "まちぼうけ"
+      "id": 3877,
+      "name": "優しい人でありたい"
+    },
+    "songs": [],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3878,
+      "name": "光"
     },
     "songs": [
       {
-        "id": 2841,
-        "name": "まちぼうけ"
+        "id": 10598,
+        "name": "光"
       }
     ],
     "candidateSong": []
   },
   {
     "spotifyTrack": {
-      "id": 6702,
-      "name": "三時のキス"
+      "id": 3879,
+      "name": "TULPA"
     },
     "songs": [
       {
-        "id": 2834,
-        "name": "三時のキス"
+        "id": 10615,
+        "name": "TULPA"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3880,
+      "name": "ANTIHERO"
+    },
+    "songs": [
+      {
+        "id": 10614,
+        "name": "ANTIHERO"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3881,
+      "name": "透明度"
+    },
+    "songs": [
+      {
+        "id": 10610,
+        "name": "透明度"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3882,
+      "name": "Kick It Down"
+    },
+    "songs": [
+      {
+        "id": 10609,
+        "name": "Kick It Down"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3883,
+      "name": "オルターエゴ"
+    },
+    "songs": [
+      {
+        "id": 10586,
+        "name": "オルターエゴ"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3884,
+      "name": "SAVEPOINT"
+    },
+    "songs": [
+      {
+        "id": 10616,
+        "name": "SAVEPOINT"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3885,
+      "name": "過去の蜃気楼"
+    },
+    "songs": [
+      {
+        "id": 10597,
+        "name": "過去の蜃気楼"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3886,
+      "name": "蜜蜂"
+    },
+    "songs": [
+      {
+        "id": 10601,
+        "name": "蜜蜂"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3887,
+      "name": "不成者"
+    },
+    "songs": [
+      {
+        "id": 10619,
+        "name": "不成者"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3888,
+      "name": "足りない"
+    },
+    "songs": [
+      {
+        "id": 10582,
+        "name": "足りない"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3889,
+      "name": "どした？"
+    },
+    "songs": [
+      {
+        "id": 10626,
+        "name": "どした?"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3890,
+      "name": "ID"
+    },
+    "songs": [
+      {
+        "id": 10625,
+        "name": "ID"
+      }
+    ],
+    "candidateSong": [
+      {
+        "id": 10587,
+        "name": "Void"
+      },
+      {
+        "id": 10620,
+        "name": "INSIDE"
+      }
+    ]
+  },
+  {
+    "spotifyTrack": {
+      "id": 3891,
+      "name": "SANDBAG"
+    },
+    "songs": [
+      {
+        "id": 10621,
+        "name": "SANDBAG"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3892,
+      "name": "Void"
+    },
+    "songs": [
+      {
+        "id": 10587,
+        "name": "Void"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3893,
+      "name": "漂泊者"
+    },
+    "songs": [
+      {
+        "id": 10618,
+        "name": "漂泊者"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3894,
+      "name": "DERO"
+    },
+    "songs": [
+      {
+        "id": 10606,
+        "name": "DERO"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3895,
+      "name": "火焔"
+    },
+    "songs": [
+      {
+        "id": 10594,
+        "name": "火焔"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3896,
+      "name": "izqnqi"
+    },
+    "songs": [
+      {
+        "id": 10629,
+        "name": "izqnqi"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3897,
+      "name": "Mad Hatter"
+    },
+    "songs": [
+      {
+        "id": 10603,
+        "name": "Mad Hatter"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3898,
+      "name": "堕落生活"
+    },
+    "songs": [
+      {
+        "id": 10596,
+        "name": "堕落生活"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3899,
+      "name": "INSIDE"
+    },
+    "songs": [
+      {
+        "id": 10620,
+        "name": "INSIDE"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3900,
+      "name": "perfectionist"
+    },
+    "songs": [
+      {
+        "id": 10628,
+        "name": "perfectionist"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3901,
+      "name": "TOUBOU"
+    },
+    "songs": [
+      {
+        "id": 10617,
+        "name": "TOUBOU"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3902,
+      "name": "白雨"
+    },
+    "songs": [],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3903,
+      "name": "albino"
+    },
+    "songs": [
+      {
+        "id": 10613,
+        "name": "albino"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3904,
+      "name": "bibouroku"
+    },
+    "songs": [
+      {
+        "id": 10627,
+        "name": "bibouroku"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3905,
+      "name": "ORIGINAL"
+    },
+    "songs": [
+      {
+        "id": 10622,
+        "name": "ORIGINAL"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3906,
+      "name": "命の行方"
+    },
+    "songs": [
+      {
+        "id": 10583,
+        "name": "命の行方"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3907,
+      "name": "独白"
+    },
+    "songs": [
+      {
+        "id": 10590,
+        "name": "独白"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3908,
+      "name": "CULT"
+    },
+    "songs": [
+      {
+        "id": 10589,
+        "name": "CULT"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3909,
+      "name": "アネモネ"
+    },
+    "songs": [
+      {
+        "id": 10593,
+        "name": "アネモネ"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3910,
+      "name": "SOIREE"
+    },
+    "songs": [
+      {
+        "id": 10624,
+        "name": "SOIREE"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3911,
+      "name": "DOMINATION"
+    },
+    "songs": [
+      {
+        "id": 10608,
+        "name": "DOMINATION"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3912,
+      "name": "狂う獣"
+    },
+    "songs": [
+      {
+        "id": 10607,
+        "name": "狂う獣"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3913,
+      "name": "Heaven and Hell"
+    },
+    "songs": [
+      {
+        "id": 10604,
+        "name": "Heaven and Hell"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3914,
+      "name": "SOPPY"
+    },
+    "songs": [
+      {
+        "id": 10630,
+        "name": "SOPPY"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3915,
+      "name": "LAZY"
+    },
+    "songs": [
+      {
+        "id": 10611,
+        "name": "LAZY"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3916,
+      "name": "LILAC"
+    },
+    "songs": [
+      {
+        "id": 10631,
+        "name": "LILAC"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3917,
+      "name": "ONE"
+    },
+    "songs": [
+      {
+        "id": 10612,
+        "name": "ONE"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3918,
+      "name": "STIGMA"
+    },
+    "songs": [
+      {
+        "id": 10591,
+        "name": "STIGMA"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3919,
+      "name": "終点"
+    },
+    "songs": [
+      {
+        "id": 10623,
+        "name": "終点"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3920,
+      "name": "灯火"
+    },
+    "songs": [
+      {
+        "id": 10588,
+        "name": "灯火"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3922,
+      "name": "心臓"
+    },
+    "songs": [],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3924,
+      "name": "NO PAIN"
+    },
+    "songs": [],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3925,
+      "name": "表情差分"
+    },
+    "songs": [
+      {
+        "id": 10584,
+        "name": "表情差分"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3928,
+      "name": "可笑しな生き物"
+    },
+    "songs": [
+      {
+        "id": 10605,
+        "name": "可笑しな生き物"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3929,
+      "name": "フラッシュバック"
+    },
+    "songs": [
+      {
+        "id": 10602,
+        "name": "フラッシュバック"
+      }
+    ],
+    "candidateSong": []
+  },
+  {
+    "spotifyTrack": {
+      "id": 3940,
+      "name": "PAIN"
+    },
+    "songs": [
+      {
+        "id": 10599,
+        "name": "PAIN"
       }
     ],
     "candidateSong": []
