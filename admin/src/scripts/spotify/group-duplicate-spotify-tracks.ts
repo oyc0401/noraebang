@@ -22,6 +22,7 @@ import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { isDuplicateTrack } from "../../lib/duplicate-track-detector.ts";
 import { findBestMatch } from "../../lib/song-spotify-matcher.ts";
+import { normalizeTitle as normalizeTrackTitle } from "../../lib/track-title-normalizer.ts";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -44,86 +45,13 @@ function popularityScore(p: number | null | undefined): number {
 }
 
 function pickPrimaryByPopularity(tracks: TrackInfo[]): TrackInfo {
-  // 변형 버전(라이브, 리믹스 등)을 제외하고 원본 트랙만 후보로
-  const originalTracks = tracks.filter((t) => !t.isDuplicateVariant);
-
-  // 원본이 하나도 없으면 어쩔 수 없이 변형 버전에서 선택
-  const candidates = originalTracks.length > 0 ? originalTracks : tracks;
-
   // popularity desc, id asc (tie-break)
-  return candidates.slice().sort((a, b) => {
+  return tracks.slice().sort((a, b) => {
     const pa = popularityScore(a.popularity);
     const pb = popularityScore(b.popularity);
     if (pa !== pb) return pb - pa;
     return a.id - b.id;
   })[0]!;
-}
-
-function normalizeTitle(title: string): string {
-  let normalized = title;
-
-  // 변형 버전 패턴 제거 (isDuplicateTrack과 동일한 패턴들)
-  const patternsToRemove = [
-    // 버전 표시
-    /\(alt ver\.?\)/gi,
-    /\(ver\.?\)/gi,
-    /\(version\)/gi,
-    /- alternate version/gi,
-    /- .+ ver\.?$/gi,
-    // 라이브
-    /- live($|\s)/gi,
-    /\(live\)/gi,
-    /\[live\]/gi,
-    /- live at\s.+/gi,
-    /\(live at\s.+\)/gi,
-    /live ver\.?$/gi,
-    /\/\s*LIVE/gi,
-    // 인스트루멘탈
-    /- instrumental/gi,
-    /\(instrumental\)/gi,
-    /\[instrumental\]/gi,
-    /- inst\.?/gi,
-    /\(inst\.?\)/gi,
-    /-instrumental-/gi,
-    // 리믹스
-    /- remix($|\s)/gi,
-    /\(remix\)/gi,
-    /- .+ remix/gi,
-    /\(.+ remix\)/gi,
-    /- .+ mix/gi,
-    // 보컬 제거
-    /- off vocal/gi,
-    /\(off vocal\)/gi,
-    /\[off vocal\]/gi,
-    // 출처 표시
-    /- from\s.+/gi,
-    /\(from\s.+\)/gi,
-    /\[from\s.+\]/gi,
-    // 특별 편곡
-    /\[with\s.+\]/gi,
-    /\(with\s.+\)/gi,
-    /- with\s.+/gi,
-    // 짧은 버전
-    /- tv size/gi,
-    /\(tv size\)/gi,
-    /\[tv size\]/gi,
-    /- short ver\.?/gi,
-    /\(short ver\.?\)/gi,
-    /- radio edit/gi,
-    /\(radio edit\)/gi,
-    // 재녹음/재발매
-    /[(（]re[:：].+[)）]/gi,
-  ];
-
-  for (const pattern of patternsToRemove) {
-    normalized = normalized.replace(pattern, "");
-  }
-
-  // 공백, 괄호, 하이픈 등 제거 및 소문자 변환
-  return normalized
-    .toLowerCase()
-    .replace(/[\s\-_()[\]{}]/g, "")
-    .trim();
 }
 
 async function main() {
@@ -231,7 +159,7 @@ async function main() {
   }
 
   console.log(
-    `✓ 변형 버전 트랙(라이브/리믹스 등): ${duplicateVariantCount}개 (그룹에 포함, primary 후보에서만 제외)`,
+    `✓ 변형 버전 트랙(라이브/리믹스 등): ${duplicateVariantCount}개 (그룹에 포함, primary 가능)`,
   );
   console.log(`✓ 그룹화 대상 unique tracks: ${trackById.size}개\n`);
 
@@ -276,14 +204,14 @@ async function main() {
 
     for (const track of tracks) {
       // name으로 매핑 (정규화)
-      const normalizedName = normalizeTitle(track.name);
+      const normalizedName = normalizeTrackTitle(track.name);
       const nameList = titleToTrackIds.get(normalizedName) ?? [];
       nameList.push(track.id);
       titleToTrackIds.set(normalizedName, nameList);
 
       // musicBrainzTitle로도 매핑 (정규화)
       if (track.musicBrainzTitle) {
-        const normalizedMb = normalizeTitle(track.musicBrainzTitle);
+        const normalizedMb = normalizeTrackTitle(track.musicBrainzTitle);
         // 정규화 후에도 다르면 추가 매핑
         if (normalizedMb !== normalizedName) {
           const mbList = titleToTrackIds.get(normalizedMb) ?? [];
@@ -496,15 +424,21 @@ async function main() {
   const primaryAssignments: { groupId: number; trackId: number }[] = [];
 
   for (const group of groupsToCreate) {
-    let groupId: number;
-
     // 여러 기존 그룹이 있는지 확인
     const existingGroupIds = group.tracks
       .map((t) => t.groupId)
       .filter((id): id is number => id !== null);
     const uniqueGroupIds = Array.from(new Set(existingGroupIds));
 
-    if (uniqueGroupIds.length > 0) {
+    let groupId: number;
+
+    if (uniqueGroupIds.length === 0) {
+      const newGroup = await prisma.spotifyTrackGroup.create({
+        data: {},
+      });
+      groupId = newGroup.id;
+      createdGroupCount++;
+    } else {
       // 기존 그룹 사용 (첫 번째 그룹)
       groupId = uniqueGroupIds[0];
 
@@ -555,25 +489,9 @@ async function main() {
           mergedGroupCount++;
         }
       }
-
-      primaryAssignments.push({ groupId, trackId: group.primary.id });
-    } else {
-      // 새 그룹 생성 (먼저 그룹만 생성)
-      const newGroup = await prisma.spotifyTrackGroup.create({
-        data: {
-          song: {
-            create: {
-              title: group.primary.name,
-            },
-          },
-        },
-      });
-      groupId = newGroup.id;
-
-      primaryAssignments.push({ groupId, trackId: group.primary.id });
-
-      createdGroupCount++;
     }
+
+    primaryAssignments.push({ groupId, trackId: group.primary.id });
 
     // 모든 트랙의 groupId 업데이트
     const trackIds = group.tracks.map((t) => t.id);
@@ -601,16 +519,8 @@ async function main() {
       });
     }
 
-    // 빈 그룹(솔로였던 그룹) 삭제
-    const emptyGroupIds = Array.from(
-      new Set(relocateList.map((r) => r.fromGroupId)),
-    );
-    await prisma.spotifyTrackGroup.deleteMany({
-      where: { id: { in: emptyGroupIds } },
-    });
-
     console.log(`✓ 재배치된 트랙: ${relocateList.length}개`);
-    console.log(`✓ 삭제된 빈 그룹: ${emptyGroupIds.length}개\n`);
+    console.log("ℹ️  기존 그룹은 삭제하지 않고 남겨둡니다.\n");
   }
 
   if (primaryAssignments.length > 0) {
