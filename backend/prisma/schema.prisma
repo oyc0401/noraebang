@@ -48,7 +48,7 @@ model Song {
 
   karaokeSongs     KaraokeSong[]
   artistSongs      ArtistSong[]
-  spotifyTracks    SpotifyTrack[]
+  spotifyTrack     SongSpotifyTrack?
   aliases          SongAlias[]
 
   @@map("song")
@@ -177,7 +177,6 @@ model SpotifyArtistTrack {
 
 model SpotifyTrack {
   id          Int                    @id @default(autoincrement())
-  songId      Int?                   @map("song_id")
   spotifyId   String                 @unique @map("spotify_id")
   spotifyUrl  String?                @map("spotify_url")
   name        String
@@ -195,7 +194,7 @@ model SpotifyTrack {
   createdAt   DateTime               @default(now()) @map("created_at")
   updatedAt   DateTime               @updatedAt @map("updated_at")
 
-  song    Song?                  @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songs   SongSpotifyTrack[]
   artists SpotifyArtistTrack[]
 
   @@map("spotify_track")
@@ -268,5 +267,18 @@ model ArtistTjSong {
   @@index([artistId])
   @@index([tjSongId])
   @@map("artist_tj_song")
+}
+
+model SongSpotifyTrack {
+  id              Int           @id @default(autoincrement())
+  songId          Int           @unique @map("song_id")
+  spotifyTrackId  Int           @map("spotify_track_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  song          Song          @relation(fields: [songId], references: [id], onDelete: Cascade)
+  spotifyTrack  SpotifyTrack  @relation(fields: [spotifyTrackId], references: [id], onDelete: Cascade)
+
+  @@index([spotifyTrackId])
+  @@map("song_spotify_track")
 }
 
