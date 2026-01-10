@@ -344,7 +344,9 @@ export class ArtistsService {
 
     if (!artist) return null;
 
-    const mainChannel = artist.youtubeChannels[0];
+    const mainChannel =
+      artist.youtubeChannels.find((ch) => ch.type === "MAIN") ??
+      artist.youtubeChannels.find((ch) => ch.type === "TOPIC");
 
     return {
       id: artist.id,
