@@ -493,6 +493,7 @@ async function main() {
   let updatedTrackCount = 0;
   let mergedGroupCount = 0;
   let songConflictCount = 0;
+  const primaryAssignments: { groupId: number; trackId: number }[] = [];
 
   for (const group of groupsToCreate) {
     let groupId: number;
@@ -555,25 +556,7 @@ async function main() {
         }
       }
 
-      // 병합 완료 후 primary 업데이트
-      // 먼저 이 트랙을 primary로 사용하는 다른 그룹이 있는지 확인하고 해제
-      const conflictingGroup = await prisma.spotifyTrackGroup.findUnique({
-        where: { primarySpotifyTrackId: group.primary.id },
-        select: { id: true },
-      });
-
-      if (conflictingGroup && conflictingGroup.id !== groupId) {
-        // 다른 그룹이 이 트랙을 primary로 사용 중이면 null로 변경
-        await prisma.spotifyTrackGroup.update({
-          where: { id: conflictingGroup.id },
-          data: { primarySpotifyTrackId: null },
-        });
-      }
-
-      await prisma.spotifyTrackGroup.update({
-        where: { id: groupId },
-        data: { primarySpotifyTrackId: group.primary.id },
-      });
+      primaryAssignments.push({ groupId, trackId: group.primary.id });
     } else {
       // 새 그룹 생성 (먼저 그룹만 생성)
       const newGroup = await prisma.spotifyTrackGroup.create({
@@ -587,24 +570,7 @@ async function main() {
       });
       groupId = newGroup.id;
 
-      // primary 설정 (충돌 확인)
-      const conflictingGroup = await prisma.spotifyTrackGroup.findUnique({
-        where: { primarySpotifyTrackId: group.primary.id },
-        select: { id: true },
-      });
-
-      if (conflictingGroup && conflictingGroup.id !== groupId) {
-        // 다른 그룹이 이 트랙을 primary로 사용 중이면 null로 변경
-        await prisma.spotifyTrackGroup.update({
-          where: { id: conflictingGroup.id },
-          data: { primarySpotifyTrackId: null },
-        });
-      }
-
-      await prisma.spotifyTrackGroup.update({
-        where: { id: groupId },
-        data: { primarySpotifyTrackId: group.primary.id },
-      });
+      primaryAssignments.push({ groupId, trackId: group.primary.id });
 
       createdGroupCount++;
     }
@@ -645,6 +611,38 @@ async function main() {
 
     console.log(`✓ 재배치된 트랙: ${relocateList.length}개`);
     console.log(`✓ 삭제된 빈 그룹: ${emptyGroupIds.length}개\n`);
+  }
+
+  if (primaryAssignments.length > 0) {
+    console.log("Step 8: Primary track 일괄 업데이트 중 ...");
+
+    const assignmentsByGroupId = new Map<number, number>();
+    for (const assignment of primaryAssignments) {
+      assignmentsByGroupId.set(assignment.groupId, assignment.trackId);
+    }
+
+    let primaryUpdateCount = 0;
+    for (const [groupId, trackId] of assignmentsByGroupId.entries()) {
+      const conflictingGroup = await prisma.spotifyTrackGroup.findUnique({
+        where: { primarySpotifyTrackId: trackId },
+        select: { id: true },
+      });
+
+      if (conflictingGroup && conflictingGroup.id !== groupId) {
+        await prisma.spotifyTrackGroup.update({
+          where: { id: conflictingGroup.id },
+          data: { primarySpotifyTrackId: null },
+        });
+      }
+
+      await prisma.spotifyTrackGroup.update({
+        where: { id: groupId },
+        data: { primarySpotifyTrackId: trackId },
+      });
+      primaryUpdateCount++;
+    }
+
+    console.log(`✓ primary 업데이트된 그룹: ${primaryUpdateCount}개\n`);
   }
 
   console.log(
