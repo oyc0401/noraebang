@@ -10,9 +10,9 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import pg from "pg";
 import * as fs from "fs";
 import * as path from "path";
+import pg from "pg";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,7 +22,18 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter, log: ["warn", "error"] });
 
-const COLLABORATION_KEYWORDS = ["with", "&", "X", "feat", "featuring", "ft", "duet", "Duet", "prod", "Prod"];
+const COLLABORATION_KEYWORDS = [
+  "with",
+  "&",
+  "X",
+  "feat",
+  "featuring",
+  "ft",
+  "duet",
+  "Duet",
+  "prod",
+  "Prod",
+];
 
 // CLI 인자 파싱
 const args = process.argv.slice(2);
@@ -106,7 +117,7 @@ async function main() {
   for (const artist of oneSong.slice(skip, skip + limit)) {
     console.log(`\n${"=".repeat(80)}`);
     console.log(
-      `처리 중 (${processed + 1}/${limit}): ${artist.nameKo || artist.name} (ID: ${artist.id})`
+      `처리 중 (${processed + 1}/${limit}): ${artist.nameKo || artist.name} (ID: ${artist.id})`,
     );
     console.log(`${"=".repeat(80)}`);
 
@@ -148,7 +159,7 @@ async function main() {
       if (found.length > 0) {
         const best = found[0];
         console.log(
-          `   → "${part}" 검색: ${best.nameKo || best.name} (ID: ${best.id}, 곡: ${best._count.artistSongs}개)`
+          `   → "${part}" 검색: ${best.nameKo || best.name} (ID: ${best.id}, 곡: ${best._count.artistSongs}개)`,
         );
 
         // 곡이 2개 이상인 아티스트만 추가
@@ -168,9 +179,9 @@ async function main() {
     }
 
     // 중복 제거
-    const uniqueArtists = Array.from(new Set(foundArtists.map((a) => a.id))).map((id) =>
-      foundArtists.find((a) => a.id === id)
-    );
+    const uniqueArtists = Array.from(
+      new Set(foundArtists.map((a) => a.id)),
+    ).map((id) => foundArtists.find((a) => a.id === id));
 
     if (uniqueArtists.length === 1) {
       // 1명이면 merge (아티스트 완전 삭제)
@@ -212,7 +223,9 @@ async function main() {
     existing.operations.push(...operations);
 
     fs.writeFileSync(jsonPath, JSON.stringify(existing, null, 2), "utf-8");
-    console.log(`\n📝 ${operations.length}개의 작업이 artist-mapping-operations.json에 추가되었습니다.`);
+    console.log(
+      `\n📝 ${operations.length}개의 작업이 artist-mapping-operations.json에 추가되었습니다.`,
+    );
   }
 }
 

@@ -9,9 +9,9 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import pg from "pg";
 import * as fs from "fs";
 import * as path from "path";
+import pg from "pg";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -78,7 +78,10 @@ async function main() {
   let keptCount = 0;
 
   for (const op of data.operations) {
-    if (op.type === "merge_artists" && hasCollaborationKeyword(op.description)) {
+    if (
+      op.type === "merge_artists" &&
+      hasCollaborationKeyword(op.description)
+    ) {
       console.log(`\\n${"=".repeat(80)}`);
       console.log(`🔍 검토 중: ${op.description}`);
 
@@ -138,7 +141,7 @@ async function main() {
           if (found.length > 0 && found[0]._count.artistSongs >= 1) {
             foundArtists.push(found[0]);
             console.log(
-              `   → "${part}" 찾음: ${found[0].nameKo || found[0].name} (곡 ${found[0]._count.artistSongs}개)`
+              `   → "${part}" 찾음: ${found[0].nameKo || found[0].name} (곡 ${found[0]._count.artistSongs}개)`,
             );
           } else {
             console.log(`   → "${part}" 못찾음`);
@@ -146,9 +149,9 @@ async function main() {
         }
 
         // 중복 제거
-        const uniqueArtists = Array.from(new Set(foundArtists.map((a) => a.id))).map((id) =>
-          foundArtists.find((a) => a.id === id)
-        );
+        const uniqueArtists = Array.from(
+          new Set(foundArtists.map((a) => a.id)),
+        ).map((id) => foundArtists.find((a) => a.id === id));
 
         if (uniqueArtists.length >= 2) {
           // 양쪽 아티스트 모두 찾았으면 copy_songs_and_delete로 변환

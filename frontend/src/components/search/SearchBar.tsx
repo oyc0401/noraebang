@@ -1,9 +1,9 @@
 "use client";
 
 import { Search as SearchIcon, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useSearchStore } from "@/store/searchStore";
-import { useRouter } from "next/navigation";
 
 export function SearchBar() {
   const { query, setQuery, clearSearch } = useSearchStore();

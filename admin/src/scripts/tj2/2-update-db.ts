@@ -34,12 +34,20 @@ async function main() {
   const isDryRun = process.argv.includes("--dry-run");
 
   // --artist-id=45 형식 파싱
-  const artistIdArg = process.argv.find((arg) => arg.startsWith("--artist-id="));
-  const artistId = artistIdArg ? Number.parseInt(artistIdArg.split("=")[1], 10) : undefined;
+  const artistIdArg = process.argv.find((arg) =>
+    arg.startsWith("--artist-id="),
+  );
+  const artistId = artistIdArg
+    ? Number.parseInt(artistIdArg.split("=")[1], 10)
+    : undefined;
 
   if (!jsonPath) {
-    console.error("❌ Usage: npx tsx src/scripts/tj2/2-update-db.ts <json-file-path> --artist-id=<id> [--dry-run]");
-    console.error('   Example: npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --artist-id=45');
+    console.error(
+      "❌ Usage: npx tsx src/scripts/tj2/2-update-db.ts <json-file-path> --artist-id=<id> [--dry-run]",
+    );
+    console.error(
+      '   Example: npx tsx src/scripts/tj2/2-update-db.ts "./아이유-2026-01-09T12-30-45.json" --artist-id=45',
+    );
     console.error("\n옵션:");
     console.error("  --artist-id=<id>  매핑할 Artist ID (필수)");
     console.error("  --dry-run         실제 업데이트 없이 미리보기만 수행");
@@ -48,7 +56,7 @@ async function main() {
 
   if (!artistId || Number.isNaN(artistId)) {
     console.error("❌ --artist-id 옵션이 필요합니다.");
-    console.error('   Example: --artist-id=45');
+    console.error("   Example: --artist-id=45");
     process.exit(1);
   }
 
@@ -62,7 +70,9 @@ async function main() {
     const fileContent = fs.readFileSync(jsonPath, "utf-8");
     const data: FetchedData = JSON.parse(fileContent);
 
-    console.log(`\n=== TJ 곡 정보 DB 업데이트 ${isDryRun ? "(DRY RUN)" : ""} ===`);
+    console.log(
+      `\n=== TJ 곡 정보 DB 업데이트 ${isDryRun ? "(DRY RUN)" : ""} ===`,
+    );
     console.log(`가수명: ${data.artistName}`);
     console.log(`곡 수: ${data.totalSongs}`);
     console.log(`스크래핑 시각: ${data.fetchedAt}`);
@@ -80,7 +90,6 @@ async function main() {
     }
 
     console.log(`Artist: ${artist.name} (${artist.nameKo})`);
-
 
     let updatedCount = 0;
     let notFoundCount = 0;
@@ -175,7 +184,9 @@ async function main() {
     }
 
     if (isDryRun) {
-      console.log(`\n💡 실제 업데이트를 수행하려면 --dry-run 없이 다시 실행하세요.`);
+      console.log(
+        `\n💡 실제 업데이트를 수행하려면 --dry-run 없이 다시 실행하세요.`,
+      );
     } else {
       console.log(`\n✅ DB 업데이트 완료!`);
     }

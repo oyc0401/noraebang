@@ -87,8 +87,7 @@ async function listMainOnlyChannels(limit?: number) {
 }
 
 const isDirectExecution =
-  process.argv[1] &&
-  pathToFileURL(process.argv[1]).href === import.meta.url;
+  process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 
 if (isDirectExecution) {
   const limitArg = process.argv[2];

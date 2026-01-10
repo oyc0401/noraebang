@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchStore } from "@/store/searchStore";
 import { CircleThumbnail } from "@/components/common/CircleThumbnail";
 import { KaraokeBadge } from "@/components/karaoke/KaraokeBadge";
 import { cn } from "@/lib/cn";
+import { useSearchStore } from "@/store/searchStore";
 
 export const SearchResults = () => {
   const { query, results, clearSearch } = useSearchStore();
@@ -75,7 +75,8 @@ export const SearchResults = () => {
                 <div className="flex gap-4">
                   <CircleThumbnail
                     src={
-                      result.song.thumbnailMedium || result.song.thumbnailDefault
+                      result.song.thumbnailMedium ||
+                      result.song.thumbnailDefault
                     }
                     alt={result.song.titleKo || result.song.title}
                     size="w-16 h-16"

@@ -2,7 +2,10 @@
 //
 // Typesense transformer 유틸리티 함수 테스트
 
-import { transformArtistToDocument, transformSongToDocument } from "./transformer";
+import {
+  transformArtistToDocument,
+  transformSongToDocument,
+} from "./transformer";
 
 describe("katakanaToHiragana", () => {
   // 내부 함수이므로 transformArtistToDocument를 통해 간접 테스트
@@ -329,9 +332,7 @@ describe("removeBrackets - Song", () => {
           },
         },
       ],
-      karaokeSongs: [
-        { provider: "TJ", karaokeNo: "12345" },
-      ],
+      karaokeSongs: [{ provider: "TJ", karaokeNo: "12345" }],
       updatedAt: new Date("2025-01-01"),
       spotifyTrack: null,
     };
@@ -343,7 +344,9 @@ describe("removeBrackets - Song", () => {
     };
 
     const resultWithKaraoke = transformSongToDocument(songWithKaraoke as any);
-    const resultWithoutKaraoke = transformSongToDocument(songWithoutKaraoke as any);
+    const resultWithoutKaraoke = transformSongToDocument(
+      songWithoutKaraoke as any,
+    );
 
     expect(resultWithKaraoke.hasKaraokeNo).toBe(true);
     expect(resultWithoutKaraoke.hasKaraokeNo).toBeUndefined();

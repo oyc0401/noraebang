@@ -29,7 +29,9 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   const isDryRun = process.argv.includes("--dry-run");
 
-  console.log(`\n=== 매핑되지 않은 SpotifyArtist 제거 ${isDryRun ? "(DRY RUN)" : ""} ===\n`);
+  console.log(
+    `\n=== 매핑되지 않은 SpotifyArtist 제거 ${isDryRun ? "(DRY RUN)" : ""} ===\n`,
+  );
 
   // 1. 모든 SpotifyArtist 조회
   console.log("Step 1: SpotifyArtist 조회 중...");
@@ -66,7 +68,9 @@ async function main() {
     }
   }
 
-  console.log(`✓ ${unmappedArtists.length}개 매핑되지 않은 SpotifyArtist 발견\n`);
+  console.log(
+    `✓ ${unmappedArtists.length}개 매핑되지 않은 SpotifyArtist 발견\n`,
+  );
 
   if (unmappedArtists.length === 0) {
     console.log("✅ 모든 SpotifyArtist가 매핑되어 있습니다!\n");
@@ -94,7 +98,10 @@ async function main() {
   console.log();
 
   // 4. 통계
-  const totalTracks = unmappedArtists.reduce((sum, a) => sum + a._count.tracks, 0);
+  const totalTracks = unmappedArtists.reduce(
+    (sum, a) => sum + a._count.tracks,
+    0,
+  );
   console.log("📊 통계:");
   console.log(`  - 삭제할 SpotifyArtist: ${unmappedArtists.length}개`);
   console.log(`  - 삭제될 SpotifyArtistTrack 매핑: ${totalTracks}개`);
@@ -122,7 +129,10 @@ async function main() {
       console.log(`  ✓ [${artist.id}] ${artist.name} 삭제 완료`);
       successCount++;
     } catch (error: any) {
-      console.error(`  ❌ [${artist.id}] ${artist.name} 삭제 실패:`, error.message);
+      console.error(
+        `  ❌ [${artist.id}] ${artist.name} 삭제 실패:`,
+        error.message,
+      );
       errorCount++;
     }
   }

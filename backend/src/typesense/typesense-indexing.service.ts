@@ -1,15 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { indexDocuments, recreateCollection } from "./indexer";
-import {
-  artistsCollectionSchema,
-  songsCollectionSchema,
-} from "./schema";
-import { TypesenseService } from "./typesense.service";
+import { artistsCollectionSchema, songsCollectionSchema } from "./schema";
 import {
   transformArtistToDocument,
   transformSongToDocument,
 } from "./transformer";
+import { TypesenseService } from "./typesense.service";
 
 interface ReindexOptions {
   maxArtistId?: number;
@@ -50,11 +47,7 @@ export class TypesenseIndexingService {
     this.logger.log(`Transforming ${artists.length} artists...`);
     const documents = artists.map(transformArtistToDocument);
 
-    await indexDocuments(
-      client,
-      artistsCollectionSchema.name,
-      documents,
-    );
+    await indexDocuments(client, artistsCollectionSchema.name, documents);
 
     return { indexedCount: documents.length };
   }

@@ -356,8 +356,12 @@ async function main() {
       // await delay(20);
     } catch (error: any) {
       if (error.message === "RATE_LIMIT_EXCEEDED") {
-        console.error(`\n❌ Rate limit exceeded. Stopping at ${artist.name} (${artist.id})`);
-        console.error(`   Please wait a few minutes and restart from: ${artist.id}\n`);
+        console.error(
+          `\n❌ Rate limit exceeded. Stopping at ${artist.name} (${artist.id})`,
+        );
+        console.error(
+          `   Please wait a few minutes and restart from: ${artist.id}\n`,
+        );
         break;
       }
       errorCount++;
@@ -371,7 +375,9 @@ async function main() {
   console.log(`✅ SpotifyTrack 생성: ${createdTracks}개`);
   console.log(`❌ 오류 발생: ${errorCount}개`);
   if (lastProcessedArtist) {
-    console.log(`🎵 마지막 처리: ${lastProcessedArtist.name} (ID: ${lastProcessedArtist.id})`);
+    console.log(
+      `🎵 마지막 처리: ${lastProcessedArtist.name} (ID: ${lastProcessedArtist.id})`,
+    );
   }
 
   if (isDryRun) {

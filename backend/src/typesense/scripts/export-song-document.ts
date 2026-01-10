@@ -35,7 +35,9 @@ async function main() {
 
   if (!songIdArg) {
     console.error("❌ Error: songId 인자가 필요합니다.");
-    console.error("사용법: pnpm ts-node src/typesense/scripts/export-song-document.ts <songId>");
+    console.error(
+      "사용법: pnpm ts-node src/typesense/scripts/export-song-document.ts <songId>",
+    );
     process.exit(1);
   }
 
@@ -88,7 +90,9 @@ async function main() {
 
   console.log(`✓ Found song: ${song.title}`);
   console.log(`  - titleKo: ${song.titleKo ?? "(없음)"}`);
-  console.log(`  - artists: ${song.artistSongs.map((as) => as.artist.name).join(", ")}`);
+  console.log(
+    `  - artists: ${song.artistSongs.map((as) => as.artist.name).join(", ")}`,
+  );
 
   // 3. Typesense 문서로 변환
   console.log("\n📝 Transforming to Typesense document...");

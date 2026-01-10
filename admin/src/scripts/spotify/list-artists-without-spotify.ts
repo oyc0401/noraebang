@@ -56,7 +56,7 @@ async function main() {
   // 테이블 헤더
   console.log("─".repeat(100));
   console.log(
-    `${"ID".padEnd(5)} | ${"Name".padEnd(35)} | ${"NameKo".padEnd(25)} | ${"Songs".padEnd(6)} | ${"Catalog".padEnd(8)}`
+    `${"ID".padEnd(5)} | ${"Name".padEnd(35)} | ${"NameKo".padEnd(25)} | ${"Songs".padEnd(6)} | ${"Catalog".padEnd(8)}`,
   );
   console.log("─".repeat(100));
 
@@ -81,11 +81,13 @@ async function main() {
       acc[catalog] = (acc[catalog] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   console.log("📊 카탈로그별 통계:");
-  for (const [catalog, count] of Object.entries(byCatalog).sort((a, b) => b[1] - a[1])) {
+  for (const [catalog, count] of Object.entries(byCatalog).sort(
+    (a, b) => b[1] - a[1],
+  )) {
     console.log(`  ${catalog.padEnd(10)}: ${count}개`);
   }
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useSearchControllerSearch } from "@/api/model/search/search";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useSearchControllerSearch } from "@/api/model/search/search";
 import { KaraokeBadge } from "@/components/common/KaraokeBadge";
 import { SearchHeader } from "@/components/search/SearchHeader";
 import { useSearchStore } from "@/store/searchStore";

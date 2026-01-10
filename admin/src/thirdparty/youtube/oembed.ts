@@ -23,7 +23,9 @@ export async function fetchYoutubeOembed(
 
   const response = await fetch(oembedUrl);
   if (!response.ok) {
-    throw new Error(`YouTube oEmbed request failed (status ${response.status})`);
+    throw new Error(
+      `YouTube oEmbed request failed (status ${response.status})`,
+    );
   }
   return (await response.json()) as YoutubeOembedResponse;
 }

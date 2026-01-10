@@ -41,7 +41,7 @@ async function main() {
 
     console.log("\n📋 사용 가능한 메서드:");
     const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(ytmusic))
-      .filter(name => name !== 'constructor')
+      .filter((name) => name !== "constructor")
       .sort();
 
     methods.forEach((method, index) => {
@@ -51,24 +51,30 @@ async function main() {
     console.log(`\n총 ${methods.length}개의 메서드 발견`);
 
     // 검색 관련 메서드 찾기
-    const searchMethods = methods.filter(m => m.toLowerCase().includes('search'));
+    const searchMethods = methods.filter((m) =>
+      m.toLowerCase().includes("search"),
+    );
     if (searchMethods.length > 0) {
       console.log("\n🔍 검색 관련 메서드:");
-      searchMethods.forEach(m => console.log(`   - ${m}`));
+      searchMethods.forEach((m) => console.log(`   - ${m}`));
     }
 
     // 아티스트 관련 메서드 찾기
-    const artistMethods = methods.filter(m => m.toLowerCase().includes('artist'));
+    const artistMethods = methods.filter((m) =>
+      m.toLowerCase().includes("artist"),
+    );
     if (artistMethods.length > 0) {
       console.log("\n🎤 아티스트 관련 메서드:");
-      artistMethods.forEach(m => console.log(`   - ${m}`));
+      artistMethods.forEach((m) => console.log(`   - ${m}`));
     }
 
     // 간단한 검색 테스트
     console.log("\n🔍 검색 테스트: '아이유'");
     const searchResult = await ytmusic.search("아이유");
-    console.log("검색 결과:", JSON.stringify(searchResult, null, 2).slice(0, 500) + "...");
-
+    console.log(
+      "검색 결과:",
+      JSON.stringify(searchResult, null, 2).slice(0, 500) + "...",
+    );
   } catch (error: any) {
     console.error("❌ 오류 발생:", error.message);
     if (error.stack) {

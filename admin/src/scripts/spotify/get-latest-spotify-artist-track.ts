@@ -69,7 +69,9 @@ async function main() {
   console.log(`  Spotify ID: ${latestMapping.spotifyArtist.spotifyId}`);
   if (latestMapping.spotifyArtist.artist) {
     console.log(`  Artist ID: ${latestMapping.spotifyArtist.artist.id}`);
-    console.log(`  Artist 이름: ${latestMapping.spotifyArtist.artist.name} (${latestMapping.spotifyArtist.artist.nameKo})`);
+    console.log(
+      `  Artist 이름: ${latestMapping.spotifyArtist.artist.name} (${latestMapping.spotifyArtist.artist.nameKo})`,
+    );
   } else {
     console.log(`  Artist ID: (매핑 안됨)`);
   }

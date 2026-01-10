@@ -5,7 +5,12 @@ interface KaraokeBadgeProps {
   isMV?: boolean;
 }
 
-export function KaraokeBadge({ provider, number, isMR, isMV }: KaraokeBadgeProps) {
+export function KaraokeBadge({
+  provider,
+  number,
+  isMR,
+  isMV,
+}: KaraokeBadgeProps) {
   return (
     <div className="inline-flex items-center gap-1 rounded-full bg-[#1D1D42] px-2 py-1">
       <span className="text-[10px] font-bold text-[#63AAFF]">

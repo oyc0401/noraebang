@@ -179,9 +179,7 @@ async function main() {
       // Step 4: apply
 
       if (isDryRun) {
-        console.log(
-          "[DRY RUN] Would execute: apply-song-spotify-mapping.ts",
-        );
+        console.log("[DRY RUN] Would execute: apply-song-spotify-mapping.ts");
       } else {
         execSync(
           "pnpm ts-node src/scripts/spotify/apply-song-spotify-mapping.ts",

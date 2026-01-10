@@ -64,9 +64,15 @@ async function main() {
     const over60Count = songs.filter((s) => s.isOver60).length;
     console.log(`\n=== Statistics ===`);
     console.log(`Total songs: ${songs.length}`);
-    console.log(`Songs with MR: ${mrCount} (${((mrCount / songs.length) * 100).toFixed(1)}%)`);
-    console.log(`Songs with MV: ${mvCount} (${((mvCount / songs.length) * 100).toFixed(1)}%)`);
-    console.log(`Songs over 60: ${over60Count} (${((over60Count / songs.length) * 100).toFixed(1)}%)`);
+    console.log(
+      `Songs with MR: ${mrCount} (${((mrCount / songs.length) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `Songs with MV: ${mvCount} (${((mvCount / songs.length) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `Songs over 60: ${over60Count} (${((over60Count / songs.length) * 100).toFixed(1)}%)`,
+    );
   } catch (error) {
     console.error("\n❌ Error:", error);
     process.exit(1);

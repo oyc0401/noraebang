@@ -1,11 +1,11 @@
 "use client";
 
 import { Header } from "@/components/common/Header";
+import { HomeSearchBar } from "@/components/home/HomeSearchBar";
 import { LinkPasteCard } from "@/components/home/LinkPasteCard";
 import { PopularSongs } from "@/components/home/PopularSongs";
 import { RecentlyPlayed } from "@/components/home/RecentlyPlayed";
 import { RecentlyReleased } from "@/components/home/RecentlyReleased";
-import { HomeSearchBar } from "@/components/home/HomeSearchBar";
 
 export function Home() {
   return (

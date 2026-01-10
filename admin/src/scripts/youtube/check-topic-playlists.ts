@@ -23,11 +23,15 @@ async function youtubeFetch(path: string, params: Record<string, string>) {
     ...params,
     key: YOUTUBE_API_KEY!,
   });
-  const response = await fetch(`${YOUTUBE_API_BASE}/${path}?${query.toString()}`);
+  const response = await fetch(
+    `${YOUTUBE_API_BASE}/${path}?${query.toString()}`,
+  );
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.error?.message || `YouTube API error (${response.status})`);
+    throw new Error(
+      data.error?.message || `YouTube API error (${response.status})`,
+    );
   }
 
   return data;

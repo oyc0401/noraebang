@@ -16,9 +16,7 @@ export function RecentlyReleased() {
             <h4 className="text-white font-bold text-sm truncate">
               Love wins all
             </h4>
-            <p className="text-gray-400 text-xs truncate mt-0.5">
-              아이유 (IU)
-            </p>
+            <p className="text-gray-400 text-xs truncate mt-0.5">아이유 (IU)</p>
             <div className="flex gap-2 mt-2">
               <span className="text-[10px] font-medium text-gray-500 flex items-center gap-1">
                 <span className="size-1.5 rounded-full bg-blue-500" /> TJ 87291
@@ -46,9 +44,7 @@ export function RecentlyReleased() {
             <h4 className="text-white font-bold text-sm truncate">
               Super Lady
             </h4>
-            <p className="text-gray-400 text-xs truncate mt-0.5">
-              (G)I-DLE
-            </p>
+            <p className="text-gray-400 text-xs truncate mt-0.5">(G)I-DLE</p>
             <div className="flex gap-2 mt-2">
               <span className="text-[10px] font-medium text-gray-500 flex items-center gap-1">
                 <span className="size-1.5 rounded-full bg-blue-500" /> TJ 89122

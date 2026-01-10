@@ -18,7 +18,9 @@ const limit = limitArg ? Number.parseInt(limitArg.split("=")[1]) : 20;
 
 if (!artistName) {
   console.error("❌ 아티스트명을 입력하세요.");
-  console.error("사용법: pnpm tsx src/scripts/youtube-music/search-artist-songs.ts \"아이유\"");
+  console.error(
+    '사용법: pnpm tsx src/scripts/youtube-music/search-artist-songs.ts "아이유"',
+  );
   process.exit(1);
 }
 
@@ -126,17 +128,25 @@ async function main() {
   // 4. 앨범 정보
   if (artistDetail.albums && artistDetail.albums.products) {
     console.log(`\n💿 앨범 (${artistDetail.albums.products.length}개):`);
-    artistDetail.albums.products.slice(0, 10).forEach((album: any, index: number) => {
-      console.log(`   ${index + 1}. ${album.name} (${album.year || "연도 불명"})`);
-    });
+    artistDetail.albums.products
+      .slice(0, 10)
+      .forEach((album: any, index: number) => {
+        console.log(
+          `   ${index + 1}. ${album.name} (${album.year || "연도 불명"})`,
+        );
+      });
   }
 
   // 5. 싱글 정보
   if (artistDetail.singles && artistDetail.singles.products) {
     console.log(`\n💽 싱글 (${artistDetail.singles.products.length}개):`);
-    artistDetail.singles.products.slice(0, 10).forEach((single: any, index: number) => {
-      console.log(`   ${index + 1}. ${single.name} (${single.year || "연도 불명"})`);
-    });
+    artistDetail.singles.products
+      .slice(0, 10)
+      .forEach((single: any, index: number) => {
+        console.log(
+          `   ${index + 1}. ${single.name} (${single.year || "연도 불명"})`,
+        );
+      });
   }
 
   console.log("\n" + "=".repeat(80));

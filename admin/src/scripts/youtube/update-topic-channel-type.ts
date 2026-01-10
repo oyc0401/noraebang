@@ -65,7 +65,9 @@ async function updateTopicChannelType(dryRun: boolean = false) {
 
     if (dryRun) {
       console.log("⚠️  DRY RUN - No changes were made");
-      console.log(`Would have updated ${topicChannels.length} channels to TOPIC type`);
+      console.log(
+        `Would have updated ${topicChannels.length} channels to TOPIC type`,
+      );
       return;
     }
 
@@ -85,7 +87,10 @@ async function updateTopicChannelType(dryRun: boolean = false) {
         console.log(`✅ Updated: ${channel.title}`);
         updated++;
       } catch (error: any) {
-        console.error(`❌ Error updating channel ${channel.id}:`, error.message);
+        console.error(
+          `❌ Error updating channel ${channel.id}:`,
+          error.message,
+        );
         errors++;
       }
     }

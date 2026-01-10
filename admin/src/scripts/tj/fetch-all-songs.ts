@@ -2,8 +2,8 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
-import { TJService, type TJSongData } from "./tj.service";
 import { saveSongToDatabase } from "./saveSong";
+import { TJService, type TJSongData } from "./tj.service";
 
 // 특정 년월부터 현재까지 모든 TJ 노래 크롤링 (기본값: 200101)
 // pnpm ts-node src/scripts/tj/fetch-all-songs.ts
@@ -34,9 +34,7 @@ async function processSongWithStats(
   force: boolean,
   totals: FetchTotals,
 ): Promise<void> {
-  console.log(
-    `  [${index + 1}/${total}] ${song.karaokeNo} - ${song.title}`,
-  );
+  console.log(`  [${index + 1}/${total}] ${song.karaokeNo} - ${song.title}`);
 
   try {
     const result = await saveSongToDatabase(song, force);
@@ -61,13 +59,7 @@ async function processSongsConcurrently(
     const batch = songs.slice(start, start + SONG_CONCURRENCY);
     await Promise.allSettled(
       batch.map((song, offset) =>
-        processSongWithStats(
-          song,
-          start + offset,
-          songs.length,
-          force,
-          totals,
-        ),
+        processSongWithStats(song, start + offset, songs.length, force, totals),
       ),
     );
   }

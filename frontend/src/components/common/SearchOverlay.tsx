@@ -1,12 +1,12 @@
 "use client";
 
+import { ArrowLeft, ArrowRight, Clock, Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Clock, ArrowRight, Search } from "lucide-react";
-import { useSearchStore } from "@/store/searchStore";
 import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/search";
-import { SearchBar } from "@/components/search/SearchBar";
 import { KaraokeBadge } from "@/components/common/KaraokeBadge";
+import { SearchBar } from "@/components/search/SearchBar";
+import { useSearchStore } from "@/store/searchStore";
 
 export function SearchOverlay() {
   const router = useRouter();

@@ -33,7 +33,6 @@ export class SearchSuggestionArtistDto {
   })
   titleKo?: string;
 
-
   @ApiProperty({
     description: "아티스트 썸네일",
     example: "https://img.youtube.com/yoasobi.jpg",
@@ -72,7 +71,7 @@ export class SearchSuggestionSongDto {
   @ApiProperty({
     type: [KaraokeSongDto],
     required: false,
-    description: "노래방 곡 정보 목록"
+    description: "노래방 곡 정보 목록",
   })
   karaokeSongs?: KaraokeSongDto[];
 
@@ -123,7 +122,7 @@ export class SearchSuggestionCardDto {
   @ApiProperty({
     type: () => SearchSuggestionSongDto,
     required: false,
-    description: "곡 카드"
+    description: "곡 카드",
   })
   song?: SearchSuggestionSongDto;
 

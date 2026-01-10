@@ -170,7 +170,12 @@ export type TypesenseDocument = TypesenseSongDocument;
  * 별칭을 locale/kind/source에 따라 q_* 필드로 그룹화
  */
 function groupAliases(
-  aliases: Array<{ alias: string; locale: string; kind: string; source: string }>,
+  aliases: Array<{
+    alias: string;
+    locale: string;
+    kind: string;
+    source: string;
+  }>,
   prefix: "q_song" | "q_artist" | "q_name",
 ) {
   const result: Record<string, string[]> = {};
@@ -185,7 +190,8 @@ function groupAliases(
     } else if (locale === "JA_KANJI") {
       localeKey = "ja_kanji";
     } else if (locale === "LATIN") {
-      localeKey = (prefix === "q_artist" || prefix === "q_name") ? "latin" : "latin";
+      localeKey =
+        prefix === "q_artist" || prefix === "q_name" ? "latin" : "latin";
       // q_artist는 songs 컬렉션의 아티스트 필드용 (raw 사용)
       // q_name은 artists 컬렉션의 이름 필드용 (latin 사용)
       if (prefix === "q_artist") {
@@ -199,7 +205,13 @@ function groupAliases(
     let tier: string;
     if (kind === "SPOTIFY") {
       tier = "p";
-    } else if (kind === "YOUTUBE" || kind === "ROMANIZATION" || kind === "TRANSLATION" || kind === "TJ_NAME" || kind === "NICKNAME") {
+    } else if (
+      kind === "YOUTUBE" ||
+      kind === "ROMANIZATION" ||
+      kind === "TRANSLATION" ||
+      kind === "TJ_NAME" ||
+      kind === "NICKNAME"
+    ) {
       if (source === "AI") {
         tier = "a2";
       } else {
@@ -226,11 +238,12 @@ function removeSpaces(text: string): string {
   return text.replace(/\s+/g, "");
 }
 
-
 /**
  * DB Song → Typesense Document 변환
  */
-export function transformSongToDocument(song: SongWithRelations): TypesenseDocument {
+export function transformSongToDocument(
+  song: SongWithRelations,
+): TypesenseDocument {
   const artists = song.artistSongs.map((as) => as.artist);
   const mainArtist = artists[0]; // 첫 번째 아티스트를 메인으로 간주
 
@@ -248,8 +261,12 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
   const titleLatin = song.titleLatin;
 
   // 노래방 번호
-  const karaokeNosTj = song.karaokeSongs.filter((ks) => ks.provider === "TJ").map((ks) => ks.karaokeNo);
-  const karaokeNosKy = song.karaokeSongs.filter((ks) => ks.provider === "KY").map((ks) => ks.karaokeNo);
+  const karaokeNosTj = song.karaokeSongs
+    .filter((ks) => ks.provider === "TJ")
+    .map((ks) => ks.karaokeNo);
+  const karaokeNosKy = song.karaokeSongs
+    .filter((ks) => ks.provider === "KY")
+    .map((ks) => ks.karaokeNo);
 
   // 인기도
   const popularity = song.spotifyTrack?.spotifyTrack?.popularity ?? undefined;
@@ -258,14 +275,18 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
   // Combo 필드 (곡+아티스트 조합, 공백 제거)
   const q_combo_a: string[] = [];
   const songKoNoSpace = titleKo ? removeSpaces(titleKo) : null;
-  const artistKoNoSpace = mainArtist?.nameKo ? removeSpaces(mainArtist.nameKo) : null;
+  const artistKoNoSpace = mainArtist?.nameKo
+    ? removeSpaces(mainArtist.nameKo)
+    : null;
 
   if (songKoNoSpace && artistKoNoSpace) {
     q_combo_a.push(`${songKoNoSpace}${artistKoNoSpace}`);
   }
 
   // romanization 조합 (예: "요루니카케루요아소비")
-  const songKoRoman = song.aliases.find((a) => a.locale === "KO" && a.kind === "ROMANIZATION")?.alias;
+  const songKoRoman = song.aliases.find(
+    (a) => a.locale === "KO" && a.kind === "ROMANIZATION",
+  )?.alias;
   if (songKoRoman && artistKoNoSpace) {
     const romanNoSpace = removeSpaces(songKoRoman);
     q_combo_a.push(`${romanNoSpace}${artistKoNoSpace}`);
@@ -298,9 +319,15 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
 
   // 곡 제목의 정규화 버전을 _a 필드에 추가
   const q_song_ko_a_values = new Set<string>(songAliases.q_song_ko_a || []);
-  const q_song_latin_a_values = new Set<string>(songAliases.q_song_latin_a || []);
-  const q_song_ja_kanji_a_values = new Set<string>(songAliases.q_song_ja_kanji_a || []);
-  const q_song_ja_kana_a_values = new Set<string>(songAliases.q_song_ja_kana_a || []);
+  const q_song_latin_a_values = new Set<string>(
+    songAliases.q_song_latin_a || [],
+  );
+  const q_song_ja_kanji_a_values = new Set<string>(
+    songAliases.q_song_ja_kanji_a || [],
+  );
+  const q_song_ja_kana_a_values = new Set<string>(
+    songAliases.q_song_ja_kana_a || [],
+  );
 
   // q_song_ko_a: 공백 제거
   if (titleKo) {
@@ -382,10 +409,20 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
     }
   }
 
-  const q_song_ko_a = q_song_ko_a_values.size > 0 ? Array.from(q_song_ko_a_values) : undefined;
-  const q_song_latin_a = q_song_latin_a_values.size > 0 ? Array.from(q_song_latin_a_values) : undefined;
-  const q_song_ja_kanji_a = q_song_ja_kanji_a_values.size > 0 ? Array.from(q_song_ja_kanji_a_values) : undefined;
-  const q_song_ja_kana_a = q_song_ja_kana_a_values.size > 0 ? Array.from(q_song_ja_kana_a_values) : undefined;
+  const q_song_ko_a =
+    q_song_ko_a_values.size > 0 ? Array.from(q_song_ko_a_values) : undefined;
+  const q_song_latin_a =
+    q_song_latin_a_values.size > 0
+      ? Array.from(q_song_latin_a_values)
+      : undefined;
+  const q_song_ja_kanji_a =
+    q_song_ja_kanji_a_values.size > 0
+      ? Array.from(q_song_ja_kanji_a_values)
+      : undefined;
+  const q_song_ja_kana_a =
+    q_song_ja_kana_a_values.size > 0
+      ? Array.from(q_song_ja_kana_a_values)
+      : undefined;
 
   // Artist 테이블의 컬럼만 q_artist_*_p 필드에 추가 (원본 + 괄호 제거 버전)
   const q_artist_ko_p_values: string[] = [];
@@ -400,7 +437,10 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
         q_artist_ko_p_values.push(artist.nameKo);
       }
       const noBrackets = removeBrackets(artist.nameKo);
-      if (artist.nameKo !== noBrackets && !q_artist_ko_p_values.includes(noBrackets)) {
+      if (
+        artist.nameKo !== noBrackets &&
+        !q_artist_ko_p_values.includes(noBrackets)
+      ) {
         q_artist_ko_p_values.push(noBrackets);
       }
     }
@@ -411,7 +451,10 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
         q_artist_raw_p_values.push(artist.nameLatin);
       }
       const noBrackets = removeBrackets(artist.nameLatin);
-      if (artist.nameLatin !== noBrackets && !q_artist_raw_p_values.includes(noBrackets)) {
+      if (
+        artist.nameLatin !== noBrackets &&
+        !q_artist_raw_p_values.includes(noBrackets)
+      ) {
         q_artist_raw_p_values.push(noBrackets);
       }
     }
@@ -422,7 +465,10 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
         q_artist_ja_kanji_p_values.push(artist.nameJaKanji);
       }
       const noBrackets = removeBrackets(artist.nameJaKanji);
-      if (artist.nameJaKanji !== noBrackets && !q_artist_ja_kanji_p_values.includes(noBrackets)) {
+      if (
+        artist.nameJaKanji !== noBrackets &&
+        !q_artist_ja_kanji_p_values.includes(noBrackets)
+      ) {
         q_artist_ja_kanji_p_values.push(noBrackets);
       }
     }
@@ -433,22 +479,41 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
         q_artist_ja_kana_p_values.push(artist.nameJaKana);
       }
       const noBrackets = removeBrackets(artist.nameJaKana);
-      if (artist.nameJaKana !== noBrackets && !q_artist_ja_kana_p_values.includes(noBrackets)) {
+      if (
+        artist.nameJaKana !== noBrackets &&
+        !q_artist_ja_kana_p_values.includes(noBrackets)
+      ) {
         q_artist_ja_kana_p_values.push(noBrackets);
       }
     }
   }
 
-  const q_artist_ko_p = q_artist_ko_p_values.length > 0 ? q_artist_ko_p_values : undefined;
-  const q_artist_raw_p = q_artist_raw_p_values.length > 0 ? q_artist_raw_p_values : undefined;
-  const q_artist_ja_kanji_p = q_artist_ja_kanji_p_values.length > 0 ? q_artist_ja_kanji_p_values : undefined;
-  const q_artist_ja_kana_p = q_artist_ja_kana_p_values.length > 0 ? q_artist_ja_kana_p_values : undefined;
+  const q_artist_ko_p =
+    q_artist_ko_p_values.length > 0 ? q_artist_ko_p_values : undefined;
+  const q_artist_raw_p =
+    q_artist_raw_p_values.length > 0 ? q_artist_raw_p_values : undefined;
+  const q_artist_ja_kanji_p =
+    q_artist_ja_kanji_p_values.length > 0
+      ? q_artist_ja_kanji_p_values
+      : undefined;
+  const q_artist_ja_kana_p =
+    q_artist_ja_kana_p_values.length > 0
+      ? q_artist_ja_kana_p_values
+      : undefined;
 
   // 아티스트 정규화 버전을 _a 필드에 추가
-  const q_artist_ko_a_values = new Set<string>(artistAliases.q_artist_ko_a || []);
-  const q_artist_raw_a_values = new Set<string>(artistAliases.q_artist_raw_a || []);
-  const q_artist_ja_kanji_a_values = new Set<string>(artistAliases.q_artist_ja_kanji_a || []);
-  const q_artist_ja_kana_a_values = new Set<string>(artistAliases.q_artist_ja_kana_a || []);
+  const q_artist_ko_a_values = new Set<string>(
+    artistAliases.q_artist_ko_a || [],
+  );
+  const q_artist_raw_a_values = new Set<string>(
+    artistAliases.q_artist_raw_a || [],
+  );
+  const q_artist_ja_kanji_a_values = new Set<string>(
+    artistAliases.q_artist_ja_kanji_a || [],
+  );
+  const q_artist_ja_kana_a_values = new Set<string>(
+    artistAliases.q_artist_ja_kana_a || [],
+  );
 
   for (const artist of artists) {
     // q_artist_ko_a: 공백 제거
@@ -524,10 +589,22 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
     }
   }
 
-  const q_artist_ko_a = q_artist_ko_a_values.size > 0 ? Array.from(q_artist_ko_a_values) : undefined;
-  const q_artist_raw_a = q_artist_raw_a_values.size > 0 ? Array.from(q_artist_raw_a_values) : undefined;
-  const q_artist_ja_kanji_a = q_artist_ja_kanji_a_values.size > 0 ? Array.from(q_artist_ja_kanji_a_values) : undefined;
-  const q_artist_ja_kana_a = q_artist_ja_kana_a_values.size > 0 ? Array.from(q_artist_ja_kana_a_values) : undefined;
+  const q_artist_ko_a =
+    q_artist_ko_a_values.size > 0
+      ? Array.from(q_artist_ko_a_values)
+      : undefined;
+  const q_artist_raw_a =
+    q_artist_raw_a_values.size > 0
+      ? Array.from(q_artist_raw_a_values)
+      : undefined;
+  const q_artist_ja_kanji_a =
+    q_artist_ja_kanji_a_values.size > 0
+      ? Array.from(q_artist_ja_kanji_a_values)
+      : undefined;
+  const q_artist_ja_kana_a =
+    q_artist_ja_kana_a_values.size > 0
+      ? Array.from(q_artist_ja_kana_a_values)
+      : undefined;
 
   return {
     id: song.id.toString(),
@@ -545,7 +622,8 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
 
     popularity,
     artistPopularity,
-    hasKaraokeNo: karaokeNosTj.length > 0 || karaokeNosKy.length > 0 || undefined,
+    hasKaraokeNo:
+      karaokeNosTj.length > 0 || karaokeNosKy.length > 0 || undefined,
     updatedAt: Math.floor(song.updatedAt.getTime() / 1000),
 
     // 곡 별칭 필드
@@ -598,7 +676,9 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
 /**
  * DB Artist → Typesense Artist Document 변환
  */
-export function transformArtistToDocument(artist: ArtistWithRelations): TypesenseArtistDocument {
+export function transformArtistToDocument(
+  artist: ArtistWithRelations,
+): TypesenseArtistDocument {
   // 별칭 그룹화
   const nameAliases = groupAliases(artist.aliases, "q_name");
 
@@ -638,9 +718,15 @@ export function transformArtistToDocument(artist: ArtistWithRelations): Typesens
 
   // 아티스트 이름의 정규화 버전을 _a 필드에 추가
   const q_name_ko_a_values = new Set<string>(nameAliases.q_name_ko_a || []);
-  const q_name_latin_a_values = new Set<string>(nameAliases.q_name_latin_a || []);
-  const q_name_ja_kanji_a_values = new Set<string>(nameAliases.q_name_ja_kanji_a || []);
-  const q_name_ja_kana_a_values = new Set<string>(nameAliases.q_name_ja_kana_a || []);
+  const q_name_latin_a_values = new Set<string>(
+    nameAliases.q_name_latin_a || [],
+  );
+  const q_name_ja_kanji_a_values = new Set<string>(
+    nameAliases.q_name_ja_kanji_a || [],
+  );
+  const q_name_ja_kana_a_values = new Set<string>(
+    nameAliases.q_name_ja_kana_a || [],
+  );
 
   // q_name_ko_a: 공백 제거
   if (nameKo) {
@@ -714,10 +800,20 @@ export function transformArtistToDocument(artist: ArtistWithRelations): Typesens
     }
   }
 
-  const q_name_ko_a = q_name_ko_a_values.size > 0 ? Array.from(q_name_ko_a_values) : undefined;
-  const q_name_latin_a = q_name_latin_a_values.size > 0 ? Array.from(q_name_latin_a_values) : undefined;
-  const q_name_ja_kanji_a = q_name_ja_kanji_a_values.size > 0 ? Array.from(q_name_ja_kanji_a_values) : undefined;
-  const q_name_ja_kana_a = q_name_ja_kana_a_values.size > 0 ? Array.from(q_name_ja_kana_a_values) : undefined;
+  const q_name_ko_a =
+    q_name_ko_a_values.size > 0 ? Array.from(q_name_ko_a_values) : undefined;
+  const q_name_latin_a =
+    q_name_latin_a_values.size > 0
+      ? Array.from(q_name_latin_a_values)
+      : undefined;
+  const q_name_ja_kanji_a =
+    q_name_ja_kanji_a_values.size > 0
+      ? Array.from(q_name_ja_kanji_a_values)
+      : undefined;
+  const q_name_ja_kana_a =
+    q_name_ja_kana_a_values.size > 0
+      ? Array.from(q_name_ja_kana_a_values)
+      : undefined;
 
   return {
     id: artist.id.toString(),

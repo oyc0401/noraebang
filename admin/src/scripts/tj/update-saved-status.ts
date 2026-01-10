@@ -19,7 +19,8 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-const isDryRun = process.argv.includes("--dry-run") || process.argv.includes("--dryrun");
+const isDryRun =
+  process.argv.includes("--dry-run") || process.argv.includes("--dryrun");
 
 async function updateSavedStatus() {
   if (isDryRun) {
@@ -41,7 +42,9 @@ async function updateSavedStatus() {
 
     const tjNumbers = tjKaraokeSongs.map((song) => song.karaokeNo);
 
-    console.log(`📊 총 ${tjNumbers.length}개의 TJ 곡이 KaraokeSong 테이블에 등록되어 있습니다.\n`);
+    console.log(
+      `📊 총 ${tjNumbers.length}개의 TJ 곡이 KaraokeSong 테이블에 등록되어 있습니다.\n`,
+    );
 
     if (tjNumbers.length === 0) {
       console.log("⚠️  업데이트할 곡이 없습니다.");
@@ -58,8 +61,12 @@ async function updateSavedStatus() {
         },
       });
 
-      console.log(`[DRY RUN] ${targetCount}개의 TJ 곡의 saved 상태를 true로 업데이트할 예정입니다.`);
-      console.log(`[DRY RUN] 실제 업데이트를 실행하려면 --dry-run 옵션 없이 실행하세요.`);
+      console.log(
+        `[DRY RUN] ${targetCount}개의 TJ 곡의 saved 상태를 true로 업데이트할 예정입니다.`,
+      );
+      console.log(
+        `[DRY RUN] 실제 업데이트를 실행하려면 --dry-run 옵션 없이 실행하세요.`,
+      );
     } else {
       // 2. TjSong 테이블에서 해당 id들의 saved를 true로 업데이트
       const result = await prisma.tjSong.updateMany({
@@ -73,7 +80,9 @@ async function updateSavedStatus() {
         },
       });
 
-      console.log(`✅ ${result.count}개의 TJ 곡의 saved 상태를 true로 업데이트했습니다.`);
+      console.log(
+        `✅ ${result.count}개의 TJ 곡의 saved 상태를 true로 업데이트했습니다.`,
+      );
     }
 
     // 3. 현재 통계 출력
@@ -86,7 +95,9 @@ async function updateSavedStatus() {
     console.log(statsPrefix);
     console.log(`   - 전체 TJ 곡: ${totalCount}개`);
     console.log(`   - Saved 곡: ${savedCount}개`);
-    console.log(`   - Saved 비율: ${((savedCount / totalCount) * 100).toFixed(2)}%`);
+    console.log(
+      `   - Saved 비율: ${((savedCount / totalCount) * 100).toFixed(2)}%`,
+    );
   } catch (error) {
     console.error("❌ 에러 발생:", error);
     throw error;

@@ -2,8 +2,8 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import pg from "pg";
-import { TJService } from "./tj.service";
 import { saveSongToDatabase } from "./saveSong";
+import { TJService } from "./tj.service";
 
 // 현재 월의 TJ 노래 크롤링
 // pnpm ts-node src/scripts/tj/fetch-new-songs.ts

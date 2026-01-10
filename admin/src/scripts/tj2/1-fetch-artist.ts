@@ -22,8 +22,12 @@ async function main() {
   const artistName = process.argv[2];
 
   if (!artistName) {
-    console.error("❌ Usage: npx tsx src/scripts/tj2/1-fetch-artist.ts <artist-name>");
-    console.error('   Example: npx tsx src/scripts/tj2/1-fetch-artist.ts "아이유"');
+    console.error(
+      "❌ Usage: npx tsx src/scripts/tj2/1-fetch-artist.ts <artist-name>",
+    );
+    console.error(
+      '   Example: npx tsx src/scripts/tj2/1-fetch-artist.ts "아이유"',
+    );
     process.exit(1);
   }
 
@@ -49,7 +53,10 @@ async function main() {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-")
+      .slice(0, 19);
     const filename = `${artistName}-${timestamp}.json`;
     const outputPath = path.join(outputDir, filename);
 
@@ -72,9 +79,15 @@ async function main() {
 
     console.log(`\n=== 통계 ===`);
     console.log(`총 곡 수: ${songs.length}`);
-    console.log(`MR 있음: ${mrCount} (${((mrCount / songs.length) * 100).toFixed(1)}%)`);
-    console.log(`MV 있음: ${mvCount} (${((mvCount / songs.length) * 100).toFixed(1)}%)`);
-    console.log(`60이상 전용: ${over60Count} (${((over60Count / songs.length) * 100).toFixed(1)}%)`);
+    console.log(
+      `MR 있음: ${mrCount} (${((mrCount / songs.length) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `MV 있음: ${mvCount} (${((mvCount / songs.length) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `60이상 전용: ${over60Count} (${((over60Count / songs.length) * 100).toFixed(1)}%)`,
+    );
 
     console.log(`\n다음 명령으로 DB에 반영하세요:`);
     console.log(`npx tsx src/scripts/tj2/2-update-db.ts "${outputPath}"\n`);

@@ -2,18 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import { EmptyState } from "@/components/common/EmptyState";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { useInfiniteSongs } from "@/hooks/useInfiniteSongs";
 import { SongCard } from "./SongCard";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { EmptyState } from "@/components/common/EmptyState";
 
 interface Props {
   artistId: number;
 }
 
 export const SongList = ({ artistId }: Props) => {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
-    useInfiniteSongs(artistId);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error,
+  } = useInfiniteSongs(artistId);
   const { ref, inView } = useInView();
   const [selectedSongId, setSelectedSongId] = useState<string>();
 
@@ -41,7 +47,8 @@ export const SongList = ({ artistId }: Props) => {
   if (error) {
     return (
       <div className="text-center text-red-400 p-8">
-        에러가 발생했습니다: {error instanceof Error ? error.message : "알 수 없는 에러"}
+        에러가 발생했습니다:{" "}
+        {error instanceof Error ? error.message : "알 수 없는 에러"}
       </div>
     );
   }

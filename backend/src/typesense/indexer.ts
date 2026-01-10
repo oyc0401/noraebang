@@ -1,6 +1,9 @@
 import type { Client } from "typesense";
 import type { CollectionCreateSchema } from "typesense/lib/Typesense/Collections";
-import type { TypesenseArtistDocument, TypesenseSongDocument } from "./transformer";
+import type {
+  TypesenseArtistDocument,
+  TypesenseSongDocument,
+} from "./transformer";
 
 /**
  * Collection 재생성 (기존 삭제 → 새로 생성)
@@ -57,10 +60,7 @@ export async function indexDocuments(
         );
       }
     } catch (error) {
-      console.error(
-        `✗ Batch ${Math.floor(i / batchSize) + 1} failed:`,
-        error,
-      );
+      console.error(`✗ Batch ${Math.floor(i / batchSize) + 1} failed:`, error);
     }
   }
 

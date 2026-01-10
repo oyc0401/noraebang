@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
+import { EmptyState } from "@/components/common/EmptyState";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { useInfiniteArtists } from "@/hooks/useInfiniteArtists";
 import { ArtistCard } from "./ArtistCard";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { EmptyState } from "@/components/common/EmptyState";
 
 export const ArtistList = () => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
-import { useArtistsStore, ARTIST_CATALOG_OPTIONS } from "./store";
+import { ARTIST_CATALOG_OPTIONS, useArtistsStore } from "./store";
 
 export function ArtistDetailSection() {
   const {
@@ -567,19 +567,18 @@ export function ArtistDetailSection() {
                           분류: {song.catalog ?? "미지정"}
                         </div>
 
-                        {song.karaokeSongs &&
-                          song.karaokeSongs.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {song.karaokeSongs.map((kn) => (
-                                <span
-                                  key={`${kn.provider}-${kn.karaokeNo}`}
-                                  className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                                >
-                                  {kn.provider} {kn.karaokeNo}
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                        {song.karaokeSongs && song.karaokeSongs.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {song.karaokeSongs.map((kn) => (
+                              <span
+                                key={`${kn.provider}-${kn.karaokeNo}`}
+                                className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                              >
+                                {kn.provider} {kn.karaokeNo}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="relative">
                         <button
@@ -734,8 +733,7 @@ export function ArtistDetailSection() {
                   </p>
                 )}
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  현재 아티스트: {selectedArtist.name} (ID {selectedArtist.id}
-                  )
+                  현재 아티스트: {selectedArtist.name} (ID {selectedArtist.id})
                 </p>
               </div>
               <div>
@@ -813,9 +811,7 @@ export function ArtistDetailSection() {
                 <input
                   type="number"
                   value={addOwnershipArtistIdInput}
-                  onChange={(e) =>
-                    setAddOwnershipArtistIdInput(e.target.value)
-                  }
+                  onChange={(e) => setAddOwnershipArtistIdInput(e.target.value)}
                   className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                   placeholder="예: 1234"
                   style={{ cursor: "text" }}
@@ -1179,9 +1175,7 @@ export function ArtistDetailSection() {
                 <input
                   type="number"
                   value={mergeTargetArtistIdInput}
-                  onChange={(e) =>
-                    setMergeTargetArtistIdInput(e.target.value)
-                  }
+                  onChange={(e) => setMergeTargetArtistIdInput(e.target.value)}
                   className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                   placeholder="예: 24"
                   style={{ cursor: "text" }}

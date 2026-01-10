@@ -1,8 +1,8 @@
 "use client";
 
-import { useSearchStore } from "@/store/searchStore";
-import { Home } from "@/components/home/Home";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
+import { Home } from "@/components/home/Home";
+import { useSearchStore } from "@/store/searchStore";
 
 export default function HomePage() {
   const { isSearchActive } = useSearchStore();

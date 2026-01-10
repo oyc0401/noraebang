@@ -19,7 +19,8 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-const isVerbose = process.argv.includes("--verbose") || process.argv.includes("-v");
+const isVerbose =
+  process.argv.includes("--verbose") || process.argv.includes("-v");
 
 async function findMissingTjSongs() {
   console.log("🔍 KaraokeSong에는 있지만 TjSong에는 없는 곡들을 찾습니다...\n");
@@ -64,7 +65,7 @@ async function findMissingTjSongs() {
 
     // 3. 누락된 곡들 필터링
     const missingSongs = tjKaraokeSongs.filter(
-      (song) => !existingIds.has(song.karaokeNo)
+      (song) => !existingIds.has(song.karaokeNo),
     );
 
     console.log(`📊 TjSong 테이블에 존재하는 곡: ${existingTjSongs.length}개`);
@@ -82,7 +83,9 @@ async function findMissingTjSongs() {
 
     for (const song of missingSongs) {
       const title = song.song.titleKo || song.song.title;
-      console.log(`${song.karaokeNo.padEnd(8)} | ${String(song.songId).padEnd(7)} | ${title}`);
+      console.log(
+        `${song.karaokeNo.padEnd(8)} | ${String(song.songId).padEnd(7)} | ${title}`,
+      );
 
       if (isVerbose) {
         console.log(`  원제: ${song.song.title}`);
@@ -95,9 +98,11 @@ async function findMissingTjSongs() {
 
     // 5. 통계 요약
     console.log("\n" + "=".repeat(80));
-    console.log(`총 ${missingSongs.length}개의 TJ 곡이 TjSong 테이블에 누락되어 있습니다.`);
     console.log(
-      `KaraokeSong 대비 누락 비율: ${((missingSongs.length / tjKaraokeSongs.length) * 100).toFixed(2)}%`
+      `총 ${missingSongs.length}개의 TJ 곡이 TjSong 테이블에 누락되어 있습니다.`,
+    );
+    console.log(
+      `KaraokeSong 대비 누락 비율: ${((missingSongs.length / tjKaraokeSongs.length) * 100).toFixed(2)}%`,
     );
 
     // 6. TJ 번호 리스트 출력 (복사 편의용)

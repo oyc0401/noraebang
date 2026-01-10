@@ -72,7 +72,9 @@ async function main() {
     );
 
     if (topicChannels.length === 0) {
-      console.log(`[SKIP] Artist ${artist.id} (${artist.name}): No TOPIC channel`);
+      console.log(
+        `[SKIP] Artist ${artist.id} (${artist.name}): No TOPIC channel`,
+      );
       skippedCount++;
       continue;
     }
@@ -93,7 +95,8 @@ async function main() {
 
       // 기존 별칭 체크
       const existingAlias = artist.aliases.find(
-        (a) => a.alias === alias && a.locale === "LATIN" && a.kind === "YOUTUBE",
+        (a) =>
+          a.alias === alias && a.locale === "LATIN" && a.kind === "YOUTUBE",
       );
 
       if (existingAlias) {
