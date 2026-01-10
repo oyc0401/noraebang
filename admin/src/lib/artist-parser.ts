@@ -340,7 +340,7 @@ function cleanupArtistName(name: string): string {
   }
 
   cleaned = cleaned.replace(/\s*외\s*(?:다수|\d+명)\s*$/i, "").trim();
-  cleaned = cleaned.replace(/\s+from\s+[^\(\)]+$/i, "").trim();
+  cleaned = cleaned.replace(/\s+from\s+[^()]+$/i, "").trim();
 
   let output = "";
   for (let i = 0; i < cleaned.length; ) {

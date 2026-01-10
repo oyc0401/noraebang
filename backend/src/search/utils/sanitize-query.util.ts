@@ -1,11 +1,9 @@
 import { removeBrackets } from "../../typesense/lib/text-utils";
 
-const FEAT_PATTERN_IN_BRACKETS =
-  /\((?:feat\.?|featuring|ft\.?)\s*[^)]*\)/gi;
-const FEAT_PATTERN_INLINE =
-  /\b(?:feat\.?|featuring|ft\.?)\s*[^\s\/・、]+/gi;
-const BRACKET_WITH_CONTENT_PATTERN = /[【「\[()（]([^】」\])）]*)[】」\])）]/g;
-const SEPARATOR_PATTERN = /[\/・_,、|]+/g;
+const FEAT_PATTERN_IN_BRACKETS = /\((?:feat\.?|featuring|ft\.?)\s*[^)]*\)/gi;
+const FEAT_PATTERN_INLINE = /\b(?:feat\.?|featuring|ft\.?)\s*[^\s/・、]+/gi;
+const BRACKET_WITH_CONTENT_PATTERN = /[【「[()（]([^】」\])）]*)[】」\])）]/g;
+const SEPARATOR_PATTERN = /[/・_,、|]+/g;
 const SUFFIX_PATTERN = /\s*MV$/i;
 
 export function sanitizeSearchText(value?: string | null): string {
@@ -14,10 +12,7 @@ export function sanitizeSearchText(value?: string | null): string {
   }
 
   const normalized = value.normalize("NFKC");
-  const withoutFeatBrackets = normalized.replace(
-    FEAT_PATTERN_IN_BRACKETS,
-    " ",
-  );
+  const withoutFeatBrackets = normalized.replace(FEAT_PATTERN_IN_BRACKETS, " ");
 
   let cleaned = withoutFeatBrackets.replace(BRACKET_WITH_CONTENT_PATTERN, " ");
   cleaned = removeBrackets(cleaned);

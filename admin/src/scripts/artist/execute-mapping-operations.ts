@@ -8,9 +8,9 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import pg from "pg";
 import * as fs from "fs";
 import * as path from "path";
+import pg from "pg";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -66,7 +66,7 @@ async function copySongsAndDelete(op: CopySongsAndDeleteOperation) {
   }
 
   console.log(
-    `   FROM: ${fromArtist.nameKo || fromArtist.name} (ID: ${fromArtist.id}, 곡: ${fromArtist._count.artistSongs}개)`
+    `   FROM: ${fromArtist.nameKo || fromArtist.name} (ID: ${fromArtist.id}, 곡: ${fromArtist._count.artistSongs}개)`,
   );
 
   // toArtists 정보
@@ -81,7 +81,7 @@ async function copySongsAndDelete(op: CopySongsAndDeleteOperation) {
 
   for (const artist of toArtists) {
     console.log(
-      `   TO:   ${artist.nameKo || artist.name} (ID: ${artist.id}, 곡: ${artist._count.artistSongs}개)`
+      `   TO:   ${artist.nameKo || artist.name} (ID: ${artist.id}, 곡: ${artist._count.artistSongs}개)`,
     );
   }
 
@@ -177,10 +177,10 @@ async function mergeArtists(op: MergeArtistsOperation) {
   }
 
   console.log(
-    `   FROM: ${fromArtist.nameKo || fromArtist.name} (ID: ${fromArtist.id}, 곡: ${fromArtist._count.artistSongs}개)`
+    `   FROM: ${fromArtist.nameKo || fromArtist.name} (ID: ${fromArtist.id}, 곡: ${fromArtist._count.artistSongs}개)`,
   );
   console.log(
-    `   TO:   ${toArtist.nameKo || toArtist.name} (ID: ${toArtist.id}, 곡: ${toArtist._count.artistSongs}개)`
+    `   TO:   ${toArtist.nameKo || toArtist.name} (ID: ${toArtist.id}, 곡: ${toArtist._count.artistSongs}개)`,
   );
 
   // fromArtist의 곡들 가져오기

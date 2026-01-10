@@ -68,7 +68,9 @@ async function updateArtistThumbnails(limit?: number) {
       `\n📊 Topic Channel Summary: ${updated} artist(s) updated (processed ${artists.length}).`,
     );
 
-    console.log("\n🗑️  Clearing thumbnails for artists without YouTube channels...\n");
+    console.log(
+      "\n🗑️  Clearing thumbnails for artists without YouTube channels...\n",
+    );
 
     const artistsWithoutChannels = await prisma.artist.findMany({
       where: {
@@ -103,9 +105,7 @@ async function updateArtistThumbnails(limit?: number) {
       );
     }
 
-    console.log(
-      `\n📊 Clear Summary: ${cleared} artist(s) thumbnails cleared.`,
-    );
+    console.log(`\n📊 Clear Summary: ${cleared} artist(s) thumbnails cleared.`);
   } catch (error) {
     console.error("❌ Failed to sync thumbnails:", error);
     throw error;
@@ -116,8 +116,7 @@ async function updateArtistThumbnails(limit?: number) {
 }
 
 const isDirectExecution =
-  process.argv[1] &&
-  pathToFileURL(process.argv[1]).href === import.meta.url;
+  process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 
 if (isDirectExecution) {
   const limitArg = process.argv[2];

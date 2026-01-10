@@ -13,15 +13,24 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter, log: ["warn", "error"] });
 
-const COLLABORATION_KEYWORDS = ["with", "&", "X", "feat", "featuring", "ft", "duet", "Duet"];
+const COLLABORATION_KEYWORDS = [
+  "with",
+  "&",
+  "X",
+  "feat",
+  "featuring",
+  "ft",
+  "duet",
+  "Duet",
+];
 
 async function main() {
   console.log("🔍 문제가 될 만한 아티스트들을 분석합니다...\n");
 
   // 1. 협업 키워드가 포함된 아티스트 중 곡이 있는 것들
-  console.log("=" .repeat(80));
+  console.log("=".repeat(80));
   console.log("1. 협업 키워드 포함 아티스트 (곡이 1개 이상)");
-  console.log("=" .repeat(80) + "\n");
+  console.log("=".repeat(80) + "\n");
 
   const artists = await prisma.artist.findMany({
     select: {
@@ -39,7 +48,7 @@ async function main() {
     const searchText = [artist.name, artist.nameKo].join(" ");
     return (
       COLLABORATION_KEYWORDS.some((keyword) =>
-        searchText.toLowerCase().includes(keyword.toLowerCase())
+        searchText.toLowerCase().includes(keyword.toLowerCase()),
       ) && artist._count.artistSongs > 0
     );
   });
@@ -47,16 +56,20 @@ async function main() {
   console.log(`총 ${collaborationArtists.length}명의 협업 아티스트\n`);
 
   // 곡이 적은 순으로 정렬
-  collaborationArtists.sort((a, b) => a._count.artistSongs - b._count.artistSongs);
+  collaborationArtists.sort(
+    (a, b) => a._count.artistSongs - b._count.artistSongs,
+  );
 
   // 곡이 10개 이하인 것만 출력
-  const fewSongsArtists = collaborationArtists.filter((a) => a._count.artistSongs <= 10);
+  const fewSongsArtists = collaborationArtists.filter(
+    (a) => a._count.artistSongs <= 10,
+  );
 
   console.log(`곡이 10개 이하인 협업 아티스트: ${fewSongsArtists.length}명\n`);
 
   for (const artist of fewSongsArtists.slice(0, 50)) {
     console.log(
-      `ID: ${artist.id.toString().padStart(5)} | 곡: ${artist._count.artistSongs.toString().padStart(2)} | ${artist.nameKo || artist.name}`
+      `ID: ${artist.id.toString().padStart(5)} | 곡: ${artist._count.artistSongs.toString().padStart(2)} | ${artist.nameKo || artist.name}`,
     );
   }
 
@@ -85,7 +98,7 @@ async function main() {
     console.log(`\n그룹: "${key}"`);
     for (const artist of group) {
       console.log(
-        `  ID: ${artist.id.toString().padStart(5)} | 곡: ${artist._count.artistSongs.toString().padStart(3)} | name: "${artist.name}" | nameKo: "${artist.nameKo || "-"}"`
+        `  ID: ${artist.id.toString().padStart(5)} | 곡: ${artist._count.artistSongs.toString().padStart(3)} | name: "${artist.name}" | nameKo: "${artist.nameKo || "-"}"`,
       );
     }
   }

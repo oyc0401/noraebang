@@ -54,15 +54,23 @@ async function getSpotifyAccessToken(): Promise<string> {
 }
 
 // Spotify에서 아티스트 정보 가져오기
-async function getSpotifyArtist(spotifyId: string, accessToken: string): Promise<any> {
-  const response = await fetch(`https://api.spotify.com/v1/artists/${spotifyId}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
+async function getSpotifyArtist(
+  spotifyId: string,
+  accessToken: string,
+): Promise<any> {
+  const response = await fetch(
+    `https://api.spotify.com/v1/artists/${spotifyId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
-    throw new Error(`Failed to get artist from Spotify: ${response.statusText}`);
+    throw new Error(
+      `Failed to get artist from Spotify: ${response.statusText}`,
+    );
   }
 
   const data = await response.json();
@@ -75,8 +83,12 @@ async function main() {
   const isDryRun = process.argv.includes("--dry-run");
 
   if (!artistIdArg || !spotifyIdArg) {
-    console.error("❌ Usage: npx tsx src/scripts/spotify/link-single-artist.ts <artistId> <spotifyId> [--dry-run]");
-    console.error('   Example: npx tsx src/scripts/spotify/link-single-artist.ts 187 46JcLfNgVQ8zNtSZU3vXB1');
+    console.error(
+      "❌ Usage: npx tsx src/scripts/spotify/link-single-artist.ts <artistId> <spotifyId> [--dry-run]",
+    );
+    console.error(
+      "   Example: npx tsx src/scripts/spotify/link-single-artist.ts 187 46JcLfNgVQ8zNtSZU3vXB1",
+    );
     process.exit(1);
   }
 
@@ -112,8 +124,12 @@ async function main() {
     console.log(`Artist: [${artist.id}] ${artist.name} (${artist.nameKo})`);
 
     if (artist.spotifyId) {
-      console.log(`⚠️  이미 Spotify ID가 설정되어 있습니다: ${artist.spotifyId}`);
-      console.log(`   새로운 ID로 덮어쓰시겠습니까? (계속하려면 --force 옵션 추가)`);
+      console.log(
+        `⚠️  이미 Spotify ID가 설정되어 있습니다: ${artist.spotifyId}`,
+      );
+      console.log(
+        `   새로운 ID로 덮어쓰시겠습니까? (계속하려면 --force 옵션 추가)`,
+      );
       if (!process.argv.includes("--force")) {
         process.exit(0);
       }
@@ -164,7 +180,9 @@ async function main() {
 
       console.log("\n✅ 매핑 완료!");
     } else {
-      console.log("\n💡 Dry-run 모드입니다. 실제 업데이트를 수행하려면 --dry-run 없이 실행하세요.");
+      console.log(
+        "\n💡 Dry-run 모드입니다. 실제 업데이트를 수행하려면 --dry-run 없이 실행하세요.",
+      );
     }
   } catch (error) {
     console.error("\n❌ 오류 발생:", error);

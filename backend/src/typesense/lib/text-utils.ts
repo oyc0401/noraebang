@@ -6,7 +6,7 @@
  * 다양한 종류의 괄호를 제거
  */
 export function removeBrackets(text: string): string {
-  return text.replace(/[『』「」【】［］()（）\[\]<>《》{}]/g, "").trim();
+  return text.replace(/[『』「」【】［］()（）[\]<>《》{}]/g, "").trim();
 }
 
 /**

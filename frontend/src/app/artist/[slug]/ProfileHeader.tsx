@@ -1,8 +1,8 @@
 "use client";
 
-import { CircleThumbnail } from "@/components/common/CircleThumbnail";
-import type { ArtistDetailsDto } from "@/api/model/models";
 import { Library } from "lucide-react";
+import type { ArtistDetailsDto } from "@/api/model/models";
+import { CircleThumbnail } from "@/components/common/CircleThumbnail";
 
 interface ProfileHeaderProps {
   artist: ArtistDetailsDto;

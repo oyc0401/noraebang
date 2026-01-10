@@ -18,7 +18,9 @@ const searchNames = process.argv.slice(2);
 
 async function main() {
   if (searchNames.length === 0) {
-    console.error("사용법: pnpm ts-node src/scripts/artist/find-real-artist.ts <검색이름1> [검색이름2] [검색이름3] ...");
+    console.error(
+      "사용법: pnpm ts-node src/scripts/artist/find-real-artist.ts <검색이름1> [검색이름2] [검색이름3] ...",
+    );
     process.exit(1);
   }
 
@@ -49,7 +51,7 @@ async function main() {
 
     for (const artist of artists) {
       console.log(
-        `ID: ${artist.id.toString().padStart(5)} | 곡: ${artist._count.artistSongs.toString().padStart(3)} | name: "${artist.name}" | nameKo: "${artist.nameKo || "-"}"`
+        `ID: ${artist.id.toString().padStart(5)} | 곡: ${artist._count.artistSongs.toString().padStart(3)} | name: "${artist.name}" | nameKo: "${artist.nameKo || "-"}"`,
       );
     }
 

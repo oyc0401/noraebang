@@ -33,14 +33,18 @@ interface YoutubeChannelDetails {
   uploadsPlaylistId?: string;
 }
 
-async function getChannelDetails(channelId: string): Promise<YoutubeChannelDetails> {
+async function getChannelDetails(
+  channelId: string,
+): Promise<YoutubeChannelDetails> {
   const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${encodeURIComponent(channelId)}&key=${YOUTUBE_API_KEY}`;
 
   const response = await fetch(url);
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(`YouTube API error: ${data.error?.message || response.statusText}`);
+    throw new Error(
+      `YouTube API error: ${data.error?.message || response.statusText}`,
+    );
   }
 
   if (!data.items || data.items.length === 0) {
@@ -63,8 +67,12 @@ async function getChannelDetails(channelId: string): Promise<YoutubeChannelDetai
     thumbnailDefault: snippet.thumbnails?.default?.url,
     thumbnailMedium: snippet.thumbnails?.medium?.url,
     thumbnailHigh: snippet.thumbnails?.high?.url,
-    subscriberCount: statistics?.subscriberCount ? parseInt(statistics.subscriberCount) : undefined,
-    videoCount: statistics?.videoCount ? parseInt(statistics.videoCount) : undefined,
+    subscriberCount: statistics?.subscriberCount
+      ? parseInt(statistics.subscriberCount)
+      : undefined,
+    videoCount: statistics?.videoCount
+      ? parseInt(statistics.videoCount)
+      : undefined,
     viewCount: statistics?.viewCount ? BigInt(statistics.viewCount) : undefined,
     hiddenSubscriberCount: statistics?.hiddenSubscriberCount,
     uploadsPlaylistId: contentDetails?.relatedPlaylists?.uploads,
@@ -130,7 +138,9 @@ async function updateChannelDetails(
       }
 
       try {
-        const channelData = await getChannelDetails(artist.youtubeChannel.channelId);
+        const channelData = await getChannelDetails(
+          artist.youtubeChannel.channelId,
+        );
 
         console.log(`   ✅ Found: ${channelData.title}`);
         console.log(

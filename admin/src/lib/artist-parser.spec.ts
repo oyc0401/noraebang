@@ -309,7 +309,9 @@ describe("parseTJArtist", () => {
     });
 
     it("Art. 도 피처링처럼 처리되어야 함", () => {
-      const result = parseTJArtist("Anonymous Artists(어나니머스아티스트)(Art.이민석)");
+      const result = parseTJArtist(
+        "Anonymous Artists(어나니머스아티스트)(Art.이민석)",
+      );
       expect(result).toEqual({
         artist: ["Anonymous Artists(어나니머스아티스트)"],
         feature: ["이민석"],
@@ -537,7 +539,9 @@ describe("parseTJArtist", () => {
     });
 
     it("K/DA는 슬래시가 있어도 하나의 아티스트로 처리되어야 함", () => {
-      const result = parseTJArtist("K/DA,(여자)아이들,Madison Beer,Jaira Burns");
+      const result = parseTJArtist(
+        "K/DA,(여자)아이들,Madison Beer,Jaira Burns",
+      );
       expect(result).toEqual({
         artist: ["K/DA", "(여자)아이들", "Madison Beer", "Jaira Burns"],
         feature: [],
@@ -546,9 +550,19 @@ describe("parseTJArtist", () => {
     });
 
     it("K/DA가 중간에 있어도 하나의 아티스트로 처리되어야 함", () => {
-      const result = parseTJArtist("(여자)아이들,Madison Beer,Lexie Liu,Jaira Burns,Seraphine,K/DA,League of Legends");
+      const result = parseTJArtist(
+        "(여자)아이들,Madison Beer,Lexie Liu,Jaira Burns,Seraphine,K/DA,League of Legends",
+      );
       expect(result).toEqual({
-        artist: ["(여자)아이들", "Madison Beer", "Lexie Liu", "Jaira Burns", "Seraphine", "K/DA", "League of Legends"],
+        artist: [
+          "(여자)아이들",
+          "Madison Beer",
+          "Lexie Liu",
+          "Jaira Burns",
+          "Seraphine",
+          "K/DA",
+          "League of Legends",
+        ],
         feature: [],
         producer: [],
       });

@@ -70,7 +70,10 @@ function parseSongList(html: string): TJSongInfo[] {
     const isOver60 = icoContainer.find(".ico.exclusive").length > 0;
 
     // 제목
-    const title = $row.find(".grid-item.title3 .ico-flex > p span").text().trim();
+    const title = $row
+      .find(".grid-item.title3 .ico-flex > p span")
+      .text()
+      .trim();
     if (!title) return;
 
     // 가수
@@ -86,9 +89,10 @@ function parseSongList(html: string): TJSongInfo[] {
 
     // 유튜브링크
     const youtubeLinkElement = $row.find(".grid-item.youtube a");
-    const youtubeLink = youtubeLinkElement.length > 0
-      ? youtubeLinkElement.attr("href")
-      : undefined;
+    const youtubeLink =
+      youtubeLinkElement.length > 0
+        ? youtubeLinkElement.attr("href")
+        : undefined;
 
     songs.push({
       songNumber,
@@ -130,7 +134,9 @@ export async function getTJSongByArtist(
         fetchTJPage(artistName, page)
           .then((html) => {
             const songs = parseSongList(html);
-            console.log(`[TJ] Page ${page}/${totalPages}: ${songs.length} songs`);
+            console.log(
+              `[TJ] Page ${page}/${totalPages}: ${songs.length} songs`,
+            );
             return songs;
           })
           .catch((error) => {

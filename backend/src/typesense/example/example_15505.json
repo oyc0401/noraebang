@@ -3,37 +3,17 @@
   "catalog": "JPOP",
   "titleKo": "아이돌",
   "titleJaKanji": "アイドル",
-  "artistIds": [
-    "179"
-  ],
-  "karaokeNosTj": [
-    "68781"
-  ],
-  "karaokeNosKy": [
-    "44923"
-  ],
+  "artistIds": ["179"],
+  "karaokeNosTj": ["68781"],
+  "karaokeNosKy": ["44923"],
   "artistPopularity": 75,
   "hasKaraokeNo": true,
   "updatedAt": 1767534159,
-  "q_song_ko_p": [
-    "아이돌"
-  ],
-  "q_song_ja_kanji_p": [
-    "アイドル"
-  ],
-  "q_artist_ko_p": [
-    "요아소비"
-  ],
-  "q_artist_ko_a": [
-    "요아소비"
-  ],
-  "q_artist_raw_p": [
-    "YOASOBI"
-  ],
-  "q_artist_ja_kanji_a": [
-    "YOASOBI"
-  ],
-  "q_combo_a": [
-    "아이돌요아소비"
-  ]
+  "q_song_ko_p": ["아이돌"],
+  "q_song_ja_kanji_p": ["アイドル"],
+  "q_artist_ko_p": ["요아소비"],
+  "q_artist_ko_a": ["요아소비"],
+  "q_artist_raw_p": ["YOASOBI"],
+  "q_artist_ja_kanji_a": ["YOASOBI"],
+  "q_combo_a": ["아이돌요아소비"]
 }

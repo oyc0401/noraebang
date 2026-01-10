@@ -26,7 +26,9 @@ async function main() {
   console.log("");
 
   if (isDryRun) {
-    console.log("ℹ️  이 스크립트는 조회만 수행하므로 dry-run 모드는 일반 모드와 동일합니다.");
+    console.log(
+      "ℹ️  이 스크립트는 조회만 수행하므로 dry-run 모드는 일반 모드와 동일합니다.",
+    );
     console.log("");
   }
 

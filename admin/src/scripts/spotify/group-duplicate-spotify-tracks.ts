@@ -351,7 +351,9 @@ async function main() {
       if (!variantTrack.groupId) continue;
 
       // 해당 그룹에 속한 트랙 수 확인 (메모리에서 체크)
-      const groupTracks = tracks.filter((t) => t.groupId === variantTrack.groupId);
+      const groupTracks = tracks.filter(
+        (t) => t.groupId === variantTrack.groupId,
+      );
 
       // 솔로가 아니면 스킵
       if (groupTracks.length > 1) continue;
@@ -404,7 +406,10 @@ async function main() {
     );
     const uniqueExistingGroupIds = Array.from(new Set(allExistingGroupIds));
 
-    let groupsInfoMap = new Map<number, { id: number; songId: number | null }>();
+    const groupsInfoMap = new Map<
+      number,
+      { id: number; songId: number | null }
+    >();
     if (uniqueExistingGroupIds.length > 0) {
       const groupsInfo = await prisma.spotifyTrackGroup.findMany({
         where: { id: { in: uniqueExistingGroupIds } },
@@ -471,9 +476,7 @@ async function main() {
     if (relocateList.length > 0) {
       console.log("\n=== DRY RUN 샘플 (변형 버전 재배치) ===");
       for (const r of relocateList.slice(0, 10)) {
-        console.log(
-          `\n트랙[${r.variantTrackId}] "${r.variantTrackName}"`,
-        );
+        console.log(`\n트랙[${r.variantTrackId}] "${r.variantTrackName}"`);
         console.log(`  그룹[${r.fromGroupId}] (솔로) → 그룹[${r.toGroupId}]`);
         console.log(`  매칭된 원본: "${r.matchedTrackName}"`);
       }

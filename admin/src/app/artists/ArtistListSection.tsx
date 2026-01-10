@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
-import { useArtistsStore, SORT_OPTIONS } from "./store";
+import { SORT_OPTIONS, useArtistsStore } from "./store";
 
 export function ArtistListSection() {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);

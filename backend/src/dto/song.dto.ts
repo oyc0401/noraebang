@@ -58,12 +58,21 @@ export class SongDto {
   @ApiProperty({ type: [KaraokeSongDto], required: false })
   karaokeSongs?: KaraokeSongDto[];
 
-  @ApiProperty({ example: "https://i.ytimg.com/vi/x8VYWazR5mE/default.jpg", required: false })
+  @ApiProperty({
+    example: "https://i.ytimg.com/vi/x8VYWazR5mE/default.jpg",
+    required: false,
+  })
   thumbnailDefault?: string;
 
-  @ApiProperty({ example: "https://i.ytimg.com/vi/x8VYWazR5mE/mqdefault.jpg", required: false })
+  @ApiProperty({
+    example: "https://i.ytimg.com/vi/x8VYWazR5mE/mqdefault.jpg",
+    required: false,
+  })
   thumbnailMedium?: string;
 
-  @ApiProperty({ example: "https://i.ytimg.com/vi/x8VYWazR5mE/hqdefault.jpg", required: false })
+  @ApiProperty({
+    example: "https://i.ytimg.com/vi/x8VYWazR5mE/hqdefault.jpg",
+    required: false,
+  })
   thumbnailHigh?: string;
 }

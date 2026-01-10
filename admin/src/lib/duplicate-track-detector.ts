@@ -60,25 +60,13 @@ export function isDuplicateTrack(trackName: string): boolean {
   ];
 
   // 보컬 제거 패턴
-  const offVocalPatterns = [
-    /- off vocal/i,
-    /\(off vocal\)/i,
-    /\[off vocal\]/i,
-  ];
+  const offVocalPatterns = [/- off vocal/i, /\(off vocal\)/i, /\[off vocal\]/i];
 
   // 출처 표시 패턴
-  const fromPatterns = [
-    /- from\s/i,
-    /\(from\s/i,
-    /\[from\s/i,
-  ];
+  const fromPatterns = [/- from\s/i, /\(from\s/i, /\[from\s/i];
 
   // 특별 편곡 패턴 (with가 끝부분에 있는 경우만)
-  const withPatterns = [
-    /\[with\s/i,
-    /\(with\s/i,
-    /- with\s/i,
-  ];
+  const withPatterns = [/\[with\s/i, /\(with\s/i, /- with\s/i];
 
   // 짧은 버전 패턴
   const shortVersionPatterns = [

@@ -209,9 +209,7 @@ async function main() {
     console.log(
       `  - TJ 소곡 가수 포함 노래: ${tjSongsWithLowCountArtists.length.toLocaleString()}개`,
     );
-    console.log(
-      `  - 매핑된 Song: ${karaokeSongs.length.toLocaleString()}개`,
-    );
+    console.log(`  - 매핑된 Song: ${karaokeSongs.length.toLocaleString()}개`);
     console.log(
       `  - 곡 개수 ${threshold}개 이하인 Artist: ${artistsWithLowSongCount.length.toLocaleString()}명`,
     );
@@ -234,23 +232,21 @@ async function main() {
       },
     });
 
-    console.log(`✅ ${deleteResult.count.toLocaleString()}명의 Artist 삭제 완료`);
+    console.log(
+      `✅ ${deleteResult.count.toLocaleString()}명의 Artist 삭제 완료`,
+    );
     console.log("");
     console.log("📈 통계:");
     console.log(
       `  - TJ 소곡 가수 포함 노래: ${tjSongsWithLowCountArtists.length.toLocaleString()}개`,
     );
-    console.log(
-      `  - 매핑된 Song: ${karaokeSongs.length.toLocaleString()}개`,
-    );
+    console.log(`  - 매핑된 Song: ${karaokeSongs.length.toLocaleString()}개`);
     console.log(`  - 삭제된 Artist: ${deleteResult.count.toLocaleString()}명`);
     console.log("");
     console.log(
       "⚠️  주의: 삭제된 Artist와 연결된 ArtistSong, YoutubeChannel도 함께 삭제되었습니다.",
     );
-    console.log(
-      "⚠️  주의: 일부 Song은 주인 없는 곡이 되었을 수 있습니다.",
-    );
+    console.log("⚠️  주의: 일부 Song은 주인 없는 곡이 되었을 수 있습니다.");
   }
 
   await prisma.$disconnect();

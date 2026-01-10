@@ -1,18 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
-import Image from "next/image";
-import { Link } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import YoutubeMusicIcon from "@/icons/youtube-music.svg";
-import SpotifyIcon from "@/icons/spotify.svg";
-import AppleMusicIcon from "@/icons/apple-music.svg";
-import { isYoutubeUrl } from "@/lib/youtube";
-import { searchControllerSearchSongByYoutubeUrl } from "@/api/model/search/search";
-import { useSearchStore } from "@/store/searchStore";
+import { Link } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 import type { SongDto } from "@/api/model/models";
+import { searchControllerSearchSongByYoutubeUrl } from "@/api/model/search/search";
 import { KaraokeBadge } from "@/components/common/KaraokeBadge";
+import AppleMusicIcon from "@/icons/apple-music.svg";
+import SpotifyIcon from "@/icons/spotify.svg";
+import YoutubeMusicIcon from "@/icons/youtube-music.svg";
+import { isYoutubeUrl } from "@/lib/youtube";
+import { useSearchStore } from "@/store/searchStore";
 
 export function LinkPasteCard() {
   const router = useRouter();

@@ -341,7 +341,7 @@ function isSpace(ch: string): boolean {
 
 function isPunctLike(ch: string): boolean {
   // 비교/삭제/삽입에서 "부가정보" 성격의 기호를 약하게 취급하기 위한 범위
-  return /[()\[\]{}【】（）「」『』〈〉《》“”‘’"'`~!@#$%^&*+=<>?,.;:|/\\_\-–—・：]/u.test(
+  return /[()[\]{}【】（）「」『』〈〉《》“”‘’"'`~!@#$%^&*+=<>?,.;:|/\\_\-–—・：]/u.test(
     ch,
   );
 }

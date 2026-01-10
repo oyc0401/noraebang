@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  FormEvent,
+  type FormEvent,
   useCallback,
   useEffect,
   useMemo,

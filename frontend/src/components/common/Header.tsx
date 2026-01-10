@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { MicVocal, Search } from "lucide-react";
+import Link from "next/link";
 import { useSearchStore } from "@/store/searchStore";
 import { Logo } from "./Logo";
 

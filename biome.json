@@ -67,9 +67,7 @@
       }
     },
     {
-      "includes": [
-        "admin/**/*"
-      ],
+      "includes": ["admin/**/*"],
       "linter": {
         "rules": {
           "a11y": {

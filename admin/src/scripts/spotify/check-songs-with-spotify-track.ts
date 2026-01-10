@@ -45,7 +45,9 @@ async function main() {
     orderBy: { id: "asc" },
   });
 
-  console.log(`총 ${songsWithSpotifyTrack.length}개 Song에 SpotifyTrack이 매핑되어 있습니다.\n`);
+  console.log(
+    `총 ${songsWithSpotifyTrack.length}개 Song에 SpotifyTrack이 매핑되어 있습니다.\n`,
+  );
 
   if (songsWithSpotifyTrack.length === 0) {
     console.log("✅ 아직 SpotifyTrack이 매핑된 Song이 없습니다.\n");
@@ -63,7 +65,9 @@ async function main() {
   for (const song of songsWithSpotifyTrack.slice(0, 20)) {
     const songId = song.id.toString().padEnd(8);
     const title = (song.title || "").padEnd(35).substring(0, 35);
-    const spotifyName = (song.spotifyTrack?.name || "").padEnd(35).substring(0, 35);
+    const spotifyName = (song.spotifyTrack?.name || "")
+      .padEnd(35)
+      .substring(0, 35);
     const popularity = song.spotifyTrack?.popularity || "N/A";
 
     console.log(`${songId} | ${title} | ${spotifyName} | ${popularity}`);

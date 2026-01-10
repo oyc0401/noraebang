@@ -1,7 +1,7 @@
+import type { SongDto } from "@/api/model/models";
 import { CircleThumbnail } from "@/components/common/CircleThumbnail";
 import { KaraokeBadge } from "@/components/common/KaraokeBadge";
 import { cn } from "@/lib/cn";
-import type { SongDto } from "@/api/model/models";
 
 interface Props {
   song: SongDto;
@@ -36,7 +36,7 @@ export const SongCard = ({ song, isSelected, onClick }: Props) => (
         {song.karaokeSongs
           ?.filter(
             (k): k is typeof k & { provider: "TJ" | "KY" } =>
-              k.provider === "TJ" || k.provider === "KY"
+              k.provider === "TJ" || k.provider === "KY",
           )
           .map((k, idx) => (
             <KaraokeBadge

@@ -1,10 +1,10 @@
 "use client";
 
-import { useSearchStore } from "@/store/searchStore";
-import { Logo } from "@/components/common/Logo";
-import { SearchTrigger } from "./SearchTrigger";
-import Link from "next/link";
 import { ArrowLeft, Home } from "lucide-react";
+import Link from "next/link";
+import { Logo } from "@/components/common/Logo";
+import { useSearchStore } from "@/store/searchStore";
+import { SearchTrigger } from "./SearchTrigger";
 
 interface SearchHeaderProps {
   value?: string;

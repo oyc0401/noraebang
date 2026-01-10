@@ -19,8 +19,16 @@ async function main() {
   // 샘플 케이스 확인
   const testCases = [
     { id: 4840, name: "4MEN&박정은", expectedArtists: ["4MEN", "박정은"] },
-    { id: 5346, name: "브라운아이드걸스&씨야", expectedArtists: ["브라운아이드걸스", "더 씨야"] },
-    { id: 7654, name: "김종국&SG워너비", expectedArtists: ["김종국", "SG워너비"] },
+    {
+      id: 5346,
+      name: "브라운아이드걸스&씨야",
+      expectedArtists: ["브라운아이드걸스", "더 씨야"],
+    },
+    {
+      id: 7654,
+      name: "김종국&SG워너비",
+      expectedArtists: ["김종국", "SG워너비"],
+    },
     { id: 8152, name: "리쌍&에픽하이", expectedArtists: ["리쌍", "에픽하이"] },
   ];
 
@@ -42,13 +50,17 @@ async function main() {
       continue;
     }
 
-    console.log(`\n📌 ${collabArtist.nameKo || collabArtist.name} (ID: ${collabArtist.id})`);
+    console.log(
+      `\n📌 ${collabArtist.nameKo || collabArtist.name} (ID: ${collabArtist.id})`,
+    );
     console.log(`   현재 곡 수: ${collabArtist._count.artistSongs}개`);
 
     if (collabArtist._count.artistSongs === 0) {
       console.log(`   ✅ 협업 아티스트의 매핑이 모두 제거되었습니다.`);
     } else {
-      console.log(`   ⚠️  아직 ${collabArtist._count.artistSongs}개의 곡이 남아있습니다.`);
+      console.log(
+        `   ⚠️  아직 ${collabArtist._count.artistSongs}개의 곡이 남아있습니다.`,
+      );
     }
 
     // 예상되는 개별 아티스트들 확인
@@ -71,7 +83,9 @@ async function main() {
       });
 
       if (artist) {
-        console.log(`   → ${artist.nameKo || artist.name}: ${artist._count.artistSongs}개 곡`);
+        console.log(
+          `   → ${artist.nameKo || artist.name}: ${artist._count.artistSongs}개 곡`,
+        );
       }
     }
   }
@@ -103,7 +117,9 @@ async function main() {
     },
   });
 
-  console.log(`   곡이 0개인 협업 아티스트: ${collaborationArtistsWithNoSongs}명`);
+  console.log(
+    `   곡이 0개인 협업 아티스트: ${collaborationArtistsWithNoSongs}명`,
+  );
 
   const collaborationArtistsWithFewSongs = await prisma.artist.count({
     where: {
@@ -124,7 +140,9 @@ async function main() {
     },
   });
 
-  console.log(`   전체 협업 키워드 아티스트: ${collaborationArtistsWithFewSongs}명`);
+  console.log(
+    `   전체 협업 키워드 아티스트: ${collaborationArtistsWithFewSongs}명`,
+  );
 }
 
 main()

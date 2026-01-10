@@ -13,12 +13,7 @@ interface Props {
   artist?: string | null;
 }
 
-export const KaraokeBadge = ({
-  provider,
-  karaokeNo,
-  title,
-  artist,
-}: Props) => (
+export const KaraokeBadge = ({ provider, karaokeNo, title, artist }: Props) => (
   <div
     className={cn(
       "px-3 py-1 rounded-full text-xs font-semibold",

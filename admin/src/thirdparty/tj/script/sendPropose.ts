@@ -28,7 +28,9 @@ async function main() {
     });
 
     if (result === null) {
-      console.error("\n❌ Failed to send propose - API returned invalid response");
+      console.error(
+        "\n❌ Failed to send propose - API returned invalid response",
+      );
       process.exit(1);
     }
 

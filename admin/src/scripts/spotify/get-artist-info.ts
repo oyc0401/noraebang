@@ -42,15 +42,23 @@ async function getSpotifyAccessToken(): Promise<string> {
 }
 
 // Spotify에서 아티스트 정보 가져오기
-async function getSpotifyArtist(spotifyId: string, accessToken: string): Promise<any> {
-  const response = await fetch(`https://api.spotify.com/v1/artists/${spotifyId}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
+async function getSpotifyArtist(
+  spotifyId: string,
+  accessToken: string,
+): Promise<any> {
+  const response = await fetch(
+    `https://api.spotify.com/v1/artists/${spotifyId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
-    throw new Error(`Failed to get artist from Spotify: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to get artist from Spotify: ${response.status} ${response.statusText}`,
+    );
   }
 
   return await response.json();
@@ -60,8 +68,12 @@ async function main() {
   const spotifyArtistId = process.argv[2];
 
   if (!spotifyArtistId) {
-    console.error("❌ Usage: pnpm ts-node src/scripts/spotify/get-artist-info.ts <spotifyArtistId>");
-    console.error("   Example: pnpm ts-node src/scripts/spotify/get-artist-info.ts 0ixzjrK1wkN2zWBXt3VW3W");
+    console.error(
+      "❌ Usage: pnpm ts-node src/scripts/spotify/get-artist-info.ts <spotifyArtistId>",
+    );
+    console.error(
+      "   Example: pnpm ts-node src/scripts/spotify/get-artist-info.ts 0ixzjrK1wkN2zWBXt3VW3W",
+    );
     process.exit(1);
   }
 

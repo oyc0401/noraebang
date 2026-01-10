@@ -1,21 +1,21 @@
 import { create } from "zustand";
 import {
-  getArtists,
+  addSongOwnership,
+  createKaraokeSong,
+  deleteArtist,
+  deleteKaraokeSong,
   getArtistById,
+  getArtists,
   getSongsByArtist,
   getSpotifyTracksByArtist,
-  updateArtistNameKo,
-  updateArtistName,
-  updateArtistSlug,
-  updateSongTitle,
-  createKaraokeSong,
-  updateKaraokeSong,
-  deleteKaraokeSong,
-  updateArtistCatalog,
-  transferSongOwnership,
-  addSongOwnership,
-  deleteArtist,
   mergeArtist,
+  transferSongOwnership,
+  updateArtistCatalog,
+  updateArtistName,
+  updateArtistNameKo,
+  updateArtistSlug,
+  updateKaraokeSong,
+  updateSongTitle,
 } from "./actions";
 
 type ArtistsResponse = Awaited<ReturnType<typeof getArtists>>;
@@ -304,8 +304,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       nameKoError: null,
     });
   },
-  closeNameKoDialog: () =>
-    set({ showNameKoDialog: false, nameKoError: null }),
+  closeNameKoDialog: () => set({ showNameKoDialog: false, nameKoError: null }),
   setNameKoInput: (value) => set({ nameKoInput: value }),
   setNameKoError: (error) => set({ nameKoError: error }),
 
@@ -642,10 +641,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
     set({ slugSaving: true, slugError: null });
 
     try {
-      const response = await updateArtistSlug(
-        selectedArtist.id,
-        sanitizedSlug,
-      );
+      const response = await updateArtistSlug(selectedArtist.id, sanitizedSlug);
 
       set({
         message: {
@@ -842,8 +838,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       });
     } catch (error: any) {
       set({
-        transferError:
-          error?.message ?? "소유권 이전 중 오류가 발생했습니다.",
+        transferError: error?.message ?? "소유권 이전 중 오류가 발생했습니다.",
       });
     } finally {
       set({ transferSaving: false });
@@ -930,12 +925,8 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
   },
 
   handleMergeArtist: async () => {
-    const {
-      selectedArtist,
-      mergeTargetArtistIdInput,
-      sort,
-      debouncedSearch,
-    } = get();
+    const { selectedArtist, mergeTargetArtistIdInput, sort, debouncedSearch } =
+      get();
     if (!selectedArtist) return;
 
     const trimmed = mergeTargetArtistIdInput.trim();
@@ -950,7 +941,10 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
     try {
       const targetArtist = await getArtistById(targetId);
       if (!targetArtist) {
-        set({ mergeError: "대상 아티스트를 찾을 수 없습니다.", mergeSaving: false });
+        set({
+          mergeError: "대상 아티스트를 찾을 수 없습니다.",
+          mergeSaving: false,
+        });
         return;
       }
 

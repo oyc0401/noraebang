@@ -42,15 +42,23 @@ async function getSpotifyAccessToken(): Promise<string> {
 }
 
 // Spotify에서 트랙 정보 가져오기
-async function getSpotifyTrack(spotifyId: string, accessToken: string): Promise<any> {
-  const response = await fetch(`https://api.spotify.com/v1/tracks/${spotifyId}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
+async function getSpotifyTrack(
+  spotifyId: string,
+  accessToken: string,
+): Promise<any> {
+  const response = await fetch(
+    `https://api.spotify.com/v1/tracks/${spotifyId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
-    throw new Error(`Failed to get track from Spotify: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to get track from Spotify: ${response.status} ${response.statusText}`,
+    );
   }
 
   return await response.json();
@@ -60,8 +68,12 @@ async function main() {
   const spotifyTrackId = process.argv[2];
 
   if (!spotifyTrackId) {
-    console.error("❌ Usage: pnpm ts-node src/scripts/spotify/get-track-info.ts <spotifyTrackId>");
-    console.error("   Example: pnpm ts-node src/scripts/spotify/get-track-info.ts 3n3Ppam7vgaVa1iaRUc9Lp");
+    console.error(
+      "❌ Usage: pnpm ts-node src/scripts/spotify/get-track-info.ts <spotifyTrackId>",
+    );
+    console.error(
+      "   Example: pnpm ts-node src/scripts/spotify/get-track-info.ts 3n3Ppam7vgaVa1iaRUc9Lp",
+    );
     process.exit(1);
   }
 

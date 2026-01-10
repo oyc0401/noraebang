@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
 import pg from "pg";
 
 /**
@@ -232,7 +232,9 @@ async function main() {
 
   console.log("=== APPLYING CHANGES ===");
   const applyTargets =
-    typeof limitValue === "number" ? candidates.slice(0, limitValue) : candidates;
+    typeof limitValue === "number"
+      ? candidates.slice(0, limitValue)
+      : candidates;
   if (applyTargets.length === 0) {
     console.log("적용할 대상이 없습니다. (--limit 값이 너무 작을 수 있습니다)");
     return;

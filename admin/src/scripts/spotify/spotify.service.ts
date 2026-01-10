@@ -142,6 +142,6 @@ export class SpotifyService {
       );
     }
 
-    return await response.json() as SpotifyArtist;
+    return (await response.json()) as SpotifyArtist;
   }
 }

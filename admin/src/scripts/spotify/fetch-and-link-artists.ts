@@ -121,7 +121,7 @@ async function main() {
   console.log("Step 3: Searching and linking Spotify artists...");
 
   let createdCount = 0;
-  let updatedCount = 0;
+  const updatedCount = 0;
   let alreadyLinkedCount = 0;
   let notFoundCount = 0;
   let errorCount = 0;

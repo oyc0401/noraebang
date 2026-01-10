@@ -73,7 +73,7 @@ function calculateSimilarity(str1: string, str2: string): number {
 function normalizeTitle(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[\(\[\{].*?[\)\]\}]/g, "") // 괄호 제거
+    .replace(/[([{].*?[)\]}]/g, "") // 괄호 제거
     .replace(/[^a-z0-9가-힣\s]/g, "") // 특수문자 제거
     .replace(/\s+/g, " ") // 공백 정규화
     .trim();
@@ -90,12 +90,12 @@ async function getYTMusicInstance(): Promise<YouTubeMusic> {
     if (!cookie) {
       throw new Error(
         "YOUTUBE_MUSIC_COOKIE 환경변수가 설정되지 않았습니다.\n" +
-        "설정 방법:\n" +
-        "1. YouTube Music (https://music.youtube.com) 접속\n" +
-        "2. 개발자 도구 열기 (F12)\n" +
-        "3. Network 탭에서 '/browse' 요청 찾기\n" +
-        "4. Request Headers에서 'cookie' 값 복사\n" +
-        "5. .env 파일에 YOUTUBE_MUSIC_COOKIE=<복사한값> 추가"
+          "설정 방법:\n" +
+          "1. YouTube Music (https://music.youtube.com) 접속\n" +
+          "2. 개발자 도구 열기 (F12)\n" +
+          "3. Network 탭에서 '/browse' 요청 찾기\n" +
+          "4. Request Headers에서 'cookie' 값 복사\n" +
+          "5. .env 파일에 YOUTUBE_MUSIC_COOKIE=<복사한값> 추가",
       );
     }
 
@@ -222,7 +222,9 @@ async function verifyArtist(artistId: number) {
 
   console.log(`\n📈 검증 결과:`);
   console.log(`   총 곡 수: ${artist.artistSongs.length}개`);
-  console.log(`   검증됨 (≥70%): ${verifiedCount}개 (${((verifiedCount / artist.artistSongs.length) * 100).toFixed(1)}%)`);
+  console.log(
+    `   검증됨 (≥70%): ${verifiedCount}개 (${((verifiedCount / artist.artistSongs.length) * 100).toFixed(1)}%)`,
+  );
   console.log(`   ├─ 높은 신뢰도 (≥90%): ${highConfidenceCount}개`);
   console.log(`   ├─ 중간 신뢰도 (70-90%): ${mediumConfidenceCount}개`);
   console.log(`   └─ 낮은 신뢰도 (50-70%): ${lowConfidenceCount}개`);
@@ -277,7 +279,6 @@ async function verifyBatch(limit: number) {
       }
     } catch (error: any) {
       console.error(`❌ 오류: ${error.message}`);
-      continue;
     }
   }
 

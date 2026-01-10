@@ -166,7 +166,7 @@ export class SongsService {
       where: { id: artistId },
     });
 
-    let targetArtistIds: number[] = [artistId];
+    const targetArtistIds: number[] = [artistId];
 
     // slug는 한 개만 허용하므로 추가 매핑 없음
 

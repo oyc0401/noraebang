@@ -7,7 +7,7 @@
 
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient, type ChannelType } from "@prisma/client";
+import { type ChannelType, PrismaClient } from "@prisma/client";
 import pg from "pg";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
@@ -29,7 +29,9 @@ if (!Number.isFinite(fromArtistId) || !Number.isFinite(toArtistId)) {
 }
 
 if (fromArtistId === toArtistId) {
-  console.error("❌ --from 과 --to 값이 동일합니다. 서로 다른 ID를 지정하세요.");
+  console.error(
+    "❌ --from 과 --to 값이 동일합니다. 서로 다른 ID를 지정하세요.",
+  );
   process.exit(1);
 }
 
@@ -80,7 +82,9 @@ async function run() {
   ]);
 
   if (!fromArtist) {
-    console.error(`❌ 대상(from) 아티스트(ID: ${fromArtistId})를 찾을 수 없습니다.`);
+    console.error(
+      `❌ 대상(from) 아티스트(ID: ${fromArtistId})를 찾을 수 없습니다.`,
+    );
     process.exit(1);
   }
 
@@ -215,4 +219,3 @@ run().catch((error) => {
   console.error("❌ 예상치 못한 오류가 발생했습니다.", error);
   process.exit(1);
 });
-

@@ -11,7 +11,11 @@ export class ArtistDto {
   @ApiProperty({ example: "요아소비" })
   nameKo: string;
 
-  @ApiProperty({ example: "yoasobi", required: false, description: "아티스트 슬러그" })
+  @ApiProperty({
+    example: "yoasobi",
+    required: false,
+    description: "아티스트 슬러그",
+  })
   slug?: string;
 
   @ApiProperty({
@@ -57,7 +61,11 @@ export class ArtistDetailsDto {
   @ApiProperty({ example: "타요리" })
   nameKo: string;
 
-  @ApiProperty({ example: "tayori", required: false, description: "아티스트 슬러그" })
+  @ApiProperty({
+    example: "tayori",
+    required: false,
+    description: "아티스트 슬러그",
+  })
   slug?: string;
 
   @ApiProperty({

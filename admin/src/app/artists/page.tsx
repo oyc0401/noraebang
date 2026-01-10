@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { useArtistsStore } from "./store";
-import { ArtistListSection } from "./ArtistListSection";
 import { ArtistDetailSection } from "./ArtistDetailSection";
+import { ArtistListSection } from "./ArtistListSection";
 import { SpotifyTracksSection } from "./SpotifyTracksSection";
+import { useArtistsStore } from "./store";
 
 export default function AdminArtistsPage() {
   const {

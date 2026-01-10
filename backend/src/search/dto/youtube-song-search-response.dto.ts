@@ -10,13 +10,17 @@ export class YoutubeOembedDataDto {
 }
 
 export class YoutubeSongSearchResponseDto {
-  @ApiProperty({ type: SongDto, required: false, description: "DB에서 찾은 곡 정보" })
+  @ApiProperty({
+    type: SongDto,
+    required: false,
+    description: "DB에서 찾은 곡 정보",
+  })
   song?: SongDto;
 
   @ApiProperty({
     type: YoutubeOembedDataDto,
     required: false,
-    description: "유튜브 oEmbed 데이터 (DB에서 곡을 찾지 못한 경우)"
+    description: "유튜브 oEmbed 데이터 (DB에서 곡을 찾지 못한 경우)",
   })
   youtube?: YoutubeOembedDataDto;
 

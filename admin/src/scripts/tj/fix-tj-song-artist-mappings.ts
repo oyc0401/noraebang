@@ -124,7 +124,9 @@ async function main() {
   console.log(`Limit: ${limit}곡\n`);
 
   const artistCache = await loadArtistCache();
-  console.log(`📦 Artist 캐시 로딩 완료: ${artistCache.size.toLocaleString()}명`);
+  console.log(
+    `📦 Artist 캐시 로딩 완료: ${artistCache.size.toLocaleString()}명`,
+  );
 
   console.log("🧮 saved=true 상태 곡에서 누락된 매핑을 검색 중...");
   const candidates = await findBrokenTjSongs();
@@ -139,7 +141,9 @@ async function main() {
     return;
   }
 
-  console.log(`⚠️ ${candidates.length}개의 곡에서 불완전한 매핑을 발견했습니다.\n`);
+  console.log(
+    `⚠️ ${candidates.length}개의 곡에서 불완전한 매핑을 발견했습니다.\n`,
+  );
 
   const songIds = Array.from(new Set(candidates.map((row) => row.song_id)));
   console.log(
@@ -231,7 +235,9 @@ async function main() {
       `생성된 Artist: ${totalCreatedArtists}, 생성된 ArtistSong: ${totalCreatedMappings}`,
     );
   } else {
-    console.log("\nℹ️  --force 없이 실행했습니다. 실제 수정을 적용하려면 --force 옵션을 추가하세요.");
+    console.log(
+      "\nℹ️  --force 없이 실행했습니다. 실제 수정을 적용하려면 --force 옵션을 추가하세요.",
+    );
   }
 
   await prisma.$disconnect();

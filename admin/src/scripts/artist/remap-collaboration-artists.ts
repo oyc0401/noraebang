@@ -31,13 +31,19 @@ const COLLABORATION_PATTERNS = [
 ];
 
 // 협업 아티스트 이름 파싱
-function parseCollaborationArtist(name: string, nameKo: string): string[] | null {
+function parseCollaborationArtist(
+  name: string,
+  nameKo: string,
+): string[] | null {
   const targetName = nameKo || name;
 
   for (const { pattern } of COLLABORATION_PATTERNS) {
     if (pattern.test(targetName)) {
       // 구분자로 분리
-      const parts = targetName.split(pattern).map((p) => p.trim()).filter(Boolean);
+      const parts = targetName
+        .split(pattern)
+        .map((p) => p.trim())
+        .filter(Boolean);
       if (parts.length >= 2) {
         return parts;
       }
@@ -70,10 +76,14 @@ async function main() {
     const searchText = [artist.name, artist.nameKo]
       .map((v) => v?.toLowerCase() ?? "")
       .join(" ");
-    return keywords.some((keyword) => searchText.includes(keyword.toLowerCase()));
+    return keywords.some((keyword) =>
+      searchText.includes(keyword.toLowerCase()),
+    );
   });
 
-  console.log(`📊 협업 키워드가 포함된 아티스트: ${collaborationArtists.length}명\n`);
+  console.log(
+    `📊 협업 키워드가 포함된 아티스트: ${collaborationArtists.length}명\n`,
+  );
 
   let remappedCount = 0;
 
@@ -86,7 +96,10 @@ async function main() {
     }
 
     // 이름 파싱 시도
-    const parsedNames = parseCollaborationArtist(collabArtist.name, collabArtist.nameKo);
+    const parsedNames = parseCollaborationArtist(
+      collabArtist.name,
+      collabArtist.nameKo,
+    );
     if (!parsedNames || parsedNames.length < 2) {
       continue;
     }
@@ -136,18 +149,22 @@ async function main() {
           });
 
           // 가장 비슷한 이름 찾기 (이름 길이 차이가 5자 이내)
-          found = candidates.find((c) => {
-            const targetName = c.nameKo || c.name;
-            const lengthDiff = Math.abs(targetName.length - parsedName.length);
-            return lengthDiff <= 5 && (
-              targetName.toLowerCase().includes(parsedName.toLowerCase()) ||
-              parsedName.toLowerCase().includes(targetName.toLowerCase())
-            );
-          }) || null;
+          found =
+            candidates.find((c) => {
+              const targetName = c.nameKo || c.name;
+              const lengthDiff = Math.abs(
+                targetName.length - parsedName.length,
+              );
+              return (
+                lengthDiff <= 5 &&
+                (targetName.toLowerCase().includes(parsedName.toLowerCase()) ||
+                  parsedName.toLowerCase().includes(targetName.toLowerCase()))
+              );
+            }) || null;
         }
 
         return found;
-      })
+      }),
     );
 
     // 모든 파싱된 이름에 대해 실제 아티스트를 찾았는지 확인
@@ -157,16 +174,22 @@ async function main() {
     }
 
     // 실제 아티스트들의 곡 수가 협업 아티스트보다 많은지 확인
-    const hasMoreSongs = foundArtists.every((a) => a!._count.artistSongs > songCount);
+    const hasMoreSongs = foundArtists.every(
+      (a) => a!._count.artistSongs > songCount,
+    );
     if (!hasMoreSongs) {
       continue;
     }
 
     // 재매핑 대상 발견!
     console.log(`\n🎯 재매핑 대상 발견:`);
-    console.log(`   협업: ${collabArtist.nameKo || collabArtist.name} (ID: ${collabArtist.id}, 곡: ${songCount}개)`);
+    console.log(
+      `   협업: ${collabArtist.nameKo || collabArtist.name} (ID: ${collabArtist.id}, 곡: ${songCount}개)`,
+    );
     foundArtists.forEach((a) => {
-      console.log(`   → ${a!.nameKo || a!.name} (ID: ${a!.id}, 곡: ${a!._count.artistSongs}개)`);
+      console.log(
+        `   → ${a!.nameKo || a!.name} (ID: ${a!.id}, 곡: ${a!._count.artistSongs}개)`,
+      );
     });
 
     // 협업 아티스트의 모든 곡 가져오기
@@ -202,9 +225,13 @@ async function main() {
                   role: song.role,
                 },
               });
-              console.log(`     ✅ Song ID ${song.songId} → ${realArtist!.nameKo || realArtist!.name} 매핑 생성`);
+              console.log(
+                `     ✅ Song ID ${song.songId} → ${realArtist!.nameKo || realArtist!.name} 매핑 생성`,
+              );
             } else {
-              console.log(`     ⏭️  Song ID ${song.songId} → ${realArtist!.nameKo || realArtist!.name} 이미 매핑됨`);
+              console.log(
+                `     ⏭️  Song ID ${song.songId} → ${realArtist!.nameKo || realArtist!.name} 이미 매핑됨`,
+              );
             }
           }
         }

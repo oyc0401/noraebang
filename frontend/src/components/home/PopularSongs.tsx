@@ -16,12 +16,8 @@ export function PopularSongs() {
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuAicKhmAEJRbX5OWpmXAkfP2rNd5bNRpvIXPUqdNpjhPPpJ8BSBluwj3doRiNvdQS9hdfnVJzGUVuOec7ZrPeG3Eyrx4Lswjolp5gam9TheyuNz0upK-MgCMT8yZEvalX5XV5F79Yi4JFBCO5eaBMGHG5Aq5b42KdnM2bbKRvIrErA9w2XrdT27zd_P6JBlw-HJQAaa65mz6di3RtKvVfs2JM5wzkNB0SH176BqoQPFGa9PAapFDGHjSWw5pU0GAgoFuhBWuKpsZ2E"
           />
           <div className="flex-1 min-w-0">
-            <h4 className="text-white font-bold text-sm truncate">
-              Ditto
-            </h4>
-            <p className="text-gray-400 text-xs truncate mt-0.5">
-              NewJeans
-            </p>
+            <h4 className="text-white font-bold text-sm truncate">Ditto</h4>
+            <p className="text-gray-400 text-xs truncate mt-0.5">NewJeans</p>
           </div>
           <div className="text-xs font-medium text-gray-500 flex flex-col items-end gap-1">
             <span className="px-2 py-0.5 rounded bg-blue-900/20 text-blue-400">
@@ -30,9 +26,7 @@ export function PopularSongs() {
           </div>
         </div>
         <div className="flex items-center gap-4 py-3 border-b border-white/5 last:border-0 hover:bg-white/5 px-2 -mx-2 rounded-lg transition-colors cursor-pointer group">
-          <div className="text-lg font-bold w-6 text-center text-white">
-            2
-          </div>
+          <div className="text-lg font-bold w-6 text-center text-white">2</div>
           <img
             alt="Neon cityscape representing city pop music"
             className="size-12 rounded-lg object-cover bg-gray-800"
@@ -40,12 +34,8 @@ export function PopularSongs() {
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwnO7hLHrNqIjgllnmtbgM1cJn31DrpomXDF9ZgshGmDP7sikhbaIGxxwi6j8oKhPpwZL3WJ34BjdnDojwGvcLSPzC7LCWH9E8grgZIjJrGKQzhklRwLZRV5UOzO6LnJLv4m9bhDTYEXWOxDaRasUXob3zVjxqnr0m9NGdnHxTjgTjI2YMDTAPDrEONSdz8c7C3_Budj1xiA2z4ZbeoB071yvIX5Sz4LlJ003w8HLc3oIzRTWuUVymhxVFmtRL8hZ9n-HRO8wNub4"
           />
           <div className="flex-1 min-w-0">
-            <h4 className="text-white font-bold text-sm truncate">
-              밤양갱
-            </h4>
-            <p className="text-gray-400 text-xs truncate mt-0.5">
-              비비 (BIBI)
-            </p>
+            <h4 className="text-white font-bold text-sm truncate">밤양갱</h4>
+            <p className="text-gray-400 text-xs truncate mt-0.5">비비 (BIBI)</p>
           </div>
           <div className="text-xs font-medium text-gray-500 flex flex-col items-end gap-1">
             <span className="px-2 py-0.5 rounded bg-blue-900/20 text-blue-400">
@@ -54,9 +44,7 @@ export function PopularSongs() {
           </div>
         </div>
         <div className="flex items-center gap-4 py-3 border-b border-white/5 last:border-0 hover:bg-white/5 px-2 -mx-2 rounded-lg transition-colors cursor-pointer group">
-          <div className="text-lg font-bold w-6 text-center text-white">
-            3
-          </div>
+          <div className="text-lg font-bold w-6 text-center text-white">3</div>
           <img
             alt="Acoustic guitar close up for indie music"
             className="size-12 rounded-lg object-cover bg-gray-800"
@@ -67,9 +55,7 @@ export function PopularSongs() {
             <h4 className="text-white font-bold text-sm truncate">
               후라이의 꿈
             </h4>
-            <p className="text-gray-400 text-xs truncate mt-0.5">
-              AKMU (악뮤)
-            </p>
+            <p className="text-gray-400 text-xs truncate mt-0.5">AKMU (악뮤)</p>
           </div>
           <div className="text-xs font-medium text-gray-500 flex flex-col items-end gap-1">
             <span className="px-2 py-0.5 rounded bg-blue-900/20 text-blue-400">

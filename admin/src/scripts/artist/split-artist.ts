@@ -46,7 +46,9 @@ const NEW_ARTIST_DATA = {
 async function main() {
   const isDryRun = process.argv.includes("--dry-run");
 
-  console.log(`\n=== 아티스트 분리 스크립트 ${isDryRun ? "(DRY RUN)" : ""} ===\n`);
+  console.log(
+    `\n=== 아티스트 분리 스크립트 ${isDryRun ? "(DRY RUN)" : ""} ===\n`,
+  );
 
   // 1. 기존 아티스트 확인
   console.log("Step 1: 기존 아티스트 확인...");
@@ -68,7 +70,9 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`✓ 기존 아티스트: [${oldArtist.id}] ${oldArtist.name} (${oldArtist.nameKo})`);
+  console.log(
+    `✓ 기존 아티스트: [${oldArtist.id}] ${oldArtist.name} (${oldArtist.nameKo})`,
+  );
   console.log(`  관련 곡 수: ${oldArtist.artistSongs.length}개\n`);
 
   // 2. 새 아티스트 ID 확인
@@ -78,7 +82,9 @@ async function main() {
   });
 
   if (existingNewArtist) {
-    console.error(`❌ Artist ID ${NEW_ARTIST_ID} already exists: ${existingNewArtist.name}`);
+    console.error(
+      `❌ Artist ID ${NEW_ARTIST_ID} already exists: ${existingNewArtist.name}`,
+    );
     console.error(`   다른 ID를 사용하거나 기존 아티스트를 삭제하세요.`);
     process.exit(1);
   }
@@ -93,14 +99,18 @@ async function main() {
   console.log(`\n[신규] ID ${NEW_ARTIST_ID}:`);
   console.log(`  생성: ${NEW_ARTIST_DATA.name} (${NEW_ARTIST_DATA.nameKo})`);
   console.log(`\n곡 매핑:`);
-  console.log(`  ${oldArtist.artistSongs.length}개 곡을 두 아티스트 모두에게 할당`);
+  console.log(
+    `  ${oldArtist.artistSongs.length}개 곡을 두 아티스트 모두에게 할당`,
+  );
   console.log(`  (나중에 수동으로 불필요한 매핑 제거 필요)`);
   console.log("─".repeat(80));
   console.log();
 
   if (isDryRun) {
     console.log("💡 DRY RUN 모드: 실제 변경은 수행되지 않았습니다.");
-    console.log("💡 실제 실행: pnpm ts-node src/scripts/artist/split-artist.ts\n");
+    console.log(
+      "💡 실제 실행: pnpm ts-node src/scripts/artist/split-artist.ts\n",
+    );
     return;
   }
 
@@ -162,8 +172,12 @@ async function main() {
     console.log(`${"=".repeat(80)}\n`);
 
     console.log("결과:");
-    console.log(`  [${OLD_ARTIST_ID}] ${OLD_ARTIST_DATA.name} (${OLD_ARTIST_DATA.nameKo})`);
-    console.log(`  [${NEW_ARTIST_ID}] ${NEW_ARTIST_DATA.name} (${NEW_ARTIST_DATA.nameKo})`);
+    console.log(
+      `  [${OLD_ARTIST_ID}] ${OLD_ARTIST_DATA.name} (${OLD_ARTIST_DATA.nameKo})`,
+    );
+    console.log(
+      `  [${NEW_ARTIST_ID}] ${NEW_ARTIST_DATA.name} (${NEW_ARTIST_DATA.nameKo})`,
+    );
     console.log(`  각각 ${copiedCount}개 곡 할당됨`);
     console.log();
   } catch (error) {

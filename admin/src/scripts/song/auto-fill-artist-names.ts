@@ -35,7 +35,10 @@ const prisma = new PrismaClient({ adapter });
 
 // 특수문자 제거
 function removeSpecialChars(text: string): string {
-  return text.replace(/[『』「」【】［］()（）\[\]<>《》{}\s!@#$%^&*_+=|\\:;"',.<>?/~`-]/g, "");
+  return text.replace(
+    /[『』「」【】［］()（）[\]<>《》{}\s!@#$%^&*_+=|\\:;"',.<>?/~`-]/g,
+    "",
+  );
 }
 
 // 한자 포함 여부 확인

@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import pg from "pg";
 
 // TJ 곡의 artistList를 기반으로 Artist 생성 및 Song 매핑 (최적화 버전)
@@ -193,7 +193,10 @@ async function markCompletedTjSongs(
     }
 
     const uniqueRequiredIds = Array.from(new Set(requiredIds));
-    candidateMap.set(tjSong.id, { songId, requiredArtistIds: uniqueRequiredIds });
+    candidateMap.set(tjSong.id, {
+      songId,
+      requiredArtistIds: uniqueRequiredIds,
+    });
   }
 
   if (candidateMap.size === 0) {
@@ -311,7 +314,9 @@ async function main() {
   for (const ks of allKaraokeSongs) {
     karaokeSongMap.set(ks.karaokeNo, ks.songId);
   }
-  console.log(`  ✅ ${karaokeSongMap.size.toLocaleString()}개의 KaraokeSong 로드 완료`);
+  console.log(
+    `  ✅ ${karaokeSongMap.size.toLocaleString()}개의 KaraokeSong 로드 완료`,
+  );
   console.log("");
 
   // 1. saved=false인 TjSong의 artistList 수집
