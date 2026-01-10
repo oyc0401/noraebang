@@ -1,21 +1,56 @@
 // song-spotify-matcher.ts
 
+export type DebugMeta = {
+  target: string;
+  layer1_0_match: boolean; // 완전 일치
+  layer1_5_match: boolean; // 공백 제거 후 완전 일치
+  layer1_7_match: boolean; // 알파벳 소문자화 후 완전 일치
+  layer1_8_match: boolean; // 알파벳 소문자화 + 공백 제거 후 완전 일치
+  layer2_0_match: boolean; // prefix-safe
+  layer3_s1: number; // partialSimilarity (with space)
+  layer3_s2: number; // partialSimilarity (no space)
+  layer3_score: number; // max(s1, s2)
+  layer3_rank: number; // 순위 (1부터 시작)
+  layer3_secondScore: number; // 2등 점수
+  layer3_margin: number; // 1등과의 점수 차
+};
+
 export type BestMatchResult = {
   answer: string | null;
   candidate: string[];
+  meta?: DebugMeta;
 };
 
 /**
  * Song–Spotify title matcher (test-driven).
  *
  * - answer: 확신 가능한 자동 확정 매칭. 없으면 null
- * - candidate: 점수 레이어(3.x)에서만 생성되는 “근접 후보” 목록
+ * - candidate: 점수 레이어(3.x)에서만 생성되는 "근접 후보" 목록
+ * - debugTarget: 디버깅할 후보 문자열 (지정 시 meta에 상세 정보 포함)
  */
 export function findBestMatch(
   query: string,
   candidates: string[],
+  debugTarget?: string,
 ): BestMatchResult {
   if (!candidates.length) return { answer: null, candidate: [] };
+
+  const meta: DebugMeta | undefined = debugTarget
+    ? {
+        target: debugTarget,
+        layer1_0_match: false,
+        layer1_5_match: false,
+        layer1_7_match: false,
+        layer1_8_match: false,
+        layer2_0_match: false,
+        layer3_s1: 0,
+        layer3_s2: 0,
+        layer3_score: 0,
+        layer3_rank: 0,
+        layer3_secondScore: 0,
+        layer3_margin: 0,
+      }
+    : undefined;
 
   const qW = K10(query);
   const qS = K15(query);
@@ -34,6 +69,9 @@ export function findBestMatch(
   {
     const idx = candidates.findIndex((c) => K10(c) === qW);
     if (idx >= 0) fixedAnswer = candidates[idx];
+    if (meta && debugTarget) {
+      meta.layer1_0_match = K10(debugTarget) === qW;
+    }
   }
 
   // 1.5: 공백 제거 후 완전 일치
@@ -41,6 +79,10 @@ export function findBestMatch(
     const matches = candidates
       .map((c, i) => ({ c, i, k10: K10(c), k15: K15(c) }))
       .filter((x) => x.k15 === qS);
+
+    if (meta && debugTarget) {
+      meta.layer1_5_match = K15(debugTarget) === qS;
+    }
 
     if (matches.length > 0) {
       // tie-break:
@@ -63,18 +105,27 @@ export function findBestMatch(
   if (!fixedAnswer && alphaGuard) {
     const idx = candidates.findIndex((c) => K17(c) === qL);
     if (idx >= 0) fixedAnswer = candidates[idx];
+    if (meta && debugTarget) {
+      meta.layer1_7_match = K17(debugTarget) === qL;
+    }
   }
 
   // 1.8: 알파벳 소문자화 + 공백 제거 후 완전 일치 (가드)
   if (!fixedAnswer && alphaGuard) {
     const idx = candidates.findIndex((c) => K18(c) === qLS);
     if (idx >= 0) fixedAnswer = candidates[idx];
+    if (meta && debugTarget) {
+      meta.layer1_8_match = K18(debugTarget) === qLS;
+    }
   }
 
   // 2.0: prefix-safe(경계 기반 확정)
   if (!fixedAnswer) {
     const idx = candidates.findIndex((c) => isPrefixSafe(qW, K10(c)));
     if (idx >= 0) fixedAnswer = candidates[idx];
+    if (meta && debugTarget) {
+      meta.layer2_0_match = isPrefixSafe(qW, K10(debugTarget));
+    }
   }
 
   // ---------------------------------
@@ -99,7 +150,7 @@ export function findBestMatch(
     const s1 = partialSimilarity(qL, cL);
     const s2 = partialSimilarity(qLS, cLS);
     const score = Math.max(s1, s2);
-    return { c, idx, cL, cLS, score };
+    return { c, idx, cL, cLS, s1, s2, score };
   });
 
   const sorted = [...scored].sort((a, b) => {
@@ -109,6 +160,23 @@ export function findBestMatch(
 
   const best = sorted[0];
   const secondScore = sorted.length >= 2 ? sorted[1].score : 0;
+
+  // debugTarget의 점수 정보를 meta에 저장
+  if (meta && debugTarget) {
+    const targetItem = scored.find((item) => item.c === debugTarget);
+    if (targetItem) {
+      meta.layer3_s1 = targetItem.s1;
+      meta.layer3_s2 = targetItem.s2;
+      meta.layer3_score = targetItem.score;
+
+      // 순위 계산 (1부터 시작)
+      const rank = sorted.findIndex((item) => item.c === debugTarget);
+      meta.layer3_rank = rank >= 0 ? rank + 1 : 0;
+
+      meta.layer3_secondScore = secondScore;
+      meta.layer3_margin = best.score - targetItem.score;
+    }
+  }
 
   // 3.1: answer 확정 (fixedAnswer 없을 때만, 그리고 짧은 query(<=2)는 금지)
   let answer = fixedAnswer;
@@ -150,7 +218,7 @@ export function findBestMatch(
     }
   }
 
-  return { answer, candidate: outCandidates };
+  return { answer, candidate: outCandidates, meta };
 }
 
 // -----------------------------

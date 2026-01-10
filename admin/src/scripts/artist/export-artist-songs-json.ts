@@ -10,7 +10,7 @@
  * 사용법:
  * pnpm ts-node src/scripts/artist/export-artist-songs-json.ts <artistId>
  * pnpm ts-node src/scripts/artist/export-artist-songs-json.ts 123
- * pnpm ts-node src/scripts/artist/export-artist-songs-json.ts 123 > artist-songs.json
+ * pnpm ts-node src/scripts/artist/export-artist-songs-json.ts 40 > artist-songs.json
  */
 
 import "dotenv/config";

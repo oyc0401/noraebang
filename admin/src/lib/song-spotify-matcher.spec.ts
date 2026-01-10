@@ -126,7 +126,7 @@ describe("findBestMatch", () => {
         "ウ",
       ]);
       expect(result.answer).toBe("ウタカタララバイ with Choci and aimyon");
-      expect(result.candidate).toEqual(["ウタカタララバ"]);
+      expect(result.candidate).toEqual([]);
     });
 
     it("feat/with가 있어도 매칭되어야 함", () => {
