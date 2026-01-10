@@ -10,8 +10,7 @@
  * {
  *   "spotifyTrackId": 123,
  *   "songIds": [456, 789],
- *   "confidence": 0.95,
- *   "details": [...]
+ *   "condidateSongId": [111, 222],
  * }
  *
  * 사용법:
@@ -124,7 +123,10 @@ function generateMapping(
       }
 
       // 2. song.title ↔ track.title (일본어 ↔ 영어/로마자)
-      maxSimilarity = Math.max(maxSimilarity, similarity(song.title, track.title));
+      maxSimilarity = Math.max(
+        maxSimilarity,
+        similarity(song.title, track.title),
+      );
 
       // 3. song.titleKo ↔ track.title (한국어 ↔ 영어/로마자)
       if (song.titleKo) {
@@ -169,7 +171,9 @@ function generateMapping(
 function main() {
   const args = process.argv.slice(2);
   const jsonPath = args.find((arg) => !arg.startsWith("--"));
-  const minConfidenceArg = args.find((arg) => arg.startsWith("--min-confidence"));
+  const minConfidenceArg = args.find((arg) =>
+    arg.startsWith("--min-confidence"),
+  );
   const minConfidence = minConfidenceArg
     ? Number.parseFloat(minConfidenceArg.split("=")[1])
     : 0.7;
