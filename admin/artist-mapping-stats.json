@@ -1,0 +1,17 @@
+{
+  "artist": {
+    "id": 40,
+    "name": "ロクデナシ",
+    "nameKo": "로쿠데나시",
+    "spotifyId": "4kpQdAU7yPjqtiJsFcBTBb"
+  },
+  "totalSongs": 32,
+  "totalSpotifyTracks": 38,
+  "stats": {
+    "tracksWithAnswer": 32,
+    "tracksWithCandidatesOnly": 0,
+    "tracksWithoutMatches": 6,
+    "totalAnswerMappings": 32,
+    "totalCandidateMappings": 0
+  }
+}
