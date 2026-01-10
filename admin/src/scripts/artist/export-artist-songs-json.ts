@@ -87,6 +87,7 @@ async function main() {
       .map((sat) => ({
         id: sat.spotifyTrack.id,
         title: sat.spotifyTrack.name,
+        musicBrainzTitle: sat.spotifyTrack.musicBrainzTitle,
         spotifyId: sat.spotifyTrack.spotifyId,
         isrc: sat.spotifyTrack.isrc,
         durationMs: sat.spotifyTrack.durationMs,
