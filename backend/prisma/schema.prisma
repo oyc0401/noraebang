@@ -182,7 +182,7 @@ model SpotifyArtistTrack {
 
 model SpotifyTrackGroup {
   id                     Int           @id @default(autoincrement())
-  songId                 Int           @unique @map("song_id")
+  songId                 Int?           @unique @map("song_id")
   primarySpotifyTrackId  Int?          @unique @map("primary_spotify_track_id")
   titleKo          String?       @map("title_ko")
   titleLatin       String?       @map("title_latin")
@@ -191,7 +191,7 @@ model SpotifyTrackGroup {
   createdAt              DateTime      @default(now()) @map("created_at")
   updatedAt              DateTime      @updatedAt @map("updated_at")
 
-  song          Song          @relation(fields: [songId], references: [id], onDelete: Cascade)
+  song          Song?          @relation(fields: [songId], references: [id], onDelete: Cascade)
   primaryTrack  SpotifyTrack? @relation("PrimaryTrack", fields: [primarySpotifyTrackId], references: [id], onDelete: SetNull)
   tracks        SpotifyTrack[] @relation("GroupTracks")
 
