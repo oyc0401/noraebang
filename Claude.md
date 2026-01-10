@@ -211,7 +211,36 @@ export class OembedDataDto {
 # 아키텍쳐 규칙 (필수)
 
 **스크립트:**
-- `admin/scripts/` 내 npx로 실행 가능한 스크립트에서는 Prisma Client를 직접 생성 가능합니다
+- 스크립트는 `admin/src/scripts/` 폴더에 작성합니다 (admin/scripts가 아님!)
+- `admin/src/scripts/` 내 pnpm ts-node로 실행 가능한 스크립트에서는 Prisma Client를 직접 생성 가능합니다
+- **새 스크립트 작성 시 반드시 기존 스크립트를 참고하세요** (admin/src/scripts/ 내 다른 스크립트들)
+- Prisma 사용 패턴:
+  ```ts
+  import "dotenv/config";  // 반드시 최상단에!
+  import { PrismaPg } from "@prisma/adapter-pg";
+  import { PrismaClient } from "@prisma/client";
+  import { Pool } from "pg";
+
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter });
+
+  async function main() {
+    // 로직
+  }
+
+  main()
+    .catch((error) => {
+      console.error("❌ 오류 발생:", error);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+      await pool.end();  // pool도 닫아야 함!
+    });
+  ```
 
 절대로 개발 서버를 실행하지 마세요
 `pnpm dev` 등 금지

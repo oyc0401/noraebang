@@ -189,7 +189,7 @@ async function main() {
   let totalGroupedTracks = 0;
 
   for (const [spotifyArtistId, tracks] of tracksBySpotifyArtistId.entries()) {
-    if (tracks.length <= 1) continue;
+    if (tracks.length === 0) continue;
 
     // Union-Find: 제목이 겹치는 곡들을 그룹화
     const parent = new Map<number, number>();
@@ -251,7 +251,7 @@ async function main() {
 
     // 각 그룹 처리
     for (const group of groups.values()) {
-      if (group.length <= 1) continue;
+      if (group.length === 0) continue;
 
       totalGroupedTracks += group.length;
 
