@@ -11,6 +11,9 @@ model Artist {
   slug             String?          @unique // 아티스트의 경로이지만, null이라면 userId로 접근가능.
   name             String
   nameKo           String           @map("name_ko")
+  nameLatin        String?          @map("name_latin")
+  nameJaKana       String?          @map("name_ja_kana")
+  nameJaKanji      String?          @map("name_ja_kanji")
   spotifyId        String?          @unique @map("spotify_id")
   homeCatalog      String?          @map("home_catalog") // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
   tjSongRequestUrl String?          @map("tj_song_request_url") // 이거보단 가장 많이등록된 tj아티스트명이 낫지 않을까?
@@ -35,6 +38,9 @@ model Song {
   id               Int           @id @default(autoincrement())
   title            String
   titleKo          String?       @map("title_ko")
+  titleLatin       String?       @map("title_latin")
+  titleJaKana      String?       @map("title_ja_kana")
+  titleJaKanji     String?       @map("title_ja_kanji")
   catalog          String? // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
   youtubeVideoId   String?       @map("youtube_video_id")
   youtubeFetchedAt DateTime?     @map("youtube_fetched_at")
