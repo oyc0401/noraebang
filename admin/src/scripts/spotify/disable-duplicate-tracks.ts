@@ -38,6 +38,7 @@ type TrackInfo = {
   id: number;
   spotifyId: string;
   name: string;
+  musicBrainzTitle: string | null;
   popularity: number | null;
   disabled: boolean;
 };
@@ -125,6 +126,7 @@ async function main() {
           id: true,
           spotifyId: true,
           name: true,
+          musicBrainzTitle: true,
           popularity: true, // <-- 스키마에 있어야 합니다 (요구사항)
           disabled: true,
         },
@@ -144,6 +146,7 @@ async function main() {
       id: t.id,
       spotifyId: t.spotifyId,
       name: t.name,
+      musicBrainzTitle: t.musicBrainzTitle,
       popularity: t.popularity,
       disabled: t.disabled,
     };
@@ -177,7 +180,7 @@ async function main() {
     }
   }
 
-  // 5-2) 같은 아티스트 내 name 완전 동일 중복
+  // 5-2) 같은 아티스트 내 name/musicBrainzTitle 중복 (Union-Find)
   let exactNameDupGroups = 0;
   let exactNameDisabled = 0;
 
@@ -190,14 +193,63 @@ async function main() {
   }> = [];
 
   for (const [spotifyArtistId, tracks] of tracksBySpotifyArtistId.entries()) {
-    const byName = new Map<string, TrackInfo[]>();
-    for (const t of tracks) {
-      const list = byName.get(t.name) ?? [];
-      list.push(t);
-      byName.set(t.name, list);
+    if (tracks.length <= 1) continue;
+
+    // Union-Find: 제목이 겹치는 곡들을 그룹화
+    const parent = new Map<number, number>();
+
+    function find(x: number): number {
+      if (!parent.has(x)) parent.set(x, x);
+      if (parent.get(x) !== x) {
+        parent.set(x, find(parent.get(x)!));
+      }
+      return parent.get(x)!;
     }
 
-    for (const [name, group] of byName.entries()) {
+    function union(x: number, y: number) {
+      const rootX = find(x);
+      const rootY = find(y);
+      if (rootX !== rootY) {
+        parent.set(rootX, rootY);
+      }
+    }
+
+    // 제목별 트랙 ID 매핑
+    const titleToTrackIds = new Map<string, number[]>();
+
+    for (const track of tracks) {
+      // name으로 매핑
+      const nameList = titleToTrackIds.get(track.name) ?? [];
+      nameList.push(track.id);
+      titleToTrackIds.set(track.name, nameList);
+
+      // musicBrainzTitle로도 매핑
+      if (track.musicBrainzTitle && track.musicBrainzTitle !== track.name) {
+        const mbList = titleToTrackIds.get(track.musicBrainzTitle) ?? [];
+        mbList.push(track.id);
+        titleToTrackIds.set(track.musicBrainzTitle, mbList);
+      }
+    }
+
+    // 같은 제목을 가진 트랙들끼리 union
+    for (const trackIds of titleToTrackIds.values()) {
+      if (trackIds.length <= 1) continue;
+      for (let i = 1; i < trackIds.length; i++) {
+        union(trackIds[0], trackIds[i]);
+      }
+    }
+
+    // 그룹별로 트랙 모으기
+    const groups = new Map<number, TrackInfo[]>();
+    for (const track of tracks) {
+      const root = find(track.id);
+      const list = groups.get(root) ?? [];
+      list.push(track);
+      groups.set(root, list);
+    }
+
+    // 각 그룹에서 popularity 높은 것만 keep
+    for (const group of groups.values()) {
       if (group.length <= 1) continue;
 
       exactNameDupGroups++;
@@ -210,9 +262,16 @@ async function main() {
       }
 
       if (isDryRun && sampleGroups.length < 8) {
+        // 그룹의 모든 제목 수집
+        const titles = new Set<string>();
+        for (const t of group) {
+          titles.add(t.name);
+          if (t.musicBrainzTitle) titles.add(t.musicBrainzTitle);
+        }
+
         sampleGroups.push({
           spotifyArtistId,
-          name,
+          name: Array.from(titles).join(" / "),
           keep,
           disable: toDisable,
         });
