@@ -557,11 +557,18 @@ export async function getSpotifyTracksByArtist(artistId: number) {
                 },
               },
             },
-            orderBy: {
-              spotifyTrack: {
-                popularity: "desc",
+            orderBy: [
+              {
+                spotifyTrack: {
+                  popularity: "desc",
+                },
               },
-            },
+              {
+                spotifyTrack: {
+                  releaseDate: "desc",
+                },
+              },
+            ],
           },
         },
       },
@@ -569,20 +576,55 @@ export async function getSpotifyTracksByArtist(artistId: number) {
   });
 
   if (!artist?.spotifyArtist) {
-    return [];
+    return { spotifyArtistId: undefined, tracks: [] };
   }
   console.log(artist.spotifyArtist.tracks);
 
-  return artist.spotifyArtist.tracks.map(({ spotifyTrack }) => ({
-    id: spotifyTrack.id,
-    spotifyId: spotifyTrack.spotifyId,
-    spotifyUrl: spotifyTrack.spotifyUrl ?? undefined,
-    name: spotifyTrack.name,
-    thumbnails: spotifyTrack.thumbnails,
-    releaseDate: spotifyTrack.releaseDate ?? undefined,
-    durationMs: spotifyTrack.durationMs ?? undefined,
-    previewUrl: spotifyTrack.previewUrl ?? undefined,
-    popularity: spotifyTrack.popularity ?? undefined,
-    disabled: spotifyTrack.primaryForGroup ?? false,
+  return {
+    spotifyArtistId: artist.spotifyArtist.id,
+    tracks: artist.spotifyArtist.tracks.map(({ spotifyTrack }) => ({
+      id: spotifyTrack.id,
+      spotifyId: spotifyTrack.spotifyId,
+      spotifyUrl: spotifyTrack.spotifyUrl ?? undefined,
+      name: spotifyTrack.name,
+      thumbnails: spotifyTrack.thumbnails,
+      releaseDate: spotifyTrack.releaseDate ?? undefined,
+      durationMs: spotifyTrack.durationMs ?? undefined,
+      previewUrl: spotifyTrack.previewUrl ?? undefined,
+      popularity: spotifyTrack.popularity ?? undefined,
+      groupId: spotifyTrack.groupId ?? undefined,
+      isPrimary: spotifyTrack.primaryForGroup !== null,
+    })),
+  };
+}
+
+export async function getSpotifyTracksByGroupId(groupId: number) {
+  const tracks = await prisma.spotifyTrack.findMany({
+    where: { groupId },
+    include: {
+      primaryForGroup: true,
+    },
+    orderBy: [
+      {
+        popularity: "desc",
+      },
+      {
+        releaseDate: "desc",
+      },
+    ],
+  });
+
+  return tracks.map((track) => ({
+    id: track.id,
+    spotifyId: track.spotifyId,
+    spotifyUrl: track.spotifyUrl ?? undefined,
+    name: track.name,
+    thumbnails: track.thumbnails,
+    releaseDate: track.releaseDate ?? undefined,
+    durationMs: track.durationMs ?? undefined,
+    previewUrl: track.previewUrl ?? undefined,
+    popularity: track.popularity ?? undefined,
+    groupId: track.groupId ?? undefined,
+    isPrimary: track.primaryForGroup !== null,
   }));
 }
