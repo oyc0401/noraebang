@@ -95,9 +95,9 @@ export class TypesenseIndexingService {
           },
         },
         karaokeSongs: true,
-        spotifyTrack: {
+        spotifyTrackGroup: {
           include: {
-            spotifyTrack: {
+            primaryTrack: {
               select: {
                 popularity: true,
               },
