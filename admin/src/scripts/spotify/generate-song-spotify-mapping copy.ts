@@ -1,5 +1,5 @@
 /**
- * Artist의 Song(TJ)과 SpotifyTrack 매칭 JSON 생성
+ * artist-songs.json을 기반으로 Song(TJ)과 SpotifyTrack 매칭 JSON 생성
  *
  * 매칭 로직:
  * - findBestMatch 알고리즘 사용 (정확도 우선 매칭)
@@ -14,22 +14,11 @@
  * }
  *
  * 사용법:
- * pnpm ts-node src/scripts/spotify/generate-song-spotify-mapping.ts <artistId>
- * pnpm ts-node src/scripts/spotify/generate-song-spotify-mapping.ts 3
+ * pnpm ts-node src/scripts/spotify/generate-song-spotify-mapping.ts artist-songs.json
  */
 
-import "dotenv/config";
 import fs from "node:fs";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
-import { Pool } from "pg";
 import { findBestMatch } from "../../lib/song-spotify-matcher.ts";
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
 
 interface ArtistSongsJson {
   artist: {
@@ -207,110 +196,27 @@ function generateMapping(data: ArtistSongsJson): MappingResult[] {
   return results;
 }
 
-async function fetchArtistData(artistId: number): Promise<ArtistSongsJson> {
-  const artist = await prisma.artist.findUnique({
-    where: { id: artistId },
-    select: {
-      id: true,
-      name: true,
-      nameKo: true,
-      spotifyId: true,
-    },
-  });
-
-  if (!artist) {
-    throw new Error(`Artist with ID ${artistId} not found`);
-  }
-
-  // Artist의 spotifyId로 SpotifyArtist 찾기
-  const spotifyArtist = artist.spotifyId
-    ? await prisma.spotifyArtist.findUnique({
-        where: { spotifyId: artist.spotifyId },
-        select: { id: true },
-      })
-    : null;
-
-  const songs = await prisma.song.findMany({
-    where: {
-      artistSongs: {
-        some: {
-          artistId,
-        },
-      },
-    },
-    select: {
-      id: true,
-      title: true,
-      titleKo: true,
-    },
-  });
-
-  const spotifyTracks = spotifyArtist
-    ? await prisma.spotifyTrack.findMany({
-        where: {
-          disabled: false,
-          artists: {
-            some: {
-              spotifyArtistId: spotifyArtist.id,
-            },
-          },
-        },
-      })
-    : [];
-
-  return {
-    artist: {
-      id: artist.id,
-      name: artist.name,
-      nameKo: artist.nameKo || "",
-      spotifyId: artist.spotifyId,
-    },
-    songs: songs.map((s) => ({
-      id: s.id,
-      title: s.title,
-      titleKo: s.titleKo,
-    })),
-    spotifyTracks: spotifyTracks.map((t) => ({
-      id: t.id,
-      title: t.name,
-      spotifyId: t.spotifyId,
-      isrc: t.isrc,
-      durationMs: t.durationMs || 0,
-      musicBrainzTitle: (t as any).musicBrainzTitle || undefined,
-    })),
-  };
-}
-
-async function main() {
+function main() {
   const args = process.argv.slice(2);
-  const artistIdStr = args[0];
+  const jsonPath = args[0];
 
-  if (!artistIdStr) {
+  if (!jsonPath) {
     console.error(
-      "❌ Usage: pnpm ts-node src/scripts/spotify/generate-song-spotify-mapping.ts <artistId>",
+      "❌ Usage: pnpm ts-node src/scripts/spotify/generate-song-spotify-mapping.ts <jsonPath>",
     );
     console.error(
-      "   Example: pnpm ts-node src/scripts/spotify/generate-song-spotify-mapping.ts 3",
+      "   Example: pnpm ts-node src/scripts/spotify/generate-song-spotify-mapping.ts artist-songs.json",
     );
     process.exit(1);
   }
 
-  const artistId = Number.parseInt(artistIdStr, 10);
-  if (Number.isNaN(artistId)) {
-    console.error(`❌ Invalid artistId: ${artistIdStr}`);
+  if (!fs.existsSync(jsonPath)) {
+    console.error(`❌ File not found: ${jsonPath}`);
     process.exit(1);
   }
 
-  console.log(`\n📂 Fetching data for Artist ID ${artistId}...\n`);
-
-  let data: ArtistSongsJson;
-  try {
-    data = await fetchArtistData(artistId);
-  } catch (error: any) {
-    console.error(`❌ Error: ${error.message}`);
-    await prisma.$disconnect();
-    process.exit(1);
-  }
+  console.log(`\n📂 Reading ${jsonPath}...\n`);
+  const data: ArtistSongsJson = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
 
   console.log(`🎵 Artist: ${data.artist.name} (${data.artist.nameKo})`);
   console.log(`📊 Songs: ${data.songs.length}`);
@@ -332,7 +238,7 @@ async function main() {
     `  🤔 Spotify tracks with candidates only: ${withCandidates.filter((m) => m.songs.length === 0).length}`,
   );
   console.log(`  ❌ Spotify tracks without matches: ${withoutAnswer.length}`);
-  console.log(`${"=".repeat(70)}\n`);
+  console.log("=".repeat(70) + "\n");
 
   // 샘플 출력 (answer 있는 것들)
   console.log("✅ Sample mappings with answer (first 10):");
@@ -382,12 +288,12 @@ async function main() {
   }
 
   // JSON 저장
-  const outputPath = `artist-mapping.json`;
+  const outputPath = jsonPath.replace(".json", "-mapping.json");
   fs.writeFileSync(outputPath, JSON.stringify(mappings, null, 2));
   console.log(`\n💾 Saved mapping to ${outputPath}`);
 
   // 간단한 통계 파일도 저장
-  const statsPath = `artist-mapping-stats.json`;
+  const statsPath = jsonPath.replace(".json", "-mapping-stats.json");
   fs.writeFileSync(
     statsPath,
     JSON.stringify(
@@ -414,12 +320,6 @@ async function main() {
     ),
   );
   console.log(`📊 Saved stats to ${statsPath}\n`);
-
-  await prisma.$disconnect();
 }
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
-  prisma.$disconnect();
-  process.exit(1);
-});
+main();
