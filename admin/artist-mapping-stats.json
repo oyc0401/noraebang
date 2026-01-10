@@ -1,17 +1,17 @@
 {
   "artist": {
-    "id": 40,
-    "name": "ロクデナシ",
-    "nameKo": "로쿠데나시",
-    "spotifyId": "4kpQdAU7yPjqtiJsFcBTBb"
+    "id": 25,
+    "name": "DUSTCELL",
+    "nameKo": "더스트셀",
+    "spotifyId": "6Rs4z6XgltEI01UlDlu98B"
   },
-  "totalSongs": 32,
-  "totalSpotifyTracks": 38,
+  "totalSongs": 50,
+  "totalSpotifyTracks": 65,
   "stats": {
-    "tracksWithAnswer": 32,
+    "tracksWithAnswer": 50,
     "tracksWithCandidatesOnly": 0,
-    "tracksWithoutMatches": 6,
-    "totalAnswerMappings": 32,
-    "totalCandidateMappings": 0
+    "tracksWithoutMatches": 15,
+    "totalAnswerMappings": 50,
+    "totalCandidateMappings": 2
   }
 }
