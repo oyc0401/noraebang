@@ -551,7 +551,11 @@ export async function getSpotifyTracksByArtist(artistId: number) {
         include: {
           tracks: {
             include: {
-              spotifyTrack: true,
+              spotifyTrack: {
+                include: {
+                  primaryForGroup: true,
+                },
+              },
             },
             orderBy: {
               spotifyTrack: {
@@ -579,6 +583,6 @@ export async function getSpotifyTracksByArtist(artistId: number) {
     durationMs: spotifyTrack.durationMs ?? undefined,
     previewUrl: spotifyTrack.previewUrl ?? undefined,
     popularity: spotifyTrack.popularity ?? undefined,
-    disabled: spotifyTrack.disabled ?? undefined,
+    disabled: spotifyTrack.primaryForGroup ?? false,
   }));
 }
