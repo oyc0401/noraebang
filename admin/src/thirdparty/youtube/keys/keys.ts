@@ -1,25 +1,23 @@
-export const YOUTUBE_KEYS: string[] = [
-  "AIzaSyCbTnCD2jlvf24-NsVwWNpPx8ymrOgD1L0",
-  "AIzaSyDPTb-42mxhw_1R3az2uL0oTaIQ9mFgwK4",
-  "AIzaSyCiXADUb3h0sp2Y3H1iAgO-o1sCIxuBZK4",
-  "AIzaSyByAwW3-b7PPfaCpplXRZZyWV0z0_QqMHg",
-  "AIzaSyCZoZ4O4VLTZtapfn2G-aTTaqUYSv7vbdU",
-  "AIzaSyC5gDOhb8fncAxxqtxttpLgjJwUqhdUpe4",
-  "AIzaSyBNrlfIegamZtKQEuXNiqwHuJq6aBOJJVM",
-  "AIzaSyC7qqSIe9vJ2BtLvi2klKkuDliuJJmXK78",
+function parseEnvKeys(): string[] {
+  const rawList = process.env.YOUTUBE_API_KEYS;
+  if (rawList) {
+    const keys = rawList
+      .split(",")
+      .map((key) => key.trim())
+      .filter(Boolean);
+    if (keys.length) {
+      return keys;
+    }
+  }
 
-  "AIzaSyBigSkjxGPKKA33srt7J6vJNniA_Pfooto",
-  "AIzaSyADI_SCRACDpyXlKmDUOkgCr6pxnCb1MYQ",
-  "AIzaSyAVWQR--TdoCFp6wQzxFmOBBorZAGsUtiA",
-  "AIzaSyDHOxEwHaIKyqpKf_oNBGpgWMM8vbML1c8",
-  "AIzaSyChp7se5z3SacbPwbVdvmzw5th9QCwnOl8",
-  "AIzaSyBcRZc2AG1qTBHOt2Cdwpb10Cup5KzfU8Q",
-  "AIzaSyDQYrs5Js-AAvTiKXWSujeMR_e3vvCGo40",
-  "AIzaSyAq9XDy_Ryo9Yf7bynyUQwd4K-eD4bGx-Y",
-  "AIzaSyAt5EtfYjNfasBVoBEUSp5ZFEgv3hGZfL0",
-  "AIzaSyCvT_rh75tocfvMFHzeapm-dRJwJWjx87A",
-  "AIzaSyCvcWrV_lc7jFUKpefn63ubYCOkXK_bOJA",
+  const singleKey = process.env.YOUTUBE_API_KEY?.trim();
+  if (singleKey) {
+    return [singleKey];
+  }
 
-  "AIzaSyBiNgo3wjfdXUIki88XEq5xFQ2lMQs5HhY",
-  "AIzaSyDBA6klR3HayY3o225PYpmTkw7C7J2dC1o",
-];
+  throw new Error(
+    "YOUTUBE_API_KEYS 환경변수가 비어 있습니다. 쉼표로 구분된 키 목록을 .env에 설정해주세요.",
+  );
+}
+
+export const YOUTUBE_KEYS: string[] = parseEnvKeys();
