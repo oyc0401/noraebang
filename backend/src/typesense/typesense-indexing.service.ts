@@ -95,9 +95,13 @@ export class TypesenseIndexingService {
           },
         },
         karaokeSongs: true,
-        spotifyTracks: {
-          select: {
-            popularity: true,
+        spotifyTrack: {
+          include: {
+            spotifyTrack: {
+              select: {
+                popularity: true,
+              },
+            },
           },
         },
       },
