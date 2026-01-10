@@ -122,29 +122,30 @@ async function main() {
       // 선택된 이름이 있으면 언어 감지 후 해당 필드에 저장
       const field = detectLanguageField(selectedName);
 
-      // nameKo는 필수 컬럼이므로 건드리지 않음
-      if (field === "nameKo") {
-        console.log(`[${artist.id}] ${selectedName} → skipped (nameKo is required)`);
-        continue;
-      }
-
       console.log(
         `[${artist.id}] ${selectedName} → ${field} (source: ${source})`,
       );
 
       if (!isDryRun) {
+        const updateData: any = {
+          nameLatin: field === "nameLatin" ? selectedName : null,
+          nameJaKanji: field === "nameJaKanji" ? selectedName : null,
+          nameJaKana: field === "nameJaKana" ? selectedName : null,
+        };
+
+        // nameKo는 값이 있을 때만 업데이트 (null로 덮어쓰지 않음)
+        if (field === "nameKo") {
+          updateData.nameKo = selectedName;
+        }
+
         await prisma.artist.update({
           where: { id: artist.id },
-          data: {
-            nameLatin: field === "nameLatin" ? selectedName : null,
-            nameJaKanji: field === "nameJaKanji" ? selectedName : null,
-            nameJaKana: field === "nameJaKana" ? selectedName : null,
-          },
+          data: updateData,
         });
       }
     } else {
-      // 선택된 이름이 null이면 모든 필드를 null로 초기화 (nameKo 제외)
-      console.log(`[${artist.id}] (no name) → clearing all fields (except nameKo)`);
+      // 선택된 이름이 null이면 일본어/라틴 필드만 null로 초기화 (nameKo는 보존)
+      console.log(`[${artist.id}] (no name) → clearing JA/Latin fields only`);
 
       if (!isDryRun) {
         await prisma.artist.update({

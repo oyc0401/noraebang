@@ -135,25 +135,30 @@ async function main() {
       );
 
       if (!isDryRun) {
+        const updateData: any = {
+          titleLatin: field === "titleLatin" ? selectedTitle : null,
+          titleJaKanji: field === "titleJaKanji" ? selectedTitle : null,
+          titleJaKana: field === "titleJaKana" ? selectedTitle : null,
+        };
+
+        // titleKo는 값이 있을 때만 업데이트 (null로 덮어쓰지 않음)
+        if (field === "titleKo") {
+          updateData.titleKo = selectedTitle;
+        }
+
         await prisma.song.update({
           where: { id: song.id },
-          data: {
-            titleKo: field === "titleKo" ? selectedTitle : null,
-            titleLatin: field === "titleLatin" ? selectedTitle : null,
-            titleJaKanji: field === "titleJaKanji" ? selectedTitle : null,
-            titleJaKana: field === "titleJaKana" ? selectedTitle : null,
-          },
+          data: updateData,
         });
       }
     } else {
-      // 선택된 제목이 null이면 모든 필드를 null로 초기화
-      console.log(`[${song.id}] (no title) → clearing all fields`);
+      // 선택된 제목이 null이면 일본어/라틴 필드만 null로 초기화 (titleKo는 보존)
+      console.log(`[${song.id}] (no title) → clearing JA/Latin fields only`);
 
       if (!isDryRun) {
         await prisma.song.update({
           where: { id: song.id },
           data: {
-            titleKo: null,
             titleLatin: null,
             titleJaKanji: null,
             titleJaKana: null,

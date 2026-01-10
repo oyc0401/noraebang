@@ -22,6 +22,9 @@ type SongWithRelations = Awaited<
       id: number;
       name: string;
       nameKo: string;
+      nameLatin?: string | null;
+      nameJaKana?: string | null;
+      nameJaKanji?: string | null;
       aliases: Array<{
         alias: string;
         locale: string;
@@ -42,6 +45,10 @@ type SongWithRelations = Awaited<
       popularity: number | null;
     } | null;
   } | null;
+  titleKo?: string | null;
+  titleLatin?: string | null;
+  titleJaKana?: string | null;
+  titleJaKanji?: string | null;
 };
 
 type ArtistWithRelations = Awaited<
@@ -56,6 +63,9 @@ type ArtistWithRelations = Awaited<
   spotifyArtist?: {
     popularity: number | null;
   } | null;
+  nameLatin?: string | null;
+  nameJaKana?: string | null;
+  nameJaKanji?: string | null;
 };
 
 export interface TypesenseSongDocument {
@@ -523,10 +533,10 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
     id: song.id.toString(),
     catalog: song.catalog ?? undefined,
 
-    titleKo,
-    titleJaKanji,
-    titleJaKana,
-    titleLatin,
+    titleKo: titleKo ?? undefined,
+    titleJaKanji: titleJaKanji ?? undefined,
+    titleJaKana: titleJaKana ?? undefined,
+    titleLatin: titleLatin ?? undefined,
 
     artistIds: artists.map((a) => a.id.toString()),
 
@@ -713,10 +723,10 @@ export function transformArtistToDocument(artist: ArtistWithRelations): Typesens
     id: artist.id.toString(),
     homeCatalog: artist.homeCatalog ?? undefined,
 
-    nameKo,
-    nameJaKanji,
-    nameJaKana,
-    nameLatin,
+    nameKo: nameKo ?? undefined,
+    nameJaKanji: nameJaKanji ?? undefined,
+    nameJaKana: nameJaKana ?? undefined,
+    nameLatin: nameLatin ?? undefined,
 
     popularity,
     updatedAt: Math.floor(artist.updatedAt.getTime() / 1000),
