@@ -8,6 +8,7 @@ import {
   getArtists,
   getSongsByArtist,
   getSpotifyTracksByArtist,
+  getSpotifyTracksByGroupId,
   mergeArtist,
   transferSongOwnership,
   updateArtistCatalog,
@@ -21,8 +22,12 @@ import {
 type ArtistsResponse = Awaited<ReturnType<typeof getArtists>>;
 type Artist = ArtistsResponse["artists"][number];
 type Song = Awaited<ReturnType<typeof getSongsByArtist>>[number];
-type SpotifyTrack = Awaited<
+type SpotifyTracksResponse = Awaited<
   ReturnType<typeof getSpotifyTracksByArtist>
+>;
+type SpotifyTrack = SpotifyTracksResponse["tracks"][number];
+type GroupTrack = Awaited<
+  ReturnType<typeof getSpotifyTracksByGroupId>
 >[number];
 
 const SORT_OPTIONS = [
@@ -64,6 +69,7 @@ interface ArtistsState {
   songs: Song[];
   songsLoading: boolean;
   spotifyTracks: SpotifyTrack[];
+  spotifyArtistId: number | undefined;
   spotifyTracksLoading: boolean;
 
   // UI States - Menus
@@ -119,6 +125,11 @@ interface ArtistsState {
   mergeTargetArtistIdInput: string;
   mergeSaving: boolean;
   mergeError: string | null;
+
+  showGroupDialog: boolean;
+  groupDialogGroupId: number | null;
+  groupDialogTracks: GroupTrack[];
+  groupDialogLoading: boolean;
 
   message: { type: "success" | "error"; text: string } | null;
   deletingArtist: boolean;
@@ -182,6 +193,9 @@ interface ArtistsState {
   setMergeTargetArtistIdInput: (value: string) => void;
   setMergeError: (error: string | null) => void;
 
+  openGroupDialog: (groupId: number) => void;
+  closeGroupDialog: () => void;
+
   setMessage: (
     message: { type: "success" | "error"; text: string } | null,
   ) => void;
@@ -225,6 +239,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
   songs: [],
   songsLoading: false,
   spotifyTracks: [],
+  spotifyArtistId: undefined,
   spotifyTracksLoading: false,
 
   nameKoMenuOpen: false,
@@ -278,6 +293,11 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
   mergeTargetArtistIdInput: "",
   mergeSaving: false,
   mergeError: null,
+
+  showGroupDialog: false,
+  groupDialogGroupId: null,
+  groupDialogTracks: [],
+  groupDialogLoading: false,
 
   message: null,
   deletingArtist: false,
@@ -428,6 +448,28 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
     set({ mergeTargetArtistIdInput: value }),
   setMergeError: (error) => set({ mergeError: error }),
 
+  openGroupDialog: async (groupId: number) => {
+    set({
+      showGroupDialog: true,
+      groupDialogGroupId: groupId,
+      groupDialogLoading: true,
+      groupDialogTracks: [],
+    });
+
+    try {
+      const tracks = await getSpotifyTracksByGroupId(groupId);
+      set({ groupDialogTracks: tracks });
+    } finally {
+      set({ groupDialogLoading: false });
+    }
+  },
+  closeGroupDialog: () =>
+    set({
+      showGroupDialog: false,
+      groupDialogGroupId: null,
+      groupDialogTracks: [],
+    }),
+
   setMessage: (message) => set({ message }),
 
   // Async actions
@@ -519,8 +561,11 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
   loadSpotifyTracks: async (artistId: number) => {
     set({ spotifyTracksLoading: true });
     try {
-      const tracks = await getSpotifyTracksByArtist(artistId);
-      set({ spotifyTracks: tracks });
+      const result = await getSpotifyTracksByArtist(artistId);
+      set({
+        spotifyTracks: result.tracks,
+        spotifyArtistId: result.spotifyArtistId,
+      });
     } finally {
       set({ spotifyTracksLoading: false });
     }
@@ -1069,4 +1114,11 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
 }));
 
 export { SORT_OPTIONS, ARTIST_CATALOG_OPTIONS };
-export type { Artist, Song, SpotifyTrack, SortOption, ArtistCatalogOption };
+export type {
+  Artist,
+  Song,
+  SpotifyTrack,
+  GroupTrack,
+  SortOption,
+  ArtistCatalogOption,
+};
