@@ -38,7 +38,9 @@ type SongWithRelations = Awaited<
     karaokeNo: string;
   }>;
   spotifyTrack?: {
-    popularity: number | null;
+    spotifyTrack: {
+      popularity: number | null;
+    } | null;
   } | null;
 };
 
@@ -240,7 +242,7 @@ export function transformSongToDocument(song: SongWithRelations): TypesenseDocum
   const karaokeNosKy = song.karaokeSongs.filter((ks) => ks.provider === "KY").map((ks) => ks.karaokeNo);
 
   // 인기도
-  const popularity = song.spotifyTrack?.popularity ?? undefined;
+  const popularity = song.spotifyTrack?.spotifyTrack?.popularity ?? undefined;
   const artistPopularity = mainArtist?.spotifyArtist?.popularity ?? undefined;
 
   // Combo 필드 (곡+아티스트 조합, 공백 제거)

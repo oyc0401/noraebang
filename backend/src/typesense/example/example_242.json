@@ -1,0 +1,32 @@
+{
+  "id": "242",
+  "catalog": "JPOP",
+  "titleKo": "심심풀이",
+  "titleJaKanji": "退屈しのぎ",
+  "artistIds": [
+    "225"
+  ],
+  "artistPopularity": 51,
+  "updatedAt": 1767534159,
+  "q_song_ko_p": [
+    "심심풀이"
+  ],
+  "q_song_ja_kanji_p": [
+    "退屈しのぎ"
+  ],
+  "q_artist_ko_p": [
+    "키노코 테이코쿠"
+  ],
+  "q_artist_ko_a": [
+    "키노코 테이코쿠"
+  ],
+  "q_artist_raw_p": [
+    "きのこ帝国"
+  ],
+  "q_artist_ja_kanji_a": [
+    "きのこ帝国"
+  ],
+  "q_combo_a": [
+    "심심풀이키노코테이코쿠"
+  ]
+}
