@@ -69,9 +69,9 @@ async function main() {
         },
       },
       karaokeSongs: true,
-      spotifyTrack: {
+      spotifyTrackGroup: {
         include: {
-          spotifyTrack: {
+          primaryTrack: {
             select: {
               popularity: true,
             },

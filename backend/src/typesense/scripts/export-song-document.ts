@@ -15,12 +15,12 @@
 // 결과:
 // backend/src/typesense/example/example_242.json 파일 생성
 
-import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import { Pool } from "pg";
+import "dotenv/config";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { Pool } from "pg";
 import { transformSongToDocument } from "../transformer";
 
 const pool = new Pool({
@@ -69,9 +69,9 @@ async function main() {
         },
       },
       karaokeSongs: true,
-      spotifyTrack: {
+      spotifyTrackGroup: {
         include: {
-          spotifyTrack: {
+          primaryTrack: {
             select: {
               popularity: true,
             },
