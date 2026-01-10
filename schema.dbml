@@ -1,0 +1,285 @@
+Enum "ArtistRole" {
+  "MAIN"
+  "FEATURING"
+  "PRODUCER"
+}
+
+Enum "ChannelType" {
+  "MAIN"
+  "TOPIC"
+}
+
+Enum "Provider" {
+  "TJ"
+  "KY"
+  "JOYSOUND"
+}
+
+Table "_prisma_migrations" {
+  "id" "character varying(36)" [pk, not null]
+  "checksum" "character varying(64)" [not null]
+  "finished_at" timestamp
+  "migration_name" "character varying(255)" [not null]
+  "logs" text
+  "rolled_back_at" timestamp
+  "started_at" timestamp [not null, default: `now()`]
+  "applied_steps_count" integer [not null, default: 0]
+}
+
+Table "artist" {
+  "id" integer [pk, not null]
+  "name" text [not null]
+  "tj_song_request_url" text
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+  "updated_at" timestamp(3) [not null]
+  "name_ko" text [not null]
+  "slug" text
+  "thumbnail_default" text
+  "thumbnail_high" text
+  "thumbnail_medium" text
+  "home_catalog" text
+  "spotify_id" text
+  "name_ja_kana" text
+  "name_ja_kanji" text
+  "name_latin" text
+
+  Indexes {
+    slug [type: btree, unique, name: "artist_slug_key"]
+    spotify_id [type: btree, unique, name: "artist_spotify_id_key"]
+  }
+}
+
+Table "artist_alias" {
+  "id" integer [pk, not null]
+  "artist_id" integer [not null]
+  "alias" text [not null]
+  "locale" text [not null]
+  "kind" text [not null]
+  "source" text [not null]
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    alias [type: btree, name: "artist_alias_alias_idx"]
+    (artist_id, alias, locale, kind) [type: btree, unique, name: "artist_alias_artist_id_alias_locale_kind_key"]
+    artist_id [type: btree, name: "artist_alias_artist_id_idx"]
+  }
+}
+
+Table "artist_song" {
+  "id" integer [pk, not null]
+  "artist_id" integer [not null]
+  "song_id" integer [not null]
+  "order" integer [not null, default: 0]
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+  "role" ArtistRole
+
+  Indexes {
+    artist_id [type: btree, name: "artist_song_artist_id_idx"]
+    (artist_id, song_id) [type: btree, unique, name: "artist_song_artist_id_song_id_key"]
+    song_id [type: btree, name: "artist_song_song_id_idx"]
+  }
+}
+
+Table "artist_tj_song" {
+  "id" integer [pk, not null]
+  "artist_id" integer [not null]
+  "tj_song_id" text [not null]
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    artist_id [type: btree, name: "artist_tj_song_artist_id_idx"]
+    (artist_id, tj_song_id) [type: btree, unique, name: "artist_tj_song_artist_id_tj_song_id_key"]
+    tj_song_id [type: btree, name: "artist_tj_song_tj_song_id_idx"]
+  }
+}
+
+Table "karaoke_song" {
+  "id" integer [pk, not null]
+  "song_id" integer [not null]
+  "provider" Provider [not null]
+  "karaoke_no" text [not null]
+  "provider_song_url" text
+  "last_seen_at" timestamp(3)
+  "ingested_at" timestamp(3)
+  "ingested_from" text
+
+  Indexes {
+    (provider, karaoke_no) [type: btree, unique, name: "karaoke_song_provider_karaoke_no_key"]
+  }
+}
+
+Table "song" {
+  "id" integer [pk, not null]
+  "title" text [not null]
+  "title_ko" text
+  "youtube_video_id" text
+  "youtube_fetched_at" timestamp(3)
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+  "updated_at" timestamp(3) [not null]
+  "thumbnail_default" text
+  "thumbnail_high" text
+  "thumbnail_medium" text
+  "catalog" text
+  "title_ja_kana" text
+  "title_ja_kanji" text
+  "title_latin" text
+}
+
+Table "song_alias" {
+  "id" integer [pk, not null]
+  "song_id" integer [not null]
+  "alias" text [not null]
+  "locale" text [not null]
+  "kind" text [not null]
+  "source" text [not null]
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    alias [type: btree, name: "song_alias_alias_idx"]
+    (song_id, alias, locale, kind) [type: btree, unique, name: "song_alias_song_id_alias_locale_kind_key"]
+    song_id [type: btree, name: "song_alias_song_id_idx"]
+  }
+}
+
+Table "song_spotify_track" {
+  "id" integer [pk, not null]
+  "song_id" integer [not null]
+  "spotify_track_id" integer [not null]
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    song_id [type: btree, unique, name: "song_spotify_track_song_id_key"]
+    spotify_track_id [type: btree, name: "song_spotify_track_spotify_track_id_idx"]
+  }
+}
+
+Table "spotify_artist" {
+  "id" integer [pk, not null]
+  "spotify_id" text [not null]
+  "spotify_url" text
+  "name" text [not null]
+  "popularity" integer
+  "followers" integer
+  "genres" "text[]" [default: `ARRAY[]::text[]`]
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+  "updated_at" timestamp(3) [not null]
+  "thumbnails" "text[]" [default: `ARRAY[]::text[]`]
+
+  Indexes {
+    spotify_id [type: btree, unique, name: "spotify_artist_spotify_id_key"]
+  }
+}
+
+Table "spotify_artist_track" {
+  "id" integer [pk, not null]
+  "spotify_artist_id" integer [not null]
+  "spotify_track_id" integer [not null]
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    spotify_artist_id [type: btree, name: "spotify_artist_track_spotify_artist_id_idx"]
+    (spotify_artist_id, spotify_track_id) [type: btree, unique, name: "spotify_artist_track_spotify_artist_id_spotify_track_id_key"]
+    spotify_track_id [type: btree, name: "spotify_artist_track_spotify_track_id_idx"]
+  }
+}
+
+Table "spotify_track" {
+  "id" integer [pk, not null]
+  "spotify_id" text [not null]
+  "spotify_url" text
+  "name" text [not null]
+  "popularity" integer
+  "preview_url" text
+  "isrc" text
+  "duration_ms" integer
+  "release_date" text
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+  "updated_at" timestamp(3) [not null]
+  "thumbnails" "text[]" [default: `ARRAY[]::text[]`]
+  "disabled" boolean [not null, default: false]
+  "musicbrainz_title" text
+  "musicbrainz_artist_credit_id" text
+  "musicbrainz_artist_id" text
+  "musicbrainz_recording_id" text
+
+  Indexes {
+    spotify_id [type: btree, unique, name: "spotify_track_spotify_id_key"]
+  }
+}
+
+Table "tj_song" {
+  "id" text [pk, not null]
+  "title" text [not null]
+  "artist" text
+  "artist_list" "text[]"
+  "lyricist" text
+  "lyricist_list" "text[]"
+  "composer" text
+  "composer_list" "text[]"
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+  "updated_at" timestamp(3) [not null]
+  "feature_list" "text[]"
+  "producer_list" "text[]"
+  "saved" boolean [not null, default: false]
+  "thumbnail_img" text
+  "publishdate" text
+  "is_mr" boolean [not null, default: false]
+  "is_mv" boolean [not null, default: false]
+  "is_over_60" boolean [not null, default: false]
+  "youtube_link" text
+}
+
+Table "youtube_channel" {
+  "id" integer [pk, not null]
+  "artist_id" integer [not null]
+  "channel_id" text [not null]
+  "title" text
+  "description" text
+  "custom_url" text
+  "published_at" timestamp(3)
+  "country" text
+  "default_language" text
+  "thumbnail_default" text
+  "thumbnail_medium" text
+  "thumbnail_high" text
+  "subscriber_count" integer
+  "video_count" integer
+  "view_count" bigint
+  "hidden_subscriber_count" boolean
+  "uploads_playlist_id" text
+  "fetched_at" timestamp(3)
+  "created_at" timestamp(3) [not null, default: `CURRENT_TIMESTAMP`]
+  "updated_at" timestamp(3) [not null]
+  "type" ChannelType [not null, default: `'MAIN'::public."ChannelType"`]
+
+  Indexes {
+    (artist_id, type) [type: btree, unique, name: "youtube_channel_artist_id_type_key"]
+    subscriber_count [type: btree, name: "youtube_channel_subscriber_count_idx"]
+  }
+}
+
+Ref "artist_alias_artist_id_fkey":"artist"."id" < "artist_alias"."artist_id" [update: cascade, delete: cascade]
+
+Ref "artist_song_artist_id_fkey":"artist"."id" < "artist_song"."artist_id" [update: cascade, delete: cascade]
+
+Ref "artist_song_song_id_fkey":"song"."id" < "artist_song"."song_id" [update: cascade, delete: cascade]
+
+Ref "artist_spotify_id_fkey":"spotify_artist"."spotify_id" < "artist"."spotify_id" [update: cascade, delete: set null]
+
+Ref "artist_tj_song_artist_id_fkey":"artist"."id" < "artist_tj_song"."artist_id" [update: cascade, delete: cascade]
+
+Ref "artist_tj_song_tj_song_id_fkey":"tj_song"."id" < "artist_tj_song"."tj_song_id" [update: cascade, delete: cascade]
+
+Ref "karaoke_song_song_id_fkey":"song"."id" < "karaoke_song"."song_id" [update: cascade, delete: restrict]
+
+Ref "song_alias_song_id_fkey":"song"."id" < "song_alias"."song_id" [update: cascade, delete: cascade]
+
+Ref "song_spotify_track_song_id_fkey":"song"."id" < "song_spotify_track"."song_id" [update: cascade, delete: cascade]
+
+Ref "song_spotify_track_spotify_track_id_fkey":"spotify_track"."id" < "song_spotify_track"."spotify_track_id" [update: cascade, delete: cascade]
+
+Ref "spotify_artist_track_spotify_artist_id_fkey":"spotify_artist"."id" < "spotify_artist_track"."spotify_artist_id" [update: cascade, delete: cascade]
+
+Ref "spotify_artist_track_spotify_track_id_fkey":"spotify_track"."id" < "spotify_artist_track"."spotify_track_id" [update: cascade, delete: cascade]
+
+Ref "youtube_channel_artist_id_fkey":"artist"."id" < "youtube_channel"."artist_id" [update: cascade, delete: cascade]
