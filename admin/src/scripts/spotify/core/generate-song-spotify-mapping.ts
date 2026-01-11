@@ -23,7 +23,7 @@ import fs from "node:fs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { findBestMatch } from "../../lib/song-spotify-matcher.ts";
+import { findBestMatch } from "../../../lib/song-spotify-matcher.ts";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
