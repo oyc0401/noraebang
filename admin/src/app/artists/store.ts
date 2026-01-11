@@ -15,6 +15,7 @@ import {
   updateArtistName,
   updateArtistNameKo,
   updateArtistSlug,
+  updateArtistSpotifyId,
   updateKaraokeSong,
   updateSongTitle,
 } from "./actions";
@@ -95,6 +96,11 @@ interface ArtistsState {
   slugSaving: boolean;
   slugError: string | null;
 
+  showSpotifyIdDialog: boolean;
+  spotifyIdInput: string;
+  spotifyIdSaving: boolean;
+  spotifyIdError: string | null;
+
   showSongTitleDialog: boolean;
   editingSong: Song | null;
   songTitleInput: string;
@@ -168,6 +174,12 @@ interface ArtistsState {
   setSlugInput: (value: string) => void;
   setSlugError: (error: string | null) => void;
 
+  openSpotifyIdDialog: () => void;
+  closeSpotifyIdDialog: () => void;
+  setShowSpotifyIdDialog: (show: boolean) => void;
+  setSpotifyIdInput: (value: string) => void;
+  setSpotifyIdError: (error: string | null) => void;
+
   openSongTitleDialog: (song: Song) => void;
   closeSongTitleDialog: () => void;
   setShowSongTitleDialog: (show: boolean) => void;
@@ -220,6 +232,7 @@ interface ArtistsState {
   saveNameKo: () => Promise<void>;
   saveName: () => Promise<void>;
   saveSlug: () => Promise<void>;
+  saveSpotifyId: () => Promise<void>;
   saveSongTitle: () => Promise<void>;
   saveKaraoke: () => Promise<void>;
   saveTransferOwnership: () => Promise<void>;
@@ -273,6 +286,11 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
   slugInput: "",
   slugSaving: false,
   slugError: null,
+
+  showSpotifyIdDialog: false,
+  spotifyIdInput: "",
+  spotifyIdSaving: false,
+  spotifyIdError: null,
 
   showSongTitleDialog: false,
   editingSong: null,
@@ -365,6 +383,19 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
   setShowSlugDialog: (show) => set({ showSlugDialog: show }),
   setSlugInput: (value) => set({ slugInput: value }),
   setSlugError: (error) => set({ slugError: error }),
+
+  openSpotifyIdDialog: () => {
+    const { selectedArtist } = get();
+    set({
+      showSpotifyIdDialog: true,
+      spotifyIdInput: selectedArtist?.spotifyId ?? "",
+      spotifyIdError: null,
+    });
+  },
+  closeSpotifyIdDialog: () => set({ showSpotifyIdDialog: false, spotifyIdError: null }),
+  setShowSpotifyIdDialog: (show) => set({ showSpotifyIdDialog: show }),
+  setSpotifyIdInput: (value) => set({ spotifyIdInput: value }),
+  setSpotifyIdError: (error) => set({ spotifyIdError: error }),
 
   openSongTitleDialog: (song) =>
     set({
@@ -743,6 +774,46 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       });
     } finally {
       set({ slugSaving: false });
+    }
+  },
+
+  saveSpotifyId: async () => {
+    const { selectedArtist, spotifyIdInput } = get();
+    if (!selectedArtist) return;
+
+    const trimmedSpotifyId = spotifyIdInput.trim();
+
+    set({ spotifyIdSaving: true, spotifyIdError: null });
+
+    try {
+      await updateArtistSpotifyId(
+        selectedArtist.id,
+        trimmedSpotifyId || null,
+      );
+
+      set({
+        message: {
+          type: "success",
+          text: trimmedSpotifyId
+            ? `✅ 스포티파이 ID가 "${trimmedSpotifyId}"로 저장되었습니다.`
+            : "✅ 스포티파이 ID가 삭제되었습니다.",
+        },
+      });
+
+      // 아티스트 정보와 스포티파이 트랙 다시 로드
+      await get().loadArtistById(selectedArtist.id);
+      await get().loadSpotifyTracks(selectedArtist.id);
+
+      set({
+        showSpotifyIdDialog: false,
+      });
+    } catch (error: any) {
+      set({
+        spotifyIdError:
+          error.message ?? "스포티파이 ID 저장 중 오류가 발생했습니다.",
+      });
+    } finally {
+      set({ spotifyIdSaving: false });
     }
   },
 
@@ -1125,12 +1196,15 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       showNameKoDialog: false,
       showNameDialog: false,
       showSlugDialog: false,
+      showSpotifyIdDialog: false,
       nameKoError: null,
       nameError: null,
       slugError: null,
+      spotifyIdError: null,
       nameKoInput: selectedArtist?.nameKo ?? "",
       nameInput: selectedArtist?.name ?? "",
       slugInput: selectedArtist?.slug ?? "",
+      spotifyIdInput: selectedArtist?.spotifyId ?? "",
     });
   },
 }));

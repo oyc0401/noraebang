@@ -94,6 +94,7 @@ export async function getArtists(
       nameKo: a.nameKo,
       slug: a.slug ?? undefined,
       homeCatalog: a.homeCatalog ?? undefined,
+      spotifyId: a.spotifyId ?? undefined,
       thumbnailDefault: a.thumbnailDefault ?? undefined,
       thumbnailMedium: a.thumbnailMedium ?? undefined,
       thumbnailHigh: a.thumbnailHigh ?? undefined,
@@ -122,6 +123,7 @@ export async function getArtistById(artistId: number) {
     nameKo: artist.nameKo,
     slug: artist.slug ?? undefined,
     homeCatalog: artist.homeCatalog ?? undefined,
+    spotifyId: artist.spotifyId ?? undefined,
     thumbnailDefault: artist.thumbnailDefault ?? undefined,
     thumbnailMedium: artist.thumbnailMedium ?? undefined,
     thumbnailHigh: artist.thumbnailHigh ?? undefined,
@@ -830,4 +832,22 @@ export async function createArtist(data: {
 
     throw error;
   }
+}
+
+// 스포티파이 ID 업데이트
+export async function updateArtistSpotifyId(
+  artistId: number,
+  spotifyId: string | null,
+) {
+  const trimmedSpotifyId = spotifyId?.trim() || null;
+
+  const updated = await prisma.artist.update({
+    where: { id: artistId },
+    data: { spotifyId: trimmedSpotifyId },
+    select: { id: true, spotifyId: true },
+  });
+
+  return {
+    spotifyId: updated.spotifyId ?? undefined,
+  };
 }

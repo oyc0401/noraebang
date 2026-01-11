@@ -35,15 +35,16 @@ model Artist {
 }
 
 model Song {
-  id               Int           @id @default(autoincrement())
-  title            String
-  titleKo          String?       @map("title_ko")
-  titleLatin       String?       @map("title_latin")
-  titleJaKana      String?       @map("title_ja_kana")
-  titleJaKanji     String?       @map("title_ja_kanji")
-  catalog          String? // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
-  youtubeVideoId   String?       @map("youtube_video_id")
-  youtubeFetchedAt DateTime?     @map("youtube_fetched_at")
+  id                    Int           @id @default(autoincrement())
+  title                 String
+  titleKo               String?       @map("title_ko")
+  titleLatin            String?       @map("title_latin")
+  titleJaKana           String?       @map("title_ja_kana")
+  titleJaKanji          String?       @map("title_ja_kanji")
+  catalog               String? // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
+  youtubeVideoId        String?       @map("youtube_video_id")
+  youtubeFetchedAt      DateTime?     @map("youtube_fetched_at")
+  spotifyTrackGroupId   Int?          @map("spotify_track_group_id")
 
   thumbnailDefault String?       @map("thumbnail_default")
   thumbnailMedium  String?       @map("thumbnail_medium")
@@ -54,11 +55,12 @@ model Song {
 
   karaokeSongs       KaraokeSong[]
   artistSongs        ArtistSong[]
-  spotifyTrackGroup  SpotifyTrackGroup?
+  spotifyTrackGroup  SpotifyTrackGroup? @relation(fields: [spotifyTrackGroupId], references: [id], onDelete: SetNull)
   aliases            SongAlias[]
 
   @@index([youtubeVideoId])
   @@index([catalog])
+  @@index([spotifyTrackGroupId])
   @@map("song")
 }
 
@@ -182,7 +184,6 @@ model SpotifyArtistTrack {
 
 model SpotifyTrackGroup {
   id                     Int           @id @default(autoincrement())
-  songId                 Int?           @unique @map("song_id")
   primarySpotifyTrackId  Int?          @unique @map("primary_spotify_track_id")
   titleKo          String?       @map("title_ko")
   titleLatin       String?       @map("title_latin")
@@ -191,7 +192,7 @@ model SpotifyTrackGroup {
   createdAt              DateTime      @default(now()) @map("created_at")
   updatedAt              DateTime      @updatedAt @map("updated_at")
 
-  song          Song?          @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songs         Song[]
   primaryTrack  SpotifyTrack? @relation("PrimaryTrack", fields: [primarySpotifyTrackId], references: [id], onDelete: SetNull)
   tracks        SpotifyTrack[] @relation("GroupTracks")
 

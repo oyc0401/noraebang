@@ -39,6 +39,10 @@ export function ArtistDetailSection() {
     slugInput,
     slugSaving,
     slugError,
+    showSpotifyIdDialog,
+    spotifyIdInput,
+    spotifyIdSaving,
+    spotifyIdError,
     showSongTitleDialog,
     editingSong,
     songTitleInput,
@@ -73,6 +77,9 @@ export function ArtistDetailSection() {
     setShowSlugDialog,
     setSlugInput,
     setSlugError,
+    setShowSpotifyIdDialog,
+    setSpotifyIdInput,
+    setSpotifyIdError,
     setShowSongTitleDialog,
     setSongTitleInput,
     setSongTitleKoInput,
@@ -98,6 +105,7 @@ export function ArtistDetailSection() {
     saveNameKo,
     saveName,
     saveSlug,
+    saveSpotifyId,
     saveSongTitle,
     saveKaraoke,
     saveTransferOwnership,
@@ -189,6 +197,10 @@ export function ArtistDetailSection() {
 
   const handleSlugSave = async () => {
     await saveSlug();
+  };
+
+  const handleSpotifyIdSave = async () => {
+    await saveSpotifyId();
   };
 
   const handleSongTitleSave = async () => {
@@ -417,7 +429,7 @@ export function ArtistDetailSection() {
                     )}
                   </p>
 
-                  {spotifyArtist && (
+                  {spotifyArtist ? (
                     <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                       <div className="flex items-center gap-2">
                         <a
@@ -445,6 +457,22 @@ export function ArtistDetailSection() {
                         {spotifyArtist.popularity !== undefined && (
                           <span>• 인기도: {spotifyArtist.popularity}</span>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowSpotifyIdDialog(true);
+                            setSpotifyIdInput(selectedArtist.spotifyId ?? "");
+                            setSpotifyIdError(null);
+                          }}
+                          className="ml-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                          style={{ cursor: "pointer" }}
+                          title="스포티파이 ID 수정"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                            <path d="m5.433 13.917 1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z" />
+                            <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z" />
+                          </svg>
+                        </button>
                       </div>
                       {spotifyArtist.genres &&
                         spotifyArtist.genres.length > 0 && (
@@ -460,6 +488,19 @@ export function ArtistDetailSection() {
                           </div>
                         )}
                     </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSpotifyIdDialog(true);
+                        setSpotifyIdInput("");
+                        setSpotifyIdError(null);
+                      }}
+                      className="mt-1 text-xs text-green-600 hover:underline dark:text-green-400"
+                      style={{ cursor: "pointer" }}
+                    >
+                      + 스포티파이 ID 추가
+                    </button>
                   )}
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                     분류: {selectedArtist.homeCatalog ?? "미지정"}
@@ -1156,6 +1197,89 @@ export function ArtistDetailSection() {
                 style={{ cursor: "pointer" }}
               >
                 {slugSaving ? "저장 중..." : "저장"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSpotifyIdDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900 dark:text-zinc-50">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              스포티파이 ID 관리
+            </h3>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              스포티파이 아티스트 ID를 입력하세요. 비워두면 삭제됩니다.
+            </p>
+            <div className="mt-4">
+              <label
+                htmlFor="spotify-id-input"
+                className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                스포티파이 ID
+              </label>
+              <input
+                id="spotify-id-input"
+                type="text"
+                value={spotifyIdInput}
+                onChange={(e) => {
+                  setSpotifyIdInput(e.target.value);
+                  if (spotifyIdError) setSpotifyIdError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSpotifyIdSave();
+                  }
+                }}
+                placeholder="예) 1vyhD5VmyZ7KMfW5gqLgo5"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                style={{ cursor: "text" }}
+              />
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                스포티파이 URL에서 아티스트 ID만 입력하세요.
+              </p>
+              <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+                예) https://open.spotify.com/artist/1vyhD5VmyZ7KMfW5gqLgo5
+              </p>
+              {spotifyIdError && (
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                  {spotifyIdError}
+                </p>
+              )}
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSpotifyIdDialog(false);
+                  setSpotifyIdError(null);
+                }}
+                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                style={{ cursor: "pointer" }}
+              >
+                취소
+              </button>
+              {spotifyIdInput.trim() === "" && selectedArtist?.spotifyId && (
+                <button
+                  type="button"
+                  onClick={handleSpotifyIdSave}
+                  disabled={spotifyIdSaving}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300 dark:bg-red-500 dark:hover:bg-red-400"
+                  style={{ cursor: "pointer" }}
+                >
+                  {spotifyIdSaving ? "삭제 중..." : "삭제"}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleSpotifyIdSave}
+                disabled={spotifyIdSaving}
+                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-300 dark:bg-green-500 dark:hover:bg-green-400"
+                style={{ cursor: "pointer" }}
+              >
+                {spotifyIdSaving ? "저장 중..." : "저장"}
               </button>
             </div>
           </div>

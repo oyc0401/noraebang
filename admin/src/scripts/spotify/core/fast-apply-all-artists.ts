@@ -5,17 +5,17 @@
  * - force 모드 기본 (매칭 여부 상관없이 무조건 적용)
  *
  * 사용법:
- * pnpm ts-node src/scripts/spotify/fast-apply-all-artists.ts
- * pnpm ts-node src/scripts/spotify/fast-apply-all-artists.ts --dry-run
- * pnpm ts-node src/scripts/spotify/fast-apply-all-artists.ts --start 1 --end 50
- * pnpm ts-node src/scripts/spotify/fast-apply-all-artists.ts --start 1 --end 50 --dry-run
+ * pnpm ts-node src/scripts/spotify/core/fast-apply-all-artists.ts
+ * pnpm ts-node src/scripts/spotify/core/fast-apply-all-artists.ts --dry-run
+ * pnpm ts-node src/scripts/spotify/core/fast-apply-all-artists.ts --start 1 --end 50
+ * pnpm ts-node src/scripts/spotify/core/fast-apply-all-artists.ts --start 1 --end 50 --dry-run
  */
 
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { findBestMatch } from "../../lib/song-spotify-matcher.ts";
+import { findBestMatch } from "../../../lib/song-spotify-matcher.ts";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -226,6 +226,10 @@ function generateMappings(data: ArtistSongsData): Mapping[] {
 async function applyMappings(mappings: Mapping[], isDryRun: boolean) {
   let applied = 0;
   let errors = 0;
+  let skipped = 0;
+
+  // 이미 처리된 songId 추적 (같은 Song에 여러 Track 매칭 시 첫 번째만 적용)
+  const processedSongIds = new Set<number>();
 
   for (const mapping of mappings) {
     try {
@@ -235,18 +239,62 @@ async function applyMappings(mappings: Mapping[], isDryRun: boolean) {
         );
         applied++;
       } else {
-        await prisma.songSpotifyTrack.upsert({
-          where: {
-            songId: mapping.songId,
-          },
-          create: {
-            songId: mapping.songId,
-            spotifyTrackId: mapping.spotifyTrackId,
-          },
-          update: {
-            spotifyTrackId: mapping.spotifyTrackId,
-          },
+        // 0. 이미 처리된 Song이면 스킵
+        if (processedSongIds.has(mapping.songId)) {
+          console.log(
+            `  ⏭️  SKIP: Song ${mapping.songId} (${mapping.songName}) 이미 처리됨 - Track ${mapping.spotifyTrackId} (${mapping.spotifyTrackName})`,
+          );
+          skipped++;
+          continue;
+        }
+
+        // 1. SpotifyTrack의 기존 Group 찾기
+        const spotifyTrack = await prisma.spotifyTrack.findUnique({
+          where: { id: mapping.spotifyTrackId },
+          select: { groupId: true },
         });
+
+        if (!spotifyTrack) {
+          throw new Error(`SpotifyTrack ${mapping.spotifyTrackId} not found`);
+        }
+
+        if (!spotifyTrack.groupId) {
+          throw new Error(`SpotifyTrack ${mapping.spotifyTrackId} has no group`);
+        }
+
+        // 2. Group이 이미 다른 Song에 연결되어 있는지 확인
+        const existingGroup = await prisma.spotifyTrackGroup.findUnique({
+          where: { id: spotifyTrack.groupId },
+          select: { songId: true },
+        });
+
+        if (existingGroup?.songId && existingGroup.songId !== mapping.songId) {
+          // 이미 다른 Song에 연결되어 있으면 스킵
+          console.log(
+            `  ⚠️  SKIP: Group ${spotifyTrack.groupId}는 이미 Song ${existingGroup.songId}에 연결됨 - Track ${mapping.spotifyTrackId} (${mapping.spotifyTrackName}) → Song ${mapping.songId} (${mapping.songName}) 시도했으나 실패`,
+          );
+          skipped++;
+          continue;
+        }
+
+        if (existingGroup?.songId === mapping.songId) {
+          // 이미 같은 Song에 연결되어 있으면 조용히 스킵
+          skipped++;
+          processedSongIds.add(mapping.songId);
+          continue;
+        }
+
+        // 3. Group의 songId 업데이트
+        await prisma.spotifyTrackGroup.update({
+          where: { id: spotifyTrack.groupId },
+          data: { songId: mapping.songId },
+        });
+
+        console.log(
+          `  ✅ APPLIED: Song ${mapping.songId} (${mapping.songName}) ↔ Group ${spotifyTrack.groupId} ← Track ${mapping.spotifyTrackId} (${mapping.spotifyTrackName})`,
+        );
+
+        processedSongIds.add(mapping.songId);
         applied++;
       }
     } catch (error: any) {
@@ -257,7 +305,7 @@ async function applyMappings(mappings: Mapping[], isDryRun: boolean) {
     }
   }
 
-  return { applied, errors };
+  return { applied, errors, skipped };
 }
 
 async function main() {
@@ -333,12 +381,14 @@ async function main() {
   } else {
     console.log("\n✨ Done!");
   }
-
-  await prisma.$disconnect();
 }
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
-  prisma.$disconnect();
-  process.exit(1);
-});
+main()
+  .catch((error) => {
+    console.error("❌ 오류 발생:", error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  });
