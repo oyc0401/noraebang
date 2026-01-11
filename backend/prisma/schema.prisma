@@ -7,73 +7,76 @@ datasource db {
 }
 
 model Artist {
-  id               Int              @id @default(autoincrement())
-  slug             String?          @unique // 아티스트의 경로이지만, null이라면 userId로 접근가능.
+  id               Int     @id @default(autoincrement())
+  slug             String? @unique // 아티스트의 경로이지만, null이라면 userId로 접근가능.
   name             String
-  nameKo           String           @map("name_ko")
-  nameLatin        String?          @map("name_latin")
-  nameJaKana       String?          @map("name_ja_kana")
-  nameJaKanji      String?          @map("name_ja_kanji")
-  spotifyId        String?          @map("spotify_id")
-  homeCatalog      String?          @map("home_catalog") // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
-  tjSongRequestUrl String?          @map("tj_song_request_url") // 이거보단 가장 많이등록된 tj아티스트명이 낫지 않을까?
+  nameKo           String  @map("name_ko")
+  nameLatin        String? @map("name_latin")
+  nameJaKana       String? @map("name_ja_kana")
+  nameJaKanji      String? @map("name_ja_kanji")
+  spotifyId        String? @map("spotify_id")
+  homeCatalog      String? @map("home_catalog") // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
+  tjSongRequestUrl String? @map("tj_song_request_url") // 이거보단 가장 많이등록된 tj아티스트명이 낫지 않을까?
 
-  thumbnailDefault String?          @map("thumbnail_default")
-  thumbnailMedium  String?          @map("thumbnail_medium")
-  thumbnailHigh    String?          @map("thumbnail_high")
+  thumbnailDefault String? @map("thumbnail_default")
+  thumbnailMedium  String? @map("thumbnail_medium")
+  thumbnailHigh    String? @map("thumbnail_high")
 
-  artistSongs      ArtistSong[]
-  youtubeChannels  YoutubeChannel[]
-  spotifyArtist    SpotifyArtist?   @relation(fields: [spotifyId], references: [spotifyId])
-  aliases          ArtistAlias[]
-  tjSongs          ArtistTjSong[]
+  artistSongs     ArtistSong[]
+  youtubeChannels YoutubeChannel[]
+  spotifyArtist   SpotifyArtist?   @relation(fields: [spotifyId], references: [spotifyId])
+  aliases         ArtistAlias[]
+  tjSongs         ArtistTjSong[]
 
-  createdAt        DateTime         @default(now()) @map("created_at")
-  updatedAt        DateTime         @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("artist")
 }
 
 model Song {
-  id                    Int           @id @default(autoincrement())
-  title                 String
-  titleKo               String?       @map("title_ko")
-  titleLatin            String?       @map("title_latin")
-  titleJaKana           String?       @map("title_ja_kana")
-  titleJaKanji          String?       @map("title_ja_kanji")
-  catalog               String? // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
-  youtubeVideoId        String?       @map("youtube_video_id")
-  youtubeFetchedAt      DateTime?     @map("youtube_fetched_at")
-  spotifyTrackGroupId   Int?          @map("spotify_track_group_id")
+  id                  Int       @id @default(autoincrement())
+  title               String
+  titleKo             String?   @map("title_ko")
+  titleLatin          String?   @map("title_latin")
+  titleJaKana         String?   @map("title_ja_kana")
+  titleJaKanji        String?   @map("title_ja_kanji")
+  catalog             String? // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
+  youtubeVideoId      String?   @map("youtube_video_id")
+  youtubeFetchedAt    DateTime? @map("youtube_fetched_at")
+  spotifyTrackGroupId Int?      @map("spotify_track_group_id")
+  tjSongId            String?   @unique @map("tj_song_id")
 
-  thumbnailDefault String?       @map("thumbnail_default")
-  thumbnailMedium  String?       @map("thumbnail_medium")
-  thumbnailHigh    String?       @map("thumbnail_high")
+  thumbnailDefault String? @map("thumbnail_default")
+  thumbnailMedium  String? @map("thumbnail_medium")
+  thumbnailHigh    String? @map("thumbnail_high")
 
-  createdAt        DateTime      @default(now()) @map("created_at")
-  updatedAt        DateTime      @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  karaokeSongs       KaraokeSong[]
-  artistSongs        ArtistSong[]
-  spotifyTrackGroup  SpotifyTrackGroup? @relation(fields: [spotifyTrackGroupId], references: [id], onDelete: SetNull)
-  aliases            SongAlias[]
+  karaokeSongs      KaraokeSong[]
+  artistSongs       ArtistSong[]
+  spotifyTrackGroup SpotifyTrackGroup? @relation(fields: [spotifyTrackGroupId], references: [id], onDelete: SetNull)
+  tjSong            TjSong?            @relation(fields: [tjSongId], references: [id], onDelete: SetNull)
+  aliases           SongAlias[]
 
   @@index([youtubeVideoId])
   @@index([catalog])
   @@index([spotifyTrackGroupId])
+  @@index([tjSongId])
   @@map("song")
 }
 
 model ArtistSong {
-  id        Int          @id @default(autoincrement())
-  artistId  Int          @map("artist_id")
-  songId    Int          @map("song_id")
-  order     Int          @default(0)
+  id        Int         @id @default(autoincrement())
+  artistId  Int         @map("artist_id")
+  songId    Int         @map("song_id")
+  order     Int         @default(0)
   role      ArtistRole? // main, featuring, collaboration
-  createdAt DateTime     @default(now()) @map("created_at")
+  createdAt DateTime    @default(now()) @map("created_at")
 
-  artist    Artist       @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  song      Song         @relation(fields: [songId], references: [id], onDelete: Cascade)
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  song   Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
 
   @@unique([artistId, songId])
   @@index([songId])
@@ -82,11 +85,11 @@ model ArtistSong {
 }
 
 model KaraokeSong {
-  id              Int       @id @default(autoincrement())
-  songId          Int       @map("song_id")
-  provider        Provider
-  karaokeNo       String    @map("karaoke_no")
-  song            Song      @relation(fields: [songId], references: [id])
+  id        Int      @id @default(autoincrement())
+  songId    Int      @map("song_id")
+  provider  Provider
+  karaokeNo String   @map("karaoke_no")
+  song      Song     @relation(fields: [songId], references: [id])
 
   @@unique([provider, karaokeNo])
   @@index([songId])
@@ -94,27 +97,28 @@ model KaraokeSong {
 }
 
 model TjSong {
-  id               String          @id
-  title            String
-  artist           String?
-  artistList       String[]        @map("artist_list")
-  featureList      String[]        @map("feature_list")
-  producerList     String[]        @map("producer_list")
-  lyricist         String?
-  lyricistList     String[]        @map("lyricist_list")
-  composer         String?
-  composerList     String[]        @map("composer_list")
-  thumbnailImg     String?         @map("thumbnail_img")
-  publishdate      String?         @map("publishdate")
-  youtubeLink      String?         @map("youtube_link")
-  saved            Boolean         @default(false) // 지워도 됌
-  isMR             Boolean         @default(false) @map("is_mr")
-  isMV             Boolean         @default(false) @map("is_mv")
-  isOver60         Boolean         @default(false) @map("is_over_60")
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @updatedAt @map("updated_at")
+  id           String   @id
+  title        String
+  artist       String?
+  artistList   String[] @map("artist_list")
+  featureList  String[] @map("feature_list")
+  producerList String[] @map("producer_list")
+  lyricist     String?
+  lyricistList String[] @map("lyricist_list")
+  composer     String?
+  composerList String[] @map("composer_list")
+  thumbnailImg String?  @map("thumbnail_img")
+  publishdate  String?  @map("publishdate")
+  youtubeLink  String?  @map("youtube_link")
+  saved        Boolean  @default(false) // 지워도 됌
+  isMR         Boolean  @default(false) @map("is_mr")
+  isMV         Boolean  @default(false) @map("is_mv")
+  isOver60     Boolean  @default(false) @map("is_over_60")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  artists          ArtistTjSong[]
+  artists ArtistTjSong[]
+  song    Song?
 
   @@map("tj_song")
 }
@@ -150,28 +154,28 @@ model YoutubeChannel {
 }
 
 model SpotifyArtist {
-  id         Int                    @id @default(autoincrement())
-  spotifyId  String                 @unique @map("spotify_id")
-  spotifyUrl String?                @map("spotify_url")
+  id         Int      @id @default(autoincrement())
+  spotifyId  String   @unique @map("spotify_id")
+  spotifyUrl String?  @map("spotify_url")
   name       String
   popularity Int?
   followers  Int?
-  genres     String[]               @default([])
-  thumbnails String[]               @default([])
-  createdAt  DateTime               @default(now()) @map("created_at")
-  updatedAt  DateTime               @updatedAt @map("updated_at")
+  genres     String[] @default([])
+  thumbnails String[] @default([])
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   artists Artist[]
-  tracks SpotifyArtistTrack[]
+  tracks  SpotifyArtistTrack[]
 
   @@map("spotify_artist")
 }
 
 model SpotifyArtistTrack {
-  id               Int           @id @default(autoincrement())
-  spotifyArtistId  Int           @map("spotify_artist_id")
-  spotifyTrackId   Int           @map("spotify_track_id")
-  createdAt        DateTime      @default(now()) @map("created_at")
+  id              Int      @id @default(autoincrement())
+  spotifyArtistId Int      @map("spotify_artist_id")
+  spotifyTrackId  Int      @map("spotify_track_id")
+  createdAt       DateTime @default(now()) @map("created_at")
 
   spotifyArtist SpotifyArtist @relation(fields: [spotifyArtistId], references: [id], onDelete: Cascade)
   spotifyTrack  SpotifyTrack  @relation(fields: [spotifyTrackId], references: [id], onDelete: Cascade)
@@ -183,52 +187,50 @@ model SpotifyArtistTrack {
 }
 
 model SpotifyTrackGroup {
-  id                     Int           @id @default(autoincrement())
-  primarySpotifyTrackId  Int?          @unique @map("primary_spotify_track_id")
-  titleKo          String?       @map("title_ko")
-  titleLatin       String?       @map("title_latin")
-  titleJaKana      String?       @map("title_ja_kana")
-  titleJaKanji     String?       @map("title_ja_kanji")
-  createdAt              DateTime      @default(now()) @map("created_at")
-  updatedAt              DateTime      @updatedAt @map("updated_at")
+  id                    Int      @id @default(autoincrement())
+  primarySpotifyTrackId Int?     @unique @map("primary_spotify_track_id")
+  titleKo               String?  @map("title_ko")
+  titleLatin            String?  @map("title_latin")
+  titleJaKana           String?  @map("title_ja_kana")
+  titleJaKanji          String?  @map("title_ja_kanji")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
 
-  songs         Song[]
-  primaryTrack  SpotifyTrack? @relation("PrimaryTrack", fields: [primarySpotifyTrackId], references: [id], onDelete: SetNull)
-  tracks        SpotifyTrack[] @relation("GroupTracks")
+  songs        Song[]
+  primaryTrack SpotifyTrack?  @relation("PrimaryTrack", fields: [primarySpotifyTrackId], references: [id], onDelete: SetNull)
+  tracks       SpotifyTrack[] @relation("GroupTracks")
 
   @@map("spotify_track_group")
 }
 
-
 model SpotifyTrack {
-  id          Int                    @id @default(autoincrement())
-  spotifyId   String                 @unique @map("spotify_id")
-  spotifyUrl  String?                @map("spotify_url")
-  name        String
-  musicBrainzTitle String?                @map("musicbrainz_title")
-  musicBrainzRecordingId String?         @map("musicbrainz_recording_id")
-  musicBrainzArtistCreditId String?      @map("musicbrainz_artist_credit_id")
-  musicBrainzArtistId String?            @map("musicbrainz_artist_id")
-  popularity  Int?
-  previewUrl  String?                @map("preview_url")
-  isrc        String?
-  durationMs  Int?                   @map("duration_ms")
-  releaseDate String?                @map("release_date")
-  thumbnails  String[]               @default([])
-  disabled    Boolean                @default(false)
-  groupId     Int?                   @map("group_id")
-  createdAt   DateTime               @default(now()) @map("created_at")
-  updatedAt   DateTime               @updatedAt @map("updated_at")
+  id                        Int      @id @default(autoincrement())
+  spotifyId                 String   @unique @map("spotify_id")
+  spotifyUrl                String?  @map("spotify_url")
+  name                      String
+  musicBrainzTitle          String?  @map("musicbrainz_title")
+  musicBrainzRecordingId    String?  @map("musicbrainz_recording_id")
+  musicBrainzArtistCreditId String?  @map("musicbrainz_artist_credit_id")
+  musicBrainzArtistId       String?  @map("musicbrainz_artist_id")
+  popularity                Int?
+  previewUrl                String?  @map("preview_url")
+  isrc                      String?
+  durationMs                Int?     @map("duration_ms")
+  releaseDate               String?  @map("release_date")
+  thumbnails                String[] @default([])
+  disabled                  Boolean  @default(false)
+  groupId                   Int?     @map("group_id")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
 
-  group           SpotifyTrackGroup? @relation("GroupTracks", fields: [groupId], references: [id], onDelete: SetNull)
-  primaryForGroup SpotifyTrackGroup? @relation("PrimaryTrack")
+  group           SpotifyTrackGroup?   @relation("GroupTracks", fields: [groupId], references: [id], onDelete: SetNull)
+  primaryForGroup SpotifyTrackGroup?   @relation("PrimaryTrack")
   artists         SpotifyArtistTrack[]
 
   @@index([groupId])
   @@index([isrc])
   @@map("spotify_track")
 }
-
 
 enum ArtistRole {
   MAIN
@@ -259,19 +261,19 @@ model ArtistAlias {
 
   artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
 
-  @@unique([artistId,alias, locale, kind])
+  @@unique([artistId, alias, locale, kind])
   @@index([artistId])
   @@index([alias])
   @@map("artist_alias")
 }
 
 model SongAlias {
-  id        Int      @id @default(autoincrement())
-  songId    Int      @map("song_id")
-  alias     String
-  locale    String // "KO", "JA_KANA", "JA_KANJI", "LATIN"
-  kind      String // "SPOTIFY", "YOUTUBE", "ROMANIZATION", "TRANSLATION", "TJ_NAME", "NICKNAME"
-  source    String // "OPERATOR", "SYSTEM", "AI", "AUTO"
+  id     Int    @id @default(autoincrement())
+  songId Int    @map("song_id")
+  alias  String
+  locale String // "KO", "JA_KANA", "JA_KANJI", "LATIN"
+  kind   String // "SPOTIFY", "YOUTUBE", "ROMANIZATION", "TRANSLATION", "TJ_NAME", "NICKNAME"
+  source String // "OPERATOR", "SYSTEM", "AI", "AUTO"
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -297,6 +299,3 @@ model ArtistTjSong {
   @@index([tjSongId])
   @@map("artist_tj_song")
 }
-
-
-
