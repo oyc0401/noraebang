@@ -9,12 +9,14 @@
  * 5. 불일치하면 스킵 (수동 확인 필요) - 단, --force 옵션 사용시 무조건 적용
  *
  * 사용법:
- * pnpm ts-node src/scripts/spotify/auto-apply-all-artists.ts
- * pnpm ts-node src/scripts/spotify/auto-apply-all-artists.ts --dry-run
- * pnpm ts-node src/scripts/spotify/auto-apply-all-artists.ts --start 1 --end 50
- * pnpm ts-node src/scripts/spotify/auto-apply-all-artists.ts --start 1 --end 50 --dry-run
- * pnpm ts-node src/scripts/spotify/auto-apply-all-artists.ts --force (매칭 여부 상관없이 무조건 적용)
- * pnpm ts-node src/scripts/spotify/auto-apply-all-artists.ts --start 1 --end 50 --force
+ * pnpm ts-node src/scripts/spotify/core/auto-apply-all-artists.ts
+ * pnpm ts-node src/scripts/spotify/core/auto-apply-all-artists.ts --dry-run
+ * pnpm ts-node src/scripts/spotify/core/auto-apply-all-artists.ts 3 (3번 아티스트부터 끝까지)
+ * pnpm ts-node src/scripts/spotify/core/auto-apply-all-artists.ts 3 50 (3번부터 50번까지)
+ * pnpm ts-node src/scripts/spotify/core/auto-apply-all-artists.ts 3 --dry-run
+ * pnpm ts-node src/scripts/spotify/core/auto-apply-all-artists.ts 3 50 --dry-run
+ * pnpm ts-node src/scripts/spotify/core/auto-apply-all-artists.ts --start 1 --end 50
+ * pnpm ts-node src/scripts/spotify/core/auto-apply-all-artists.ts --force (매칭 여부 상관없이 무조건 적용)
  */
 
 import { execSync } from "node:child_process";
@@ -43,6 +45,20 @@ function parseArgs() {
   let start = 1;
   let end = 272;
 
+  // 숫자 인자만 추출 (플래그가 아닌 것들)
+  const numberArgs = args.filter(
+    (arg) => !arg.startsWith("--") && !Number.isNaN(Number.parseInt(arg, 10)),
+  );
+
+  if (numberArgs.length > 0) {
+    start = Number.parseInt(numberArgs[0], 10);
+  }
+
+  if (numberArgs.length > 1) {
+    end = Number.parseInt(numberArgs[1], 10);
+  }
+
+  // 기존 --start, --end 플래그도 지원 (하위 호환성)
   const startIdx = args.indexOf("--start");
   if (startIdx !== -1 && args[startIdx + 1]) {
     start = Number.parseInt(args[startIdx + 1], 10);
@@ -151,27 +167,11 @@ async function main() {
       }
 
       if (stats.totalSongs !== stats.stats.tracksWithAnswer) {
-        if (!isForce) {
-          console.log("\n⚠️  PARTIAL MATCH: totalSongs !== tracksWithAnswer");
-          console.log(
-            `   Expected: ${stats.totalSongs}, Got: ${stats.stats.tracksWithAnswer}`,
-          );
-          console.log("   → Skipping auto-apply (manual review needed)");
-          results.push({
-            artistId,
-            artistName: `${stats.artist.name} (${stats.artist.nameKo})`,
-            status: "partial",
-            reason: `${stats.stats.tracksWithAnswer}/${stats.totalSongs} matched`,
-            totalSongs: stats.totalSongs,
-            tracksWithAnswer: stats.stats.tracksWithAnswer,
-          });
-          partialMatchCount++;
-          continue;
-        }
-        console.log("\n⚠️  PARTIAL MATCH but FORCE MODE - Applying anyway...");
+        console.log("\n⚠️  PARTIAL MATCH: totalSongs !== tracksWithAnswer");
         console.log(
           `   Expected: ${stats.totalSongs}, Got: ${stats.stats.tracksWithAnswer}`,
         );
+        console.log("   → Applying anyway...");
       } else {
         console.log("\n✅ PERFECT MATCH! Applying mapping...");
       }

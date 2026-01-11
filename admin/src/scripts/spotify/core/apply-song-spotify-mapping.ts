@@ -1,14 +1,14 @@
 /**
- * artist-mapping.json을 읽어서 Song과 SpotifyTrack을 실제로 DB에 매핑
+ * artist-mapping.json을 읽어서 Song과 SpotifyTrackGroup을 실제로 DB에 매핑
  *
  * 로직:
  * - artist-mapping.json 파일 읽기
- * - songs 배열에 있는 각 곡을 해당 spotifyTrack과 연결
- * - SongSpotifyTrack 테이블에 upsert
+ * - songs 배열에 있는 각 곡을 해당 spotifyTrack이 속한 Group과 연결
+ * - SpotifyTrackGroup 테이블의 songId 업데이트
  *
  * 사용법:
- * pnpm ts-node src/scripts/spotify/apply-song-spotify-mapping.ts
- * pnpm ts-node src/scripts/spotify/apply-song-spotify-mapping.ts --dry-run
+ * pnpm ts-node src/scripts/spotify/core/apply-song-spotify-mapping.ts
+ * pnpm ts-node src/scripts/spotify/core/apply-song-spotify-mapping.ts --dry-run
  */
 
 import "dotenv/config";
@@ -73,28 +73,42 @@ async function main() {
 
     for (const song of mapping.songs) {
       try {
+        // SpotifyTrack이 속한 Group을 찾기
+        const spotifyTrack = await prisma.spotifyTrack.findUnique({
+          where: { id: mapping.spotifyTrack.id },
+          select: { groupId: true },
+        });
+
+        if (!spotifyTrack) {
+          console.error(
+            `❌ SpotifyTrack ${mapping.spotifyTrack.id} not found`,
+          );
+          errorCount++;
+          continue;
+        }
+
+        if (!spotifyTrack.groupId) {
+          console.error(
+            `❌ SpotifyTrack ${mapping.spotifyTrack.id} has no group`,
+          );
+          errorCount++;
+          continue;
+        }
+
         if (isDryRun) {
           console.log(
-            `[DRY RUN] Would connect Song ${song.id} (${song.name}) ↔ SpotifyTrack ${mapping.spotifyTrack.id} (${mapping.spotifyTrack.name})`,
+            `[DRY RUN] Would connect Song ${song.id} (${song.name}) ↔ SpotifyTrackGroup ${spotifyTrack.groupId} (SpotifyTrack ${mapping.spotifyTrack.id}: ${mapping.spotifyTrack.name})`,
           );
           createdCount++;
         } else {
-          // upsert: songId가 이미 있으면 spotifyTrackId만 업데이트, 없으면 새로 생성
-          await prisma.songSpotifyTrack.upsert({
-            where: {
-              songId: song.id,
-            },
-            create: {
-              songId: song.id,
-              spotifyTrackId: mapping.spotifyTrack.id,
-            },
-            update: {
-              spotifyTrackId: mapping.spotifyTrack.id,
-            },
+          // Group의 songId 업데이트
+          await prisma.spotifyTrackGroup.update({
+            where: { id: spotifyTrack.groupId },
+            data: { songId: song.id },
           });
 
           console.log(
-            `✅ Connected Song ${song.id} (${song.name}) ↔ SpotifyTrack ${mapping.spotifyTrack.id} (${mapping.spotifyTrack.name})`,
+            `✅ Connected Song ${song.id} (${song.name}) ↔ SpotifyTrackGroup ${spotifyTrack.groupId} (SpotifyTrack ${mapping.spotifyTrack.id}: ${mapping.spotifyTrack.name})`,
           );
           createdCount++;
         }

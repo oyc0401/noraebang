@@ -25,7 +25,7 @@ type Song = Awaited<ReturnType<typeof getSongsByArtist>>[number];
 type SpotifyTracksResponse = Awaited<
   ReturnType<typeof getSpotifyTracksByArtist>
 >;
-type SpotifyTrack = SpotifyTracksResponse["tracks"][number];
+type SpotifyGroup = SpotifyTracksResponse["groups"][number];
 type SpotifyArtistInfo = SpotifyTracksResponse["spotifyArtist"];
 type GroupTrack = Awaited<ReturnType<typeof getSpotifyTracksByGroupId>>[number];
 
@@ -67,7 +67,7 @@ interface ArtistsState {
   selectedArtist: Artist | null;
   songs: Song[];
   songsLoading: boolean;
-  spotifyTracks: SpotifyTrack[];
+  spotifyGroups: SpotifyGroup[];
   spotifyArtistId: number | undefined;
   spotifyArtist: SpotifyArtistInfo;
   spotifyTracksLoading: boolean;
@@ -248,7 +248,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
   selectedArtist: null,
   songs: [],
   songsLoading: false,
-  spotifyTracks: [],
+  spotifyGroups: [],
   spotifyArtistId: undefined,
   spotifyArtist: undefined,
   spotifyTracksLoading: false,
@@ -584,7 +584,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
     try {
       const result = await getSpotifyTracksByArtist(artistId);
       set({
-        spotifyTracks: result.tracks,
+        spotifyGroups: result.groups,
         spotifyArtistId: result.spotifyArtistId,
         spotifyArtist: result.spotifyArtist,
       });
@@ -1139,7 +1139,7 @@ export { SORT_OPTIONS, ARTIST_CATALOG_OPTIONS };
 export type {
   Artist,
   Song,
-  SpotifyTrack,
+  SpotifyGroup,
   SpotifyArtistInfo,
   GroupTrack,
   SortOption,
