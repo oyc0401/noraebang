@@ -1,17 +1,17 @@
 {
   "artist": {
-    "id": 25,
-    "name": "DUSTCELL",
-    "nameKo": "더스트셀",
-    "spotifyId": "6Rs4z6XgltEI01UlDlu98B"
+    "id": 13,
+    "name": "ナツノセ",
+    "nameKo": "나츠노세",
+    "spotifyId": "2oGGvMrukzgUrFNLxk2Mbe"
   },
-  "totalSongs": 50,
-  "totalSpotifyTracks": 65,
+  "totalSongs": 10,
+  "totalSpotifyTracks": 5,
   "stats": {
-    "tracksWithAnswer": 50,
+    "tracksWithAnswer": 2,
     "tracksWithCandidatesOnly": 0,
-    "tracksWithoutMatches": 15,
-    "totalAnswerMappings": 50,
-    "totalCandidateMappings": 2
+    "tracksWithoutMatches": 3,
+    "totalAnswerMappings": 2,
+    "totalCandidateMappings": 0
   }
 }

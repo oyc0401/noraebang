@@ -92,7 +92,7 @@ async function main() {
       // Step 1: generate-song-spotify-mapping.ts 실행
       console.log("\n📝 Step 1: Generating mapping...");
       execSync(
-        `pnpm ts-node src/scripts/spotify/generate-song-spotify-mapping.ts ${artistId}`,
+        `pnpm ts-node src/scripts/spotify/core/generate-song-spotify-mapping.ts ${artistId}`,
         {
           cwd: process.cwd(),
           stdio: "inherit",
@@ -182,7 +182,7 @@ async function main() {
         console.log("[DRY RUN] Would execute: apply-song-spotify-mapping.ts");
       } else {
         execSync(
-          "pnpm ts-node src/scripts/spotify/apply-song-spotify-mapping.ts",
+          "pnpm ts-node src/scripts/spotify/core/apply-song-spotify-mapping.ts",
           {
             cwd: process.cwd(),
             stdio: "inherit",

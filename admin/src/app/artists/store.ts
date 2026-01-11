@@ -27,9 +27,7 @@ type SpotifyTracksResponse = Awaited<
 >;
 type SpotifyTrack = SpotifyTracksResponse["tracks"][number];
 type SpotifyArtistInfo = SpotifyTracksResponse["spotifyArtist"];
-type GroupTrack = Awaited<
-  ReturnType<typeof getSpotifyTracksByGroupId>
->[number];
+type GroupTrack = Awaited<ReturnType<typeof getSpotifyTracksByGroupId>>[number];
 
 const SORT_OPTIONS = [
   { value: "id_asc", label: "아이디 ↑" },
@@ -500,7 +498,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
     const { sort, debouncedSearch } = get();
     set({ artistsLoading: true });
     try {
-      const res = await getArtists(sort, 100, undefined, debouncedSearch);
+      const res = await getArtists(sort, 500, undefined, debouncedSearch);
       set({
         artists: res.artists,
         artistsHasMore: res.hasMore,
@@ -525,7 +523,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
 
     set({ loadingMoreArtists: true });
     try {
-      const res = await getArtists(sort, 100, artistsCursor, debouncedSearch);
+      const res = await getArtists(sort, 500, artistsCursor, debouncedSearch);
       set((state) => ({
         artists: [...state.artists, ...res.artists],
         artistsHasMore: res.hasMore,
@@ -622,7 +620,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
 
       const updatedArtists = await getArtists(
         sort,
-        100,
+        500,
         undefined,
         debouncedSearch,
       );
@@ -672,7 +670,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
 
       const updatedArtists = await getArtists(
         sort,
-        100,
+        500,
         undefined,
         debouncedSearch,
       );
@@ -723,7 +721,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
 
       const updatedArtists = await getArtists(
         sort,
-        100,
+        500,
         undefined,
         debouncedSearch,
       );
@@ -969,7 +967,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
 
     try {
       await deleteArtist(selectedArtist.id);
-      const res = await getArtists(sort, 100, undefined, debouncedSearch);
+      const res = await getArtists(sort, 500, undefined, debouncedSearch);
       set({
         artists: res.artists,
         artistsHasMore: res.hasMore,
@@ -1029,7 +1027,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       }
 
       await mergeArtist(selectedArtist.id, targetId);
-      const res = await getArtists(sort, 100, undefined, debouncedSearch);
+      const res = await getArtists(sort, 500, undefined, debouncedSearch);
       set({
         artists: res.artists,
         artistsHasMore: res.hasMore,
@@ -1088,7 +1086,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       });
 
       const [updatedArtists, updatedSongs] = await Promise.all([
-        getArtists(sort, 100, undefined, debouncedSearch),
+        getArtists(sort, 500, undefined, debouncedSearch),
         getSongsByArtist(selectedArtist.id),
       ]);
 

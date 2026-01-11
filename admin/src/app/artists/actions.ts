@@ -17,7 +17,7 @@ export type ArtistCatalog = (typeof ARTIST_CATALOGS)[number];
 
 export async function getArtists(
   sort: SortOption = DEFAULT_SORT,
-  take = 100,
+  take = 500,
   cursor?: number,
   search?: string,
 ) {
@@ -652,7 +652,11 @@ export async function searchSongs(query: string, limit = 20) {
       OR: [
         { title: { contains: trimmedQuery, mode: "insensitive" } },
         { titleKo: { contains: trimmedQuery, mode: "insensitive" } },
-        { id: /^\d+$/.test(trimmedQuery) ? Number.parseInt(trimmedQuery, 10) : undefined },
+        {
+          id: /^\d+$/.test(trimmedQuery)
+            ? Number.parseInt(trimmedQuery, 10)
+            : undefined,
+        },
       ],
     },
     include: {
