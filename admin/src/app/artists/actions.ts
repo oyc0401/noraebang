@@ -638,3 +638,114 @@ export async function getSpotifyTracksByGroupId(groupId: number) {
     isPrimary: track.primaryForGroup !== null,
   }));
 }
+
+// 곡 검색
+export async function searchSongs(query: string, limit = 20) {
+  const trimmedQuery = query.trim();
+
+  if (!trimmedQuery) {
+    return [];
+  }
+
+  const songs = await prisma.song.findMany({
+    where: {
+      OR: [
+        { title: { contains: trimmedQuery, mode: "insensitive" } },
+        { titleKo: { contains: trimmedQuery, mode: "insensitive" } },
+        { id: /^\d+$/.test(trimmedQuery) ? Number.parseInt(trimmedQuery, 10) : undefined },
+      ],
+    },
+    include: {
+      artistSongs: {
+        include: {
+          artist: true,
+        },
+      },
+    },
+    take: limit,
+    orderBy: {
+      id: "desc",
+    },
+  });
+
+  return songs.map((song) => ({
+    id: song.id,
+    title: song.title,
+    titleKo: song.titleKo ?? undefined,
+    catalog: song.catalog ?? undefined,
+    artists: song.artistSongs.map((as) => ({
+      id: as.artist.id,
+      name: as.artist.name,
+      nameKo: as.artist.nameKo,
+    })),
+  }));
+}
+
+// 아티스트 생성
+export async function createArtist(data: {
+  name: string;
+  nameKo: string;
+  slug?: string;
+  homeCatalog?: ArtistCatalog;
+  songIds?: number[];
+}) {
+  const trimmedName = data.name.trim();
+  const trimmedNameKo = data.nameKo.trim();
+
+  if (!trimmedName) {
+    throw new Error("영문 이름을 입력해주세요.");
+  }
+
+  if (!trimmedNameKo) {
+    throw new Error("한글 이름을 입력해주세요.");
+  }
+
+  const sanitizedSlug = data.slug?.trim().replace(/^@/, "");
+
+  try {
+    const artist = await prisma.artist.create({
+      data: {
+        name: trimmedName,
+        nameKo: trimmedNameKo,
+        slug: sanitizedSlug || undefined,
+        homeCatalog: data.homeCatalog || undefined,
+      },
+      select: {
+        id: true,
+        name: true,
+        nameKo: true,
+        slug: true,
+        homeCatalog: true,
+      },
+    });
+
+    // 곡 연결
+    if (data.songIds && data.songIds.length > 0) {
+      await prisma.artistSong.createMany({
+        data: data.songIds.map((songId, index) => ({
+          artistId: artist.id,
+          songId,
+          order: index,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    return {
+      id: artist.id,
+      name: artist.name,
+      nameKo: artist.nameKo,
+      slug: artist.slug ?? undefined,
+      homeCatalog: artist.homeCatalog ?? undefined,
+    };
+  } catch (error: any) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new Error("이미 존재하는 별칭입니다.");
+    }
+
+    throw error;
+  }
+}
