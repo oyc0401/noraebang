@@ -1,20 +1,12 @@
 import * as cheerio from "cheerio";
 import type { TJSongInfo } from "./type/TJSongInfo";
 
-export type { TJSongInfo };
-
-async function fetchTJPage(
-  artistName: string,
-  pageNo: number,
-): Promise<string> {
+async function fetchTJPageByNumber(songNumber: string): Promise<string> {
   const params = new URLSearchParams({
-    pageNo: pageNo.toString(),
-    pageRowCnt: "15",
-    strSotrGubun: "ASC",
-    strSortType: "",
     nationType: "",
-    strType: "2",
-    searchTxt: artistName,
+    strType: "16",
+    searchTxt: songNumber,
+    strWord: "Y",
   });
 
   const url = `https://www.tjmedia.com/song/accompaniment_search?${params.toString()}`;
@@ -33,14 +25,7 @@ async function fetchTJPage(
   return await res.text();
 }
 
-function getTotalPages(html: string): number {
-  const $ = cheerio.load(html);
-  const pageListText = $("li.page-list ul.page-num li:last-child a").text();
-  const totalPages = Number.parseInt(pageListText, 10);
-  return Number.isNaN(totalPages) ? 1 : totalPages;
-}
-
-function parseSongList(html: string): TJSongInfo[] {
+function parseSongInfo(html: string): TJSongInfo {
   const $ = cheerio.load(html);
   const songs: TJSongInfo[] = [];
 
@@ -98,51 +83,27 @@ function parseSongList(html: string): TJSongInfo[] {
     });
   });
 
-  return songs;
-}
-
-export async function getTJSongByArtist(
-  artistName: string,
-): Promise<TJSongInfo[]> {
-  console.log(`[TJ] Fetching songs for artist: ${artistName}`);
-
-  // 첫 페이지를 가져와서 전체 페이지 수 확인
-  const firstPageHtml = await fetchTJPage(artistName, 1);
-  const totalPages = getTotalPages(firstPageHtml);
-
-  console.log(`[TJ] Total pages: ${totalPages}`);
-
-  // 첫 페이지 파싱
-  const allSongs: TJSongInfo[] = parseSongList(firstPageHtml);
-  console.log(`[TJ] Page 1/${totalPages}: ${allSongs.length} songs`);
-
-  // 나머지 페이지들을 병렬로 가져오기
-  if (totalPages > 1) {
-    const pagePromises: Promise<TJSongInfo[]>[] = [];
-
-    for (let page = 2; page <= totalPages; page++) {
-      pagePromises.push(
-        fetchTJPage(artistName, page)
-          .then((html) => {
-            const songs = parseSongList(html);
-            console.log(
-              `[TJ] Page ${page}/${totalPages}: ${songs.length} songs`,
-            );
-            return songs;
-          })
-          .catch((error) => {
-            console.error(`[TJ] Error fetching page ${page}:`, error);
-            return [];
-          }),
-      );
-    }
-
-    const pageSongs = await Promise.all(pagePromises);
-    for (const songs of pageSongs) {
-      allSongs.push(...songs);
-    }
+  if (songs.length === 0) {
+    throw new Error("No song found for the given song number");
   }
 
-  console.log(`[TJ] Total songs fetched: ${allSongs.length}`);
-  return allSongs;
+  if (songs.length > 1) {
+    throw new Error(
+      `Multiple songs found (${songs.length}) for the given song number. Expected exactly one.`,
+    );
+  }
+
+  return songs[0];
+}
+
+export async function getTJSongByNumber(
+  songNumber: string,
+): Promise<TJSongInfo> {
+  console.log(`[TJ] Fetching song by number: ${songNumber}`);
+
+  const html = await fetchTJPageByNumber(songNumber);
+  const song = parseSongInfo(html);
+
+  console.log(`[TJ] Song found: ${song.title} - ${song.artist}`);
+  return song;
 }
