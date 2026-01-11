@@ -2,13 +2,15 @@
  * 전체 아티스트 Song-SpotifyTrack 매핑 고속 적용
  *
  * - JSON 파일 생성 없이 메모리에서 매핑 생성 후 바로 DB 적용
- * - force 모드 기본 (매칭 여부 상관없이 무조건 적용)
+ * - 기본: 이미 연결된 Song은 스킵
+ * - --force: 이미 연결된 Song도 덮어쓰기
  *
  * 사용법:
  * pnpm ts-node src/scripts/spotify/core/fast-apply-all-artists.ts
  * pnpm ts-node src/scripts/spotify/core/fast-apply-all-artists.ts --dry-run
+ * pnpm ts-node src/scripts/spotify/core/fast-apply-all-artists.ts --force
  * pnpm ts-node src/scripts/spotify/core/fast-apply-all-artists.ts --start 1 --end 50
- * pnpm ts-node src/scripts/spotify/core/fast-apply-all-artists.ts --start 1 --end 50 --dry-run
+ * pnpm ts-node src/scripts/spotify/core/fast-apply-all-artists.ts --start 1 --end 50 --force --dry-run
  */
 
 import "dotenv/config";
@@ -52,6 +54,7 @@ interface Mapping {
 function parseArgs() {
   const args = process.argv.slice(2);
   const isDryRun = args.includes("--dry-run");
+  const isForce = args.includes("--force");
 
   let start = 1;
   let end = 272;
@@ -66,7 +69,7 @@ function parseArgs() {
     end = Number.parseInt(args[endIdx + 1], 10);
   }
 
-  return { start, end, isDryRun };
+  return { start, end, isDryRun, isForce };
 }
 
 async function fetchArtistData(artistId: number): Promise<ArtistSongsData> {
@@ -147,74 +150,74 @@ async function fetchArtistData(artistId: number): Promise<ArtistSongsData> {
 function generateMappings(data: ArtistSongsData): Mapping[] {
   const mappings: Mapping[] = [];
 
-  for (const track of data.spotifyTracks) {
+  for (const song of data.songs) {
     let finalAnswer: string | null = null;
-    let answerField: "title" | "titleKo" | null = null;
+    let answerField: "title" | "musicBrainzTitle" | null = null;
 
-    // 우선순위 1: musicBrainzTitle ↔ song.title
-    if (!finalAnswer && track.musicBrainzTitle) {
-      const candidateTitles = data.songs.map((s) => s.title);
-      const result = findBestMatch(track.musicBrainzTitle, candidateTitles);
+    // 우선순위 1: song.title ↔ track.musicBrainzTitle
+    if (!finalAnswer) {
+      const candidateMbTitles = data.spotifyTracks
+        .filter((t) => t.musicBrainzTitle)
+        .map((t) => t.musicBrainzTitle as string);
+
+      if (candidateMbTitles.length > 0) {
+        const result = findBestMatch(song.title, candidateMbTitles);
+        if (result.answer) {
+          finalAnswer = result.answer;
+          answerField = "musicBrainzTitle";
+        }
+      }
+    }
+
+    // 우선순위 2: song.title ↔ track.title
+    if (!finalAnswer) {
+      const candidateTitles = data.spotifyTracks.map((t) => t.title);
+      const result = findBestMatch(song.title, candidateTitles);
       if (result.answer) {
         finalAnswer = result.answer;
         answerField = "title";
       }
     }
 
-    // 우선순위 2: title ↔ song.title
-    if (!finalAnswer) {
-      const candidateTitles = data.songs.map((s) => s.title);
-      const result = findBestMatch(track.title, candidateTitles);
+    // 우선순위 3: song.titleKo ↔ track.musicBrainzTitle
+    if (!finalAnswer && song.titleKo) {
+      const candidateMbTitles = data.spotifyTracks
+        .filter((t) => t.musicBrainzTitle)
+        .map((t) => t.musicBrainzTitle as string);
+
+      if (candidateMbTitles.length > 0) {
+        const result = findBestMatch(song.titleKo, candidateMbTitles);
+        if (result.answer) {
+          finalAnswer = result.answer;
+          answerField = "musicBrainzTitle";
+        }
+      }
+    }
+
+    // 우선순위 4: song.titleKo ↔ track.title
+    if (!finalAnswer && song.titleKo) {
+      const candidateTitles = data.spotifyTracks.map((t) => t.title);
+      const result = findBestMatch(song.titleKo, candidateTitles);
       if (result.answer) {
         finalAnswer = result.answer;
         answerField = "title";
-      }
-    }
-
-    // 우선순위 3: musicBrainzTitle ↔ song.titleKo
-    if (!finalAnswer && track.musicBrainzTitle) {
-      const candidateTitleKos = data.songs
-        .filter((s) => s.titleKo)
-        .map((s) => s.titleKo as string);
-
-      if (candidateTitleKos.length > 0) {
-        const result = findBestMatch(track.musicBrainzTitle, candidateTitleKos);
-        if (result.answer) {
-          finalAnswer = result.answer;
-          answerField = "titleKo";
-        }
-      }
-    }
-
-    // 우선순위 4: title ↔ song.titleKo
-    if (!finalAnswer) {
-      const candidateTitleKos = data.songs
-        .filter((s) => s.titleKo)
-        .map((s) => s.titleKo as string);
-
-      if (candidateTitleKos.length > 0) {
-        const result = findBestMatch(track.title, candidateTitleKos);
-        if (result.answer) {
-          finalAnswer = result.answer;
-          answerField = "titleKo";
-        }
       }
     }
 
     // answer 있으면 매핑 추가
     if (finalAnswer && answerField) {
-      const matchedSong = data.songs.find((s) =>
-        answerField === "title"
-          ? s.title === finalAnswer
-          : s.titleKo === finalAnswer,
+      const matchedTrack = data.spotifyTracks.find((t) =>
+        answerField === "musicBrainzTitle"
+          ? t.musicBrainzTitle === finalAnswer
+          : t.title === finalAnswer,
       );
 
-      if (matchedSong) {
+      if (matchedTrack) {
         mappings.push({
-          spotifyTrackId: track.id,
-          spotifyTrackName: track.musicBrainzTitle || track.title,
-          songId: matchedSong.id,
-          songName: finalAnswer,
+          spotifyTrackId: matchedTrack.id,
+          spotifyTrackName: matchedTrack.musicBrainzTitle || matchedTrack.title,
+          songId: song.id,
+          songName: song.titleKo || song.title,
         });
       }
     }
@@ -223,13 +226,10 @@ function generateMappings(data: ArtistSongsData): Mapping[] {
   return mappings;
 }
 
-async function applyMappings(mappings: Mapping[], isDryRun: boolean) {
+async function applyMappings(mappings: Mapping[], isDryRun: boolean, isForce: boolean) {
   let applied = 0;
   let errors = 0;
   let skipped = 0;
-
-  // 이미 처리된 songId 추적 (같은 Song에 여러 Track 매칭 시 첫 번째만 적용)
-  const processedSongIds = new Set<number>();
 
   for (const mapping of mappings) {
     try {
@@ -239,13 +239,17 @@ async function applyMappings(mappings: Mapping[], isDryRun: boolean) {
         );
         applied++;
       } else {
-        // 0. 이미 처리된 Song이면 스킵
-        if (processedSongIds.has(mapping.songId)) {
-          console.log(
-            `  ⏭️  SKIP: Song ${mapping.songId} (${mapping.songName}) 이미 처리됨 - Track ${mapping.spotifyTrackId} (${mapping.spotifyTrackName})`,
-          );
-          skipped++;
-          continue;
+        // 0. force가 아니면 이미 연결된 Song은 스킵
+        if (!isForce) {
+          const existingSong = await prisma.song.findUnique({
+            where: { id: mapping.songId },
+            select: { spotifyTrackGroupId: true },
+          });
+
+          if (existingSong?.spotifyTrackGroupId) {
+            skipped++;
+            continue;
+          }
         }
 
         // 1. SpotifyTrack의 기존 Group 찾기
@@ -259,42 +263,17 @@ async function applyMappings(mappings: Mapping[], isDryRun: boolean) {
         }
 
         if (!spotifyTrack.groupId) {
-          throw new Error(`SpotifyTrack ${mapping.spotifyTrackId} has no group`);
-        }
-
-        // 2. Group이 이미 다른 Song에 연결되어 있는지 확인
-        const existingGroup = await prisma.spotifyTrackGroup.findUnique({
-          where: { id: spotifyTrack.groupId },
-          select: { songId: true },
-        });
-
-        if (existingGroup?.songId && existingGroup.songId !== mapping.songId) {
-          // 이미 다른 Song에 연결되어 있으면 스킵
-          console.log(
-            `  ⚠️  SKIP: Group ${spotifyTrack.groupId}는 이미 Song ${existingGroup.songId}에 연결됨 - Track ${mapping.spotifyTrackId} (${mapping.spotifyTrackName}) → Song ${mapping.songId} (${mapping.songName}) 시도했으나 실패`,
+          throw new Error(
+            `SpotifyTrack ${mapping.spotifyTrackId} has no group`,
           );
-          skipped++;
-          continue;
         }
 
-        if (existingGroup?.songId === mapping.songId) {
-          // 이미 같은 Song에 연결되어 있으면 조용히 스킵
-          skipped++;
-          processedSongIds.add(mapping.songId);
-          continue;
-        }
-
-        // 3. Group의 songId 업데이트
-        await prisma.spotifyTrackGroup.update({
-          where: { id: spotifyTrack.groupId },
-          data: { songId: mapping.songId },
+        // 2. Song의 spotifyTrackGroupId 업데이트
+        await prisma.song.update({
+          where: { id: mapping.songId },
+          data: { spotifyTrackGroupId: spotifyTrack.groupId },
         });
 
-        console.log(
-          `  ✅ APPLIED: Song ${mapping.songId} (${mapping.songName}) ↔ Group ${spotifyTrack.groupId} ← Track ${mapping.spotifyTrackId} (${mapping.spotifyTrackName})`,
-        );
-
-        processedSongIds.add(mapping.songId);
         applied++;
       }
     } catch (error: any) {
@@ -309,20 +288,25 @@ async function applyMappings(mappings: Mapping[], isDryRun: boolean) {
 }
 
 async function main() {
-  const { start, end, isDryRun } = parseArgs();
+  const { start, end, isDryRun, isForce } = parseArgs();
 
   console.log("🚀 Fast Song-SpotifyTrack Mapping");
   console.log(`📊 Artist range: ${start} ~ ${end}`);
   if (isDryRun) {
     console.log("🔍 DRY RUN MODE");
   }
-  console.log("⚡ FORCE MODE (always apply)");
+  if (isForce) {
+    console.log("⚡ FORCE MODE (덮어쓰기)");
+  } else {
+    console.log("✅ SAFE MODE (이미 연결된 Song 스킵)");
+  }
   console.log("\n" + "=".repeat(70) + "\n");
 
   let totalProcessed = 0;
   let totalApplied = 0;
   let totalErrors = 0;
-  let totalSkipped = 0;
+  let totalArtistSkipped = 0;
+  let totalSongSkipped = 0;
 
   const startTime = Date.now();
 
@@ -334,7 +318,7 @@ async function main() {
         console.log(
           `⏭️  Artist ${artistId}: ${data.artist.name} - No data (songs: ${data.songs.length}, tracks: ${data.spotifyTracks.length})`,
         );
-        totalSkipped++;
+        totalArtistSkipped++;
         continue;
       }
 
@@ -348,10 +332,11 @@ async function main() {
       );
 
       if (mappings.length > 0) {
-        const { applied, errors } = await applyMappings(mappings, isDryRun);
-        console.log(`   ✅ Applied: ${applied}, ❌ Errors: ${errors}`);
+        const { applied, errors, skipped } = await applyMappings(mappings, isDryRun, isForce);
+        console.log(`   ✅ Applied: ${applied}, ❌ Errors: ${errors}, ⏭️ Skipped: ${skipped}`);
         totalApplied += applied;
         totalErrors += errors;
+        totalSongSkipped += skipped;
       } else {
         console.log("   ⚠️  No mappings generated");
       }
@@ -371,7 +356,8 @@ async function main() {
   console.log("=".repeat(70));
   console.log(`✅ Artists processed: ${totalProcessed}`);
   console.log(`✅ Mappings applied: ${totalApplied}`);
-  console.log(`⏭️  Artists skipped: ${totalSkipped}`);
+  console.log(`⏭️  Artists skipped (no data): ${totalArtistSkipped}`);
+  console.log(`⏭️  Songs skipped (already connected): ${totalSongSkipped}`);
   console.log(`❌ Errors: ${totalErrors}`);
   console.log(`⏱️  Duration: ${duration}s`);
   console.log("=".repeat(70));
