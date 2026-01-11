@@ -14,7 +14,7 @@ model Artist {
   nameLatin        String?          @map("name_latin")
   nameJaKana       String?          @map("name_ja_kana")
   nameJaKanji      String?          @map("name_ja_kanji")
-  spotifyId        String?          @unique @map("spotify_id")
+  spotifyId        String?          @map("spotify_id")
   homeCatalog      String?          @map("home_catalog") // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
   tjSongRequestUrl String?          @map("tj_song_request_url") // 이거보단 가장 많이등록된 tj아티스트명이 낫지 않을까?
 
@@ -159,7 +159,7 @@ model SpotifyArtist {
   createdAt  DateTime               @default(now()) @map("created_at")
   updatedAt  DateTime               @updatedAt @map("updated_at")
 
-  artist Artist?
+  artists Artist[]
   tracks SpotifyArtistTrack[]
 
   @@map("spotify_artist")
