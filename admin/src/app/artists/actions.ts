@@ -141,6 +141,11 @@ export async function getSongsByArtist(artistId: number) {
               artist: true,
             },
           },
+          spotifyTrackGroup: {
+            include: {
+              primaryTrack: true,
+            },
+          },
         },
       },
     },
@@ -161,6 +166,23 @@ export async function getSongsByArtist(artistId: number) {
       name: owner.artist.name,
       nameKo: owner.artist.nameKo,
     })),
+    spotifyGroup: as.song.spotifyTrackGroup
+      ? {
+          id: as.song.spotifyTrackGroup.id,
+          primaryTrack: as.song.spotifyTrackGroup.primaryTrack
+            ? {
+                id: as.song.spotifyTrackGroup.primaryTrack.id,
+                spotifyId: as.song.spotifyTrackGroup.primaryTrack.spotifyId,
+                spotifyUrl: as.song.spotifyTrackGroup.primaryTrack.spotifyUrl ?? undefined,
+                name: as.song.spotifyTrackGroup.primaryTrack.name,
+                thumbnails: as.song.spotifyTrackGroup.primaryTrack.thumbnails,
+                releaseDate: as.song.spotifyTrackGroup.primaryTrack.releaseDate ?? undefined,
+                durationMs: as.song.spotifyTrackGroup.primaryTrack.durationMs ?? undefined,
+                popularity: as.song.spotifyTrackGroup.primaryTrack.popularity ?? undefined,
+              }
+            : undefined,
+        }
+      : undefined,
   }));
 }
 
@@ -576,9 +598,77 @@ export async function getSpotifyTracksByArtist(artistId: number) {
   });
 
   if (!artist?.spotifyArtist) {
-    return { spotifyArtistId: undefined, spotifyArtist: undefined, tracks: [] };
+    return { spotifyArtistId: undefined, spotifyArtist: undefined, groups: [] };
   }
-  console.log(artist.spotifyArtist.tracks);
+
+  type TrackData = {
+    id: number;
+    spotifyId: string;
+    spotifyUrl: string | undefined;
+    name: string;
+    thumbnails: string[];
+    releaseDate: string | undefined;
+    durationMs: number | undefined;
+    previewUrl: string | undefined;
+    popularity: number | undefined;
+    groupId: number | undefined;
+    isPrimary: boolean;
+  };
+
+  // 그룹별로 묶기
+  const groupMap = new Map<
+    number,
+    {
+      groupId: number;
+      primaryTrack?: TrackData;
+      trackCount: number;
+    }
+  >();
+
+  const ungroupedTracks: TrackData[] = [];
+
+  for (const { spotifyTrack } of artist.spotifyArtist.tracks) {
+    const trackData: TrackData = {
+      id: spotifyTrack.id,
+      spotifyId: spotifyTrack.spotifyId,
+      spotifyUrl: spotifyTrack.spotifyUrl ?? undefined,
+      name: spotifyTrack.name,
+      thumbnails: spotifyTrack.thumbnails,
+      releaseDate: spotifyTrack.releaseDate ?? undefined,
+      durationMs: spotifyTrack.durationMs ?? undefined,
+      previewUrl: spotifyTrack.previewUrl ?? undefined,
+      popularity: spotifyTrack.popularity ?? undefined,
+      groupId: spotifyTrack.groupId ?? undefined,
+      isPrimary: spotifyTrack.primaryForGroup !== null,
+    };
+
+    if (spotifyTrack.groupId) {
+      const existing = groupMap.get(spotifyTrack.groupId);
+      if (existing) {
+        existing.trackCount++;
+        if (trackData.isPrimary) {
+          existing.primaryTrack = trackData;
+        }
+      } else {
+        groupMap.set(spotifyTrack.groupId, {
+          groupId: spotifyTrack.groupId,
+          primaryTrack: trackData.isPrimary ? trackData : undefined,
+          trackCount: 1,
+        });
+      }
+    } else {
+      ungroupedTracks.push(trackData);
+    }
+  }
+
+  // 그룹화된 데이터 생성
+  const groups = Array.from(groupMap.values())
+    .filter((group) => group.primaryTrack !== undefined)
+    .map((group) => ({
+      groupId: group.groupId,
+      trackCount: group.trackCount,
+      primaryTrack: group.primaryTrack as TrackData,
+    }));
 
   return {
     spotifyArtistId: artist.spotifyArtist.id,
@@ -592,19 +682,7 @@ export async function getSpotifyTracksByArtist(artistId: number) {
       genres: artist.spotifyArtist.genres,
       thumbnails: artist.spotifyArtist.thumbnails,
     },
-    tracks: artist.spotifyArtist.tracks.map(({ spotifyTrack }) => ({
-      id: spotifyTrack.id,
-      spotifyId: spotifyTrack.spotifyId,
-      spotifyUrl: spotifyTrack.spotifyUrl ?? undefined,
-      name: spotifyTrack.name,
-      thumbnails: spotifyTrack.thumbnails,
-      releaseDate: spotifyTrack.releaseDate ?? undefined,
-      durationMs: spotifyTrack.durationMs ?? undefined,
-      previewUrl: spotifyTrack.previewUrl ?? undefined,
-      popularity: spotifyTrack.popularity ?? undefined,
-      groupId: spotifyTrack.groupId ?? undefined,
-      isPrimary: spotifyTrack.primaryForGroup !== null,
-    })),
+    groups: [...groups, ...ungroupedTracks.map((track) => ({ groupId: undefined, trackCount: 1, primaryTrack: track }))],
   };
 }
 

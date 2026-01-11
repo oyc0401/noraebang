@@ -55,6 +55,10 @@ export function ArtistDetailSection() {
     karaokeJoysoundInput,
     karaokeSaving,
     karaokeError,
+    showGroupDialog,
+    groupDialogGroupId,
+    groupDialogTracks,
+    groupDialogLoading,
     setNameKoMenuOpen,
     setNameMenuOpen,
     setSlugMenuOpen,
@@ -89,6 +93,8 @@ export function ArtistDetailSection() {
     setShowMergeDialog,
     setMergeTargetArtistIdInput,
     setMergeError,
+    openGroupDialog,
+    closeGroupDialog,
     saveNameKo,
     saveName,
     saveSlug,
@@ -624,6 +630,63 @@ export function ArtistDetailSection() {
                                 {kn.provider} {kn.karaokeNo}
                               </span>
                             ))}
+                          </div>
+                        )}
+
+                        {song.spotifyGroup?.primaryTrack && (
+                          <div className="mt-3 p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                            <div className="flex items-center gap-2">
+                              {song.spotifyGroup.primaryTrack.thumbnails[0] && (
+                                <Image
+                                  src={song.spotifyGroup.primaryTrack.thumbnails[0]}
+                                  alt={song.spotifyGroup.primaryTrack.name}
+                                  width={40}
+                                  height={40}
+                                  className="rounded"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                    className="h-3 w-3 text-green-600 dark:text-green-400"
+                                  >
+                                    <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
+                                  </svg>
+                                  <a
+                                    href={song.spotifyGroup.primaryTrack.spotifyUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs font-medium text-green-700 dark:text-green-300 hover:underline truncate"
+                                    style={{ cursor: "pointer" }}
+                                  >
+                                    {song.spotifyGroup.primaryTrack.name}
+                                  </a>
+                                </div>
+                                <div className="text-[10px] text-green-600 dark:text-green-400 mt-0.5">
+                                  {song.spotifyGroup.primaryTrack.releaseDate && (
+                                    <span>{song.spotifyGroup.primaryTrack.releaseDate}</span>
+                                  )}
+                                  {song.spotifyGroup.primaryTrack.popularity !== undefined && (
+                                    <span> • 인기도: {song.spotifyGroup.primaryTrack.popularity}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (song.spotifyGroup) {
+                                    openGroupDialog(song.spotifyGroup.id);
+                                  }
+                                }}
+                                className="text-xs px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400 whitespace-nowrap"
+                                style={{ cursor: "pointer" }}
+                              >
+                                그룹 전체보기
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1357,6 +1420,96 @@ export function ArtistDetailSection() {
                 {karaokeSaving ? "저장 중..." : "저장"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showGroupDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+                스포티파이 그룹 전체 트랙
+              </h3>
+              <button
+                type="button"
+                onClick={closeGroupDialog}
+                className="cursor-pointer rounded-full p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {groupDialogLoading ? (
+              <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">
+                로딩 중...
+              </div>
+            ) : groupDialogTracks.length === 0 ? (
+              <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">
+                트랙이 없습니다
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {groupDialogTracks.map((track) => (
+                  <div
+                    key={track.id}
+                    className={`rounded-lg border p-4 ${
+                      track.isPrimary
+                        ? "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+                        : "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800"
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      {track.thumbnails[0] && (
+                        <Image
+                          src={track.thumbnails[0]}
+                          alt={track.name}
+                          width={64}
+                          height={64}
+                          className="rounded"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          {track.isPrimary && (
+                            <span className="inline-block rounded bg-green-600 px-2 py-0.5 text-xs font-semibold text-white">
+                              PRIMARY
+                            </span>
+                          )}
+                          <a
+                            href={track.spotifyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-zinc-900 hover:text-green-600 dark:text-zinc-50 dark:hover:text-green-400"
+                            style={{ cursor: "pointer" }}
+                          >
+                            {track.name}
+                          </a>
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-zinc-500 dark:text-zinc-400">
+                          {track.releaseDate && <span>발매일: {track.releaseDate}</span>}
+                          {track.popularity !== undefined && (
+                            <span>인기도: {track.popularity}</span>
+                          )}
+                          {track.durationMs !== undefined && (
+                            <span>
+                              길이: {Math.floor(track.durationMs / 60000)}:
+                              {String(Math.floor((track.durationMs % 60000) / 1000)).padStart(2, "0")}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 text-xs text-zinc-400 dark:text-zinc-500 truncate">
+                          ID: {track.spotifyId}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
