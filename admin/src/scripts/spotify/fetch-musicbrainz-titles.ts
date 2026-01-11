@@ -6,8 +6,8 @@
  * - 각 트랙의 ISRC로 MusicBrainz API 호출
  * - 일본어 제목을 찾아서 musicBrainzTitle 필드에 저장
  * - Rate limiting: 1초당 1요청 (MusicBrainz 정책 준수)
- * - artistId 없으면 id <= 300인 모든 아티스트 처리
- * - artistId 있으면 해당 ID부터 300까지 처리 (예: 123 입력 시 123~300)
+ * - artistId 없으면 모든 아티스트 처리
+ * - artistId 있으면 해당 ID부터 처리
  *
  * 사용법:
  * pnpm ts-node src/scripts/spotify/fetch-musicbrainz-titles.ts
@@ -279,13 +279,12 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`🔄 Artist ID ${startId}부터 300까지 처리합니다.\n`);
+  console.log(`🔄 Artist ID ${startId}부터 끝까지 처리합니다.\n`);
 
   const artists = await prisma.artist.findMany({
     where: {
       id: {
         gte: startId,
-        lte: 300,
       },
     },
     select: {

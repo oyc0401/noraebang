@@ -2,7 +2,7 @@
  * Artist의 Spotify 트랙을 모두 가져와서 SpotifyTrack에 저장하는 스크립트
  *
  * 기능:
- * - artistId < 300인 Artist들의 Spotify 트랙을 Spotify API에서 가져오기
+ * - Artist들의 Spotify 트랙을 Spotify API에서 가져오기
  * - 앨범을 20개씩 묶어서 한 번에 조회 (API 호출 최적화)
  * - SpotifyTrack 테이블에 저장 (songId는 null로 저장, 나중에 수동 매핑)
  * - SpotifyArtistTrack 매핑 생성 (트랙의 모든 아티스트)
@@ -237,11 +237,10 @@ async function main() {
   console.log("✓ Access token acquired\n");
 
   // 2. Artist들 가져오기 (spotifyId가 있는 것만)
-  console.log("Step 2: Fetching artists (id < 300)...");
+  console.log("Step 2: Fetching artists");
   const artists = await prisma.artist.findMany({
     where: {
       id: {
-        lt: 300,
         ...(startArtistId ? { gte: startArtistId } : {}),
       },
       spotifyId: { not: null },
