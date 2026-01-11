@@ -2,13 +2,14 @@
  * Artist의 Spotify 정보를 가져와서 SpotifyArtist를 생성하고 매핑하는 스크립트
  *
  * 기능:
- * - artistId < 300인 Artist들의 Spotify 정보를 Spotify API에서 검색
+ * - 지정한 artistId 이후(또는 기본값) Artist들의 Spotify 정보를 Spotify API에서 검색
  * - SpotifyArtist 테이블에 저장 (없으면 생성, 있으면 업데이트)
  * - Artist.spotifyId에 매핑
  *
  * 사용법:
  * npx tsx src/scripts/spotify/fetch-and-link-artists.ts --dry-run
  * npx tsx src/scripts/spotify/fetch-and-link-artists.ts
+ * npx tsx src/scripts/spotify/fetch-and-link-artists.ts 312
  *
  * 주의:
  * - SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET 환경변수 필요
@@ -17,6 +18,9 @@
  */
 
 import "dotenv/config";
+import { readFile, writeFile } from "fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
@@ -26,6 +30,46 @@ const pool = new Pool({
 });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DUPLICATE_LOG_PATH = path.resolve(__dirname, "fetch-and-link-artists.json");
+
+type DuplicateLogEntry = {
+  id: number;
+  name: string;
+  spotifyArtistId: string;
+  targetId: number;
+  targetName: string | null;
+};
+
+type DuplicateLog = {
+  duplicates: DuplicateLogEntry[];
+};
+
+async function loadDuplicateLog(): Promise<DuplicateLog> {
+  try {
+    const raw = await readFile(DUPLICATE_LOG_PATH, "utf8");
+    return JSON.parse(raw) as DuplicateLog;
+  } catch {
+    return { duplicates: [] };
+  }
+}
+
+async function saveDuplicateLog(log: DuplicateLog) {
+  await writeFile(DUPLICATE_LOG_PATH, `${JSON.stringify(log, null, 2)}\n`, "utf8");
+}
+
+async function appendDuplicateLog(entry: DuplicateLogEntry) {
+  const log = await loadDuplicateLog();
+  const alreadyLogged = log.duplicates.some(
+    (dup) => dup.id === entry.id && dup.spotifyArtistId === entry.spotifyArtistId,
+  );
+  if (!alreadyLogged) {
+    log.duplicates.push(entry);
+    await saveDuplicateLog(log);
+  }
+}
 
 // Spotify Access Token 가져오기
 async function getSpotifyAccessToken(): Promise<string> {
@@ -85,7 +129,34 @@ function delay(ms: number) {
 }
 
 async function main() {
-  const isDryRun = process.argv.includes("--dry-run");
+  const args = process.argv.slice(2);
+  let startIdArg: number | undefined;
+  let isDryRun = false;
+
+  for (const arg of args) {
+    if (arg === "--dry-run") {
+      isDryRun = true;
+      continue;
+    }
+
+    if (arg.startsWith("--start=")) {
+      const parsed = Number.parseInt(arg.split("=")[1], 10);
+      if (Number.isNaN(parsed) || parsed <= 0) {
+        throw new Error("유효한 start ID를 입력해주세요.");
+      }
+      startIdArg = parsed;
+      continue;
+    }
+
+    if (!arg.startsWith("--") && startIdArg === undefined) {
+      const parsed = Number.parseInt(arg, 10);
+      if (Number.isNaN(parsed) || parsed <= 0) {
+        throw new Error("숫자로 된 artist ID를 입력해주세요.");
+      }
+      startIdArg = parsed;
+      continue;
+    }
+  }
 
   console.log(
     `\n=== Spotify Artist 생성 및 매핑 ${isDryRun ? "(DRY RUN)" : ""} ===\n`,
@@ -96,12 +167,28 @@ async function main() {
   const accessToken = await getSpotifyAccessToken();
   console.log("✓ Access token acquired\n");
 
-  // 2. artistId < 300인 Artist들 가져오기
-  console.log("Step 2: Fetching artists (id < 300)...");
+  // 2. 시작 artistId 결정 (기본: Spotify 정보가 없는 가장 낮은 ID)
+  let startId: number;
+  if (typeof startIdArg === "number") {
+    startId = startIdArg;
+    console.log(`Step 2: ID ${startId}부터 조회합니다.`);
+  } else {
+    const firstWithoutSpotify = await prisma.artist.findFirst({
+      where: { spotifyId: null },
+      orderBy: { id: "asc" },
+      select: { id: true },
+    });
+    startId = firstWithoutSpotify?.id ?? 1;
+    console.log(
+      `Step 2: Spotify 미연결 아티스트 중 ID ${startId}부터 시작합니다.`,
+    );
+  }
+
+  // 3. 대상 Artist 가져오기
   const artists = await prisma.artist.findMany({
     where: {
       id: {
-        lt: 300,
+        gte: startId,
       },
     },
     select: {
@@ -117,8 +204,8 @@ async function main() {
 
   console.log(`✓ Found ${artists.length} artists\n`);
 
-  // 3. 각 아티스트에 대해 Spotify 검색 및 저장
-  console.log("Step 3: Searching and linking Spotify artists...");
+  // 4. 각 아티스트에 대해 Spotify 검색 및 저장
+  console.log("Step 4: Searching and linking Spotify artists...");
 
   let createdCount = 0;
   const updatedCount = 0;
@@ -167,6 +254,30 @@ async function main() {
         genres: spotifyArtist.genres || [],
         thumbnails,
       };
+
+      const targetArtist = await prisma.artist.findFirst({
+        where: {
+          spotifyId: spotifyData.spotifyId,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+
+      if (targetArtist && targetArtist.id !== artist.id) {
+        console.warn(
+          `  [${i + 1}/${artists.length}] ⚠️  [${artist.id}] ${artist.name} - Duplicate Spotify ID (already linked to artist ${targetArtist.id} ${targetArtist.name ?? ""})`,
+        );
+        await appendDuplicateLog({
+          id: artist.id,
+          name: artist.name,
+          spotifyArtistId: spotifyData.spotifyId,
+          targetId: targetArtist.id,
+          targetName: targetArtist.name ?? null,
+        });
+        continue;
+      }
 
       if (!isDryRun) {
         // SpotifyArtist 생성 또는 업데이트

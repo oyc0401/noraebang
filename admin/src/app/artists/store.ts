@@ -26,6 +26,7 @@ type SpotifyTracksResponse = Awaited<
   ReturnType<typeof getSpotifyTracksByArtist>
 >;
 type SpotifyTrack = SpotifyTracksResponse["tracks"][number];
+type SpotifyArtistInfo = SpotifyTracksResponse["spotifyArtist"];
 type GroupTrack = Awaited<
   ReturnType<typeof getSpotifyTracksByGroupId>
 >[number];
@@ -70,6 +71,7 @@ interface ArtistsState {
   songsLoading: boolean;
   spotifyTracks: SpotifyTrack[];
   spotifyArtistId: number | undefined;
+  spotifyArtist: SpotifyArtistInfo;
   spotifyTracksLoading: boolean;
 
   // UI States - Menus
@@ -152,27 +154,32 @@ interface ArtistsState {
   // Dialog actions
   openNameKoDialog: () => void;
   closeNameKoDialog: () => void;
+  setShowNameKoDialog: (show: boolean) => void;
   setNameKoInput: (value: string) => void;
   setNameKoError: (error: string | null) => void;
 
   openNameDialog: () => void;
   closeNameDialog: () => void;
+  setShowNameDialog: (show: boolean) => void;
   setNameInput: (value: string) => void;
   setNameError: (error: string | null) => void;
 
   openSlugDialog: () => void;
   closeSlugDialog: () => void;
+  setShowSlugDialog: (show: boolean) => void;
   setSlugInput: (value: string) => void;
   setSlugError: (error: string | null) => void;
 
   openSongTitleDialog: (song: Song) => void;
   closeSongTitleDialog: () => void;
+  setShowSongTitleDialog: (show: boolean) => void;
   setSongTitleInput: (value: string) => void;
   setSongTitleKoInput: (value: string) => void;
   setSongTitleError: (error: string | null) => void;
 
   openKaraokeDialog: (song: Song) => void;
   closeKaraokeDialog: () => void;
+  setShowKaraokeDialog: (show: boolean) => void;
   setKaraokeTjInput: (value: string) => void;
   setKaraokeKyInput: (value: string) => void;
   setKaraokeJoysoundInput: (value: string) => void;
@@ -180,16 +187,21 @@ interface ArtistsState {
 
   openTransferDialog: (song: Song) => void;
   closeTransferDialog: () => void;
+  setShowTransferDialog: (show: boolean) => void;
+  setTransferSong: (song: Song | null) => void;
   setTransferArtistIdInput: (value: string) => void;
   setTransferError: (error: string | null) => void;
 
   openAddOwnershipDialog: (song: Song) => void;
   closeAddOwnershipDialog: () => void;
+  setShowAddOwnershipDialog: (show: boolean) => void;
+  setAddOwnershipSong: (song: Song | null) => void;
   setAddOwnershipArtistIdInput: (value: string) => void;
   setAddOwnershipError: (error: string | null) => void;
 
   openMergeDialog: () => void;
   closeMergeDialog: () => void;
+  setShowMergeDialog: (show: boolean) => void;
   setMergeTargetArtistIdInput: (value: string) => void;
   setMergeError: (error: string | null) => void;
 
@@ -240,6 +252,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
   songsLoading: false,
   spotifyTracks: [],
   spotifyArtistId: undefined,
+  spotifyArtist: undefined,
   spotifyTracksLoading: false,
 
   nameKoMenuOpen: false,
@@ -325,6 +338,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
     });
   },
   closeNameKoDialog: () => set({ showNameKoDialog: false, nameKoError: null }),
+  setShowNameKoDialog: (show) => set({ showNameKoDialog: show }),
   setNameKoInput: (value) => set({ nameKoInput: value }),
   setNameKoError: (error) => set({ nameKoError: error }),
 
@@ -337,6 +351,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
     });
   },
   closeNameDialog: () => set({ showNameDialog: false, nameError: null }),
+  setShowNameDialog: (show) => set({ showNameDialog: show }),
   setNameInput: (value) => set({ nameInput: value }),
   setNameError: (error) => set({ nameError: error }),
 
@@ -349,6 +364,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
     });
   },
   closeSlugDialog: () => set({ showSlugDialog: false, slugError: null }),
+  setShowSlugDialog: (show) => set({ showSlugDialog: show }),
   setSlugInput: (value) => set({ slugInput: value }),
   setSlugError: (error) => set({ slugError: error }),
 
@@ -366,6 +382,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       editingSong: null,
       songTitleError: null,
     }),
+  setShowSongTitleDialog: (show) => set({ showSongTitleDialog: show }),
   setSongTitleInput: (value) => set({ songTitleInput: value }),
   setSongTitleKoInput: (value) => set({ songTitleKoInput: value }),
   setSongTitleError: (error) => set({ songTitleError: error }),
@@ -392,6 +409,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       editingSong: null,
       karaokeError: null,
     }),
+  setShowKaraokeDialog: (show) => set({ showKaraokeDialog: show }),
   setKaraokeTjInput: (value) => set({ karaokeTjInput: value }),
   setKaraokeKyInput: (value) => set({ karaokeKyInput: value }),
   setKaraokeJoysoundInput: (value) => set({ karaokeJoysoundInput: value }),
@@ -411,6 +429,8 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       transferArtistIdInput: "",
       transferError: null,
     }),
+  setShowTransferDialog: (show) => set({ showTransferDialog: show }),
+  setTransferSong: (song) => set({ transferSong: song }),
   setTransferArtistIdInput: (value) => set({ transferArtistIdInput: value }),
   setTransferError: (error) => set({ transferError: error }),
 
@@ -428,6 +448,8 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       addOwnershipArtistIdInput: "",
       addOwnershipError: null,
     }),
+  setShowAddOwnershipDialog: (show) => set({ showAddOwnershipDialog: show }),
+  setAddOwnershipSong: (song) => set({ addOwnershipSong: song }),
   setAddOwnershipArtistIdInput: (value) =>
     set({ addOwnershipArtistIdInput: value }),
   setAddOwnershipError: (error) => set({ addOwnershipError: error }),
@@ -444,6 +466,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       mergeTargetArtistIdInput: "",
       mergeError: null,
     }),
+  setShowMergeDialog: (show) => set({ showMergeDialog: show }),
   setMergeTargetArtistIdInput: (value) =>
     set({ mergeTargetArtistIdInput: value }),
   setMergeError: (error) => set({ mergeError: error }),
@@ -565,6 +588,7 @@ export const useArtistsStore = create<ArtistsState>((set, get) => ({
       set({
         spotifyTracks: result.tracks,
         spotifyArtistId: result.spotifyArtistId,
+        spotifyArtist: result.spotifyArtist,
       });
     } finally {
       set({ spotifyTracksLoading: false });
@@ -1118,6 +1142,7 @@ export type {
   Artist,
   Song,
   SpotifyTrack,
+  SpotifyArtistInfo,
   GroupTrack,
   SortOption,
   ArtistCatalogOption,

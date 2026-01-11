@@ -576,12 +576,22 @@ export async function getSpotifyTracksByArtist(artistId: number) {
   });
 
   if (!artist?.spotifyArtist) {
-    return { spotifyArtistId: undefined, tracks: [] };
+    return { spotifyArtistId: undefined, spotifyArtist: undefined, tracks: [] };
   }
   console.log(artist.spotifyArtist.tracks);
 
   return {
     spotifyArtistId: artist.spotifyArtist.id,
+    spotifyArtist: {
+      id: artist.spotifyArtist.id,
+      spotifyId: artist.spotifyArtist.spotifyId,
+      spotifyUrl: artist.spotifyArtist.spotifyUrl ?? undefined,
+      name: artist.spotifyArtist.name,
+      popularity: artist.spotifyArtist.popularity ?? undefined,
+      followers: artist.spotifyArtist.followers ?? undefined,
+      genres: artist.spotifyArtist.genres,
+      thumbnails: artist.spotifyArtist.thumbnails,
+    },
     tracks: artist.spotifyArtist.tracks.map(({ spotifyTrack }) => ({
       id: spotifyTrack.id,
       spotifyId: spotifyTrack.spotifyId,
