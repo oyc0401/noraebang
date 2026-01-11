@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createArtist, searchSongs } from "./actions";
 import { ArtistDetailSection } from "./ArtistDetailSection";
 import { ArtistListSection } from "./ArtistListSection";
 import { SpotifyTracksSection } from "./SpotifyTracksSection";
@@ -26,6 +27,21 @@ export default function AdminArtistsPage() {
     loadSpotifyTracks,
     resetDialogStates,
   } = useArtistsStore();
+
+  // 아티스트 생성 다이얼로그
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createNameKo, setCreateNameKo] = useState("");
+  const [createSlug, setCreateSlug] = useState("");
+  const [createCatalog, setCreateCatalog] = useState<string>("");
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  // 곡 검색 및 선택
+  const [songSearchQuery, setSongSearchQuery] = useState("");
+  const [songSearchResults, setSongSearchResults] = useState<any[]>([]);
+  const [selectedSongIds, setSelectedSongIds] = useState<number[]>([]);
+  const [songSearchLoading, setSongSearchLoading] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -120,6 +136,62 @@ export default function AdminArtistsPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [artists, selectedArtist, setSelectedArtist]);
 
+  // 곡 검색 디바운싱
+  useEffect(() => {
+    if (!songSearchQuery.trim()) {
+      setSongSearchResults([]);
+      return;
+    }
+
+    const handler = setTimeout(async () => {
+      setSongSearchLoading(true);
+      try {
+        const results = await searchSongs(songSearchQuery);
+        setSongSearchResults(results);
+      } catch (error) {
+        console.error("곡 검색 실패:", error);
+      } finally {
+        setSongSearchLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [songSearchQuery]);
+
+  // 아티스트 생성 핸들러
+  const handleCreateArtist = async () => {
+    setCreateLoading(true);
+    setCreateError(null);
+
+    try {
+      const newArtist = await createArtist({
+        name: createName,
+        nameKo: createNameKo,
+        slug: createSlug || undefined,
+        homeCatalog: createCatalog || undefined,
+        songIds: selectedSongIds.length > 0 ? selectedSongIds : undefined,
+      });
+
+      // 성공
+      setCreateDialogOpen(false);
+      setCreateName("");
+      setCreateNameKo("");
+      setCreateSlug("");
+      setCreateCatalog("");
+      setSelectedSongIds([]);
+      setSongSearchQuery("");
+      setSongSearchResults([]);
+
+      // 리스트 새로고침 및 새 아티스트 선택
+      await loadArtists();
+      loadArtistById(newArtist.id);
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : "아티스트 생성 실패");
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   return (
     <div className="h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
       {/* Header */}
@@ -155,14 +227,21 @@ export default function AdminArtistsPage() {
       </div>
 
       {/* Search */}
-      <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-3">
+      <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-3 flex items-center gap-3">
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="아티스트 검색..."
-          className="w-full max-w-md rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
+          className="flex-1 max-w-md rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
         />
+        <button
+          type="button"
+          onClick={() => setCreateDialogOpen(true)}
+          className="cursor-pointer rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100 dark:border-green-500/40 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20"
+        >
+          + 아티스트 생성
+        </button>
       </div>
 
       {/* Message */}
@@ -186,6 +265,198 @@ export default function AdminArtistsPage() {
         <ArtistDetailSection />
         <SpotifyTracksSection />
       </div>
+
+      {/* 아티스트 생성 다이얼로그 */}
+      {createDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900 max-h-[90vh] overflow-y-auto">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+                아티스트 생성
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setCreateDialogOpen(false);
+                  setCreateError(null);
+                }}
+                className="cursor-pointer rounded-full p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* 영문명 */}
+              <div>
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  영문명 *
+                </label>
+                <input
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  placeholder="예) IU"
+                />
+              </div>
+
+              {/* 한글명 */}
+              <div>
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  한글명 *
+                </label>
+                <input
+                  value={createNameKo}
+                  onChange={(e) => setCreateNameKo(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  placeholder="예) 아이유"
+                />
+              </div>
+
+              {/* 별칭 */}
+              <div>
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  별칭 (선택)
+                </label>
+                <input
+                  value={createSlug}
+                  onChange={(e) => setCreateSlug(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  placeholder="예) iu"
+                />
+              </div>
+
+              {/* 분류 */}
+              <div>
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  분류 (선택)
+                </label>
+                <select
+                  value={createCatalog}
+                  onChange={(e) => setCreateCatalog(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                >
+                  <option value="">선택 안 함</option>
+                  <option value="KPOP">KPOP</option>
+                  <option value="JPOP">JPOP</option>
+                  <option value="POP">POP</option>
+                  <option value="CPOP">CPOP</option>
+                </select>
+              </div>
+
+              {/* 곡 검색 및 선택 */}
+              <div>
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  곡 연결 (선택)
+                </label>
+                <input
+                  value={songSearchQuery}
+                  onChange={(e) => setSongSearchQuery(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  placeholder="곡 제목 또는 ID로 검색..."
+                />
+
+                {/* 선택된 곡 */}
+                {selectedSongIds.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedSongIds.map((songId) => {
+                      const song = songSearchResults.find((s) => s.id === songId);
+                      if (!song) return null;
+                      return (
+                        <div
+                          key={songId}
+                          className="flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs dark:bg-blue-900/30"
+                        >
+                          <span className="text-blue-700 dark:text-blue-300">
+                            {song.titleKo || song.title} (ID: {song.id})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedSongIds((prev) => prev.filter((id) => id !== songId))}
+                            className="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* 검색 결과 */}
+                {songSearchQuery && (
+                  <div className="mt-2 max-h-48 overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+                    {songSearchLoading ? (
+                      <div className="p-3 text-sm text-zinc-500">검색 중...</div>
+                    ) : songSearchResults.length === 0 ? (
+                      <div className="p-3 text-sm text-zinc-500">검색 결과가 없습니다.</div>
+                    ) : (
+                      <div className="divide-y divide-zinc-200 dark:divide-zinc-700">
+                        {songSearchResults.map((song) => (
+                          <button
+                            key={song.id}
+                            type="button"
+                            onClick={() => {
+                              if (selectedSongIds.includes(song.id)) {
+                                setSelectedSongIds((prev) => prev.filter((id) => id !== song.id));
+                              } else {
+                                setSelectedSongIds((prev) => [...prev, song.id]);
+                              }
+                            }}
+                            className={`w-full cursor-pointer p-3 text-left text-sm transition hover:bg-zinc-50 dark:hover:bg-zinc-800 ${
+                              selectedSongIds.includes(song.id) ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                            }`}
+                          >
+                            <div className="font-medium text-zinc-900 dark:text-zinc-50">
+                              {song.titleKo || song.title}
+                            </div>
+                            <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                              ID: {song.id}
+                              {song.artists.length > 0 && ` · ${song.artists.map((a: any) => a.nameKo).join(", ")}`}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {createError && (
+                <p className="text-sm text-red-500">{createError}</p>
+              )}
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreateDialogOpen(false);
+                    setCreateError(null);
+                  }}
+                  className="cursor-pointer rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateArtist}
+                  disabled={createLoading || !createName.trim() || !createNameKo.trim()}
+                  className={`cursor-pointer rounded-full px-4 py-2 text-sm font-semibold ${
+                    createLoading || !createName.trim() || !createNameKo.trim()
+                      ? "bg-green-200 text-white dark:bg-green-900/40"
+                      : "bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400"
+                  }`}
+                >
+                  {createLoading ? "생성 중..." : "생성"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
