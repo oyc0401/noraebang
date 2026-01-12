@@ -9,6 +9,8 @@ import {
   MANAGER_PAGE_SIZE,
   type ManagerArtistDetail,
   type ManagerArtistSummary,
+  type ManagerSpotifyPanelData,
+  type ManagerSpotifyTrackSummary,
   type ManagerSortKey,
 } from "./types";
 
@@ -280,6 +282,19 @@ function mergeWhere(
   return { AND: combined };
 }
 
+const spotifyTrackBaseSelect = {
+  id: true,
+  spotifyId: true,
+  spotifyUrl: true,
+  name: true,
+  thumbnails: true,
+  durationMs: true,
+  releaseDate: true,
+  popularity: true,
+  createdAt: true,
+  groupId: true,
+} satisfies Prisma.SpotifyTrackSelect;
+
 export async function fetchManagerArtistDetail(
   artistId: number,
 ): Promise<ManagerArtistDetail | null> {
@@ -370,5 +385,102 @@ export async function fetchManagerArtistDetail(
         }
       : null,
     songs,
+  };
+}
+
+export async function fetchManagerArtistSpotifyPanel(
+  artistId: number,
+): Promise<ManagerSpotifyPanelData> {
+  if (!artistId || Number.isNaN(artistId)) {
+    return { groups: [], orphanTracks: [] };
+  }
+
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    select: { spotifyId: true },
+  });
+
+  if (!artist?.spotifyId) {
+    return { groups: [], orphanTracks: [] };
+  }
+
+  const artistTracks = await prisma.spotifyArtistTrack.findMany({
+    where: { spotifyArtist: { spotifyId: artist.spotifyId } },
+    select: {
+      spotifyTrack: {
+        select: {
+          ...spotifyTrackBaseSelect,
+          group: {
+            select: {
+              id: true,
+              primaryTrack: { select: spotifyTrackBaseSelect },
+              _count: { select: { tracks: true } },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { spotifyTrack: { name: "asc" } },
+  });
+
+  const groupsAccumulator = new Map<
+    number,
+    {
+      groupId: number;
+      trackCount: number;
+      artistTrackCount: number;
+      primaryTrack: ManagerSpotifyTrackSummary;
+    }
+  >();
+  const orphanTracks: ManagerSpotifyTrackSummary[] = [];
+
+  const mapTrack = (track: any): ManagerSpotifyTrackSummary => ({
+    id: track.id,
+    spotifyId: track.spotifyId,
+    name: track.name,
+    spotifyUrl: track.spotifyUrl ?? null,
+    durationMs: track.durationMs ?? null,
+    releaseDate: track.releaseDate ?? null,
+    popularity: track.popularity ?? null,
+    thumbnails: track.thumbnails ?? [],
+    createdAt: track.createdAt instanceof Date ? track.createdAt.toISOString() : String(track.createdAt ?? ""),
+    groupId: track.groupId ?? null,
+  });
+
+  for (const record of artistTracks) {
+    const track = record.spotifyTrack;
+    if (!track) continue;
+    const summary = mapTrack(track);
+
+    if (track.groupId && track.group) {
+      const fallbackPrimary = track.group.primaryTrack
+        ? mapTrack(track.group.primaryTrack)
+        : summary;
+      const existing = groupsAccumulator.get(track.group.id);
+      if (existing) {
+        existing.artistTrackCount += 1;
+        if (!existing.primaryTrack && fallbackPrimary) {
+          existing.primaryTrack = fallbackPrimary;
+        }
+      } else {
+        groupsAccumulator.set(track.group.id, {
+          groupId: track.group.id,
+          trackCount: track.group._count?.tracks ?? 0,
+          artistTrackCount: 1,
+          primaryTrack: fallbackPrimary,
+        });
+      }
+    } else {
+      orphanTracks.push(summary);
+    }
+  }
+
+  const groups = Array.from(groupsAccumulator.values()).sort(
+    (a, b) => a.groupId - b.groupId,
+  );
+
+  return {
+    groups,
+    orphanTracks: orphanTracks.sort((a, b) => a.name.localeCompare(b.name)),
   };
 }

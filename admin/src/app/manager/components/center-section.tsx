@@ -152,7 +152,7 @@ export function CenterSection() {
                     href={detail.spotify.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex w-fit items-center gap-2 rounded-xl border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:text-emerald-800"
+                    className="inline-flex w-fit items-center gap-2 rounded-xl border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-700 transition hover:border-emerald-300 hover:text-emerald-800"
                   >
                     Spotify 페이지 열기
                   </a>
@@ -199,7 +199,7 @@ export function CenterSection() {
             {detail.songs.map((song) => (
               <div
                 key={song.id}
-                className="rounded-xl border border-zinc-100 bg-white/80 px-4 py-3 shadow-sm"
+                className="rounded-xl border border-zinc-100 bg-white/80 px-4 py-3"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -249,7 +249,7 @@ export function CenterSection() {
   };
 
   return (
-    <section className="flex flex-col rounded-2xl border border-zinc-200 bg-white/80 p-6 text-sm text-zinc-700 shadow-sm">
+    <section className="flex flex-col border border-zinc-200 bg-white p-6 text-sm text-zinc-700">
       {renderBody()}
     </section>
   );
