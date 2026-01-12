@@ -553,24 +553,56 @@ export async function fetchManagerArtistSpotifyPanel(
     return { groups: [], orphanTracks: [] };
   }
 
-  const artistTracks = await prisma.spotifyArtistTrack.findMany({
-    where: { spotifyArtist: { spotifyId: artist.spotifyId } },
-    select: {
-      spotifyTrack: {
-        select: {
-          ...spotifyTrackBaseSelect,
-          group: {
-            select: {
-              id: true,
-              primaryTrack: { select: spotifyTrackBaseSelect },
-              _count: { select: { tracks: true } },
+  const [artistTracks, artistSongLinks] = await Promise.all([
+    prisma.spotifyArtistTrack.findMany({
+      where: { spotifyArtist: { spotifyId: artist.spotifyId } },
+      select: {
+        spotifyTrack: {
+          select: {
+            ...spotifyTrackBaseSelect,
+            group: {
+              select: {
+                id: true,
+                primaryTrack: { select: spotifyTrackBaseSelect },
+                _count: { select: { tracks: true } },
+              },
             },
           },
         },
       },
-    },
-    orderBy: { spotifyTrack: { name: "asc" } },
-  });
+      orderBy: { spotifyTrack: { name: "asc" } },
+    }),
+    prisma.artistSong.findMany({
+      where: { artistId },
+      select: {
+        song: {
+          select: {
+            id: true,
+            title: true,
+            titleKo: true,
+            spotifyTrackGroupId: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  const linkedSongMap = new Map<
+    number,
+    Array<{ id: number; title: string; titleKo?: string | null }>
+  >();
+  for (const link of artistSongLinks) {
+    const groupId = link.song.spotifyTrackGroupId;
+    if (!groupId) continue;
+    if (!linkedSongMap.has(groupId)) {
+      linkedSongMap.set(groupId, []);
+    }
+    linkedSongMap.get(groupId)!.push({
+      id: link.song.id,
+      title: link.song.title,
+      titleKo: link.song.titleKo ?? null,
+    });
+  }
 
   const groupsAccumulator = new Map<
     number,
@@ -617,16 +649,21 @@ export async function fetchManagerArtistSpotifyPanel(
     }
   }
 
-  const groups = Array.from(groupsAccumulator.values()).sort((a, b) => {
-    const popularityA = a.primaryTrack.popularity ?? -1;
-    const popularityB = b.primaryTrack.popularity ?? -1;
-    if (popularityA !== popularityB) {
-      return popularityB - popularityA;
-    }
-    const dateA = a.primaryTrack.releaseDate ?? "";
-    const dateB = b.primaryTrack.releaseDate ?? "";
-    return dateB.localeCompare(dateA);
-  });
+  const groups = Array.from(groupsAccumulator.values())
+    .map((group) => ({
+      ...group,
+      linkedSongs: linkedSongMap.get(group.groupId) ?? [],
+    }))
+    .sort((a, b) => {
+      const popularityA = a.primaryTrack.popularity ?? -1;
+      const popularityB = b.primaryTrack.popularity ?? -1;
+      if (popularityA !== popularityB) {
+        return popularityB - popularityA;
+      }
+      const dateA = a.primaryTrack.releaseDate ?? "";
+      const dateB = b.primaryTrack.releaseDate ?? "";
+      return dateB.localeCompare(dateA);
+    });
 
   return {
     groups,

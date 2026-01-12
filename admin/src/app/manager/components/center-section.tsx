@@ -11,6 +11,7 @@ import { ArtistMergeDialog } from "./artist-merge-dialog";
 import { ArtistNameDialog } from "./artist-name-dialog";
 import { ArtistSpotifyIdDialog } from "./artist-spotify-id-dialog";
 import { ArtistYoutubeDialog } from "./artist-youtube-dialog";
+import { SpotifyIcon } from "./spotify-icon";
 import { SpotifyInfoCard } from "./spotify-info-card";
 import { YoutubeInfoCard } from "./youtube-info-card";
 
@@ -392,28 +393,53 @@ export function CenterSection() {
                           </div>
                         </div>
                         {song.spotifyGroup ? (
-                          <div className="text-right text-[11px] text-zinc-500 space-y-1">
-                            {primaryTrack?.name ? (
-                              <p className="text-sm font-semibold text-black">
-                                {primaryTrack?.name}
-                                <span className="text-gray-400 text-xs">{` (${primaryTrack.musicBrainzTitle})`}</span>
-                              </p>
-                            ) : (
-                              <p className="font-semibold text-blue-600">
-                                {"Primary track 없음"}
-                              </p>
-                            )}
-
-                            <p className="text-xs">
-                              그룹 #{song.spotifyGroup.id}
-                            </p>
-                            <div className="space-y-0.5">
-                              <p>
-                                <span>길이 {primaryDuration} </span> / 인기도{" "}
-                                {primaryTrack?.popularity ?? "-"}{" "}
-                              </p>
-
-                              <p>발매일 {primaryRelease}</p>
+                          <div className="rounded-lg border border-emerald-100/70 bg-white/70 p-3 text-[11px] text-zinc-500 shadow-sm">
+                            <div className="flex items-start gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
+                                <SpotifyIcon className="h-4 w-4" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[10px] uppercase tracking-[0.4em] text-emerald-500">
+                                  Group #{song.spotifyGroup.id}
+                                </p>
+                                {primaryTrack?.name ? (
+                                  primaryTrack.spotifyUrl ? (
+                                    <a
+                                      href={primaryTrack.spotifyUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="group block"
+                                    >
+                                      <span className="text-sm font-semibold text-zinc-900 group-hover:text-emerald-600">
+                                        {primaryTrack?.name}
+                                      </span>
+                                      <span className="block text-[11px] text-zinc-400 truncate">{`(${primaryTrack.musicBrainzTitle})`}</span>
+                                    </a>
+                                  ) : (
+                                    <div>
+                                      <p className="text-sm font-semibold text-zinc-900">
+                                        {primaryTrack?.name}
+                                      </p>
+                                      <span className="block text-[11px] text-zinc-400 truncate">{`(${primaryTrack.musicBrainzTitle})`}</span>
+                                    </div>
+                                  )
+                                ) : (
+                                  <p className="font-semibold text-emerald-600">
+                                    Primary track 없음
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-zinc-500">
+                              <span className="inline-flex items-center rounded-full border border-emerald-100 px-2.5 py-0.5">
+                                길이 {primaryDuration}
+                              </span>
+                              <span className="inline-flex items-center rounded-full border border-emerald-100 px-2.5 py-0.5">
+                                인기도 {primaryTrack?.popularity ?? "-"}
+                              </span>
+                              <span className="inline-flex items-center rounded-full border border-emerald-100 px-2.5 py-0.5">
+                                발매일 {primaryRelease}
+                              </span>
                             </div>
                           </div>
                         ) : null}

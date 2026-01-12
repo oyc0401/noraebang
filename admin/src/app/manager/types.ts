@@ -121,6 +121,11 @@ export type ManagerSpotifyGroupSummary = {
   artistTrackCount: number;
   primaryTrack: ManagerSpotifyTrackSummary;
   tracks: ManagerSpotifyTrackSummary[];
+  linkedSongs: Array<{
+    id: number;
+    title: string;
+    titleKo?: string | null;
+  }>;
 };
 
 export type ManagerSpotifyPanelData = {
