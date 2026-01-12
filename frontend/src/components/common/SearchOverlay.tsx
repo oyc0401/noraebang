@@ -1,21 +1,25 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Clock, Search } from "lucide-react";
+import { Clock, Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/search";
 import { KaraokeBadge } from "@/components/common/KaraokeBadge";
 import { SearchBar } from "@/components/search/SearchBar";
+import { hasIncompleteKorean } from "@/lib/korean";
 import { useSearchStore } from "@/store/searchStore";
 
 export function SearchOverlay() {
   const router = useRouter();
   const { query, setQuery, clearSearch } = useSearchStore();
 
+  // 완성형 한글이 아니면 API 호출 안함
+  const shouldFetch = query.length > 0 && !hasIncompleteKorean(query);
+
   const { data: suggestions, isLoading } =
     useSearchControllerGetSearchSuggestions(
       { query },
-      { query: { enabled: true } },
+      { query: { enabled: shouldFetch } },
     );
 
   return (
