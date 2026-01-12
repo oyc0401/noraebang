@@ -380,6 +380,13 @@ export async function fetchManagerArtistDetail(
               thumbnailDefault: true,
               thumbnailMedium: true,
               thumbnailHigh: true,
+              tjSong: {
+                select: {
+                  id: true,
+                  title: true,
+                  artist: true,
+                },
+              },
               spotifyTrackGroup: {
                 select: {
                   id: true,
@@ -435,6 +442,13 @@ export async function fetchManagerArtistDetail(
           primaryTrack: song.spotifyTrackGroup.primaryTrack
             ? mapSpotifyTrackSummary(song.spotifyTrackGroup.primaryTrack)
             : null,
+        }
+      : null,
+    tjSong: song.tjSong
+      ? {
+          id: song.tjSong.id,
+          title: song.tjSong.title,
+          artist: song.tjSong.artist,
         }
       : null,
     karaoke: song.karaokeSongs.map((item) => ({
