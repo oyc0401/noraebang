@@ -478,6 +478,7 @@ export async function fetchManagerArtistSpotifyPanel(
       trackCount: number;
       artistTrackCount: number;
       primaryTrack: ManagerSpotifyTrackSummary;
+      tracks: ManagerSpotifyTrackSummary[];
     }
   >();
   const orphanTracks: ManagerSpotifyTrackSummary[] = [];
@@ -507,6 +508,7 @@ export async function fetchManagerArtistSpotifyPanel(
       const existing = groupsAccumulator.get(track.group.id);
       if (existing) {
         existing.artistTrackCount += 1;
+        existing.tracks.push(summary);
         if (!existing.primaryTrack && fallbackPrimary) {
           existing.primaryTrack = fallbackPrimary;
         }
@@ -516,6 +518,7 @@ export async function fetchManagerArtistSpotifyPanel(
           trackCount: track.group._count?.tracks ?? 0,
           artistTrackCount: 1,
           primaryTrack: fallbackPrimary,
+          tracks: [summary],
         });
       }
     } else {
@@ -573,9 +576,21 @@ export async function updateArtistNames({
     throw new Error("이름과 한국어 이름은 필수입니다.");
   }
 
+  const data: Prisma.ArtistUpdateInput = {
+    name: sanitized.name,
+    nameKo: sanitized.nameKo,
+    nameJaKana: sanitized.nameJaKana,
+    nameJaKanji: sanitized.nameJaKanji,
+    nameLatin: sanitized.nameLatin,
+    slug: sanitized.slug,
+  };
+  if (sanitized.homeCatalog !== undefined) {
+    data.homeCatalog = sanitized.homeCatalog;
+  }
+
   const artist = await prisma.artist.update({
     where: { id: artistId },
-    data: sanitized,
+    data,
     select: {
       id: true,
       name: true,
@@ -589,6 +604,39 @@ export async function updateArtistNames({
   });
 
   return artist;
+}
+
+export type CreateArtistInput = {
+  name: string;
+  nameKo: string;
+  slug?: string | null;
+  catalog?: "미정" | "KPOP" | "JPOP" | "POP";
+};
+
+export async function createArtist({
+  name,
+  nameKo,
+  slug,
+  catalog,
+}: CreateArtistInput): Promise<ManagerArtistSummary> {
+  const trimmedName = name.trim();
+  const trimmedNameKo = nameKo.trim();
+  if (!trimmedName || !trimmedNameKo) {
+    throw new Error("이름과 한국어 이름은 필수입니다.");
+  }
+  const data: Prisma.ArtistCreateInput = {
+    name: trimmedName,
+    nameKo: trimmedNameKo,
+    slug: slug?.trim() || null,
+  };
+  if (catalog) {
+    data.homeCatalog = catalog === "미정" ? null : catalog;
+  }
+  const payload = await prisma.artist.create({
+    data,
+    select: artistSelect,
+  });
+  return mapArtistRecord(payload);
 }
 
 export type UpdateArtistSpotifyIdInput = {
