@@ -158,6 +158,28 @@ describe("transformArtistToDocument", () => {
     expect(result.q_name_ko_p).toContain("가라쿠타"); // 기본 이름
     expect(result.q_name_ko_a).toContain("쓰레기"); // 별칭
   });
+
+  it("tjSongCount should reflect TJ-linked songs and affect popularity", () => {
+    const artist = {
+      id: 42,
+      name: "테스트",
+      nameKo: "테스트",
+      homeCatalog: "JPOP",
+      aliases: [],
+      updatedAt: new Date("2025-01-01"),
+      spotifyArtist: { popularity: 10 },
+      artistSongs: [
+        { song: { tjSong: { id: "TJ12345" } } },
+        { song: { tjSong: null } },
+        { song: {} },
+      ],
+    };
+
+    const result = transformArtistToDocument(artist as any);
+
+    expect(result.tjSongCount).toBe(1);
+    expect(result.popularity).toBe(11);
+  });
 });
 
 describe("removeBrackets - Artist", () => {

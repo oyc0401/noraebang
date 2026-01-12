@@ -50,6 +50,17 @@ async function main() {
     },
     include: {
       aliases: true,
+      artistSongs: {
+        include: {
+          song: {
+            select: {
+              tjSong: {
+                select: { id: true },
+              },
+            },
+          },
+        },
+      },
       spotifyArtist: {
         select: {
           popularity: true,
