@@ -91,7 +91,8 @@ export function SpotifyTracksSection() {
                               인기도: {group.primaryTrack.popularity}
                             </div>
                           )}
-                          {group.primaryTrack.popularity !== undefined && (
+                          {group.primaryTrack.musicBrainzRecordingId !==
+                            undefined && (
                             <div className="text-xs text-zinc-500 dark:text-zinc-400">
                               musicId:{" "}
                               {group.primaryTrack.musicBrainzRecordingId}

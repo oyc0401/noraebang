@@ -190,7 +190,9 @@ async function processArtist(
     const track = tracksWithIsrc[i];
     const progress = `[${i + 1}/${tracksWithIsrc.length}]`;
 
-    console.log(`${progress} ${track.name} (ISRC: ${track.isrc})`);
+    console.log(
+      `${progress} (${artistId}) ${track.name} (ISRC: ${track.isrc})`,
+    );
 
     // ISRC null 체크
     if (!track.isrc) {
@@ -199,10 +201,10 @@ async function processArtist(
       continue;
     }
 
-    // 이미 musicBrainzRecordingId가 있으면 스킵 (제목만 있는 경우는 다시 조회)
-    if ((track as any).musicBrainzRecordingId) {
+    // 이미 조회한 트랙이면 스킵
+    if ((track as any).musicBrainzFetchedAt) {
       console.log(
-        `  ⏭️  이미 저장됨: ${(track as any).musicBrainzTitle} (Recording ID: ${(track as any).musicBrainzRecordingId})\n`,
+        `  ⏭️  이미 조회됨${(track as any).musicBrainzTitle ? `: ${(track as any).musicBrainzTitle}` : ""}\n`,
       );
       skippedCount++;
       continue;
@@ -230,6 +232,7 @@ async function processArtist(
               musicBrainzRecordingId: musicBrainzData.recordingId,
               musicBrainzArtistCreditId: musicBrainzData.artistCreditId,
               musicBrainzArtistId: musicBrainzData.artistId,
+              musicBrainzFetchedAt: new Date(),
             },
           });
           console.log(`  💾 DB 업데이트 완료\n`);
@@ -244,6 +247,19 @@ async function processArtist(
       }
     } else {
       console.log(`  ❌ 제목을 찾을 수 없음\n`);
+      // 조회했지만 결과가 없는 경우에도 musicBrainzFetchedAt 기록
+      if (!isDryRun) {
+        try {
+          await prisma.spotifyTrack.update({
+            where: { id: track.id },
+            data: {
+              musicBrainzFetchedAt: new Date(),
+            },
+          });
+        } catch (error) {
+          console.error(`  ❌ DB 업데이트 실패:`, error);
+        }
+      }
       errorCount++;
     }
 
