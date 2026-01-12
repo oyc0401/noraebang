@@ -2,6 +2,7 @@ import { Injectable, type OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Client } from "typesense";
 import type { SearchResponse } from "typesense/lib/Typesense/Documents";
+import type { OperationMode } from "typesense/lib/Typesense/Types";
 import { preprocessSearchQuery } from "./lib/query-preprocessor";
 import type {
   TypesenseArtistDocument,
@@ -78,6 +79,7 @@ export class TypesenseService implements OnModuleInit {
           "q_name_ja_kana_p",
           "q_name_ja_kana_a",
         ].join(","),
+        sort_by: "popularity:desc,_text_match:desc",
         page,
         per_page: perPage,
       });
@@ -92,36 +94,75 @@ export class TypesenseService implements OnModuleInit {
     const { query, page = 1, perPage = 20 } = params;
     const preprocessedQuery = preprocessSearchQuery(query);
 
-    return this.client
+    const songQueryFields = [
+      "q_song_ko_p",
+      "q_song_ko_a",
+      "q_song_ko_norm",
+      "q_song_latin_p",
+      "q_song_latin_a",
+      "q_song_latin_norm",
+      "q_song_ja_kanji_p",
+      "q_song_ja_kanji_a",
+      "q_song_ja_kanji_norm",
+      "q_song_ja_kana_p",
+      "q_song_ja_kana_a",
+      "q_song_ja_kana_norm",
+      "q_artist_ko_p",
+      "q_artist_ko_a",
+      "q_artist_ko_norm",
+      "q_artist_raw_p",
+      "q_artist_raw_a",
+      "q_artist_raw_norm",
+      "q_artist_ja_kanji_p",
+      "q_artist_ja_kanji_a",
+      "q_artist_ja_kanji_norm",
+      "q_artist_ja_kana_p",
+      "q_artist_ja_kana_a",
+      "q_artist_ja_kana_norm",
+      "q_combo_a",
+    ];
+
+    const normFields = new Set<string>([
+      "q_song_ko_norm",
+      "q_song_latin_norm",
+      "q_song_ja_kanji_norm",
+      "q_song_ja_kana_norm",
+      "q_artist_ko_norm",
+      "q_artist_raw_norm",
+      "q_artist_ja_kanji_norm",
+      "q_artist_ja_kana_norm",
+    ]);
+    const infixModes: OperationMode[] = songQueryFields.map((field) =>
+      normFields.has(field) ? "always" : "off",
+    );
+
+    console.log("🔍 [Typesense] 검색 요청:", {
+      originalQuery: query,
+      preprocessedQuery,
+      infixCount: infixModes.filter((m) => m === "always").length,
+    });
+
+    const result = await this.client
       .collections<TypesenseSongDocument>("songs")
       .documents()
       .search({
         q: preprocessedQuery,
-        query_by: [
-          // 곡 제목
-          "q_song_ko_p",
-          "q_song_ko_a",
-          "q_song_latin_p",
-          "q_song_latin_a",
-          "q_song_ja_kanji_p",
-          "q_song_ja_kanji_a",
-          "q_song_ja_kana_p",
-          "q_song_ja_kana_a",
-          // 아티스트 이름
-          "q_artist_ko_p",
-          "q_artist_ko_a",
-          "q_artist_raw_p",
-          "q_artist_raw_a",
-          "q_artist_ja_kanji_p",
-          "q_artist_ja_kanji_a",
-          "q_artist_ja_kana_p",
-          "q_artist_ja_kana_a",
-          // 조합 검색
-          "q_combo_a",
-        ].join(","),
-        sort_by: "hasKaraokeNo:desc,_text_match:desc",
+        query_by: songQueryFields.join(","),
+        sort_by: "hasKaraokeNo:desc,_text_match:desc,popularity:desc",
+        infix: infixModes,
         page,
         per_page: perPage,
       });
+
+    console.log(
+      `🔍 [Typesense] 검색 결과: ${result.hits?.length ?? 0}개, found: ${result.found}`,
+    );
+    if (result.hits && result.hits.length > 0) {
+      console.log(
+        `   첫 3개 ID: ${result.hits.slice(0, 3).map((h) => h.document.id).join(", ")}`,
+      );
+    }
+
+    return result;
   }
 }

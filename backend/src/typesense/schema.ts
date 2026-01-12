@@ -42,27 +42,35 @@ export const songsCollectionSchema: CollectionCreateSchema = {
     { name: "q_song_ko_a", type: "string[]", optional: true },
     { name: "q_song_ko_a2", type: "string[]", optional: true },
     { name: "q_song_ko_f", type: "string[]", optional: true },
+    { name: "q_song_ko_norm", type: "string[]", optional: true, infix:true },
 
     { name: "q_song_latin_p", type: "string[]", optional: true },
     { name: "q_song_latin_a", type: "string[]", optional: true },
     { name: "q_song_latin_a2", type: "string[]", optional: true },
     { name: "q_song_latin_f", type: "string[]", optional: true },
+    { name: "q_song_latin_norm", type: "string[]", optional: true, infix:true },
 
     { name: "q_song_ja_kanji_p", type: "string[]", optional: true },
     { name: "q_song_ja_kanji_a", type: "string[]", optional: true },
     { name: "q_song_ja_kanji_a2", type: "string[]", optional: true },
     { name: "q_song_ja_kanji_f", type: "string[]", optional: true },
+    { name: "q_song_ja_kanji_norm", type: "string[]", optional: true, infix:true },
 
     { name: "q_song_ja_kana_p", type: "string[]", optional: true },
     { name: "q_song_ja_kana_a", type: "string[]", optional: true },
     { name: "q_song_ja_kana_a2", type: "string[]", optional: true },
     { name: "q_song_ja_kana_f", type: "string[]", optional: true },
+    { name: "q_song_ja_kana_norm", type: "string[]", optional: true, infix:true },
 
     // ===== 검색 필드: 아티스트명 =====
     { name: "q_artist_ko_p", type: "string[]", optional: true },
     { name: "q_artist_ko_a", type: "string[]", optional: true },
     { name: "q_artist_ko_a2", type: "string[]", optional: true },
     { name: "q_artist_ko_f", type: "string[]", optional: true },
+    { name: "q_artist_ko_norm", type: "string[]", optional: true, infix:true },
+    { name: "q_artist_raw_norm", type: "string[]", optional: true, infix:true },
+    { name: "q_artist_ja_kanji_norm", type: "string[]", optional: true, infix:true },
+    { name: "q_artist_ja_kana_norm", type: "string[]", optional: true, infix:true},
 
     { name: "q_artist_raw_p", type: "string[]", optional: true },
     { name: "q_artist_raw_a", type: "string[]", optional: true },
