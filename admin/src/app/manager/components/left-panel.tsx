@@ -10,6 +10,7 @@ import {
   type ManagerArtistSummary,
   type ManagerSortKey,
 } from "../types";
+import { useManagerStore } from "../store";
 import { ArtistCard } from "./artist-card";
 import { FilterDialog } from "./filter-dialog";
 
@@ -22,8 +23,6 @@ type LeftPanelProps = {
   onSortKeyChange: (value: ManagerSortKey) => void;
   selectedFilters: ArtistFilterId[];
   onFiltersChange: (filters: ArtistFilterId[]) => void;
-  selectedArtistId: number | null;
-  onSelectArtist: (artistId: number) => void;
   isLoading: boolean;
   errorMessage: string | null;
   onRequestMore: () => void;
@@ -40,8 +39,6 @@ export function LeftPanel({
   onSortKeyChange,
   selectedFilters,
   onFiltersChange,
-  selectedArtistId,
-  onSelectArtist,
   isLoading,
   errorMessage,
   onRequestMore,
@@ -51,9 +48,13 @@ export function LeftPanel({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
+  const setSelectedArtistId = useManagerStore(
+    (state) => state.setSelectedArtistId,
+  );
 
   useEffect(() => {
-    if (!scrollContainerRef.current || !sentinelRef.current) {
+    if (!scrollContainerRef.current || !sentinelRef.current || !hasMore) {
       return;
     }
     const container = scrollContainerRef.current;
@@ -163,7 +164,7 @@ export function LeftPanel({
                   key={artist.id}
                   artist={artist}
                   selected={artist.id === selectedArtistId}
-                  onSelect={onSelectArtist}
+                  onSelect={setSelectedArtistId}
                 />
               ))}
               {errorMessage && (

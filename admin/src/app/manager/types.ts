@@ -22,3 +22,37 @@ export const managerSortOptions: Array<{ key: ManagerSortKey; label: string }> =
     { key: "idDesc", label: "ID 내림차순" },
     { key: "popularityDesc", label: "스포티파이 인기순" },
   ];
+
+export type ManagerArtistSongDetail = {
+  id: number;
+  title: string;
+  titleKo?: string | null;
+  catalog?: string | null;
+  hasYoutube: boolean;
+  karaoke: Array<{
+    provider: string;
+    karaokeNo: string;
+  }>;
+};
+
+export type ManagerArtistDetail = {
+  id: number;
+  name: string;
+  nameKo: string;
+  nameJa?: string | null;
+  nameLatin?: string | null;
+  catalog?: string | null;
+  songCount: number;
+  thumbnails: {
+    default?: string | null;
+    medium?: string | null;
+    high?: string | null;
+  };
+  spotify?: {
+    popularity?: number | null;
+    followers?: number | null;
+    genres: string[];
+    url?: string | null;
+  } | null;
+  songs: ManagerArtistSongDetail[];
+};
