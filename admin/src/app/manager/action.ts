@@ -295,6 +295,8 @@ const spotifyTrackBaseSelect = {
   durationMs: true,
   releaseDate: true,
   popularity: true,
+  musicBrainzTitle: true,
+  musicBrainzArtistId: true,
   createdAt: true,
   groupId: true,
 } satisfies Prisma.SpotifyTrackSelect;
@@ -322,6 +324,8 @@ function mapSpotifyTrackSummary(track: any): ManagerSpotifyTrackSummary {
     durationMs: track.durationMs ?? null,
     releaseDate: track.releaseDate ?? null,
     popularity: track.popularity ?? null,
+    musicBrainzTitle: track.musicBrainzTitle ?? null,
+    musicBrainzArtistId: track.musicBrainzArtistId ?? null,
     thumbnails: track.thumbnails ?? [],
     createdAt:
       track.createdAt instanceof Date

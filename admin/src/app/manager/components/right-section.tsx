@@ -69,9 +69,7 @@ export function RightSection() {
     if (!selectedGroupId) {
       return;
     }
-    const element = document.getElementById(
-      `spotify-group-${selectedGroupId}`,
-    );
+    const element = document.getElementById(`spotify-group-${selectedGroupId}`);
     element?.scrollIntoView({ block: "nearest" });
   }, [selectedGroupId, data.groups.length]);
 
@@ -193,22 +191,16 @@ function SpotifyGroupCard({ group }: SpotifyGroupCardProps) {
   return (
     <div
       id={`spotify-group-${group.groupId}`}
-      className={`border bg-white p-3 transition ${
-        isSelected ? "border-blue-400 bg-blue-50" : "border-gray-100"
+      className={`border  p-3 transition ${
+        isSelected
+          ? "border-blue-400 bg-blue-50 border-2"
+          : "border-gray-100 bg-white"
       }`}
       onClick={() => setSelectedGroupId(group.groupId)}
     >
-      <div className="flex items-center justify_between text-xs text-zinc-500">
+      <div className="flex items-center justify-between text-xs text-zinc-500">
         <span className="font-semibold text-zinc-800">
           그룹 #{group.groupId}
-        </span>
-      </div>
-      <div className="mt-3">
-        <SpotifyTrackCard track={group.primaryTrack} groupId={group.groupId} />
-      </div>
-      <div className="mt-3 flex items-center justify-between text-[11px] text-zinc-500">
-        <span>
-          {group.trackCount}곡 중 {group.artistTrackCount}곡 연동
         </span>
         <button
           type="button"
@@ -221,6 +213,9 @@ function SpotifyGroupCard({ group }: SpotifyGroupCardProps) {
         >
           그룹 상세 보기
         </button>
+      </div>
+      <div className="mt-3">
+        <SpotifyTrackCard track={group.primaryTrack} groupId={group.groupId} />
       </div>
     </div>
   );
@@ -241,9 +236,9 @@ function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
       : "-";
 
   return (
-    <div className="rounded-lg border border-zinc-100 bg-white p-3">
+    <div className="rounded-lg border border-zinc-100 p-3">
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-zinc-100">
+        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md">
           {track.thumbnails?.length ? (
             <img
               src={track.thumbnails[0]}
@@ -258,17 +253,19 @@ function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
         </div>
         <div className="flex flex-1 flex-col gap-1">
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <p className="font-semibold text-zinc-900">{track.name}</p>
-            {groupId ? (
-              <span className="text-[11px] text-blue-600">그룹 #{groupId}</span>
-            ) : null}
+            <p className="font-semibold text-zinc-900">
+              {track.name}
+              <span className="ml-1 text-xs text-gray-500 font-normal ">{`(${track.musicBrainzTitle})`}</span>{" "}
+            </p>
           </div>
           <p className="text-[11px] text-zinc-500">
-            Track #{track.id} · Spotify {track.spotifyId}
+            Track ID: {track.spotifyId}
           </p>
           <div className="flex flex-wrap gap-3 text-[11px] text-zinc-500">
             <span>발매 {releaseLabel}</span>
             <span>등록 {createdLabel}</span>
+          </div>
+          <div className="flex flex-wrap gap-3 text-[11px] text-zinc-500">
             <span>길이 {durationLabel}</span>
             <span>인기도 {track.popularity ?? "-"}</span>
           </div>
@@ -287,7 +284,6 @@ function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
         ) : (
           <span className="text-zinc-400">스포티파이 URL 없음</span>
         )}
-        <span className="text-zinc-400">생성 {createdLabel}</span>
       </div>
     </div>
   );
