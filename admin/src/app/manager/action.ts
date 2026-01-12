@@ -299,6 +299,21 @@ const spotifyTrackBaseSelect = {
   musicBrainzArtistId: true,
   createdAt: true,
   groupId: true,
+  artists: {
+    select: {
+      spotifyArtist: {
+        select: {
+          spotifyId: true,
+          name: true,
+          artists: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      },
+    },
+  },
 } satisfies Prisma.SpotifyTrackSelect;
 
 function mapSpotifyTrackSummary(track: any): ManagerSpotifyTrackSummary {
@@ -332,6 +347,28 @@ function mapSpotifyTrackSummary(track: any): ManagerSpotifyTrackSummary {
         ? track.createdAt.toISOString()
         : String(track.createdAt ?? ""),
     groupId: track.groupId ?? null,
+    artists:
+      track.artists?.flatMap((link: any) => {
+        const spotifyArtist = link.spotifyArtist;
+        if (!spotifyArtist) {
+          return [];
+        }
+        const linkedArtists = spotifyArtist.artists ?? [];
+        if (!linkedArtists.length) {
+          return [
+            {
+              artistId: null,
+              spotifyName: spotifyArtist.name,
+              spotifyId: spotifyArtist.spotifyId,
+            },
+          ];
+        }
+        return linkedArtists.map((artistRecord: any) => ({
+          artistId: artistRecord.id,
+          spotifyName: spotifyArtist.name,
+          spotifyId: spotifyArtist.spotifyId,
+        }));
+      }) ?? [],
   };
 }
 

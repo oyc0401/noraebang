@@ -74,6 +74,29 @@ export function GroupDetailDialog() {
                   </a>
                 ) : null}
               </div>
+              <div className="mt-2 text-[11px] text-zinc-600">
+                <p className="mb-1 font-semibold text-zinc-700">아티스트</p>
+                {track.artists.length === 0 ? (
+                  <p className="text-zinc-400">연결된 아티스트가 없습니다.</p>
+                ) : (
+                  track.artists.map((artist) => (
+                    <div
+                      key={`${track.id}-${artist.spotifyId}-${artist.artistId ?? "none"}`}
+                      className="flex flex-wrap items-center gap-2"
+                    >
+                      <span className="rounded border border-zinc-200 px-2 py-0.5 text-[10px] text-zinc-500">
+                        #{artist.artistId ?? "미연결"}
+                      </span>
+                      <span className="font-semibold text-zinc-800">
+                        {artist.spotifyName}
+                      </span>
+                      <span className="text-blue-600">
+                        Spotify {artist.spotifyId}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           ))}
         </div>
