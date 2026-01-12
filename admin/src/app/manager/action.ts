@@ -333,6 +333,9 @@ export async function fetchManagerArtistDetail(
               titleKo: true,
               catalog: true,
               youtubeVideoId: true,
+              thumbnailDefault: true,
+              thumbnailMedium: true,
+              thumbnailHigh: true,
               karaokeSongs: {
                 select: {
                   provider: true,
@@ -357,6 +360,11 @@ export async function fetchManagerArtistDetail(
     titleKo: song.titleKo,
     catalog: song.catalog,
     hasYoutube: Boolean(song.youtubeVideoId),
+    thumbnails: {
+      default: song.thumbnailDefault,
+      medium: song.thumbnailMedium,
+      high: song.thumbnailHigh,
+    },
     karaoke: song.karaokeSongs.map((item) => ({
       provider: String(item.provider),
       karaokeNo: item.karaokeNo,
