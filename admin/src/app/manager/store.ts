@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { ManagerSpotifyTrackSummary } from "./types";
 
 type ManagerStoreState = {
   selectedArtistId: number | null;
@@ -18,6 +19,15 @@ type ManagerStoreState = {
   isYoutubeDialogOpen: boolean;
   openYoutubeDialog: () => void;
   closeYoutubeDialog: () => void;
+  isCreateArtistDialogOpen: boolean;
+  openCreateArtistDialog: () => void;
+  closeCreateArtistDialog: () => void;
+  groupDetail: { groupId: number; tracks: ManagerSpotifyTrackSummary[] } | null;
+  openGroupDetail: (
+    groupId: number,
+    tracks: ManagerSpotifyTrackSummary[],
+  ) => void;
+  closeGroupDetail: () => void;
 };
 
 export const useManagerStore = create<ManagerStoreState>((set) => ({
@@ -38,4 +48,10 @@ export const useManagerStore = create<ManagerStoreState>((set) => ({
   isYoutubeDialogOpen: false,
   openYoutubeDialog: () => set({ isYoutubeDialogOpen: true }),
   closeYoutubeDialog: () => set({ isYoutubeDialogOpen: false }),
+  isCreateArtistDialogOpen: false,
+  openCreateArtistDialog: () => set({ isCreateArtistDialogOpen: true }),
+  closeCreateArtistDialog: () => set({ isCreateArtistDialogOpen: false }),
+  groupDetail: null,
+  openGroupDetail: (groupId, tracks) => set({ groupDetail: { groupId, tracks } }),
+  closeGroupDetail: () => set({ groupDetail: null }),
 }));

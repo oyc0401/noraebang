@@ -38,6 +38,7 @@ type ManagerArtistsContextValue = {
     patch: Partial<ManagerArtistSummary>,
   ) => void;
   removeArtistSummary: (artistId: number) => void;
+  prependArtist: (artist: ManagerArtistSummary) => void;
 };
 
 const ManagerArtistsContext = createContext<ManagerArtistsContextValue | null>(
@@ -285,6 +286,15 @@ export function ManagerArtistsProvider({ children }: { children: ReactNode }) {
     [selectedArtistId, setSelectedArtistId],
   );
 
+  const handlePrependArtist = useCallback(
+    (artist: ManagerArtistSummary) => {
+      setArtists((prev) => [artist, ...prev]);
+      setTotalArtistCount((prev) => prev + 1);
+      setSelectedArtistId(artist.id);
+    },
+    [setSelectedArtistId],
+  );
+
   const value = useMemo<ManagerArtistsContextValue>(
     () => ({
       artists,
@@ -301,6 +311,7 @@ export function ManagerArtistsProvider({ children }: { children: ReactNode }) {
       loadMore,
       updateArtistSummary: handleUpdateArtistSummary,
       removeArtistSummary: handleRemoveArtistSummary,
+      prependArtist: handlePrependArtist,
     }),
     [
       artists,
@@ -317,6 +328,7 @@ export function ManagerArtistsProvider({ children }: { children: ReactNode }) {
       loadMore,
       handleUpdateArtistSummary,
       handleRemoveArtistSummary,
+      handlePrependArtist,
     ],
   );
 

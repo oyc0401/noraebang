@@ -169,15 +169,20 @@ type SpotifyGroupCardProps = {
 };
 
 function SpotifyGroupCard({ group }: SpotifyGroupCardProps) {
+  const openGroupDetail = useManagerStore((state) => state.openGroupDetail);
   return (
     <div className="border border-gray-100 bg-white p-3">
-      <div className="flex items-center justify-between text-xs text-zinc-500">
+      <div className="flex items-center justify_between text-xs text-zinc-500">
         <span className="font-semibold text-zinc-800">
           그룹 #{group.groupId}
         </span>
-        <span>
-          {group.trackCount}곡 중 {group.artistTrackCount}곡 연동
-        </span>
+        <button
+          type="button"
+          className="cursor-pointer rounded border border-zinc-200 px-2 py-0.5 text-[11px] text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
+          onClick={() => openGroupDetail(group.groupId, group.tracks)}
+        >
+          그룹 상세 보기
+        </button>
       </div>
       <div className="mt-3">
         <SpotifyTrackCard track={group.primaryTrack} groupId={group.groupId} />

@@ -104,6 +104,7 @@ export type ManagerSpotifyGroupSummary = {
   trackCount: number;
   artistTrackCount: number;
   primaryTrack: ManagerSpotifyTrackSummary;
+  tracks: ManagerSpotifyTrackSummary[];
 };
 
 export type ManagerSpotifyPanelData = {
