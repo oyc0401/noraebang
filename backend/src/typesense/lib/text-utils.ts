@@ -10,6 +10,22 @@ export function removeBrackets(text: string): string {
 }
 
 /**
+ * 구두점 제거 (일본어/한국어/영어 구두점 모두 제거)
+ */
+export function removePunctuation(text: string): string {
+  return text
+    .replace(/[。、！？!?.,;:~・]/g, "")
+    .trim();
+}
+
+/**
+ * 괄호와 구두점을 모두 제거
+ */
+export function cleanText(text: string): string {
+  return removePunctuation(removeBrackets(text));
+}
+
+/**
  * 카타카나를 히라가나로 변환
  */
 export function katakanaToHiragana(text: string): string {
