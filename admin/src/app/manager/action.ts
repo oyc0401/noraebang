@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import type { ArtistFilterId } from "./filter-options";
 import {
   MANAGER_PAGE_SIZE,
+  type ManagerArtistDetail,
   type ManagerArtistSummary,
   type ManagerSortKey,
 } from "./types";
@@ -277,4 +278,97 @@ function mergeWhere(
     return combined[0]!;
   }
   return { AND: combined };
+}
+
+export async function fetchManagerArtistDetail(
+  artistId: number,
+): Promise<ManagerArtistDetail | null> {
+  if (!artistId || Number.isNaN(artistId)) {
+    return null;
+  }
+
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    select: {
+      id: true,
+      name: true,
+      nameKo: true,
+      nameLatin: true,
+      nameJaKana: true,
+      nameJaKanji: true,
+      homeCatalog: true,
+      thumbnailDefault: true,
+      thumbnailMedium: true,
+      thumbnailHigh: true,
+      spotifyArtist: {
+        select: {
+          popularity: true,
+          followers: true,
+          genres: true,
+          spotifyUrl: true,
+        },
+      },
+      artistSongs: {
+        orderBy: { order: "asc" },
+        select: {
+          song: {
+            select: {
+              id: true,
+              title: true,
+              titleKo: true,
+              catalog: true,
+              youtubeVideoId: true,
+              karaokeSongs: {
+                select: {
+                  provider: true,
+                  karaokeNo: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      _count: { select: { artistSongs: true } },
+    },
+  });
+
+  if (!artist) {
+    return null;
+  }
+
+  const songs = artist.artistSongs.map(({ song }) => ({
+    id: song.id,
+    title: song.title,
+    titleKo: song.titleKo,
+    catalog: song.catalog,
+    hasYoutube: Boolean(song.youtubeVideoId),
+    karaoke: song.karaokeSongs.map((item) => ({
+      provider: String(item.provider),
+      karaokeNo: item.karaokeNo,
+    })),
+  }));
+
+  return {
+    id: artist.id,
+    name: artist.name,
+    nameKo: artist.nameKo,
+    nameLatin: artist.nameLatin,
+    nameJa: artist.nameJaKanji ?? artist.nameJaKana,
+    catalog: artist.homeCatalog,
+    songCount: artist._count.artistSongs,
+    thumbnails: {
+      default: artist.thumbnailDefault,
+      medium: artist.thumbnailMedium,
+      high: artist.thumbnailHigh,
+    },
+    spotify: artist.spotifyArtist
+      ? {
+          popularity: artist.spotifyArtist.popularity,
+          followers: artist.spotifyArtist.followers,
+          genres: artist.spotifyArtist.genres ?? [],
+          url: artist.spotifyArtist.spotifyUrl,
+        }
+      : null,
+    songs,
+  };
 }

@@ -3,11 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  fetchManagerArtistsBatch,
-  resolveArtistBatchOffset,
-} from "./action";
-import { CenterSectionPlaceholder } from "./components/center-section";
+import { fetchManagerArtistsBatch, resolveArtistBatchOffset } from "./action";
+import { CenterSection } from "./components/center-section";
 import { LeftPanel } from "./components/left-panel";
 import { RightSectionPlaceholder } from "./components/right-section";
 import { artistFilterOptions, type ArtistFilterId } from "./filter-options";
@@ -16,6 +13,7 @@ import {
   type ManagerArtistSummary,
   type ManagerSortKey,
 } from "./types";
+import { useManagerStore } from "./store";
 
 export default function ManagerPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,7 +24,10 @@ export default function ManagerPage() {
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null);
+  const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
+  const setSelectedArtistId = useManagerStore(
+    (state) => state.setSelectedArtistId,
+  );
   const loadedOffsetsRef = useRef(new Set<number>());
   const nextOffsetRef = useRef(0);
   const selectionAnchorIndexRef = useRef<number | null>(null);
@@ -50,7 +51,11 @@ export default function ManagerPage() {
   const loadBatch = useCallback(
     async (
       offset: number,
-      options?: { replace?: boolean; anchorId?: number | null; expectKey?: string },
+      options?: {
+        replace?: boolean;
+        anchorId?: number | null;
+        expectKey?: string;
+      },
     ) => {
       const expectKey = options?.expectKey ?? queryKeyRef.current;
       if (loadingRef.current && !options?.replace) {
@@ -98,7 +103,7 @@ export default function ManagerPage() {
 
         const anchorId =
           options?.anchorId ??
-          (options?.replace ? response.artists[0]?.id ?? null : null);
+          (options?.replace ? (response.artists[0]?.id ?? null) : null);
         if (anchorId) {
           const existsInBatch = response.artists.some(
             (artist) => artist.id === anchorId,
@@ -125,7 +130,7 @@ export default function ManagerPage() {
         setIsLoading(false);
       }
     },
-    [searchTerm, selectedFilters, sortKey],
+    [searchTerm, selectedFilters, setSelectedArtistId, sortKey],
   );
 
   const getHashArtistId = useCallback(() => {
@@ -193,6 +198,7 @@ export default function ManagerPage() {
     querySignature,
     searchTerm,
     selectedFilters,
+    setSelectedArtistId,
     sortKey,
   ]);
 
@@ -206,10 +212,6 @@ export default function ManagerPage() {
     }
     loadBatch(nextOffset, { expectKey: queryKeyRef.current });
   }, [hasMore, loadBatch]);
-
-  const handleArtistSelect = useCallback((artistId: number) => {
-    setSelectedArtistId(artistId);
-  }, []);
 
   const moveSelection = useCallback(
     (direction: "up" | "down") => {
@@ -240,7 +242,7 @@ export default function ManagerPage() {
         setSelectedArtistId(nextArtist.id);
       }
     },
-    [artists, hasMore, loadMore, selectedArtistId],
+    [artists, hasMore, loadMore, selectedArtistId, setSelectedArtistId],
   );
 
   useEffect(() => {
@@ -270,7 +272,7 @@ export default function ManagerPage() {
         selectionAnchorIndexRef.current = null;
       }
     }
-  }, [artists]);
+  }, [artists, setSelectedArtistId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || selectedArtistId === null) {
@@ -291,7 +293,7 @@ export default function ManagerPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-900">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 lg:gap-8">
+      <div className="mx-auto flex flex-col gap-6 lg:gap-8">
         <header className="flex flex-col gap-3">
           <p className="text-sm uppercase tracking-widest text-zinc-500">
             Admin / Manager
@@ -321,7 +323,7 @@ export default function ManagerPage() {
           </div>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[420px,1fr,320px]">
+        <div className="grid gap-6 lg:[grid-template-columns:420px_minmax(0,1fr)_320px]">
           <LeftPanel
             artists={artists}
             totalArtistCount={totalArtistCount}
@@ -331,8 +333,6 @@ export default function ManagerPage() {
             onSortKeyChange={setSortKey}
             selectedFilters={selectedFilters}
             onFiltersChange={setSelectedFilters}
-            selectedArtistId={selectedArtistId}
-            onSelectArtist={handleArtistSelect}
             isLoading={isLoading}
             errorMessage={errorMessage}
             onRequestMore={loadMore}
@@ -340,7 +340,7 @@ export default function ManagerPage() {
             filters={artistFilterOptions}
           />
 
-          <CenterSectionPlaceholder />
+          <CenterSection />
 
           <RightSectionPlaceholder />
         </div>
