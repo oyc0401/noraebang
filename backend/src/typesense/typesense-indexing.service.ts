@@ -5,6 +5,8 @@ import { artistsCollectionSchema, songsCollectionSchema } from "./schema";
 import {
   transformArtistToDocument,
   transformSongToDocument,
+  type ArtistWithRelations,
+  type SongWithRelations,
 } from "./transformer";
 import { TypesenseService } from "./typesense.service";
 
@@ -56,7 +58,9 @@ export class TypesenseIndexingService {
     });
 
     this.logger.log(`Transforming ${artists.length} artists...`);
-    const documents = artists.map(transformArtistToDocument);
+    const documents = artists.map((artist) =>
+      transformArtistToDocument(artist as ArtistWithRelations),
+    );
 
     await indexDocuments(client, artistsCollectionSchema.name, documents);
 
@@ -117,7 +121,9 @@ export class TypesenseIndexingService {
     });
 
     this.logger.log(`Transforming ${songs.length} songs...`);
-    const documents = songs.map(transformSongToDocument);
+    const documents = songs.map((song) =>
+      transformSongToDocument(song as SongWithRelations),
+    );
 
     await indexDocuments(client, songsCollectionSchema.name, documents);
 

@@ -20,7 +20,10 @@ import { Pool } from "pg";
 import { createTypesenseClient } from "../client";
 import { indexDocuments, recreateCollection } from "../indexer";
 import { songsCollectionSchema } from "../schema";
-import { transformSongToDocument } from "../transformer";
+import {
+  transformSongToDocument,
+  type SongWithRelations,
+} from "../transformer";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -90,7 +93,9 @@ async function main() {
 
   // 4. 변환
   console.log("\nStep 3: Transforming to Typesense documents...");
-  const documents = songs.map(transformSongToDocument);
+  const documents = songs.map((song) =>
+    transformSongToDocument(song as SongWithRelations),
+  );
   console.log(`✓ Transformed ${documents.length} documents`);
 
   // 5. 인덱싱

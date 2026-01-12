@@ -13,7 +13,7 @@ import {
   toAllKatakana,
 } from "./lib/text-utils";
 
-type SongWithRelations = Awaited<
+export type SongWithRelations = Awaited<
   ReturnType<PrismaClient["song"]["findMany"]>
 >[number] & {
   aliases: Array<{
@@ -27,9 +27,9 @@ type SongWithRelations = Awaited<
       id: number;
       name: string;
       nameKo: string;
-      nameLatin?: string | null;
-      nameJaKana?: string | null;
-      nameJaKanji?: string | null;
+      nameLatin?: string;
+      nameJaKana?: string;
+      nameJaKanji?: string;
       aliases: Array<{
         alias: string;
         locale: string;
@@ -37,29 +37,29 @@ type SongWithRelations = Awaited<
         source: string;
       }>;
       spotifyArtist?: {
-        popularity: number | null;
-      } | null;
+        popularity?: number;
+      };
       tjSongs?: Array<{
         tjSongId: string;
       }>;
     };
   }>;
-  tjSongId?: string | null;
+  tjSongId?: string;
   tjSong?: {
     id: string;
-  } | null;
+  };
   spotifyTrack?: {
-    spotifyTrack: {
-      popularity: number | null;
-    } | null;
-  } | null;
-  titleKo?: string | null;
-  titleLatin?: string | null;
-  titleJaKana?: string | null;
-  titleJaKanji?: string | null;
+    spotifyTrack?: {
+      popularity?: number;
+    };
+  };
+  titleKo?: string;
+  titleLatin?: string;
+  titleJaKana?: string;
+  titleJaKanji?: string;
 };
 
-type ArtistWithRelations = Awaited<
+export type ArtistWithRelations = Awaited<
   ReturnType<PrismaClient["artist"]["findMany"]>
 >[number] & {
   aliases: Array<{
@@ -72,15 +72,15 @@ type ArtistWithRelations = Awaited<
     song?: {
       tjSong?: {
         id: string;
-      } | null;
-    } | null;
+      };
+    };
   }>;
   spotifyArtist?: {
-    popularity: number | null;
-  } | null;
-  nameLatin?: string | null;
-  nameJaKana?: string | null;
-  nameJaKanji?: string | null;
+    popularity?: number;
+  };
+  nameLatin?: string;
+  nameJaKana?: string;
+  nameJaKanji?: string;
 };
 
 export interface TypesenseSongDocument {
@@ -195,9 +195,6 @@ export interface TypesenseArtistDocument {
   q_name_ja_kana_norm?: string[];
 }
 
-// Backward compatibility
-export type TypesenseDocument = TypesenseSongDocument;
-
 /**
  * 별칭을 locale/kind/source에 따라 q_* 필드로 그룹화
  */
@@ -272,7 +269,7 @@ function removeSpaces(text: string): string {
 
 function addJapaneseVariants(
   values: Set<string>,
-  text?: string | null,
+  text?: string,
   options?: { includeNormalized?: boolean },
 ) {
   if (!text) {
@@ -314,23 +311,13 @@ function addJapaneseVariants(
   }
 }
 
-function normalizeBasic(text?: string | null) {
+function normalizeBasic(text?: string) {
   if (!text) {
     return undefined;
   }
 
   const normalized = cleanText(removeSpaces(text));
   return normalized.length > 0 ? normalized : undefined;
-}
-
-function addBasicNormalizedVariant(
-  values: Set<string>,
-  text?: string | null,
-) {
-  const normalized = normalizeBasic(text);
-  if (normalized && normalized !== text) {
-    values.add(normalized);
-  }
 }
 
 function transferNormalizedValues(
@@ -349,7 +336,7 @@ function transferNormalizedValues(
   }
 }
 
-function buildPrimaryValues(value?: string | null): string[] | undefined {
+function buildPrimaryValues(value?: string): string[] | undefined {
   if (!value) {
     return undefined;
   }
@@ -363,7 +350,7 @@ function buildPrimaryValues(value?: string | null): string[] | undefined {
  */
 export function transformSongToDocument(
   song: SongWithRelations,
-): TypesenseDocument {
+): TypesenseSongDocument {
   const artists = song.artistSongs.map((as) => as.artist);
   const mainArtist = artists[0]; // 첫 번째 아티스트를 메인으로 간주
 

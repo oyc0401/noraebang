@@ -21,7 +21,10 @@ import "dotenv/config";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Pool } from "pg";
-import { transformSongToDocument } from "../transformer";
+import {
+  transformSongToDocument,
+  type SongWithRelations,
+} from "../transformer";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -101,7 +104,7 @@ async function main() {
 
   // 3. Typesense 문서로 변환
   console.log("\n📝 Transforming to Typesense document...");
-  const document = transformSongToDocument(song);
+  const document = transformSongToDocument(song as SongWithRelations);
   console.log("✓ Transformation complete");
 
   // 4. JSON 파일로 저장

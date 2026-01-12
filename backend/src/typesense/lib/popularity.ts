@@ -10,7 +10,7 @@
  * @returns 최종 인기도 (spotifyPopularity + tjSongCount)
  */
 export function calculateArtistPopularity(
-  spotifyPopularity: number | undefined | null,
+  spotifyPopularity: number | undefined,
   tjSongCount: number,
 ): number {
   const basePopularity = spotifyPopularity ?? 0;
@@ -18,8 +18,8 @@ export function calculateArtistPopularity(
 }
 
 interface SongPopularityInput {
-  artistPopularity?: number | null;
-  spotifyTrackPopularity?: number | null;
+  artistPopularity?: number;
+  spotifyTrackPopularity?: number;
   hasTjSong: boolean;
 }
 
@@ -34,9 +34,9 @@ export function calculateSongPopularity(
 ): number | undefined {
   const { artistPopularity, spotifyTrackPopularity, hasTjSong } = input;
   const hasSource =
-    artistPopularity !== undefined && artistPopularity !== null
+    artistPopularity !== undefined
       ? true
-      : spotifyTrackPopularity !== undefined && spotifyTrackPopularity !== null
+      : spotifyTrackPopularity !== undefined
         ? true
         : hasTjSong;
 
