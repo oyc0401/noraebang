@@ -4,6 +4,8 @@ import type { ManagerSpotifyTrackSummary } from "./types";
 type ManagerStoreState = {
   selectedArtistId: number | null;
   setSelectedArtistId: (artistId: number | null) => void;
+  selectedGroupId: number | null;
+  setSelectedGroupId: (groupId: number | null) => void;
   isArtistNameDialogOpen: boolean;
   openArtistNameDialog: () => void;
   closeArtistNameDialog: () => void;
@@ -33,6 +35,8 @@ type ManagerStoreState = {
 export const useManagerStore = create<ManagerStoreState>((set) => ({
   selectedArtistId: null,
   setSelectedArtistId: (selectedArtistId) => set({ selectedArtistId }),
+  selectedGroupId: null,
+  setSelectedGroupId: (selectedGroupId) => set({ selectedGroupId }),
   isArtistNameDialogOpen: false,
   openArtistNameDialog: () => set({ isArtistNameDialogOpen: true }),
   closeArtistNameDialog: () => set({ isArtistNameDialogOpen: false }),

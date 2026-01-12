@@ -42,6 +42,10 @@ export type ManagerArtistSongDetail = {
     provider: string;
     karaokeNo: string;
   }>;
+  spotifyGroup?: {
+    id: number;
+    primaryTrack: ManagerSpotifyTrackSummary | null;
+  } | null;
 };
 
 export type ManagerArtistYoutubeChannel = {

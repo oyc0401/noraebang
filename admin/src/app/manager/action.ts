@@ -299,6 +299,38 @@ const spotifyTrackBaseSelect = {
   groupId: true,
 } satisfies Prisma.SpotifyTrackSelect;
 
+function mapSpotifyTrackSummary(track: any): ManagerSpotifyTrackSummary {
+  if (!track) {
+    return {
+      id: 0,
+      spotifyId: "",
+      name: "",
+      spotifyUrl: null,
+      durationMs: null,
+      releaseDate: null,
+      popularity: null,
+      thumbnails: [],
+      createdAt: "",
+      groupId: null,
+    };
+  }
+  return {
+    id: track.id,
+    spotifyId: track.spotifyId,
+    name: track.name,
+    spotifyUrl: track.spotifyUrl ?? null,
+    durationMs: track.durationMs ?? null,
+    releaseDate: track.releaseDate ?? null,
+    popularity: track.popularity ?? null,
+    thumbnails: track.thumbnails ?? [],
+    createdAt:
+      track.createdAt instanceof Date
+        ? track.createdAt.toISOString()
+        : String(track.createdAt ?? ""),
+    groupId: track.groupId ?? null,
+  };
+}
+
 export async function fetchManagerArtistDetail(
   artistId: number,
 ): Promise<ManagerArtistDetail | null> {
@@ -344,6 +376,12 @@ export async function fetchManagerArtistDetail(
               thumbnailDefault: true,
               thumbnailMedium: true,
               thumbnailHigh: true,
+              spotifyTrackGroup: {
+                select: {
+                  id: true,
+                  primaryTrack: { select: spotifyTrackBaseSelect },
+                },
+              },
               karaokeSongs: {
                 select: {
                   provider: true,
@@ -387,6 +425,14 @@ export async function fetchManagerArtistDetail(
       medium: song.thumbnailMedium,
       high: song.thumbnailHigh,
     },
+    spotifyGroup: song.spotifyTrackGroup
+      ? {
+          id: song.spotifyTrackGroup.id,
+          primaryTrack: song.spotifyTrackGroup.primaryTrack
+            ? mapSpotifyTrackSummary(song.spotifyTrackGroup.primaryTrack)
+            : null,
+        }
+      : null,
     karaoke: song.karaokeSongs.map((item) => ({
       provider: String(item.provider),
       karaokeNo: item.karaokeNo,
@@ -483,18 +529,8 @@ export async function fetchManagerArtistSpotifyPanel(
   >();
   const orphanTracks: ManagerSpotifyTrackSummary[] = [];
 
-  const mapTrack = (track: any): ManagerSpotifyTrackSummary => ({
-    id: track.id,
-    spotifyId: track.spotifyId,
-    name: track.name,
-    spotifyUrl: track.spotifyUrl ?? null,
-    durationMs: track.durationMs ?? null,
-    releaseDate: track.releaseDate ?? null,
-    popularity: track.popularity ?? null,
-    thumbnails: track.thumbnails ?? [],
-    createdAt: track.createdAt instanceof Date ? track.createdAt.toISOString() : String(track.createdAt ?? ""),
-    groupId: track.groupId ?? null,
-  });
+  const mapTrack = (track: any): ManagerSpotifyTrackSummary =>
+    mapSpotifyTrackSummary(track);
 
   for (const record of artistTracks) {
     const track = record.spotifyTrack;
@@ -526,9 +562,16 @@ export async function fetchManagerArtistSpotifyPanel(
     }
   }
 
-  const groups = Array.from(groupsAccumulator.values()).sort(
-    (a, b) => a.groupId - b.groupId,
-  );
+  const groups = Array.from(groupsAccumulator.values()).sort((a, b) => {
+    const popularityA = a.primaryTrack.popularity ?? -1;
+    const popularityB = b.primaryTrack.popularity ?? -1;
+    if (popularityA !== popularityB) {
+      return popularityB - popularityA;
+    }
+    const dateA = a.primaryTrack.releaseDate ?? "";
+    const dateB = b.primaryTrack.releaseDate ?? "";
+    return dateB.localeCompare(dateA);
+  });
 
   return {
     groups,
