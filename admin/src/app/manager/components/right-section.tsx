@@ -9,6 +9,7 @@ import type {
   ManagerSpotifyTrackSummary,
 } from "../types";
 import { useManagerStore } from "../store";
+import { SpotifyIcon } from "./spotify-icon";
 
 export function RightSection() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
@@ -23,6 +24,9 @@ export function RightSection() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fetchIdRef = useRef(0);
+  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
+    {},
+  );
 
   useEffect(() => {
     if (!selectedArtistId) {
@@ -73,10 +77,36 @@ export function RightSection() {
     element?.scrollIntoView({ block: "nearest" });
   }, [selectedGroupId, data.groups.length]);
 
+  useEffect(() => {
+    setExpandedGroups((prev) => {
+      const next: Record<number, boolean> = {};
+      data.groups.forEach((group) => {
+        next[group.groupId] = prev[group.groupId] ?? true;
+      });
+      return next;
+    });
+  }, [data.groups]);
+
   const hasContent = useMemo(
     () => data.groups.length > 0 || data.orphanTracks.length > 0,
     [data.groups.length, data.orphanTracks.length],
   );
+
+  const handleCollapseAll = () => {
+    const next: Record<number, boolean> = {};
+    data.groups.forEach((group) => {
+      next[group.groupId] = false;
+    });
+    setExpandedGroups(next);
+  };
+
+  const handleExpandAll = () => {
+    const next: Record<number, boolean> = {};
+    data.groups.forEach((group) => {
+      next[group.groupId] = true;
+    });
+    setExpandedGroups(next);
+  };
 
   const renderBody = () => {
     if (!selectedArtistId) {
@@ -115,7 +145,7 @@ export function RightSection() {
       <div className="flex h-full flex-1 min-h-0 flex-col gap-4 overflow-y-auto pr-1">
         {data.groups.length > 0 && (
           <div className="pt-4">
-            <div className="px-4 flex items-center justify-between">
+            <div className="px-4 pb-4 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-zinc-800">
                 스포티파이 그룹 ({data.groups.length})
               </h3>
@@ -123,8 +153,25 @@ export function RightSection() {
                 primary 트랙 기준으로 정렬
               </span>
             </div>
+
             {data.groups.map((group) => (
-              <SpotifyGroupCard key={group.groupId} group={group} />
+              <SpotifyGroupCard
+                key={group.groupId}
+                group={group}
+                isExpanded={expandedGroups[group.groupId] ?? true}
+                onToggle={() =>
+                  setExpandedGroups((prev) => ({
+                    ...prev,
+                    [group.groupId]: !(prev[group.groupId] ?? true),
+                  }))
+                }
+                isSelected={selectedGroupId === group.groupId}
+                onSelect={
+                  group.linkedSongs.length
+                    ? () => setSelectedGroupId(group.groupId)
+                    : undefined
+                }
+              />
             ))}
           </div>
         )}
@@ -157,19 +204,40 @@ export function RightSection() {
   };
 
   return (
-    <section className="flex h-full min-h-0 flex-col overflow-hidden border border-zinc-200 bg-white text-sm text-zinc-700">
-      <div className="pt-4 px-4 flex items-center justify-between border-b border-gray-200 pb-3">
+    <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white text-sm text-zinc-700 shadow-sm">
+      <div className="flex items-center justify-between border-b border-emerald-100/80 bg-gradient-to-r from-emerald-50/60 to-transparent px-4 pb-3 pt-4">
         <div>
-          <p className="text-xs uppercase tracking-widest text-zinc-400">
-            Spotify Tracks
+          <p className="text-[11px] uppercase tracking-[0.4em] text-emerald-500">
+            Spotify
           </p>
           <h2 className="text-lg font-semibold text-zinc-900">
             스포티파이 트랙 관리
           </h2>
         </div>
-        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-          {data.groups.length} 그룹 / {data.orphanTracks.length} 단독
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white/80 px-3 py-1 text-[11px] font-semibold text-emerald-700">
+            <SpotifyIcon className="h-3.5 w-3.5" />
+            {data.groups.length} / {data.orphanTracks.length}
+          </span>
+          <div className="flex overflow-hidden rounded-full border border-emerald-200 bg-white/80 text-[11px] font-semibold text-emerald-700">
+            <button
+              type="button"
+              className="px-3 py-1 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:text-emerald-300"
+              onClick={handleCollapseAll}
+              disabled={data.groups.length === 0}
+            >
+              모두 접기
+            </button>
+            <button
+              type="button"
+              className="border-l border-emerald-100 px-3 py-1 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:text-emerald-300"
+              onClick={handleExpandAll}
+              disabled={data.groups.length === 0}
+            >
+              모두 펼치기
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-hidden">{renderBody()}</div>
@@ -179,43 +247,82 @@ export function RightSection() {
 
 type SpotifyGroupCardProps = {
   group: ManagerSpotifyGroupSummary;
+  isExpanded: boolean;
+  onToggle: () => void;
+  isSelected: boolean;
+  onSelect?: () => void;
 };
 
-function SpotifyGroupCard({ group }: SpotifyGroupCardProps) {
-  const openGroupDetail = useManagerStore((state) => state.openGroupDetail);
-  const selectedGroupId = useManagerStore((state) => state.selectedGroupId);
-  const setSelectedGroupId = useManagerStore(
-    (state) => state.setSelectedGroupId,
-  );
-  const isSelected = selectedGroupId === group.groupId;
+function SpotifyGroupCard({
+  group,
+  isExpanded,
+  onToggle,
+  isSelected,
+  onSelect,
+}: SpotifyGroupCardProps) {
+  const hasLinkedSongs = group.linkedSongs.length > 0;
+  const tracksToRender =
+    isExpanded || !group.primaryTrack ? group.tracks : [group.primaryTrack];
+
   return (
     <div
       id={`spotify-group-${group.groupId}`}
-      className={`border  p-3 transition ${
+      className={` border-1  p-4 shadow-sm transition ${
+        hasLinkedSongs && onSelect ? "cursor-pointer" : "cursor-default"
+      } ${
         isSelected
-          ? "border-blue-400 bg-blue-50 border-2"
-          : "border-gray-100 bg-white"
+          ? "border-emerald-400 bg-emerald-50/70"
+          : "border-gray-300 bg-white hover:border-emerald-300"
       }`}
-      onClick={() => setSelectedGroupId(group.groupId)}
+      onClick={() => {
+        if (!hasLinkedSongs || !onSelect) return;
+        onSelect();
+      }}
     >
-      <div className="flex items-center justify-between text-xs text-zinc-500">
-        <span className="font-semibold text-zinc-800">
-          그룹 #{group.groupId}
-        </span>
-        <button
-          type="button"
-          className="cursor-pointer rounded border border-zinc-200 px-2 py-0.5 text-[11px] text-blue-600 transition hover:border-blue-300 hover:text-blue-700"
-          onClick={(event) => {
-            event.stopPropagation();
-            setSelectedGroupId(group.groupId);
-            openGroupDetail(group.groupId, group.tracks);
-          }}
-        >
-          그룹 상세 보기
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold text-zinc-900">
+            그룹 #{group.groupId}
+          </p>
+          <p className="text-[11px] text-zinc-500">
+            {group.tracks.length} 트랙 · {group.linkedSongs.length}곡 연결
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-[11px]">
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-0.5 ${
+              hasLinkedSongs
+                ? "border border-emerald-200 text-emerald-700"
+                : "border border-dashed border-amber-200 text-amber-600"
+            }`}
+          >
+            {hasLinkedSongs ? "연결됨" : "미연결"}
+          </span>
+          <button
+            type="button"
+            className="rounded-full border border-zinc-200 px-2.5 py-0.5 text-[11px] text-zinc-600 transition hover:border-emerald-200 hover:text-emerald-700"
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggle();
+            }}
+          >
+            {isExpanded ? "접기" : "펼치기"}
+          </button>
+        </div>
       </div>
-      <div className="mt-3">
-        <SpotifyTrackCard track={group.primaryTrack} groupId={group.groupId} />
+      <div className="mt-3 space-y-2">
+        {tracksToRender.map((track, index) => (
+          <SpotifyTrackCard
+            key={`${group.groupId}-${track.id}`}
+            track={track}
+            groupId={group.groupId}
+            linkedSongs={group.linkedSongs}
+            onSelect={onSelect}
+            isSelected={isSelected}
+            variant="group"
+            isPrimary={track.id === group.primaryTrack.id && index === 0}
+          />
+        ))}
       </div>
     </div>
   );
@@ -224,21 +331,48 @@ function SpotifyGroupCard({ group }: SpotifyGroupCardProps) {
 type SpotifyTrackCardProps = {
   track: ManagerSpotifyTrackSummary;
   groupId?: number | null;
+  linkedSongs?: Array<{ id: number; title: string; titleKo?: string | null }>;
+  onSelect?: () => void;
+  isSelected?: boolean;
+  variant?: "group" | "standalone";
+  isPrimary?: boolean;
 };
 
-function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
+function SpotifyTrackCard({
+  track,
+  groupId,
+  linkedSongs = [],
+  onSelect,
+  isSelected = false,
+  variant = "standalone",
+  isPrimary = false,
+}: SpotifyTrackCardProps) {
   const durationLabel = formatDuration(track.durationMs);
   const releaseLabel = track.releaseDate ?? "-";
-  const createdAtDate = track.createdAt ? new Date(track.createdAt) : null;
-  const createdLabel =
-    createdAtDate && !Number.isNaN(createdAtDate.getTime())
-      ? createdAtDate.toLocaleDateString("ko-KR")
-      : "-";
+  const hasLinkedSongs = Boolean(groupId && linkedSongs.length > 0);
+  const isGroupVariant = variant === "group";
+  const canSelect = Boolean(onSelect) && (!groupId || hasLinkedSongs);
+  const cardStateClass = isGroupVariant
+    ? "border border-zinc-100 bg-white/80"
+    : isSelected
+      ? "border-emerald-400 bg-emerald-50/70"
+      : "border-zinc-100 bg-white/80";
+  const showLinkedSongs =
+    Boolean(groupId) && (!isGroupVariant || (isGroupVariant && isPrimary));
 
   return (
-    <div className="rounded-lg border border-zinc-100 p-3">
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md">
+    <div
+      className={`rounded-xl p-3 shadow-sm transition ${
+        canSelect ? "cursor-pointer" : "cursor-default"
+      } ${cardStateClass}`}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (!canSelect) return;
+        onSelect?.();
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100">
           {track.thumbnails?.length ? (
             <img
               src={track.thumbnails[0]}
@@ -246,30 +380,89 @@ function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-zinc-500">
-              ♪
+            <span className="flex h-full w-full items-center justify-center text-emerald-500">
+              <SpotifyIcon className="h-4 w-4" />
             </span>
           )}
         </div>
-        <div className="flex flex-1 flex-col gap-1">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <p className="font-semibold text-zinc-900">
-              {track.name}
-              <span className="ml-1 text-xs text-gray-500 font-normal ">{`(${track.musicBrainzTitle})`}</span>{" "}
-            </p>
+        <div className="flex flex-1 flex-col gap-2">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              {track.spotifyUrl ? (
+                <a
+                  href={track.spotifyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex flex-col"
+                >
+                  <span className="text-sm font-semibold text-zinc-900 group-hover:text-emerald-600">
+                    {track.name}
+                  </span>
+                  <span className="text-[11px] font-normal text-zinc-400">
+                    {`(${track.musicBrainzTitle})`}
+                  </span>
+                </a>
+              ) : (
+                <p className="text-sm font-semibold text-zinc-900">
+                  {track.name}
+                  <span className="ml-1 text-xs font-normal text-zinc-400">{`(${track.musicBrainzTitle})`}</span>
+                </p>
+              )}
+              <p className="text-[11px] text-zinc-500">
+                Track ID:{" "}
+                <span className="font-semibold text-emerald-600">
+                  {track.spotifyId}
+                </span>
+              </p>
+            </div>
+            {isGroupVariant ? (
+              <div className="text-[10px] text-emerald-600">
+                {isPrimary ? (
+                  <span className="inline-flex items-center rounded-full border border-emerald-200 px-2 py-0.5">
+                    Primary
+                  </span>
+                ) : null}
+              </div>
+            ) : (
+              <div className="flex flex-col items-end gap-1 text-[10px]">
+                {groupId ? (
+                  <>
+                    <span className="inline-flex items-center rounded-full border border-emerald-200 px-2 py-0.5 text-emerald-700">
+                      그룹 #{groupId}
+                    </span>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 ${
+                        hasLinkedSongs
+                          ? "border border-emerald-200 text-emerald-700"
+                          : "border border-dashed border-amber-200 text-amber-600"
+                      }`}
+                    >
+                      {hasLinkedSongs
+                        ? `${linkedSongs.length}곡 연결`
+                        : "연결된 곡 없음"}
+                    </span>
+                  </>
+                ) : (
+                  <span className="inline-flex items-center rounded-full border border-zinc-200 px-2 py-0.5 text-zinc-600">
+                    단독 트랙
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-          <p className="text-[11px] text-zinc-500">
-            Track ID: {track.spotifyId}
-          </p>
-          <div className="flex flex-wrap gap-3 text-[11px] text-zinc-500">
-            <span>발매 {releaseLabel}</span>
-            <span>등록 {createdLabel}</span>
+          <div className="flex flex-wrap gap-2 text-[11px] text-emerald-700">
+            <span className="rounded-full bg-emerald-50 px-2 py-0.5">
+              발매 {releaseLabel}
+            </span>
+
+            <span className="rounded-full bg-emerald-50 px-2 py-0.5">
+              길이 {durationLabel}
+            </span>
+            <span className="rounded-full bg-emerald-50 px-2 py-0.5">
+              인기도 {track.popularity ?? "-"}
+            </span>
           </div>
-          <div className="flex flex-wrap gap-3 text-[11px] text-zinc-500">
-            <span>길이 {durationLabel}</span>
-            <span>인기도 {track.popularity ?? "-"}</span>
-          </div>
-          <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-zinc-500">
+          <div className="flex flex-wrap gap-2 text-[11px] text-zinc-500">
             {track.artists.length === 0 ? (
               <span className="text-zinc-400">연결된 아티스트 없음</span>
             ) : (
@@ -283,7 +476,7 @@ function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
                 .map((artist) => (
                   <span
                     key={`${track.id}-${artist.spotifyId}-${artist.artistId ?? "none"}`}
-                    className="inline-flex items-center gap-1 rounded border border-zinc-200 px-2 py-0.5"
+                    className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2 py-0.5"
                   >
                     <span className="text-[10px] text-zinc-400">
                       #{artist.artistId ?? "--"}
@@ -295,26 +488,35 @@ function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
                 ))
             )}
           </div>
+          {showLinkedSongs ? (
+            hasLinkedSongs ? (
+              <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-zinc-600">
+                {linkedSongs.map((song) => (
+                  <span
+                    key={`${track.id}-song-${song.id}`}
+                    className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2 py-0.5"
+                  >
+                    <span className="text-[10px] text-zinc-400">
+                      #{song.id}
+                    </span>
+                    <span className="font-medium text-zinc-700">
+                      {song.title}
+                      {song.titleKo ? ` (${song.titleKo})` : ""}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-[11px] text-zinc-400">
+                아직 이 그룹과 연결된 곡이 없습니다.
+              </p>
+            )
+          ) : null}
         </div>
-      </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-        {track.spotifyUrl ? (
-          <a
-            href={track.spotifyUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-emerald-700 underline"
-          >
-            스포티파이 열기
-          </a>
-        ) : (
-          <span className="text-zinc-400">스포티파이 URL 없음</span>
-        )}
       </div>
     </div>
   );
 }
-
 function formatDuration(durationMs?: number | null) {
   if (!durationMs || durationMs <= 0) return "-";
   const totalSeconds = Math.floor(durationMs / 1000);
