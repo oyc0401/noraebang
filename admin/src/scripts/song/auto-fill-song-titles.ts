@@ -92,13 +92,22 @@ async function main() {
   console.log("======================================");
   console.log(`Mode: ${isDryRun ? "DRY RUN" : "PRODUCTION"}\n`);
 
-  // 모든 곡 가져오기 (SpotifyTrack 정보 포함)
-  console.log("📦 Fetching all songs...");
+  // artistId < 300인 아티스트의 곡만 가져오기 (SpotifyTrack 정보 포함)
+  console.log("📦 Fetching songs (artistId < 300)...");
   const songs = await prisma.song.findMany({
+    where: {
+      artistSongs: {
+        some: {
+          artistId: {
+            lt: 300,
+          },
+        },
+      },
+    },
     include: {
-      spotifyTrack: {
+      spotifyTrackGroup: {
         include: {
-          spotifyTrack: {
+          primaryTrack: {
             select: {
               name: true,
               musicBrainzTitle: true,
@@ -118,11 +127,11 @@ async function main() {
     let selectedTitle: string | null = null;
     let source = "";
 
-    if (song.spotifyTrack?.spotifyTrack?.name) {
-      selectedTitle = song.spotifyTrack.spotifyTrack.name;
+    if (song.spotifyTrackGroup?.primaryTrack?.name) {
+      selectedTitle = song.spotifyTrackGroup.primaryTrack.name;
       source = "spotifyTrackName";
-    } else if (song.spotifyTrack?.spotifyTrack?.musicBrainzTitle) {
-      selectedTitle = song.spotifyTrack.spotifyTrack.musicBrainzTitle;
+    } else if (song.spotifyTrackGroup?.primaryTrack?.musicBrainzTitle) {
+      selectedTitle = song.spotifyTrackGroup.primaryTrack.musicBrainzTitle;
       source = "spotifyMusicBrainzTitle";
     } else {
       selectedTitle = song.title;
@@ -133,44 +142,33 @@ async function main() {
       // 선택된 제목이 있으면 언어 감지 후 해당 필드에 저장
       const field = detectLanguageField(selectedTitle);
 
-      console.log(
-        `[${song.id}] ${selectedTitle} → ${field} (source: ${source})`,
-      );
+      // 해당 필드에 이미 값이 있는지 확인
+      const existingValue = song[field];
 
-      if (!isDryRun) {
-        const updateData: any = {
-          titleLatin: field === "titleLatin" ? selectedTitle : null,
-          titleJaKanji: field === "titleJaKanji" ? selectedTitle : null,
-          titleJaKana: field === "titleJaKana" ? selectedTitle : null,
-        };
-
-        // titleKo는 값이 있을 때만 업데이트 (null로 덮어쓰지 않음)
-        if (field === "titleKo") {
-          updateData.titleKo = selectedTitle;
-        }
-
-        await prisma.song.update({
-          where: { id: song.id },
-          data: updateData,
-        });
+      if (existingValue) {
+        // console.log(
+        //   `[${song.id}] ${field} already has value "${existingValue}" → skipping`,
+        // );
+        continue;
       }
-    } else {
-      // 선택된 제목이 null이면 일본어/라틴 필드만 null로 초기화 (titleKo는 보존)
-      console.log(`[${song.id}] (no title) → clearing JA/Latin fields only`);
+
+      // console.log(
+      //   `[${song.id}] ${selectedTitle} → ${field} (source: ${source})`,
+      // );
 
       if (!isDryRun) {
         await prisma.song.update({
           where: { id: song.id },
           data: {
-            titleLatin: null,
-            titleJaKanji: null,
-            titleJaKana: null,
+            [field]: selectedTitle,
           },
         });
       }
-    }
 
-    updatedCount++;
+      updatedCount++;
+    } else {
+      console.log(`[${song.id}] (no title) → skipping`);
+    }
   }
 
   console.log("\n======================================");
