@@ -1,27 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { fetchManagerArtistDetail } from "../action";
 import type { ManagerArtistDetail } from "../types";
 import { useManagerStore } from "../store";
 import { ArtistDetailProvider } from "./artist-detail-context";
-import { ArtistCatalogDialog } from "./artist-catalog-dialog";
 import { ArtistDeleteDialog } from "./artist-delete-dialog";
 import { ArtistMergeDialog } from "./artist-merge-dialog";
 import { ArtistNameDialog } from "./artist-name-dialog";
 import { ArtistSpotifyIdDialog } from "./artist-spotify-id-dialog";
+import { ArtistYoutubeDialog } from "./artist-youtube-dialog";
+import { SpotifyInfoCard } from "./spotify-info-card";
+import { YoutubeInfoCard } from "./youtube-info-card";
 
 export function CenterSection() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
   const openArtistNameDialog = useManagerStore(
     (state) => state.openArtistNameDialog,
-  );
-  const openSpotifyIdDialog = useManagerStore(
-    (state) => state.openSpotifyIdDialog,
-  );
-  const openCatalogDialog = useManagerStore(
-    (state) => state.openCatalogDialog,
   );
   const openDeleteArtistDialog = useManagerStore(
     (state) => state.openDeleteArtistDialog,
@@ -33,6 +29,8 @@ export function CenterSection() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fetchIdRef = useRef(0);
+  const actionMenuRef = useRef<HTMLDivElement | null>(null);
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedArtistId) {
@@ -77,38 +75,25 @@ export function CenterSection() {
     };
   }, [selectedArtistId]);
 
-  const generalSummaryItems = useMemo(() => {
-    if (!detail) return [];
-    return [
-      { label: "ID", value: `#${detail.id}` },
-      { label: "Slug", value: detail.slug ?? "-" },
-      { label: "분류", value: detail.catalog ?? "미분류" },
-    ];
-  }, [detail]);
+  useEffect(() => {
+    if (!isActionMenuOpen) {
+      return;
+    }
+    const handleClick = (event: MouseEvent) => {
+      if (
+        actionMenuRef.current &&
+        !actionMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsActionMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [isActionMenuOpen]);
 
-  const spotifyStats = useMemo(() => {
-    if (!detail) return [];
-    const spotifyId = detail.spotifyId ?? "-";
-    const spotifyPopularity =
-      typeof detail.spotify?.popularity === "number"
-        ? String(detail.spotify.popularity)
-        : "-";
-    const spotifyFollowers =
-      typeof detail.spotify?.followers === "number"
-        ? detail.spotify.followers.toLocaleString()
-        : "-";
-    const genres = detail.spotify?.genres ?? [];
-    return [
-      { label: "ID", value: spotifyId || "-" },
-      { label: "인기도", value: spotifyPopularity },
-      { label: "팔로워", value: spotifyFollowers },
-      {
-        label: "장르",
-        value: genres.length ? genres.slice(0, 3).join(", ") : "-",
-        wide: true,
-      },
-    ];
-  }, [detail]);
+  useEffect(() => {
+    setIsActionMenuOpen(false);
+  }, [detail?.id]);
 
   const renderBody = () => {
     if (!selectedArtistId) {
@@ -144,7 +129,7 @@ export function CenterSection() {
     return (
       <>
         <div className="space-y-3 border-b border-zinc-100 px-4 pb-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <button
               type="button"
               onClick={openArtistNameDialog}
@@ -177,164 +162,67 @@ export function CenterSection() {
                 <h2 className="text-lg font-semibold text-zinc-900">
                   {detail.name}
                 </h2>
-                <div className="text-xs text-zinc-500">
-                  <span>{detail.nameKo}</span>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                  {detail.nameKo && <span>{detail.nameKo}</span>}
                   {detail.nameJa && (
-                    <span className="ml-2 text-zinc-400">{detail.nameJa}</span>
+                    <span className="text-zinc-400">{detail.nameJa}</span>
                   )}
                   {detail.nameLatin && (
-                    <span className="ml-2 text-zinc-400">
-                      {detail.nameLatin}
-                    </span>
+                    <span className="text-zinc-400">{detail.nameLatin}</span>
                   )}
+                  <span className="rounded-full border border-zinc-200 px-2 py-0.5 text-[11px] text-zinc-600">
+                    {detail.catalog ?? "미분류"}
+                  </span>
                 </div>
+                {detail.slug && (
+                  <div className="text-xs text-blue-500">@{detail.slug}</div>
+                )}
               </div>
             </button>
-            <div className="grid w-full max-w-md grid-cols-2 gap-2 text-xs">
-              {generalSummaryItems.map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2"
+            <div className="flex flex-1 flex-col items-end gap-2 text-xs">
+              <div className="text-right">
+                <p className="text-lg font-semibold text-zinc-900">
+                  #{detail.id}
+                </p>
+              </div>
+              <div className="relative" ref={actionMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsActionMenuOpen((previous) => !previous)}
+                  className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-1 text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
                 >
-                  <p className="text-[10px] uppercase tracking-wide text-zinc-400">
-                    {item.label}
-                  </p>
-                  <p className="text-sm font-semibold text-zinc-900">
-                    {item.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs">
-              <button
-                type="button"
-                onClick={openSpotifyIdDialog}
-                className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-1 text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
-              >
-                스포티파이 ID 편집
-              </button>
-              <button
-                type="button"
-                onClick={openCatalogDialog}
-                className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-1 text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
-              >
-                분류 편집
-              </button>
-              <button
-                type="button"
-                onClick={openMergeArtistDialog}
-                className="cursor-pointer rounded-lg border border-amber-200 px-3 py-1 text-amber-600 transition hover:border-amber-300 hover:text-amber-700"
-              >
-                아티스트 병합
-              </button>
-              <button
-                type="button"
-                onClick={openDeleteArtistDialog}
-                className="cursor-pointer rounded-lg border border-red-200 px-3 py-1 text-red-600 transition hover:border-red-300 hover:text-red-700"
-              >
-                아티스트 삭제
-              </button>
+                  편집
+                </button>
+                {isActionMenuOpen && (
+                  <div className="absolute right-0 z-20 mt-2 w-40 rounded-lg border border-zinc-200 bg-white py-1 text-sm shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionMenuOpen(false);
+                        openMergeArtistDialog();
+                      }}
+                      className="flex w-full items-center px-3 py-2 text-left text-amber-600 transition hover:bg-amber-50"
+                    >
+                      아티스트 병합
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionMenuOpen(false);
+                        openDeleteArtistDialog();
+                      }}
+                      className="flex w-full items-center px-3 py-2 text-left text-red-600 transition hover:bg-red-50"
+                    >
+                      아티스트 삭제
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="grid gap-3 lg:grid-cols-2">
-            <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3 text-[11px] text-zinc-600">
-              <div className="flex items-center justify-between text-emerald-700">
-                <p className="font-semibold">Spotify</p>
-                {detail.spotify?.url ? (
-                  <a
-                    href={detail.spotify.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[10px] underline"
-                  >
-                    열기
-                  </a>
-                ) : null}
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                {spotifyStats.map((item) => (
-                  <div
-                    key={item.label}
-                    className={`flex items-center gap-1 ${
-                      item.wide ? "basis-full" : ""
-                    }`}
-                  >
-                    <span className="text-zinc-400">{item.label}:</span>
-                    <span className="font-semibold text-zinc-800 break-all">
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="rounded-xl border border-red-100 bg-red-50/40">
-              <div className="flex items-center justify-between border-b border-red-100 px-4 py-2">
-                <p className="text-xs font-semibold text-red-700">
-                  YouTube 채널
-                </p>
-                <span className="text-[11px] text-red-600">
-                  {youtubeChannels.length
-                    ? `${youtubeChannels.length}개`
-                    : "등록된 채널 없음"}
-                </span>
-              </div>
-              {youtubeChannels.length === 0 ? (
-                <div className="px-4 py-3 text-xs text-red-500">
-                  연결된 유튜브 채널이 없습니다.
-                </div>
-              ) : (
-                <div className="divide-y divide-red-100">
-                  {youtubeChannels.map((channel) => {
-                    const thumb =
-                      channel.thumbnails.default ??
-                      channel.thumbnails.medium ??
-                      channel.thumbnails.high ??
-                      null;
-                    const channelUrl = `https://www.youtube.com/channel/${channel.channelId}`;
-                    return (
-                      <a
-                        key={channel.id}
-                        href={channelUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-3 px-4 py-3 transition hover:bg-red-50/70"
-                      >
-                        <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-red-100">
-                          {thumb ? (
-                            <img
-                              src={thumb}
-                              alt={channel.title ?? channel.channelId}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex h-full w-full items-center justify-center text-xs font-semibold text-red-500">
-                              YT
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-red-900">
-                            {channel.title ?? "채널 이름 없음"}
-                          </p>
-                          <p className="text-[11px] text-red-500">
-                            {channel.type} · {channel.channelId}
-                          </p>
-                        </div>
-                        {channel.subscriberCount ? (
-                          <span className="text-xs font-semibold text-red-700">
-                            {channel.subscriberCount.toLocaleString()}명
-                          </span>
-                        ) : (
-                          <span className="text-[11px] text-red-400">
-                            구독자 정보 없음
-                          </span>
-                        )}
-                      </a>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <SpotifyInfoCard detail={detail} />
+            <YoutubeInfoCard detail={detail} />
           </div>
         </div>
 
@@ -448,9 +336,9 @@ export function CenterSection() {
       </section>
       <ArtistNameDialog />
       <ArtistSpotifyIdDialog />
-      <ArtistCatalogDialog />
       <ArtistDeleteDialog />
       <ArtistMergeDialog />
+      <ArtistYoutubeDialog />
     </ArtistDetailProvider>
   );
 }

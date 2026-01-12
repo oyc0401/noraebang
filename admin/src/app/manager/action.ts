@@ -323,10 +323,12 @@ export async function fetchManagerArtistDetail(
       thumbnailHigh: true,
       spotifyArtist: {
         select: {
+          name: true,
           popularity: true,
           followers: true,
           genres: true,
           spotifyUrl: true,
+          thumbnails: true,
         },
       },
       artistSongs: {
@@ -410,6 +412,8 @@ export async function fetchManagerArtistDetail(
     },
     spotify: artist.spotifyArtist
       ? {
+          name: artist.spotifyArtist.name,
+          thumbnails: artist.spotifyArtist.thumbnails,
           popularity: artist.spotifyArtist.popularity,
           followers: artist.spotifyArtist.followers,
           genres: artist.spotifyArtist.genres ?? [],
@@ -537,6 +541,7 @@ export type UpdateArtistNamesInput = {
   nameJaKanji?: string | null;
   nameLatin?: string | null;
   slug?: string | null;
+  catalog?: "미정" | "KPOP" | "JPOP" | "POP";
 };
 
 export async function updateArtistNames({
@@ -547,6 +552,7 @@ export async function updateArtistNames({
   nameJaKanji,
   nameLatin,
   slug,
+  catalog,
 }: UpdateArtistNamesInput) {
   if (!artistId || Number.isNaN(artistId)) {
     throw new Error("유효한 아티스트 ID가 필요합니다.");
@@ -559,6 +565,8 @@ export async function updateArtistNames({
     nameJaKanji: nameJaKanji?.trim() || null,
     nameLatin: nameLatin?.trim() || null,
     slug: slug?.trim() ? slug.trim() : null,
+    homeCatalog:
+      catalog && catalog !== "미정" ? catalog : catalog === "미정" ? null : undefined,
   };
 
   if (!sanitized.name || !sanitized.nameKo) {
@@ -576,6 +584,7 @@ export async function updateArtistNames({
       nameJaKanji: true,
       nameLatin: true,
       slug: true,
+      homeCatalog: true,
     },
   });
 
@@ -599,28 +608,6 @@ export async function updateArtistSpotifyId({
     where: { id: artistId },
     data: { spotifyId: value },
     select: { id: true, spotifyId: true },
-  });
-  return artist;
-}
-
-export type UpdateArtistCatalogInput = {
-  artistId: number;
-  catalog: "미정" | "KPOP" | "JPOP" | "POP";
-};
-
-export async function updateArtistCatalog({
-  artistId,
-  catalog,
-}: UpdateArtistCatalogInput) {
-  if (!artistId || Number.isNaN(artistId)) {
-    throw new Error("유효한 아티스트 ID가 필요합니다.");
-  }
-  const catalogValue =
-    catalog === "미정" ? null : catalog;
-  const artist = await prisma.artist.update({
-    where: { id: artistId },
-    data: { homeCatalog: catalogValue },
-    select: { id: true, homeCatalog: true },
   });
   return artist;
 }

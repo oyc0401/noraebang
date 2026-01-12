@@ -18,6 +18,9 @@ export function ArtistNameDialog() {
   const [nameJaKanji, setNameJaKanji] = useState("");
   const [nameLatin, setNameLatin] = useState("");
   const [slug, setSlug] = useState("");
+  const [catalog, setCatalog] = useState<"미정" | "KPOP" | "JPOP" | "POP">(
+    "미정",
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -29,6 +32,14 @@ export function ArtistNameDialog() {
       setNameJaKanji(detail.nameJaKanji ?? "");
       setNameLatin(detail.nameLatin ?? "");
       setSlug(detail.slug ?? "");
+      const resolvedCatalog = detail.catalog ?? "미정";
+      setCatalog(
+        resolvedCatalog === "KPOP" ||
+          resolvedCatalog === "JPOP" ||
+          resolvedCatalog === "POP"
+          ? resolvedCatalog
+          : "미정",
+      );
       setErrorMessage(null);
     }
   }, [detail, isOpen]);
@@ -56,6 +67,7 @@ export function ArtistNameDialog() {
           nameJaKanji,
           nameLatin,
           slug,
+          catalog,
         });
 
         setDetail((prev) =>
@@ -69,6 +81,7 @@ export function ArtistNameDialog() {
                 nameJaKanji: updated.nameJaKanji,
                 nameLatin: updated.nameLatin,
                 slug: updated.slug,
+                catalog: updated.homeCatalog ?? null,
               }
             : prev,
         );
@@ -78,6 +91,7 @@ export function ArtistNameDialog() {
           nameLatin: updated.nameLatin ?? null,
           nameJa: updated.nameJaKanji ?? updated.nameJaKana ?? null,
           slug: updated.slug ?? null,
+          catalog: updated.homeCatalog ?? null,
         });
         closeDialog();
       } catch (error) {
@@ -181,6 +195,23 @@ export function ArtistNameDialog() {
               onChange={(event) => setSlug(event.target.value)}
               placeholder="slug 입력 (비워두면 null)"
             />
+          </div>
+          <div className="space-y-1 text-sm">
+            <label className="text-xs font-semibold text-zinc-600">
+              분류
+            </label>
+            <select
+              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              value={catalog}
+              onChange={(event) =>
+                setCatalog(event.target.value as "미정" | "KPOP" | "JPOP" | "POP")
+              }
+            >
+              <option value="미정">미분류</option>
+              <option value="KPOP">KPOP</option>
+              <option value="JPOP">JPOP</option>
+              <option value="POP">POP</option>
+            </select>
           </div>
           {errorMessage && (
             <p className="text-xs text-red-600">{errorMessage}</p>
