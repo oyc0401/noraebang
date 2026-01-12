@@ -135,7 +135,7 @@ export function LeftPanel() {
 
   return (
     <>
-      <section className="flex h-full flex-col rounded-2xl border border-zinc-200 bg-white shadow-sm">
+      <section className="flex h-[min(900px,80vh)] flex-col border border-zinc-200 bg-white">
         <div className="border-b border-zinc-100 p-4">
           <div className="flex items-center justify-between">
             <div>

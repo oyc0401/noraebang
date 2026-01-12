@@ -40,7 +40,7 @@ export function FilterDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold">필터 옵션</h3>
@@ -89,7 +89,7 @@ export function FilterDialog({
           </button>
           <button
             type="button"
-            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm cursor-pointer"
+            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white cursor-pointer"
             onClick={onClose}
           >
             적용하기

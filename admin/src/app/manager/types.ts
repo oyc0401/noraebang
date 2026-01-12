@@ -56,3 +56,28 @@ export type ManagerArtistDetail = {
   } | null;
   songs: ManagerArtistSongDetail[];
 };
+
+export type ManagerSpotifyTrackSummary = {
+  id: number;
+  spotifyId: string;
+  name: string;
+  spotifyUrl?: string | null;
+  durationMs?: number | null;
+  releaseDate?: string | null;
+  popularity?: number | null;
+  thumbnails: string[];
+  createdAt: string;
+  groupId?: number | null;
+};
+
+export type ManagerSpotifyGroupSummary = {
+  groupId: number;
+  trackCount: number;
+  artistTrackCount: number;
+  primaryTrack: ManagerSpotifyTrackSummary;
+};
+
+export type ManagerSpotifyPanelData = {
+  groups: ManagerSpotifyGroupSummary[];
+  orphanTracks: ManagerSpotifyTrackSummary[];
+};
