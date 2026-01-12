@@ -148,7 +148,7 @@ export class TypesenseService implements OnModuleInit {
       .search({
         q: preprocessedQuery,
         query_by: songQueryFields.join(","),
-        sort_by: "hasKaraokeNo:desc,_text_match:desc,popularity:desc",
+        sort_by: "_text_match:desc,popularity:desc",
         infix: infixModes,
         page,
         per_page: perPage,

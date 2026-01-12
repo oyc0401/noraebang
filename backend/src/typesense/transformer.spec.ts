@@ -281,7 +281,6 @@ describe("removeBrackets - Song", () => {
           },
         },
       ],
-      karaokeSongs: [],
       updatedAt: new Date("2025-01-01"),
       spotifyTrack: null,
     };
@@ -326,7 +325,6 @@ describe("removeBrackets - Song", () => {
           },
         },
       ],
-      karaokeSongs: [],
       updatedAt: new Date("2025-01-01"),
       spotifyTrack: null,
     };
@@ -341,8 +339,8 @@ describe("removeBrackets - Song", () => {
     expect(result.q_artist_ko_a).toContain("요아소비");
   });
 
-  it("hasKaraokeNo가 노래방 번호 유무에 따라 설정되어야 함", () => {
-    const songWithKaraoke = {
+  it("tjSongId가 있으면 그대로 유지되고, 없으면 undefined", () => {
+    const songWithTjSong = {
       id: 1,
       title: "테스트",
       titleKo: "테스트",
@@ -359,24 +357,24 @@ describe("removeBrackets - Song", () => {
           },
         },
       ],
-      karaokeSongs: [{ provider: "TJ", karaokeNo: "12345" }],
+      tjSongId: "TJ12345",
       updatedAt: new Date("2025-01-01"),
       spotifyTrack: null,
     };
 
-    const songWithoutKaraoke = {
-      ...songWithKaraoke,
+    const songWithoutTjSong = {
+      ...songWithTjSong,
       id: 2,
-      karaokeSongs: [],
+      tjSongId: null,
     };
 
-    const resultWithKaraoke = transformSongToDocument(songWithKaraoke as any);
-    const resultWithoutKaraoke = transformSongToDocument(
-      songWithoutKaraoke as any,
+    const resultWithTjSong = transformSongToDocument(songWithTjSong as any);
+    const resultWithoutTjSong = transformSongToDocument(
+      songWithoutTjSong as any,
     );
 
-    expect(resultWithKaraoke.hasKaraokeNo).toBe(true);
-    expect(resultWithoutKaraoke.hasKaraokeNo).toBeUndefined();
+    expect(resultWithTjSong.tjSongId).toBe("TJ12345");
+    expect(resultWithoutTjSong.tjSongId).toBeUndefined();
   });
 });
 
@@ -456,7 +454,6 @@ describe("혼합 가나 처리 - Song", () => {
           },
         },
       ],
-      karaokeSongs: [],
       updatedAt: new Date("2025-01-01"),
       spotifyTrack: null,
     };
@@ -489,7 +486,6 @@ describe("혼합 가나 처리 - Song", () => {
           },
         },
       ],
-      karaokeSongs: [],
       updatedAt: new Date("2025-01-01"),
       spotifyTrack: null,
     };
@@ -595,7 +591,6 @@ describe("공백+특수문자 제거 - Song", () => {
           },
         },
       ],
-      karaokeSongs: [],
       updatedAt: new Date("2025-01-01"),
       spotifyTrack: null,
     };
@@ -630,7 +625,6 @@ describe("공백+특수문자 제거 - Song", () => {
           },
         },
       ],
-      karaokeSongs: [],
       updatedAt: new Date("2025-01-01"),
       spotifyTrack: null,
     };
@@ -666,7 +660,6 @@ describe("공백+특수문자 제거 - Song", () => {
           },
         },
       ],
-      karaokeSongs: [],
       updatedAt: new Date("2025-01-01"),
       spotifyTrack: null,
     };
