@@ -5,8 +5,11 @@ export type ManagerArtistSummary = {
   name: string;
   nameKo: string;
   nameJa?: string | null;
+  nameJaKana?: string | null;
+  nameJaKanji?: string | null;
   nameLatin?: string | null;
   catalog?: string | null;
+  slug?: string | null;
   songCount: number;
   popularity?: number | null;
   thumbnailDefault?: string | null;
@@ -63,6 +66,7 @@ export type ManagerArtistDetail = {
   nameJaKanji?: string | null;
   nameLatin?: string | null;
   catalog?: string | null;
+  slug?: string | null;
   songCount: number;
   spotifyId?: string | null;
   thumbnails: {

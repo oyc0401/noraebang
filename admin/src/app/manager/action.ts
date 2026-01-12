@@ -110,6 +110,7 @@ const artistSelect = {
   nameLatin: true,
   nameJaKana: true,
   nameJaKanji: true,
+  slug: true,
   homeCatalog: true,
   thumbnailDefault: true,
   thumbnailMedium: true,
@@ -128,6 +129,7 @@ function mapArtistRecord(artist: Prisma.ArtistGetPayload<{ select: typeof artist
     nameJaKana: artist.nameJaKana,
     nameJaKanji: artist.nameJaKanji,
     catalog: artist.homeCatalog,
+    slug: artist.slug,
     songCount: artist._count.artistSongs,
     popularity: artist.spotifyArtist?.popularity ?? null,
     thumbnailDefault: artist.thumbnailDefault,
@@ -313,6 +315,7 @@ export async function fetchManagerArtistDetail(
       nameLatin: true,
       nameJaKana: true,
       nameJaKanji: true,
+      slug: true,
       homeCatalog: true,
       spotifyId: true,
       thumbnailDefault: true,
@@ -394,7 +397,10 @@ export async function fetchManagerArtistDetail(
     nameKo: artist.nameKo,
     nameLatin: artist.nameLatin,
     nameJa: artist.nameJaKanji ?? artist.nameJaKana,
+    nameJaKana: artist.nameJaKana,
+    nameJaKanji: artist.nameJaKanji,
     catalog: artist.homeCatalog,
+    slug: artist.slug,
     spotifyId: artist.spotifyId,
     songCount: artist._count.artistSongs,
     thumbnails: {
@@ -530,6 +536,7 @@ export type UpdateArtistNamesInput = {
   nameJaKana?: string | null;
   nameJaKanji?: string | null;
   nameLatin?: string | null;
+  slug?: string | null;
 };
 
 export async function updateArtistNames({
@@ -539,6 +546,7 @@ export async function updateArtistNames({
   nameJaKana,
   nameJaKanji,
   nameLatin,
+  slug,
 }: UpdateArtistNamesInput) {
   if (!artistId || Number.isNaN(artistId)) {
     throw new Error("유효한 아티스트 ID가 필요합니다.");
@@ -550,6 +558,7 @@ export async function updateArtistNames({
     nameJaKana: nameJaKana?.trim() || null,
     nameJaKanji: nameJaKanji?.trim() || null,
     nameLatin: nameLatin?.trim() || null,
+    slug: slug?.trim() ? slug.trim() : null,
   };
 
   if (!sanitized.name || !sanitized.nameKo) {
@@ -566,8 +575,124 @@ export async function updateArtistNames({
       nameJaKana: true,
       nameJaKanji: true,
       nameLatin: true,
+      slug: true,
     },
   });
 
   return artist;
+}
+
+export type UpdateArtistSpotifyIdInput = {
+  artistId: number;
+  spotifyId?: string | null;
+};
+
+export async function updateArtistSpotifyId({
+  artistId,
+  spotifyId,
+}: UpdateArtistSpotifyIdInput) {
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+  const value = spotifyId?.trim() ? spotifyId.trim() : null;
+  const artist = await prisma.artist.update({
+    where: { id: artistId },
+    data: { spotifyId: value },
+    select: { id: true, spotifyId: true },
+  });
+  return artist;
+}
+
+export type UpdateArtistCatalogInput = {
+  artistId: number;
+  catalog: "미정" | "KPOP" | "JPOP" | "POP";
+};
+
+export async function updateArtistCatalog({
+  artistId,
+  catalog,
+}: UpdateArtistCatalogInput) {
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+  const catalogValue =
+    catalog === "미정" ? null : catalog;
+  const artist = await prisma.artist.update({
+    where: { id: artistId },
+    data: { homeCatalog: catalogValue },
+    select: { id: true, homeCatalog: true },
+  });
+  return artist;
+}
+
+export async function deleteArtist(artistId: number) {
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+  const deleted = await prisma.artist.delete({
+    where: { id: artistId },
+    select: { id: true },
+  });
+  return deleted;
+}
+
+export type MergeArtistInput = {
+  sourceArtistId: number;
+  targetArtistId: number;
+};
+
+export async function mergeArtist({
+  sourceArtistId,
+  targetArtistId,
+}: MergeArtistInput) {
+  if (
+    !sourceArtistId ||
+    Number.isNaN(sourceArtistId) ||
+    !targetArtistId ||
+    Number.isNaN(targetArtistId)
+  ) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+  if (sourceArtistId === targetArtistId) {
+    throw new Error("동일한 아티스트로 병합할 수 없습니다.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const target = await tx.artist.findUnique({
+      where: { id: targetArtistId },
+      select: { id: true },
+    });
+    if (!target) {
+      throw new Error("대상 아티스트를 찾을 수 없습니다.");
+    }
+    const source = await tx.artist.findUnique({
+      where: { id: sourceArtistId },
+      select: { id: true },
+    });
+    if (!source) {
+      throw new Error("현재 아티스트를 찾을 수 없습니다.");
+    }
+
+    const artistSongs = await tx.artistSong.findMany({
+      where: { artistId: sourceArtistId },
+      select: { songId: true, order: true, role: true },
+    });
+
+    if (artistSongs.length > 0) {
+      await tx.artistSong.createMany({
+        data: artistSongs.map((song) => ({
+          artistId: targetArtistId,
+          songId: song.songId,
+          order: song.order,
+          role: song.role,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    await tx.artistSong.deleteMany({ where: { artistId: sourceArtistId } });
+    await tx.artist.delete({ where: { id: sourceArtistId } });
+  });
+
+  return { merged: true };
 }
