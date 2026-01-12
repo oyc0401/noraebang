@@ -256,7 +256,7 @@ model ArtistAlias {
   artistId  Int      @map("artist_id")
   alias     String
   locale    String // "KO", "JA_KANA", "JA_KANJI", "LATIN"
-  kind      String // "SPOTIFY", "YOUTUBE", "ROMANIZATION", "TRANSLATION", "TJ_NAME", "NICKNAME"
+  kind      String // "COMMON", "SPOTIFY", "YOUTUBE", "ROMANIZATION", "TRANSLATION", "TJ_NAME", "NICKNAME"
   source    String // "OPERATOR", "SYSTEM", "AI", "AUTO"
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -273,7 +273,7 @@ model SongAlias {
   songId Int    @map("song_id")
   alias  String
   locale String // "KO", "JA_KANA", "JA_KANJI", "LATIN"
-  kind   String // "SPOTIFY", "YOUTUBE", "ROMANIZATION", "TRANSLATION", "TJ_NAME", "NICKNAME"
+  kind   String // "COMMON", "SPOTIFY", "YOUTUBE", "ROMANIZATION", "TRANSLATION", "TJ_NAME", "NICKNAME"
   source String // "OPERATOR", "SYSTEM", "AI", "AUTO"
 
   createdAt DateTime @default(now()) @map("created_at")

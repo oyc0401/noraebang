@@ -24,6 +24,9 @@ type ManagerStoreState = {
   isCreateArtistDialogOpen: boolean;
   openCreateArtistDialog: () => void;
   closeCreateArtistDialog: () => void;
+  isAliasDialogOpen: boolean;
+  openAliasDialog: () => void;
+  closeAliasDialog: () => void;
   groupDetail: { groupId: number; tracks: ManagerSpotifyTrackSummary[] } | null;
   openGroupDetail: (
     groupId: number,
@@ -55,6 +58,9 @@ export const useManagerStore = create<ManagerStoreState>((set) => ({
   isCreateArtistDialogOpen: false,
   openCreateArtistDialog: () => set({ isCreateArtistDialogOpen: true }),
   closeCreateArtistDialog: () => set({ isCreateArtistDialogOpen: false }),
+  isAliasDialogOpen: false,
+  openAliasDialog: () => set({ isAliasDialogOpen: true }),
+  closeAliasDialog: () => set({ isAliasDialogOpen: false }),
   groupDetail: null,
   openGroupDetail: (groupId, tracks) => set({ groupDetail: { groupId, tracks } }),
   closeGroupDetail: () => set({ groupDetail: null }),

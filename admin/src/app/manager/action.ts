@@ -329,6 +329,7 @@ function mapSpotifyTrackSummary(track: any): ManagerSpotifyTrackSummary {
       thumbnails: [],
       createdAt: "",
       groupId: null,
+      artists: [],
     };
   }
   return {
@@ -865,4 +866,34 @@ export async function mergeArtist({
   });
 
   return { merged: true };
+}
+
+export type ArtistAlias = {
+  id: number;
+  alias: string;
+  locale: string;
+  kind: string;
+  source: string;
+};
+
+export async function fetchArtistAliases(
+  artistId: number,
+): Promise<ArtistAlias[]> {
+  if (!artistId || Number.isNaN(artistId)) {
+    return [];
+  }
+
+  const aliases = await prisma.artistAlias.findMany({
+    where: { artistId },
+    select: {
+      id: true,
+      alias: true,
+      locale: true,
+      kind: true,
+      source: true,
+    },
+    orderBy: [{ locale: "asc" }, { kind: "asc" }, { alias: "asc" }],
+  });
+
+  return aliases;
 }
