@@ -1,3 +1,5 @@
+"use client";
+
 export function RightSectionPlaceholder() {
   return (
     <section className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center text-sm text-zinc-500">

@@ -1,53 +1,38 @@
-import { useEffect, useRef, useState } from "react";
+"use client";
 
-import type {
-  ArtistFilterDefinition,
-  ArtistFilterId,
-} from "../filter-options";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { useManagerArtists } from "../artist-list-context";
+import { artistFilterOptions } from "../filter-options";
 import {
   MANAGER_PAGE_SIZE,
   managerSortOptions,
-  type ManagerArtistSummary,
   type ManagerSortKey,
 } from "../types";
 import { useManagerStore } from "../store";
 import { ArtistCard } from "./artist-card";
 import { FilterDialog } from "./filter-dialog";
 
-type LeftPanelProps = {
-  artists: ManagerArtistSummary[];
-  totalArtistCount: number;
-  searchTerm: string;
-  onSearchTermChange: (value: string) => void;
-  sortKey: ManagerSortKey;
-  onSortKeyChange: (value: ManagerSortKey) => void;
-  selectedFilters: ArtistFilterId[];
-  onFiltersChange: (filters: ArtistFilterId[]) => void;
-  isLoading: boolean;
-  errorMessage: string | null;
-  onRequestMore: () => void;
-  hasMore: boolean;
-  filters: ArtistFilterDefinition[];
-};
-
-export function LeftPanel({
-  artists,
-  totalArtistCount,
-  searchTerm,
-  onSearchTermChange,
-  sortKey,
-  onSortKeyChange,
-  selectedFilters,
-  onFiltersChange,
-  isLoading,
-  errorMessage,
-  onRequestMore,
-  hasMore,
-  filters,
-}: LeftPanelProps) {
+export function LeftPanel() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const selectionAnchorIndexRef = useRef<number | null>(null);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+
+  const {
+    artists,
+    totalArtistCount,
+    searchTerm,
+    setSearchTerm,
+    sortKey,
+    setSortKey,
+    selectedFilters,
+    setSelectedFilters,
+    isLoading,
+    errorMessage,
+    hasMore,
+    loadMore,
+  } = useManagerArtists();
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
   const setSelectedArtistId = useManagerStore(
     (state) => state.setSelectedArtistId,
@@ -64,7 +49,7 @@ export function LeftPanel({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            onRequestMore();
+            loadMore();
           }
         });
       },
@@ -73,11 +58,84 @@ export function LeftPanel({
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, onRequestMore]);
+  }, [hasMore, loadMore]);
+
+  const moveSelection = useCallback(
+    (direction: "up" | "down") => {
+      if (!artists.length) {
+        return;
+      }
+      const currentIndex = artists.findIndex(
+        (artist) => artist.id === selectedArtistId,
+      );
+      const fallbackIndex = direction === "down" ? 0 : artists.length - 1;
+      const resolvedIndex = currentIndex === -1 ? fallbackIndex : currentIndex;
+      const nextIndex =
+        direction === "down" ? resolvedIndex + 1 : resolvedIndex - 1;
+
+      if (nextIndex < 0) {
+        return;
+      }
+
+      if (nextIndex >= artists.length) {
+        if (!hasMore) return;
+        selectionAnchorIndexRef.current = nextIndex;
+        loadMore();
+        return;
+      }
+
+      const nextArtist = artists[nextIndex];
+      if (nextArtist) {
+        setSelectedArtistId(nextArtist.id);
+      }
+    },
+    [artists, hasMore, loadMore, selectedArtistId, setSelectedArtistId],
+  );
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        moveSelection("down");
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        moveSelection("up");
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [moveSelection]);
+
+  useEffect(() => {
+    const targetIndex = selectionAnchorIndexRef.current;
+    if (targetIndex === null) {
+      return;
+    }
+    if (targetIndex < artists.length) {
+      const target = artists[targetIndex];
+      if (target) {
+        setSelectedArtistId(target.id);
+        selectionAnchorIndexRef.current = null;
+      }
+    }
+  }, [artists, setSelectedArtistId]);
+
+  useEffect(() => {
+    if (selectedArtistId === null) {
+      return;
+    }
+    const cardElement = document.getElementById(
+      `artist-card-${selectedArtistId}`,
+    );
+    cardElement?.scrollIntoView({ block: "nearest" });
+  }, [selectedArtistId, artists.length]);
+
+  const availableFilters = artistFilterOptions;
 
   return (
     <>
-      <section className="flex h-[min(900px,75vh)] min-h-[600px] flex-col rounded-2xl border border-zinc-200 bg-white shadow-sm">
+      <section className="flex h-full flex-col rounded-2xl border border-zinc-200 bg-white shadow-sm">
         <div className="border-b border-zinc-100 p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -100,13 +158,13 @@ export function LeftPanel({
               className="w-full rounded-xl border border-zinc-200 px-4 py-2 text-sm outline-none transition focus:border-blue-500"
               placeholder="ID 또는 이름 검색 (ID 입력 시 ID 검색)"
               value={searchTerm}
-              onChange={(event) => onSearchTermChange(event.target.value)}
+              onChange={(event) => setSearchTerm(event.target.value)}
             />
             {searchTerm && (
               <button
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400 cursor-pointer"
-                onClick={() => onSearchTermChange("")}
+                onClick={() => setSearchTerm("")}
               >
                 초기화
               </button>
@@ -119,7 +177,7 @@ export function LeftPanel({
                 className="flex-1 bg-transparent text-sm outline-none"
                 value={sortKey}
                 onChange={(event) =>
-                  onSortKeyChange(event.target.value as ManagerSortKey)
+                  setSortKey(event.target.value as ManagerSortKey)
                 }
               >
                 {managerSortOptions.map((option) => (
@@ -145,7 +203,7 @@ export function LeftPanel({
               <button
                 type="button"
                 className="rounded-xl border border-zinc-100 px-3 py-2 text-xs text-zinc-400 transition hover:text-zinc-600 cursor-pointer"
-                onClick={() => onFiltersChange([])}
+                onClick={() => setSelectedFilters([])}
               >
                 필터 초기화
               </button>
@@ -195,9 +253,9 @@ export function LeftPanel({
 
       {isFilterDialogOpen && (
         <FilterDialog
-          filters={filters}
+          filters={availableFilters}
           selectedFilters={selectedFilters}
-          onChange={onFiltersChange}
+          onChange={setSelectedFilters}
           onClose={() => setIsFilterDialogOpen(false)}
         />
       )}
