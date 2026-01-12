@@ -12,6 +12,14 @@ export default function AdminDashboard() {
           <p className="text-zinc-600 dark:text-zinc-400">
             노래방 검색 서비스 관리 시스템
           </p>
+          <div className="mt-4">
+            <Link
+              href="/manager"
+              className="inline-flex items-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:border-blue-400 hover:text-blue-600 cursor-pointer"
+            >
+              관리자 매니저 페이지로 돌아가기
+            </Link>
+          </div>
         </header>
 
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
