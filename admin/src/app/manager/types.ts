@@ -75,6 +75,8 @@ export type ManagerArtistDetail = {
     high?: string | null;
   };
   spotify?: {
+    name?: string | null;
+    thumbnails?: string[];
     popularity?: number | null;
     followers?: number | null;
     genres: string[];
