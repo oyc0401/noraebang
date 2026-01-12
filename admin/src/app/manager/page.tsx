@@ -22,11 +22,11 @@ function ManagerPageInner() {
   const { totalArtistCount } = useManagerArtists();
 
   return (
-    <div className="min-h-screen bg-zinc-50 py-4 text-zinc-900">
-      <div className="mx-auto flex flex-col gap-2 lg:gap-8">
-        <header className="flex flex-col gap-3">
-          <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
-            <div className=" px-4 flex flex-row gap-4">
+    <div className="min-h-screen bg-zinc-50  text-zinc-900 h-[100vh]">
+      <div className="mx-auto flex h-full min-h-0 flex-col">
+        <header className="flex flex-col px-4 py-4">
+          <div className="flex flex-row justify-between md:items-end">
+            <div className="  flex flex-row">
               <h1 className=" text-3xl font-bold">아티스트 관리자</h1>
               <Link
                 href="/"
@@ -43,11 +43,11 @@ function ManagerPageInner() {
           <div className="flex flex-wrap gap-3"></div>
         </header>
 
-        <div className="grid gap-0 lg:[grid-template-columns:350px_minmax(0,1fr)_420px] h-full">
+        <div className="grid flex-1 min-h-0 gap-0 lg:[grid-template-columns:350px_minmax(0,1fr)_420px]">
           <LeftPanel />
-          <CenterSection />
+          {/* <CenterSection /> */}
 
-          <RightSection />
+          {/* <RightSection /> */}
         </div>
       </div>
     </div>
