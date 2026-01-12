@@ -130,11 +130,11 @@ export function useSearchControllerSearch<TData = Awaited<ReturnType<typeof sear
 
 
 /**
- * 검색 중 노출될 추천 검색어와 추천 아티스트/곡을 반환합니다.
- * @summary 검색 추천어 조회
+ * 검색어를 기반으로 자동완성 결과(아티스트, 곡)를 반환합니다.
+ * @summary 검색 자동완성
  */
 export const searchControllerGetSearchSuggestions = (
-    params: SearchControllerGetSearchSuggestionsParams,
+    params?: SearchControllerGetSearchSuggestionsParams,
  signal?: AbortSignal
 ) => {
       
@@ -156,7 +156,7 @@ export const getSearchControllerGetSearchSuggestionsQueryKey = (params?: SearchC
     }
 
     
-export const getSearchControllerGetSearchSuggestionsQueryOptions = <TData = Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError = ErrorResponseDto>(params: SearchControllerGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError, TData>>, }
+export const getSearchControllerGetSearchSuggestionsQueryOptions = <TData = Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError = ErrorResponseDto>(params?: SearchControllerGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
@@ -179,7 +179,7 @@ export type SearchControllerGetSearchSuggestionsQueryError = ErrorResponseDto
 
 
 export function useSearchControllerGetSearchSuggestions<TData = Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError = ErrorResponseDto>(
- params: SearchControllerGetSearchSuggestionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError, TData>> & Pick<
+ params: undefined |  SearchControllerGetSearchSuggestionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>,
           TError,
@@ -189,7 +189,7 @@ export function useSearchControllerGetSearchSuggestions<TData = Awaited<ReturnTy
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSearchControllerGetSearchSuggestions<TData = Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError = ErrorResponseDto>(
- params: SearchControllerGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError, TData>> & Pick<
+ params?: SearchControllerGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>,
           TError,
@@ -199,15 +199,15 @@ export function useSearchControllerGetSearchSuggestions<TData = Awaited<ReturnTy
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSearchControllerGetSearchSuggestions<TData = Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError = ErrorResponseDto>(
- params: SearchControllerGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError, TData>>, }
+ params?: SearchControllerGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 검색 추천어 조회
+ * @summary 검색 자동완성
  */
 
 export function useSearchControllerGetSearchSuggestions<TData = Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError = ErrorResponseDto>(
- params: SearchControllerGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError, TData>>, }
+ params?: SearchControllerGetSearchSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetSearchSuggestions>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
