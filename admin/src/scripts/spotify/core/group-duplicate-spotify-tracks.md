@@ -8,10 +8,10 @@
 
 ```bash
 # Dry-run (실제 DB 업데이트 없음)
-pnpm ts-node src/scripts/spotify/group-duplicate-spotify-tracks.ts --dry-run
+pnpm ts-node src/scripts/spotify/core/group-duplicate-spotify-tracks.ts --dry-run
 
 # 실제 실행
-pnpm ts-node src/scripts/spotify/group-duplicate-spotify-tracks.ts
+pnpm ts-node src/scripts/spotify/core/group-duplicate-spotify-tracks.ts
 ```
 
 ## 처리 범위

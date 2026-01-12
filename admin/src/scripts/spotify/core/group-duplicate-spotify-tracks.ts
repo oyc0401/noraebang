@@ -4,25 +4,29 @@
  * 규칙:
  * 1. 같은 아티스트 내에서 track.name 또는 musicBrainzTitle이 완전히 동일한 트랙들을 그룹화
  * 2. 이미 그룹에 속한 트랙이 있다면 그 그룹에 나머지 트랙들도 추가
- * 3. 그룹이 없다면 새 SpotifyTrackGroup 생성 (기존 Song과 연결하거나 새 Song 생성)
- * 4. popularity가 가장 높은 트랙을 primary로 설정 (popularity 동률이면 id가 작은 것)
- * 5. isDuplicateTrack으로 판단되는 트랙은 그룹화에서 제외 (전처리)
+ * 3. 그룹이 없다면 새 SpotifyTrackGroup 생성 (Song 매핑은 별도 스크립트에서 처리)
+ * 4. popularity가 가장 높은 트랙을 primary로 설정 (popularity 동률이면 releaseDate 최신, id가 작은 것)
+ * 5. 변형 버전(라이브, 리믹스 등)도 그룹에 포함하며 primary 가능
  *
  * 범위:
- * - artist.id < 300 인 아티스트들의 spotifyId로 연결된 spotifyArtist의 트랙들만 스캔/업데이트
+ * - 모든 아티스트들의 spotifyId로 연결된 spotifyArtist의 트랙들만 스캔/업데이트
+ *
+ * 주의:
+ * - 이 스크립트는 Song을 생성하지 않음 (SpotifyTrackGroup만 생성/관리)
+ * - Song과의 매핑은 다른 스크립트에서 수동으로 처리
  *
  * 사용법:
- * pnpm ts-node src/scripts/spotify/group-duplicate-spotify-tracks.ts --dry-run
- * pnpm ts-node src/scripts/spotify/group-duplicate-spotify-tracks.ts
+ * pnpm ts-node src/scripts/spotify/core/group-duplicate-spotify-tracks.ts --dry-run
+ * pnpm ts-node src/scripts/spotify/core/group-duplicate-spotify-tracks.ts
  */
 
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { isDuplicateTrack } from "../../lib/duplicate-track-detector.ts";
-import { findBestMatch } from "../../lib/song-spotify-matcher.ts";
-import { normalizeTitle as normalizeTrackTitle } from "../../lib/track-title-normalizer.ts";
+import { isDuplicateTrack } from "../../../lib/duplicate-track-detector.ts";
+import { findBestMatch } from "../../../lib/song-spotify-matcher.ts";
+import { normalizeTitle as normalizeTrackTitle } from "../../../lib/track-title-normalizer.ts";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -71,9 +75,8 @@ async function main() {
   );
 
   // 1) 대상 아티스트 조회
-  console.log("Step 1: 대상 아티스트 조회 중 (artist.id < 300) ...");
+  console.log("Step 1: 대상 아티스트 조회 중 ...");
   const artists = await prisma.artist.findMany({
-    where: { id: { lt: 300 } },
     select: { id: true, name: true, spotifyId: true },
     orderBy: { id: "asc" },
   });
@@ -136,14 +139,21 @@ async function main() {
 
   console.log(`✓ spotifyArtistTrack links: ${links.length}개\n`);
 
-  // 4) spotifyArtistId -> tracks[] 구성
+  // 4) spotifyArtistId -> tracks[] 구성 (groupId가 null인 트랙만)
   const tracksBySpotifyArtistId = new Map<number, TrackInfo[]>();
   const trackById = new Map<number, TrackInfo>();
 
   let duplicateVariantCount = 0;
+  let alreadyGroupedCount = 0;
 
   for (const row of links) {
     const t = row.spotifyTrack;
+
+    // 이미 그룹에 속한 트랙은 제외
+    if (t.groupId !== null) {
+      alreadyGroupedCount++;
+      continue;
+    }
 
     // 변형 버전 여부 판단 (라이브, 리믹스, 인스트루멘탈 등)
     const isDupVariant = isDuplicateTrack(t.name);
@@ -169,6 +179,7 @@ async function main() {
     if (!trackById.has(info.id)) trackById.set(info.id, info);
   }
 
+  console.log(`✓ 이미 그룹에 속한 트랙: ${alreadyGroupedCount}개 (스킵)`);
   console.log(
     `✓ 변형 버전 트랙(라이브/리믹스 등): ${duplicateVariantCount}개 (그룹에 포함, primary 가능)`,
   );
@@ -268,8 +279,9 @@ async function main() {
   console.log(`✓ 생성할 그룹 수: ${groupsToCreate.length}개`);
   console.log(`✓ 그룹화될 트랙 수: ${totalGroupedTracks}개\n`);
 
-  // 6) 변형 버전 솔로 그룹 재배치
-  console.log("Step 6: 변형 버전 솔로 그룹 재배치 중 ...");
+  // 5) 변형 버전 솔로 그룹 재배치
+  // 주의: groupId가 null인 트랙만 대상이므로 이 로직은 실행되지 않음
+  console.log("Step 5: 변형 버전 솔로 그룹 재배치 중 ...");
 
   type RelocateInfo = {
     variantTrackId: number;
@@ -286,7 +298,7 @@ async function main() {
     const variantTracks = tracks.filter((t) => t.isDuplicateVariant);
 
     for (const variantTrack of variantTracks) {
-      // 그룹이 없으면 스킵
+      // groupId가 null인 트랙만 대상이므로 여기서 모두 스킵됨
       if (!variantTrack.groupId) continue;
 
       // 해당 그룹에 속한 트랙 수 확인 (메모리에서 체크)
@@ -347,12 +359,12 @@ async function main() {
 
     const groupsInfoMap = new Map<
       number,
-      { id: number; songId: number | null }
+      { id: number; songs: { id: number }[] }
     >();
     if (uniqueExistingGroupIds.length > 0) {
       const groupsInfo = await prisma.spotifyTrackGroup.findMany({
         where: { id: { in: uniqueExistingGroupIds } },
-        select: { id: true, songId: true },
+        include: { songs: { select: { id: true } } },
       });
       for (const info of groupsInfo) {
         groupsInfoMap.set(info.id, info);
@@ -380,24 +392,20 @@ async function main() {
 
       if (uniqueGroupIds.length > 1) {
         const mainGroupId = uniqueGroupIds[0];
-        const mainGroupInfo = groupsInfoMap.get(mainGroupId);
-        const mainHasSong = mainGroupInfo?.songId !== null;
 
-        console.log(`  ⚠️  여러 그룹 병합 예정:`);
+        console.log(`  ⚠️  여러 그룹 병합 예정 (그룹[${mainGroupId}]로 통합):`);
         for (const mergeGroupId of uniqueGroupIds.slice(1)) {
           const mergeGroupInfo = groupsInfoMap.get(mergeGroupId);
-          const mergeHasSong = mergeGroupInfo?.songId !== null;
+          const mergeHasSong =
+            mergeGroupInfo && mergeGroupInfo.songs.length > 0;
 
-          if (mergeHasSong && mainHasSong) {
+          if (mergeHasSong) {
+            const songIds = mergeGroupInfo!.songs.map((s) => s.id).join(", ");
             console.log(
-              `      그룹[${mergeGroupId}] Song[${mergeGroupInfo!.songId}] - Song 충돌로 병합 스킵`,
-            );
-          } else if (mergeHasSong && !mainHasSong) {
-            console.log(
-              `      그룹[${mergeGroupId}] Song[${mergeGroupInfo!.songId}] - Song 이전 후 삭제`,
+              `      그룹[${mergeGroupId}] Songs[${songIds}] - Song 이전 후 그룹 삭제`,
             );
           } else {
-            console.log(`      그룹[${mergeGroupId}] - 삭제 예정`);
+            console.log(`      그룹[${mergeGroupId}] - 그룹 삭제 예정`);
           }
         }
       }
@@ -426,12 +434,11 @@ async function main() {
   }
 
   // 6) DB 업데이트
-  console.log("Step 4: SpotifyTrackGroup 생성 및 트랙 업데이트 중 ...");
+  console.log("Step 6: SpotifyTrackGroup 생성 및 트랙 업데이트 중 ...");
 
   let createdGroupCount = 0;
   let updatedTrackCount = 0;
   let mergedGroupCount = 0;
-  let songConflictCount = 0;
   const groupIdMapping = new Map<number, number>(); // oldGroupId -> newGroupId
   const createdOrUsedGroupIds: number[] = []; // primary 설정을 위해 추적
 
@@ -454,50 +461,49 @@ async function main() {
       // 기존 그룹 사용 (첫 번째 그룹)
       groupId = uniqueGroupIds[0];
 
-      // 여러 기존 그룹이 있으면 먼저 병합 처리
+      // 여러 기존 그룹이 있으면 병합 처리
       if (uniqueGroupIds.length > 1) {
         const groupsToMerge = uniqueGroupIds.slice(1);
 
         // 병합할 그룹들의 Song 정보 조회
         const groupsInfo = await prisma.spotifyTrackGroup.findMany({
           where: { id: { in: [groupId, ...groupsToMerge] } },
-          select: { id: true, songId: true },
+          include: { songs: { select: { id: true } } },
         });
-
-        const mainGroupInfo = groupsInfo.find((g) => g.id === groupId);
-        let mainHasSong = mainGroupInfo?.songId !== null;
 
         for (const mergeGroupId of groupsToMerge) {
           const mergeGroupInfo = groupsInfo.find((g) => g.id === mergeGroupId);
-          const mergeHasSong = mergeGroupInfo?.songId !== null;
+          const mergeHasSong =
+            mergeGroupInfo && mergeGroupInfo.songs.length > 0;
 
-          if (mergeHasSong) {
-            if (!mainHasSong) {
-              // 메인 그룹에 Song 없고, 병합 그룹에 Song 있으면 → Song 이전
-              await prisma.spotifyTrackGroup.update({
-                where: { id: groupId },
-                data: { songId: mergeGroupInfo!.songId },
-              });
-              console.log(
-                `  ℹ️  그룹[${mergeGroupId}]의 Song[${mergeGroupInfo!.songId}]을 그룹[${groupId}]로 이전`,
-              );
-
-              // 이제 메인 그룹에 Song이 생겼으므로 플래그 업데이트
-              mainHasSong = true;
-            } else {
-              // 양쪽 다 Song 있으면 → 충돌, 삭제 안함
-              console.log(
-                `  ⚠️  Song 충돌: 그룹[${groupId}]의 Song[${mainGroupInfo!.songId}] vs 그룹[${mergeGroupId}]의 Song[${mergeGroupInfo!.songId}] - 병합 스킵`,
-              );
-              songConflictCount++;
-              continue; // 이 그룹은 삭제하지 않음
-            }
+          // 1. 병합 그룹의 SpotifyTrack들을 먼저 메인 그룹으로 이동
+          const mergeGroupTracks = group.tracks.filter(
+            (t) => t.groupId === mergeGroupId,
+          );
+          if (mergeGroupTracks.length > 0) {
+            const trackIds = mergeGroupTracks.map((t) => t.id);
+            await prisma.spotifyTrack.updateMany({
+              where: { id: { in: trackIds } },
+              data: { groupId },
+            });
           }
 
-          // 병합 매핑 저장 (oldGroupId -> newGroupId)
+          // 2. 병합 그룹의 Song이 있으면 메인 그룹으로 이전
+          if (mergeHasSong) {
+            const songIds = mergeGroupInfo!.songs.map((s) => s.id);
+            await prisma.song.updateMany({
+              where: { id: { in: songIds } },
+              data: { spotifyTrackGroupId: groupId },
+            });
+            console.log(
+              `  ℹ️  그룹[${mergeGroupId}]의 Songs[${songIds.join(", ")}]을 그룹[${groupId}]로 이전`,
+            );
+          }
+
+          // 3. 병합 매핑 저장 (oldGroupId -> newGroupId)
           groupIdMapping.set(mergeGroupId, groupId);
 
-          // Song 충돌이 없으면 그룹 삭제
+          // 4. 이제 안전하게 그룹 삭제 (외래 키 제약 없음)
           await prisma.spotifyTrackGroup.delete({
             where: { id: mergeGroupId },
           });
@@ -508,21 +514,23 @@ async function main() {
 
     createdOrUsedGroupIds.push(groupId);
 
-    // 모든 트랙의 groupId 업데이트
-    const trackIds = group.tracks.map((t) => t.id);
-    await prisma.spotifyTrack.updateMany({
-      where: { id: { in: trackIds } },
-      data: { groupId },
-    });
-    updatedTrackCount += trackIds.length;
+    // 아직 이동 안 한 트랙들만 groupId 업데이트 (병합 시 이미 이동했으므로)
+    const tracksToUpdate = group.tracks.filter((t) => t.groupId !== groupId);
+    if (tracksToUpdate.length > 0) {
+      const trackIds = tracksToUpdate.map((t) => t.id);
+      await prisma.spotifyTrack.updateMany({
+        where: { id: { in: trackIds } },
+        data: { groupId },
+      });
+      updatedTrackCount += trackIds.length;
+    }
   }
 
   console.log(`✓ 신규 생성된 그룹: ${createdGroupCount}개`);
   console.log(`✓ 병합/삭제된 그룹: ${mergedGroupCount}개`);
-  console.log(`✓ Song 충돌로 병합 스킵: ${songConflictCount}개`);
   console.log(`✓ 업데이트된 트랙: ${updatedTrackCount}개\n`);
 
-  // 8) 변형 버전 재배치 처리
+  // 7) 변형 버전 재배치 처리
   if (relocateList.length > 0) {
     console.log("Step 7: 변형 버전 재배치 처리 중 ...");
 
@@ -567,12 +575,24 @@ async function main() {
   }
 
   if (createdOrUsedGroupIds.length > 0) {
-    console.log("Step 8: Primary track 설정 중 ...");
+    console.log("Step 8: Primary 트랙 설정 중 ...");
 
     const uniqueGroupIds = Array.from(new Set(createdOrUsedGroupIds));
     let primaryUpdateCount = 0;
+    let skippedCount = 0;
 
     for (const groupId of uniqueGroupIds) {
+      // 그룹이 아직 존재하는지 확인 (병합으로 삭제되었을 수 있음)
+      const groupExists = await prisma.spotifyTrackGroup.findUnique({
+        where: { id: groupId },
+        select: { id: true, primarySpotifyTrackId: true },
+      });
+
+      if (!groupExists) {
+        skippedCount++;
+        continue;
+      }
+
       // 해당 그룹의 모든 트랙 조회
       const tracks = await prisma.spotifyTrack.findMany({
         where: { groupId },
@@ -583,7 +603,10 @@ async function main() {
         },
       });
 
-      if (tracks.length === 0) continue;
+      if (tracks.length === 0) {
+        skippedCount++;
+        continue;
+      }
 
       // Popularity 높은 순, 같으면 최신 순, 같으면 id 작은 순
       const primary = tracks.slice().sort((a, b) => {
@@ -601,6 +624,11 @@ async function main() {
         return a.id - b.id;
       })[0]!;
 
+      // 이미 올바른 primary가 설정되어 있으면 스킵
+      if (groupExists.primarySpotifyTrackId === primary.id) {
+        continue;
+      }
+
       await prisma.spotifyTrackGroup.update({
         where: { id: groupId },
         data: { primarySpotifyTrackId: primary.id },
@@ -608,7 +636,11 @@ async function main() {
       primaryUpdateCount++;
     }
 
-    console.log(`✓ primary 설정된 그룹: ${primaryUpdateCount}개\n`);
+    console.log(`✓ primary 설정된 그룹: ${primaryUpdateCount}개`);
+    if (skippedCount > 0) {
+      console.log(`✓ 스킵된 그룹: ${skippedCount}개 (삭제되었거나 트랙 없음)`);
+    }
+    console.log("");
   }
 
   console.log(
