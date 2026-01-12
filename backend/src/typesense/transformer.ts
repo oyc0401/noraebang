@@ -239,6 +239,66 @@ function removeSpaces(text: string): string {
   return text.replace(/\s+/g, "");
 }
 
+function addJapaneseVariants(values: Set<string>, text?: string | null) {
+  if (!text) {
+    return;
+  }
+
+  const noSpaceAndPunct = cleanText(removeSpaces(text));
+  if (noSpaceAndPunct !== text) {
+    values.add(noSpaceAndPunct);
+  }
+
+  const hiragana = toAllHiragana(text);
+  if (hiragana !== text) {
+    values.add(hiragana);
+  }
+
+  const katakana = toAllKatakana(text);
+  if (katakana !== text) {
+    values.add(katakana);
+  }
+
+  const noSpaceAndPunctHiragana = toAllHiragana(noSpaceAndPunct);
+  if (
+    noSpaceAndPunctHiragana !== noSpaceAndPunct &&
+    noSpaceAndPunctHiragana !== hiragana
+  ) {
+    values.add(noSpaceAndPunctHiragana);
+  }
+
+  const noSpaceAndPunctKatakana = toAllKatakana(noSpaceAndPunct);
+  if (
+    noSpaceAndPunctKatakana !== noSpaceAndPunct &&
+    noSpaceAndPunctKatakana !== katakana
+  ) {
+    values.add(noSpaceAndPunctKatakana);
+  }
+}
+
+function addBasicNormalizedVariant(
+  values: Set<string>,
+  text?: string | null,
+) {
+  if (!text) {
+    return;
+  }
+
+  const noSpaceAndPunct = cleanText(removeSpaces(text));
+  if (noSpaceAndPunct !== text) {
+    values.add(noSpaceAndPunct);
+  }
+}
+
+function buildPrimaryValues(value?: string | null): string[] | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const cleaned = cleanText(value);
+  return cleaned === value ? [value] : [value, cleaned];
+}
+
 /**
  * DB Song → Typesense Document 변환
  */
@@ -294,29 +354,10 @@ export function transformSongToDocument(
   }
 
   // Song 테이블의 제목만 q_song_*_p 필드에 추가 (원본 + 괄호/구두점 제거 버전)
-  const q_song_ko_p = titleKo
-    ? titleKo === cleanText(titleKo)
-      ? [titleKo]
-      : [titleKo, cleanText(titleKo)]
-    : undefined;
-
-  const q_song_ja_kanji_p = titleJaKanji
-    ? titleJaKanji === cleanText(titleJaKanji)
-      ? [titleJaKanji]
-      : [titleJaKanji, cleanText(titleJaKanji)]
-    : undefined;
-
-  const q_song_ja_kana_p = titleJaKana
-    ? titleJaKana === cleanText(titleJaKana)
-      ? [titleJaKana]
-      : [titleJaKana, cleanText(titleJaKana)]
-    : undefined;
-
-  const q_song_latin_p = titleLatin
-    ? titleLatin === cleanText(titleLatin)
-      ? [titleLatin]
-      : [titleLatin, cleanText(titleLatin)]
-    : undefined;
+  const q_song_ko_p = buildPrimaryValues(titleKo);
+  const q_song_ja_kanji_p = buildPrimaryValues(titleJaKanji);
+  const q_song_ja_kana_p = buildPrimaryValues(titleJaKana);
+  const q_song_latin_p = buildPrimaryValues(titleLatin);
 
   // 곡 제목의 정규화 버전을 _a 필드에 추가
   const q_song_ko_a_values = new Set<string>(songAliases.q_song_ko_a || []);
@@ -331,98 +372,12 @@ export function transformSongToDocument(
   );
 
   // q_song_ko_a: 공백+특수문자 제거만
-  if (titleKo) {
-    const noSpaceAndPunct = cleanText(removeSpaces(titleKo));
-    if (noSpaceAndPunct !== titleKo) {
-      q_song_ko_a_values.add(noSpaceAndPunct);
-    }
-  }
-
-  // q_song_latin_a: 공백+특수문자 제거만
-  if (titleLatin) {
-    const noSpaceAndPunct = cleanText(removeSpaces(titleLatin));
-    if (noSpaceAndPunct !== titleLatin) {
-      q_song_latin_a_values.add(noSpaceAndPunct);
-    }
-  }
+  addBasicNormalizedVariant(q_song_ko_a_values, titleKo);
+  addBasicNormalizedVariant(q_song_latin_a_values, titleLatin);
 
   // q_song_ja_kanji_a: 공백+특수 제거 / 히라 / 가타 / 공백특수히라 / 공백특수가타
-  if (titleJaKanji) {
-    // 1. 공백+특수문자 제거
-    const noSpaceAndPunct = cleanText(removeSpaces(titleJaKanji));
-    if (noSpaceAndPunct !== titleJaKanji) {
-      q_song_ja_kanji_a_values.add(noSpaceAndPunct);
-    }
-
-    // 2. 히라가나 변환 (원본 기준)
-    const hiragana = toAllHiragana(titleJaKanji);
-    if (hiragana !== titleJaKanji) {
-      q_song_ja_kanji_a_values.add(hiragana);
-    }
-
-    // 3. 카타카나 변환 (원본 기준)
-    const katakana = toAllKatakana(titleJaKanji);
-    if (katakana !== titleJaKanji) {
-      q_song_ja_kanji_a_values.add(katakana);
-    }
-
-    // 4. 공백+특수문자 제거 + 히라가나
-    const noSpaceAndPunctHiragana = toAllHiragana(noSpaceAndPunct);
-    if (
-      noSpaceAndPunctHiragana !== noSpaceAndPunct &&
-      noSpaceAndPunctHiragana !== hiragana
-    ) {
-      q_song_ja_kanji_a_values.add(noSpaceAndPunctHiragana);
-    }
-
-    // 5. 공백+특수문자 제거 + 카타카나
-    const noSpaceAndPunctKatakana = toAllKatakana(noSpaceAndPunct);
-    if (
-      noSpaceAndPunctKatakana !== noSpaceAndPunct &&
-      noSpaceAndPunctKatakana !== katakana
-    ) {
-      q_song_ja_kanji_a_values.add(noSpaceAndPunctKatakana);
-    }
-  }
-
-  // q_song_ja_kana_a: 공백+특수 제거 / 히라 / 가타 / 공백특수히라 / 공백특수가타
-  if (titleJaKana) {
-    // 1. 공백+특수문자 제거
-    const noSpaceAndPunct = cleanText(removeSpaces(titleJaKana));
-    if (noSpaceAndPunct !== titleJaKana) {
-      q_song_ja_kana_a_values.add(noSpaceAndPunct);
-    }
-
-    // 2. 히라가나 변환 (원본 기준)
-    const hiragana = toAllHiragana(titleJaKana);
-    if (hiragana !== titleJaKana) {
-      q_song_ja_kana_a_values.add(hiragana);
-    }
-
-    // 3. 카타카나 변환 (원본 기준)
-    const katakana = toAllKatakana(titleJaKana);
-    if (katakana !== titleJaKana) {
-      q_song_ja_kana_a_values.add(katakana);
-    }
-
-    // 4. 공백+특수문자 제거 + 히라가나
-    const noSpaceAndPunctHiragana = toAllHiragana(noSpaceAndPunct);
-    if (
-      noSpaceAndPunctHiragana !== noSpaceAndPunct &&
-      noSpaceAndPunctHiragana !== hiragana
-    ) {
-      q_song_ja_kana_a_values.add(noSpaceAndPunctHiragana);
-    }
-
-    // 5. 공백+특수문자 제거 + 카타카나
-    const noSpaceAndPunctKatakana = toAllKatakana(noSpaceAndPunct);
-    if (
-      noSpaceAndPunctKatakana !== noSpaceAndPunct &&
-      noSpaceAndPunctKatakana !== katakana
-    ) {
-      q_song_ja_kana_a_values.add(noSpaceAndPunctKatakana);
-    }
-  }
+  addJapaneseVariants(q_song_ja_kanji_a_values, titleJaKanji);
+  addJapaneseVariants(q_song_ja_kana_a_values, titleJaKana);
 
   const q_song_ko_a =
     q_song_ko_a_values.size > 0 ? Array.from(q_song_ko_a_values) : undefined;
@@ -532,88 +487,11 @@ export function transformSongToDocument(
 
   for (const artist of artists) {
     // q_artist_ko_a: 공백+특수문자 제거만
-    if (artist.nameKo) {
-      const noSpaceAndPunct = cleanText(removeSpaces(artist.nameKo));
-      if (noSpaceAndPunct !== artist.nameKo) {
-        q_artist_ko_a_values.add(noSpaceAndPunct);
-      }
-    }
+    addBasicNormalizedVariant(q_artist_ko_a_values, artist.nameKo);
+    addBasicNormalizedVariant(q_artist_raw_a_values, artist.nameLatin);
 
-    // q_artist_raw_a: 공백+특수문자 제거만
-    if (artist.nameLatin) {
-      const noSpaceAndPunct = cleanText(removeSpaces(artist.nameLatin));
-      if (noSpaceAndPunct !== artist.nameLatin) {
-        q_artist_raw_a_values.add(noSpaceAndPunct);
-      }
-    }
-
-    // q_artist_ja_kanji_a: 공백+특수 제거 / 히라 / 가타 / 공백특수히라 / 공백특수가타
-    if (artist.nameJaKanji) {
-      const noSpaceAndPunct = cleanText(removeSpaces(artist.nameJaKanji));
-      if (noSpaceAndPunct !== artist.nameJaKanji) {
-        q_artist_ja_kanji_a_values.add(noSpaceAndPunct);
-      }
-
-      const hiragana = toAllHiragana(artist.nameJaKanji);
-      if (hiragana !== artist.nameJaKanji) {
-        q_artist_ja_kanji_a_values.add(hiragana);
-      }
-
-      const katakana = toAllKatakana(artist.nameJaKanji);
-      if (katakana !== artist.nameJaKanji) {
-        q_artist_ja_kanji_a_values.add(katakana);
-      }
-
-      const noSpaceAndPunctHiragana = toAllHiragana(noSpaceAndPunct);
-      if (
-        noSpaceAndPunctHiragana !== noSpaceAndPunct &&
-        noSpaceAndPunctHiragana !== hiragana
-      ) {
-        q_artist_ja_kanji_a_values.add(noSpaceAndPunctHiragana);
-      }
-
-      const noSpaceAndPunctKatakana = toAllKatakana(noSpaceAndPunct);
-      if (
-        noSpaceAndPunctKatakana !== noSpaceAndPunct &&
-        noSpaceAndPunctKatakana !== katakana
-      ) {
-        q_artist_ja_kanji_a_values.add(noSpaceAndPunctKatakana);
-      }
-    }
-
-    // q_artist_ja_kana_a: 공백+특수 제거 / 히라 / 가타 / 공백특수히라 / 공백특수가타
-    if (artist.nameJaKana) {
-      const noSpaceAndPunct = cleanText(removeSpaces(artist.nameJaKana));
-      if (noSpaceAndPunct !== artist.nameJaKana) {
-        q_artist_ja_kana_a_values.add(noSpaceAndPunct);
-      }
-
-      const hiragana = toAllHiragana(artist.nameJaKana);
-      if (hiragana !== artist.nameJaKana) {
-        q_artist_ja_kana_a_values.add(hiragana);
-      }
-
-      const katakana = toAllKatakana(artist.nameJaKana);
-      if (katakana !== artist.nameJaKana) {
-        q_artist_ja_kana_a_values.add(katakana);
-      }
-
-      const noSpaceAndPunctHiragana = toAllHiragana(noSpaceAndPunct);
-      if (
-        noSpaceAndPunctHiragana !== noSpaceAndPunct &&
-        noSpaceAndPunctHiragana !== hiragana
-      ) {
-        q_artist_ja_kana_a_values.add(noSpaceAndPunctHiragana);
-      }
-
-      const noSpaceAndPunctKatakana = toAllKatakana(noSpaceAndPunct);
-      if (
-        noSpaceAndPunctKatakana !== noSpaceAndPunct &&
-        noSpaceAndPunctKatakana !== katakana
-      ) {
-        q_artist_ja_kana_a_values.add(noSpaceAndPunctKatakana);
-      }
-    }
+    addJapaneseVariants(q_artist_ja_kanji_a_values, artist.nameJaKanji);
+    addJapaneseVariants(q_artist_ja_kana_a_values, artist.nameJaKana);
   }
 
   const q_artist_ko_a =
@@ -719,29 +597,10 @@ export function transformArtistToDocument(
   const popularity = artist.spotifyArtist?.popularity ?? undefined;
 
   // Artist 테이블의 컬럼만 q_name_*_p 필드에 추가 (원본 + 괄호/구두점 제거 버전)
-  const q_name_ko_p = nameKo
-    ? nameKo === cleanText(nameKo)
-      ? [nameKo]
-      : [nameKo, cleanText(nameKo)]
-    : undefined;
-
-  const q_name_latin_p = nameLatin
-    ? nameLatin === cleanText(nameLatin)
-      ? [nameLatin]
-      : [nameLatin, cleanText(nameLatin)]
-    : undefined;
-
-  const q_name_ja_kanji_p = nameJaKanji
-    ? nameJaKanji === cleanText(nameJaKanji)
-      ? [nameJaKanji]
-      : [nameJaKanji, cleanText(nameJaKanji)]
-    : undefined;
-
-  const q_name_ja_kana_p = nameJaKana
-    ? nameJaKana === cleanText(nameJaKana)
-      ? [nameJaKana]
-      : [nameJaKana, cleanText(nameJaKana)]
-    : undefined;
+  const q_name_ko_p = buildPrimaryValues(nameKo);
+  const q_name_latin_p = buildPrimaryValues(nameLatin);
+  const q_name_ja_kanji_p = buildPrimaryValues(nameJaKanji);
+  const q_name_ja_kana_p = buildPrimaryValues(nameJaKana);
 
   // 아티스트 이름의 정규화 버전을 _a 필드에 추가
   const q_name_ko_a_values = new Set<string>(nameAliases.q_name_ko_a || []);
@@ -755,89 +614,11 @@ export function transformArtistToDocument(
     nameAliases.q_name_ja_kana_a || [],
   );
 
-  // q_name_ko_a: 공백+특수문자 제거만
-  if (nameKo) {
-    const noSpaceAndPunct = cleanText(removeSpaces(nameKo));
-    if (noSpaceAndPunct !== nameKo) {
-      q_name_ko_a_values.add(noSpaceAndPunct);
-    }
-  }
+  addBasicNormalizedVariant(q_name_ko_a_values, nameKo);
+  addBasicNormalizedVariant(q_name_latin_a_values, nameLatin);
 
-  // q_name_latin_a: 공백+특수문자 제거만
-  if (nameLatin) {
-    const noSpaceAndPunct = cleanText(removeSpaces(nameLatin));
-    if (noSpaceAndPunct !== nameLatin) {
-      q_name_latin_a_values.add(noSpaceAndPunct);
-    }
-  }
-
-  // q_name_ja_kanji_a: 공백+특수 제거 / 히라 / 가타 / 공백특수히라 / 공백특수가타
-  if (nameJaKanji) {
-    const noSpaceAndPunct = cleanText(removeSpaces(nameJaKanji));
-    if (noSpaceAndPunct !== nameJaKanji) {
-      q_name_ja_kanji_a_values.add(noSpaceAndPunct);
-    }
-
-    const hiragana = toAllHiragana(nameJaKanji);
-    if (hiragana !== nameJaKanji) {
-      q_name_ja_kanji_a_values.add(hiragana);
-    }
-
-    const katakana = toAllKatakana(nameJaKanji);
-    if (katakana !== nameJaKanji) {
-      q_name_ja_kanji_a_values.add(katakana);
-    }
-
-    const noSpaceAndPunctHiragana = toAllHiragana(noSpaceAndPunct);
-    if (
-      noSpaceAndPunctHiragana !== noSpaceAndPunct &&
-      noSpaceAndPunctHiragana !== hiragana
-    ) {
-      q_name_ja_kanji_a_values.add(noSpaceAndPunctHiragana);
-    }
-
-    const noSpaceAndPunctKatakana = toAllKatakana(noSpaceAndPunct);
-    if (
-      noSpaceAndPunctKatakana !== noSpaceAndPunct &&
-      noSpaceAndPunctKatakana !== katakana
-    ) {
-      q_name_ja_kanji_a_values.add(noSpaceAndPunctKatakana);
-    }
-  }
-
-  // q_name_ja_kana_a: 공백+특수 제거 / 히라 / 가타 / 공백특수히라 / 공백특수가타
-  if (nameJaKana) {
-    const noSpaceAndPunct = cleanText(removeSpaces(nameJaKana));
-    if (noSpaceAndPunct !== nameJaKana) {
-      q_name_ja_kana_a_values.add(noSpaceAndPunct);
-    }
-
-    const hiragana = toAllHiragana(nameJaKana);
-    if (hiragana !== nameJaKana) {
-      q_name_ja_kana_a_values.add(hiragana);
-    }
-
-    const katakana = toAllKatakana(nameJaKana);
-    if (katakana !== nameJaKana) {
-      q_name_ja_kana_a_values.add(katakana);
-    }
-
-    const noSpaceAndPunctHiragana = toAllHiragana(noSpaceAndPunct);
-    if (
-      noSpaceAndPunctHiragana !== noSpaceAndPunct &&
-      noSpaceAndPunctHiragana !== hiragana
-    ) {
-      q_name_ja_kana_a_values.add(noSpaceAndPunctHiragana);
-    }
-
-    const noSpaceAndPunctKatakana = toAllKatakana(noSpaceAndPunct);
-    if (
-      noSpaceAndPunctKatakana !== noSpaceAndPunct &&
-      noSpaceAndPunctKatakana !== katakana
-    ) {
-      q_name_ja_kana_a_values.add(noSpaceAndPunctKatakana);
-    }
-  }
+  addJapaneseVariants(q_name_ja_kanji_a_values, nameJaKanji);
+  addJapaneseVariants(q_name_ja_kana_a_values, nameJaKana);
 
   const q_name_ko_a =
     q_name_ko_a_values.size > 0 ? Array.from(q_name_ko_a_values) : undefined;
