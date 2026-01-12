@@ -115,6 +115,7 @@ export const artistsCollectionSchema: CollectionCreateSchema = {
 
     // ===== 정렬/랭킹 필드 =====
     { name: "popularity", type: "float", optional: true }, // Spotify artist popularity
+    { name: "tjSongCount", type: "int32", optional: true, index: false }, // Number of TJ songs
     { name: "updatedAt", type: "int64" }, // Unix timestamp
 
     // ===== 검색 필드: 아티스트명 (한국어) =====

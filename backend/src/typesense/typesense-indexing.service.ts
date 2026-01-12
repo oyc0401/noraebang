@@ -36,6 +36,17 @@ export class TypesenseIndexingService {
       where: { id: { lte: maxArtistId } },
       include: {
         aliases: true,
+        artistSongs: {
+          include: {
+            song: {
+              select: {
+                tjSong: {
+                  select: { id: true },
+                },
+              },
+            },
+          },
+        },
         spotifyArtist: {
           select: {
             popularity: true,

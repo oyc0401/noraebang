@@ -1,5 +1,9 @@
 import type { PrismaClient } from "@prisma/client";
 import {
+  calculateArtistPopularity,
+  calculateSongPopularity,
+} from "./lib/popularity";
+import {
   cleanText,
   detectJapaneseType,
   hasMixedKana,
@@ -60,6 +64,13 @@ type ArtistWithRelations = Awaited<
     locale: string;
     kind: string;
     source: string;
+  }>;
+  artistSongs?: Array<{
+    song?: {
+      tjSong?: {
+        id: string;
+      } | null;
+    } | null;
   }>;
   spotifyArtist?: {
     popularity: number | null;
@@ -150,6 +161,7 @@ export interface TypesenseArtistDocument {
   nameLatin?: string;
 
   popularity?: number;
+  tjSongCount?: number;
   updatedAt: number;
 
   q_name_ko_p?: string[];
@@ -729,8 +741,19 @@ export function transformArtistToDocument(
   const nameJaKanji = artist.nameJaKanji;
   const nameJaKana = artist.nameJaKana;
 
-  // 인기도
-  const popularity = artist.spotifyArtist?.popularity ?? undefined;
+  // TJ 곡 개수 계산: 해당 아티스트의 곡 중 TJ 노래방 번호가 있는 곡의 개수
+  const artistSongs = artist.artistSongs ?? [];
+  const tjSongCount = artistSongs.reduce((count, artistSong) => {
+    return artistSong.song?.tjSong ? count + 1 : count;
+  }, 0);
+
+  // 인기도: spotifyPopularity + tjSongCount
+  const spotifyPopularity = artist.spotifyArtist?.popularity ?? undefined;
+  const hasPopularitySource =
+    spotifyPopularity !== undefined || tjSongCount > 0;
+  const popularity = hasPopularitySource
+    ? calculateArtistPopularity(spotifyPopularity, tjSongCount)
+    : undefined;
 
   // Artist 테이블의 컬럼만 q_name_*_p 필드에 추가 (원본 + 괄호/구두점 제거 버전)
   const q_name_ko_p = buildPrimaryValues(nameKo);
@@ -781,6 +804,7 @@ export function transformArtistToDocument(
     nameLatin: nameLatin ?? undefined,
 
     popularity,
+    tjSongCount,
     updatedAt: Math.floor(artist.updatedAt.getTime() / 1000),
 
     // 이름 별칭 필드 (한국어)
