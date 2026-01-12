@@ -15,6 +15,7 @@ describe("katakanaToHiragana", () => {
       id: 1,
       name: "ガラクタ", // 카타카나
       nameKo: "가라쿠타",
+      nameJaKana: "ガラクタ", // 일본어 가나 필드 명시
       homeCatalog: "JPOP",
       aliases: [],
       updatedAt: new Date("2025-01-01"),
@@ -34,6 +35,7 @@ describe("katakanaToHiragana", () => {
       id: 2,
       name: "夜遊び", // 한자
       nameKo: "요아소비",
+      nameJaKanji: "夜遊び", // 일본어 한자 필드 명시
       homeCatalog: "JPOP",
       aliases: [],
       updatedAt: new Date("2025-01-01"),
@@ -52,6 +54,7 @@ describe("katakanaToHiragana", () => {
       id: 3,
       name: "ゆず", // 히라가나
       nameKo: "유즈",
+      nameJaKana: "ゆず", // 일본어 가나 필드 명시
       homeCatalog: "JPOP",
       aliases: [],
       updatedAt: new Date("2025-01-01"),
@@ -70,6 +73,7 @@ describe("katakanaToHiragana", () => {
       id: 4,
       name: "米津玄師", // 한자+히라가나
       nameKo: "요네즈 켄시",
+      nameJaKanji: "米津玄師", // 일본어 한자 필드 명시
       homeCatalog: "JPOP",
       aliases: [],
       updatedAt: new Date("2025-01-01"),
@@ -115,6 +119,7 @@ describe("transformArtistToDocument", () => {
       id: 1,
       name: "ガラクタ",
       nameKo: "가라쿠타",
+      nameJaKana: "ガラクタ",
       homeCatalog: "JPOP",
       aliases: [],
       updatedAt: new Date("2025-01-01"),
@@ -124,10 +129,9 @@ describe("transformArtistToDocument", () => {
     const result = transformArtistToDocument(artist as any);
 
     expect(result.q_name_ko_p).toEqual(["가라쿠타"]);
-    expect(result.q_name_ko_a).toEqual(["가라쿠타"]); // 원본도 _a에 포함
+    expect(result.q_name_ko_a).toBeUndefined(); // 공백이 없으니 _a는 undefined
     expect(result.q_name_ja_kana_p).toEqual(["ガラクタ"]);
-    // 원본(ガラクタ) + 히라가나 변환(がらくた)
-    expect(result.q_name_ja_kana_a).toContain("ガラクタ");
+    // 히라가나 변환(がらくた)
     expect(result.q_name_ja_kana_a).toContain("がらくた");
   });
 
@@ -162,6 +166,7 @@ describe("removeBrackets - Artist", () => {
       id: 189,
       name: "『ユイカ』",
       nameKo: "『유이카』",
+      nameJaKana: "『ユイカ』",
       homeCatalog: "JPOP",
       aliases: [],
       updatedAt: new Date("2025-01-01"),
@@ -170,20 +175,19 @@ describe("removeBrackets - Artist", () => {
 
     const result = transformArtistToDocument(artist as any);
 
-    // 원본 포함
-    expect(result.q_name_ko_a).toContain("『유이카』");
-    // 괄호 제거 버전 포함
-    expect(result.q_name_ko_a).toContain("유이카");
+    // 공백만 제거 (공백 없으니 원본과 동일) + 특수문자 제거
+    expect(result.q_name_ko_a).toContain("『유이카』"); // 공백만 제거 (공백 없음)
+    expect(result.q_name_ko_a).toContain("유이카"); // 공백+특수문자 제거
 
     // 일본어(가나)도 마찬가지
-    expect(result.q_name_ja_kana_a).toContain("『ユイカ』");
-    expect(result.q_name_ja_kana_a).toContain("ユイカ");
+    expect(result.q_name_ja_kana_a).toContain("『ユイカ』"); // 공백만 제거
+    expect(result.q_name_ja_kana_a).toContain("ユイカ"); // 공백+특수문자 제거
     // 히라가나 변환 버전들도 포함
-    expect(result.q_name_ja_kana_a).toContain("『ゆいか』");
-    expect(result.q_name_ja_kana_a).toContain("ゆいか");
+    expect(result.q_name_ja_kana_a).toContain("『ゆいか』"); // 원본 히라가나 변환
+    expect(result.q_name_ja_kana_a).toContain("ゆいか"); // 공백+특수문자 제거 + 히라가나
   });
 
-  it("괄호가 없는 아티스트는 원본만 들어가야 함", () => {
+  it("괄호가 없는 아티스트는 _a 필드가 undefined여야 함 (공백이 없으므로)", () => {
     const artist = {
       id: 1,
       name: "YOASOBI",
@@ -196,8 +200,8 @@ describe("removeBrackets - Artist", () => {
 
     const result = transformArtistToDocument(artist as any);
 
-    // 원본만 들어감 (중복 없음)
-    expect(result.q_name_ko_a).toEqual(["요아소비"]);
+    // 공백이 없고 특수문자도 없으니 _a는 undefined
+    expect(result.q_name_ko_a).toBeUndefined();
   });
 
   it("다양한 괄호 종류를 제거해야 함", () => {
@@ -213,8 +217,8 @@ describe("removeBrackets - Artist", () => {
 
     const result = transformArtistToDocument(artist as any);
 
-    expect(result.q_name_ko_a).toContain("【테스트】");
-    expect(result.q_name_ko_a).toContain("테스트");
+    expect(result.q_name_ko_a).toContain("【테스트】"); // 공백만 제거
+    expect(result.q_name_ko_a).toContain("테스트"); // 공백+특수문자 제거
   });
 
   it("한자 이름에 괄호가 있으면 원본과 제거 버전 모두 포함", () => {
@@ -222,6 +226,7 @@ describe("removeBrackets - Artist", () => {
       id: 1,
       name: "『夜遊び』",
       nameKo: "요아소비",
+      nameJaKanji: "『夜遊び』",
       homeCatalog: "JPOP",
       aliases: [],
       updatedAt: new Date("2025-01-01"),
@@ -230,8 +235,8 @@ describe("removeBrackets - Artist", () => {
 
     const result = transformArtistToDocument(artist as any);
 
-    expect(result.q_name_ja_kanji_a).toContain("『夜遊び』");
-    expect(result.q_name_ja_kanji_a).toContain("夜遊び");
+    expect(result.q_name_ja_kanji_a).toContain("『夜遊び』"); // 공백만 제거
+    expect(result.q_name_ja_kanji_a).toContain("夜遊び"); // 공백+특수문자 제거
   });
 });
 
@@ -473,5 +478,186 @@ describe("혼합 가나 처리 - Song", () => {
     expect(result.q_artist_ja_kana_a).toContain("ひらガナ"); // 원본
     expect(result.q_artist_ja_kana_a).toContain("ひらがな"); // 전부 히라가나
     expect(result.q_artist_ja_kana_a).toContain("ヒラガナ"); // 전부 카타카나
+  });
+});
+
+describe("공백+특수문자 제거 - Artist", () => {
+  it("한국어 아티스트명의 공백+특수문자가 제거된 버전이 q_name_ko_a에 포함되어야 함", () => {
+    const artist = {
+      id: 399,
+      name: "계속 한밤중이면 좋을 텐데",
+      nameKo: "계속 한밤중이면 좋을 텐데。",
+      homeCatalog: "JPOP",
+      aliases: [],
+      updatedAt: new Date("2025-01-01"),
+      spotifyArtist: null,
+    };
+
+    const result = transformArtistToDocument(artist as any);
+
+    // Primary: 원본 + 특수문자 제거 버전
+    expect(result.q_name_ko_p).toContain("계속 한밤중이면 좋을 텐데。");
+    expect(result.q_name_ko_p).toContain("계속 한밤중이면 좋을 텐데");
+
+    // Alias: 공백+특수문자 제거 버전만 (공백만 제거 버전도 포함됨)
+    expect(result.q_name_ko_a).toContain("계속한밤중이면좋을텐데"); // 최종 목표
+    // 공백만 제거 버전도 현재는 포함됨
+    expect(result.q_name_ko_a).toContain("계속한밤중이면좋을텐데。");
+  });
+
+  it("라틴 아티스트명의 공백+특수문자가 제거된 버전이 q_name_latin_a에 포함되어야 함", () => {
+    const artist = {
+      id: 1,
+      name: "The Beatles!",
+      nameKo: "비틀즈",
+      nameLatin: "The Beatles!",
+      homeCatalog: "POP",
+      aliases: [],
+      updatedAt: new Date("2025-01-01"),
+      spotifyArtist: null,
+    };
+
+    const result = transformArtistToDocument(artist as any);
+
+    // Primary: 원본 + 특수문자 제거 버전
+    expect(result.q_name_latin_p).toContain("The Beatles!");
+    expect(result.q_name_latin_p).toContain("The Beatles");
+
+    // Alias: 공백+특수문자 제거 버전만
+    expect(result.q_name_latin_a).toContain("TheBeatles");
+    // 공백만 제거 버전도 포함됨
+    expect(result.q_name_latin_a).toContain("TheBeatles!");
+  });
+
+  it("일본어 한자 아티스트명의 공백+특수문자가 제거된 버전이 q_name_ja_kanji_a에 포함되어야 함", () => {
+    const artist = {
+      id: 1,
+      name: "夜遊び。",
+      nameKo: "요아소비",
+      nameJaKanji: "夜遊び。",
+      homeCatalog: "JPOP",
+      aliases: [],
+      updatedAt: new Date("2025-01-01"),
+      spotifyArtist: null,
+    };
+
+    const result = transformArtistToDocument(artist as any);
+
+    // Primary: 원본 + 특수문자 제거 버전
+    expect(result.q_name_ja_kanji_p).toContain("夜遊び。");
+    expect(result.q_name_ja_kanji_p).toContain("夜遊び");
+
+    // Alias: 공백+특수문자 제거 버전 포함
+    expect(result.q_name_ja_kanji_a).toContain("夜遊び");
+    // 공백만 제거 버전도 포함됨
+    expect(result.q_name_ja_kanji_a).toContain("夜遊び。");
+  });
+});
+
+describe("공백+특수문자 제거 - Song", () => {
+  it("한국어 곡 제목의 공백+특수문자가 제거된 버전이 q_song_ko_a에 포함되어야 함", () => {
+    const song = {
+      id: 1,
+      title: "밤을 달리다",
+      titleKo: "밤을 달리다。",
+      catalog: "JPOP",
+      aliases: [],
+      artistSongs: [
+        {
+          artist: {
+            id: 1,
+            name: "YOASOBI",
+            nameKo: "요아소비",
+            aliases: [],
+            spotifyArtist: null,
+          },
+        },
+      ],
+      karaokeSongs: [],
+      updatedAt: new Date("2025-01-01"),
+      spotifyTrack: null,
+    };
+
+    const result = transformSongToDocument(song as any);
+
+    // Primary: 원본 + 특수문자 제거 버전
+    expect(result.q_song_ko_p).toContain("밤을 달리다。");
+    expect(result.q_song_ko_p).toContain("밤을 달리다");
+
+    // Alias: 공백+특수문자 제거 버전 포함
+    expect(result.q_song_ko_a).toContain("밤을달리다");
+    // 공백만 제거 버전도 포함됨
+    expect(result.q_song_ko_a).toContain("밤을달리다。");
+  });
+
+  it("곡의 한국어 아티스트명의 공백+특수문자가 제거된 버전이 q_artist_ko_a에 포함되어야 함", () => {
+    const song = {
+      id: 1,
+      title: "테스트",
+      titleKo: "테스트",
+      catalog: "JPOP",
+      aliases: [],
+      artistSongs: [
+        {
+          artist: {
+            id: 399,
+            name: "계속 한밤중이면 좋을 텐데",
+            nameKo: "계속 한밤중이면 좋을 텐데。",
+            aliases: [],
+            spotifyArtist: null,
+          },
+        },
+      ],
+      karaokeSongs: [],
+      updatedAt: new Date("2025-01-01"),
+      spotifyTrack: null,
+    };
+
+    const result = transformSongToDocument(song as any);
+
+    // Primary: 원본 + 특수문자 제거 버전
+    expect(result.q_artist_ko_p).toContain("계속 한밤중이면 좋을 텐데。");
+    expect(result.q_artist_ko_p).toContain("계속 한밤중이면 좋을 텐데");
+
+    // Alias: 공백+특수문자 제거 버전 포함
+    expect(result.q_artist_ko_a).toContain("계속한밤중이면좋을텐데");
+    // 공백만 제거 버전도 포함됨
+    expect(result.q_artist_ko_a).toContain("계속한밤중이면좋을텐데。");
+  });
+
+  it("라틴 곡 제목의 공백+특수문자가 제거된 버전이 q_song_latin_a에 포함되어야 함", () => {
+    const song = {
+      id: 1,
+      title: "Let It Be!",
+      titleKo: "렛잇비",
+      titleLatin: "Let It Be!",
+      catalog: "POP",
+      aliases: [],
+      artistSongs: [
+        {
+          artist: {
+            id: 1,
+            name: "The Beatles",
+            nameKo: "비틀즈",
+            aliases: [],
+            spotifyArtist: null,
+          },
+        },
+      ],
+      karaokeSongs: [],
+      updatedAt: new Date("2025-01-01"),
+      spotifyTrack: null,
+    };
+
+    const result = transformSongToDocument(song as any);
+
+    // Primary: 원본 + 특수문자 제거 버전
+    expect(result.q_song_latin_p).toContain("Let It Be!");
+    expect(result.q_song_latin_p).toContain("Let It Be");
+
+    // Alias: 공백+특수문자 제거 버전 포함
+    expect(result.q_song_latin_a).toContain("LetItBe");
+    // 공백만 제거 버전도 포함됨
+    expect(result.q_song_latin_a).toContain("LetItBe!");
   });
 });
