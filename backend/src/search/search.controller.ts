@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Controller,
   Get,
-  Logger,
   Query,
 } from "@nestjs/common";
 import {
@@ -11,7 +10,6 @@ import {
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
-import { Provider } from "@prisma/client";
 import { ErrorResponseDto } from "../dto";
 import { fetchYoutubeOembed } from "../thirdparty/youtube/oembed.js";
 import { SearchResponseDto } from "./dto/search-response.dto";
@@ -23,8 +21,6 @@ import { SearchService } from "./search.service";
 @ApiTags("Search")
 @Controller("search")
 export class SearchController {
-  private readonly logger = new Logger(SearchController.name);
-
   constructor(private readonly searchService: SearchService) {}
 
   @Get()
@@ -92,88 +88,35 @@ export class SearchController {
 
   @Get("suggestions")
   @ApiOperation({
-    summary: "검색 추천어 조회",
-    description: "검색 중 노출될 추천 검색어와 추천 아티스트/곡을 반환합니다.",
+    summary: "검색 자동완성",
+    description:
+      "검색어를 기반으로 자동완성 결과(아티스트, 곡)를 반환합니다.",
   })
-  @ApiQuery({ name: "query", description: "검색어" })
+  @ApiQuery({
+    name: "query",
+    description: "검색어",
+    required: false,
+  })
   @SwaggerApiResponse({
     status: 200,
-    description: "추천 검색어 결과",
+    description: "자동완성 결과",
     type: SearchSuggestionsResponseDto,
   })
   @SwaggerApiResponse({
-    status: 400,
-    description: "검색어 필요",
+    status: 500,
+    description: "서버 오류",
     type: ErrorResponseDto,
   })
   async getSearchSuggestions(
-    @Query() _queryDto: SearchSuggestionsQueryDto,
+    @Query() queryDto: SearchSuggestionsQueryDto,
   ): Promise<SearchSuggestionsResponseDto> {
+    const cards = await this.searchService.getAutocomplete(queryDto.query);
+
     return {
       data: {
-        cards: [
-          // 최근 검색어 2개
-          {
-            suggestion: {
-              title: "요아소비",
-              source: "recent",
-            },
-          },
-          {
-            suggestion: {
-              title: "아이유",
-              source: "recent",
-            },
-          },
-          // 추천 검색어 3개
-          {
-            suggestion: {
-              title: "뉴진스",
-              source: "trending",
-            },
-          },
-          {
-            suggestion: {
-              title: "아이브",
-              source: "trending",
-            },
-          },
-          {
-            suggestion: {
-              title: "세븐틴",
-              source: "popular",
-            },
-          },
-          // 곡 1개
-          {
-            song: {
-              id: 1,
-              title: "夜に駆ける",
-              titleKo: "밤을 달리다",
-              artistName: "YOASOBI",
-              artistSlug: "yoasobi",
-              karaokeSongs: [
-                {
-                  provider: Provider.TJ,
-                  karaokeNo: "12345",
-                },
-              ],
-              thumbnail: "https://i.ytimg.com/vi/x8VYWazR5mE/default.jpg",
-            },
-          },
-          // 아티스트 1개
-          {
-            artist: {
-              id: 15509,
-              slug: "yoasobi",
-              title: "YOASOBI",
-              titleKo: "요아소비",
-              thumbnail: "https://yt3.googleusercontent.com/yoasobi.jpg",
-            },
-          },
-        ],
+        cards,
       },
-      message: "추천 검색어 조회 성공",
+      message: "자동완성 조회 성공",
     };
   }
 

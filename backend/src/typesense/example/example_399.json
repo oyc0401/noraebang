@@ -1,0 +1,36 @@
+{
+  "id": "399",
+  "catalog": "JPOP",
+  "titleKo": "잔기",
+  "titleJaKanji": "残機",
+  "artistIds": [
+    "4"
+  ],
+  "karaokeNosTj": [
+    "68806"
+  ],
+  "karaokeNosKy": [
+    "44927"
+  ],
+  "artistPopularity": 68,
+  "hasKaraokeNo": true,
+  "updatedAt": 1768163347,
+  "q_song_ko_p": [
+    "잔기"
+  ],
+  "q_song_ja_kanji_p": [
+    "残機"
+  ],
+  "q_artist_ko_p": [
+    "계속 한밤중이면 좋을 텐데。"
+  ],
+  "q_artist_ko_a": [
+    "계속한밤중이면좋을텐데。"
+  ],
+  "q_artist_raw_p": [
+    "ZUTOMAYO"
+  ],
+  "q_combo_a": [
+    "잔기계속한밤중이면좋을텐데。"
+  ]
+}

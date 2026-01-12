@@ -10,5 +10,5 @@ export type SearchControllerGetSearchSuggestionsParams = {
 /**
  * 검색어
  */
-query: string;
+query?: string;
 };

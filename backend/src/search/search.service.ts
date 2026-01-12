@@ -4,6 +4,7 @@ import { ArtistDetailsDto, KaraokeSongDto, SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { TypesenseService } from "../typesense/typesense.service";
 import { SearchResultDto } from "./dto/search-response.dto";
+import { SearchSuggestionCardDto } from "./dto/search-suggestions-response.dto";
 import { sanitizeSearchText } from "./utils/sanitize-query.util";
 
 type SongWithRelations = {
@@ -359,5 +360,130 @@ export class SearchService {
     const paginatedResults = allResults.slice(skip, skip + limit);
 
     return { results: paginatedResults, total };
+  }
+
+  // 자동완성 검색
+  async getAutocomplete(query?: string): Promise<SearchSuggestionCardDto[]> {
+    if (!query || !query.trim()) {
+      return [];
+    }
+
+    const trimmedQuery = query.trim();
+    const sanitizedQuery = sanitizeSearchText(trimmedQuery) || trimmedQuery;
+
+    // Typesense에서 아티스트와 곡 검색 (상위 5개씩)
+    const [artistsResponse, songsResponse] = await Promise.all([
+      this.typesenseService.searchArtists({
+        query: sanitizedQuery,
+        page: 1,
+        perPage: 5,
+      }),
+      this.typesenseService.searchSongs({
+        query: sanitizedQuery,
+        page: 1,
+        perPage: 5,
+      }),
+    ]);
+
+    // Typesense 결과에서 ID 추출
+    const artistIds =
+      artistsResponse.hits?.map((hit) => parseInt(hit.document.id, 10)) ?? [];
+    const songIds =
+      songsResponse.hits?.map((hit) => parseInt(hit.document.id, 10)) ?? [];
+
+    // DB에서 상세 정보 조회
+    type AutocompleteArtist = {
+      id: number;
+      name: string;
+      nameKo: string | null;
+      slug: string | null;
+      thumbnailDefault: string | null;
+      thumbnailMedium: string | null;
+      thumbnailHigh: string | null;
+    };
+
+    const [artists, songs] = await Promise.all([
+      artistIds.length > 0
+        ? this.prisma.artist.findMany({
+            where: { id: { in: artistIds } },
+            select: {
+              id: true,
+              name: true,
+              nameKo: true,
+              slug: true,
+              thumbnailDefault: true,
+              thumbnailMedium: true,
+              thumbnailHigh: true,
+            },
+          })
+        : Promise.resolve<AutocompleteArtist[]>([]),
+      songIds.length > 0
+        ? this.prisma.song.findMany({
+            where: { id: { in: songIds } },
+            select: SONG_SEARCH_SELECT,
+          })
+        : Promise.resolve<SongWithRelations[]>([]),
+    ]);
+
+    // ID 순서 맵 생성 (Typesense 결과 순서 유지)
+    const artistOrderMap = new Map(artistIds.map((id, index) => [id, index]));
+    const songOrderMap = new Map(songIds.map((id, index) => [id, index]));
+
+    // 순서대로 정렬
+    const sortedArtists = artists.sort(
+      (a, b) =>
+        (artistOrderMap.get(a.id) ?? 0) - (artistOrderMap.get(b.id) ?? 0),
+    );
+    const sortedSongs = songs.sort(
+      (a, b) => (songOrderMap.get(a.id) ?? 0) - (songOrderMap.get(b.id) ?? 0),
+    );
+
+    // 결과를 SearchSuggestionCardDto 형식으로 변환
+    const cards: SearchSuggestionCardDto[] = [];
+
+    // 아티스트 카드 추가
+    for (const artist of sortedArtists) {
+      cards.push({
+        artist: {
+          id: artist.id,
+          slug: artist.slug ?? undefined,
+          title: artist.name,
+          titleKo: artist.nameKo ?? undefined,
+          thumbnail: artist.thumbnailMedium ?? artist.thumbnailDefault ?? undefined,
+        },
+      });
+    }
+
+    // 곡 카드 추가
+    const tjSongMap = await this.buildTjSongMap(sortedSongs);
+    for (const song of sortedSongs) {
+      const primaryArtist = song.artistSongs[0]?.artist;
+      cards.push({
+        song: {
+          id: song.id,
+          title: song.title,
+          titleKo: song.titleKo ?? undefined,
+          artistName: primaryArtist?.name ?? "Unknown",
+          artistSlug: primaryArtist?.slug ?? undefined,
+          karaokeSongs: song.karaokeSongs.map((karaokeSong) => {
+            const dto: KaraokeSongDto = {
+              provider: karaokeSong.provider,
+              karaokeNo: karaokeSong.karaokeNo,
+            };
+
+            if (karaokeSong.provider === Provider.TJ) {
+              const details = tjSongMap[karaokeSong.karaokeNo];
+              dto.title = details?.title ?? null;
+              dto.artist = details?.artist ?? null;
+            }
+
+            return dto;
+          }),
+          thumbnail: song.thumbnailMedium ?? song.thumbnailDefault ?? undefined,
+        },
+      });
+    }
+
+    return cards;
   }
 }
