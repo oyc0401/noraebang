@@ -5,9 +5,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchManagerArtistDetail } from "../action";
 import type { ManagerArtistDetail } from "../types";
 import { useManagerStore } from "../store";
+import { ArtistDetailProvider } from "./artist-detail-context";
+import { ArtistNameDialog } from "./artist-name-dialog";
 
 export function CenterSection() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
+  const openArtistNameDialog = useManagerStore(
+    (state) => state.openArtistNameDialog,
+  );
   const [detail, setDetail] = useState<ManagerArtistDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -123,7 +128,11 @@ export function CenterSection() {
       <>
         <div className="space-y-3 border-b border-zinc-100 px-4 pb-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={openArtistNameDialog}
+              className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-1 py-1 text-left transition hover:border-blue-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400"
+            >
               <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-100 bg-zinc-50">
                 {(() => {
                   const artistThumb =
@@ -163,7 +172,7 @@ export function CenterSection() {
                   )}
                 </div>
               </div>
-            </div>
+            </button>
             <div className="grid w-full max-w-md grid-cols-2 gap-2 text-xs">
               {generalSummaryItems.map((item) => (
                 <div
@@ -386,8 +395,11 @@ export function CenterSection() {
   };
 
   return (
-    <section className="flex h-full min-h-0 flex-col border border-zinc-200 bg-white pt-6 text-sm text-zinc-700">
-      {renderBody()}
-    </section>
+    <ArtistDetailProvider detail={detail} setDetail={setDetail}>
+      <section className="flex h-full min-h-0 flex-col border border-zinc-200 bg-white pt-6 text-sm text-zinc-700">
+        {renderBody()}
+      </section>
+      <ArtistNameDialog />
+    </ArtistDetailProvider>
   );
 }
