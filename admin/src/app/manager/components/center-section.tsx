@@ -66,6 +66,7 @@ export function CenterSection() {
 
   const spotifyStats = useMemo(() => {
     if (!detail) return [];
+    const spotifyId = detail.spotifyId ?? "-";
     const spotifyPopularity =
       typeof detail.spotify?.popularity === "number"
         ? String(detail.spotify.popularity)
@@ -76,20 +77,15 @@ export function CenterSection() {
         : "-";
     const genres = detail.spotify?.genres ?? [];
     return [
+      { label: "ID", value: spotifyId || "-" },
       { label: "인기도", value: spotifyPopularity },
       { label: "팔로워", value: spotifyFollowers },
-      { label: "장르", value: genres.length ? genres.slice(0, 4).join(", ") : "-" },
+      {
+        label: "장르",
+        value: genres.length ? genres.slice(0, 3).join(", ") : "-",
+        wide: true,
+      },
     ];
-  }, [detail]);
-
-  const youtubeStats = useMemo(() => {
-    if (!detail) {
-      return { total: 0, registered: 0, karaokeLinked: 0 };
-    }
-    const total = detail.songs.length;
-    const registered = detail.songs.filter((song) => song.hasYoutube).length;
-    const karaokeLinked = detail.songs.filter((song) => song.karaoke.length > 0).length;
-    return { total, registered, karaokeLinked };
   }, [detail]);
 
   const renderBody = () => {
@@ -121,23 +117,35 @@ export function CenterSection() {
       return null;
     }
 
+    const youtubeChannels = detail.youtubeChannels ?? [];
+
     return (
       <>
         <div className="space-y-3 border-b border-zinc-100 px-4 pb-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3">
-              <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-100 bg-zinc-50">
-                {detail.thumbnails.high ? (
-                  <img
-                    src={detail.thumbnails.high}
-                    alt={detail.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-zinc-400">
-                    {detail.name.at(0)}
-                  </span>
-                )}
+              <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-100 bg-zinc-50">
+                {(() => {
+                  const artistThumb =
+                    detail.thumbnails.default ??
+                    detail.thumbnails.medium ??
+                    detail.thumbnails.high ??
+                    null;
+                  if (!artistThumb) {
+                    return (
+                      <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-zinc-400">
+                        {detail.name.at(0)}
+                      </span>
+                    );
+                  }
+                  return (
+                    <img
+                      src={artistThumb}
+                      alt={detail.name}
+                      className="h-full w-full object-cover"
+                    />
+                  );
+                })()}
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-zinc-900">
@@ -149,7 +157,9 @@ export function CenterSection() {
                     <span className="ml-2 text-zinc-400">{detail.nameJa}</span>
                   )}
                   {detail.nameLatin && (
-                    <span className="ml-2 text-zinc-400">{detail.nameLatin}</span>
+                    <span className="ml-2 text-zinc-400">
+                      {detail.nameLatin}
+                    </span>
                   )}
                 </div>
               </div>
@@ -171,71 +181,109 @@ export function CenterSection() {
             </div>
           </div>
           <div className="grid gap-3 lg:grid-cols-2">
-            <div className="rounded-xl border border-emerald-100 bg-emerald-50/40">
-              <div className="flex items-center justify-between border-b border-emerald-100 px-4 py-2">
-                <p className="text-xs font-semibold text-emerald-700">
-                  Spotify 정보
-                </p>
-                {detail.spotify?.url && (
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3 text-[11px] text-zinc-600">
+              <div className="flex items-center justify-between text-emerald-700">
+                <p className="font-semibold">Spotify</p>
+                {detail.spotify?.url ? (
                   <a
                     href={detail.spotify.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs font-semibold text-emerald-700 underline decoration-dotted"
+                    className="text-[10px] underline"
                   >
-                    페이지 열기
+                    열기
                   </a>
-                )}
+                ) : null}
               </div>
-              <dl className="divide-y divide-emerald-100 text-sm">
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                 {spotifyStats.map((item) => (
                   <div
                     key={item.label}
-                    className="flex items-center justify-between px-4 py-2"
+                    className={`flex items-center gap-1 ${
+                      item.wide ? "basis-full" : ""
+                    }`}
                   >
-                    <dt className="text-xs uppercase tracking-wide text-emerald-500">
-                      {item.label}
-                    </dt>
-                    <dd className="text-sm font-semibold text-emerald-900">
+                    <span className="text-zinc-400">{item.label}:</span>
+                    <span className="font-semibold text-zinc-800 break-all">
                       {item.value}
-                    </dd>
+                    </span>
                   </div>
                 ))}
-              </dl>
+              </div>
             </div>
             <div className="rounded-xl border border-red-100 bg-red-50/40">
               <div className="flex items-center justify-between border-b border-red-100 px-4 py-2">
                 <p className="text-xs font-semibold text-red-700">
-                  YouTube / 노래방
+                  YouTube 채널
                 </p>
                 <span className="text-[11px] text-red-600">
-                  총 {youtubeStats.total}곡
+                  {youtubeChannels.length
+                    ? `${youtubeChannels.length}개`
+                    : "등록된 채널 없음"}
                 </span>
               </div>
-              <dl className="divide-y divide-red-100 text-sm">
-                <div className="flex items-center justify-between px-4 py-2">
-                  <dt className="text-xs uppercase tracking-wide text-red-500">
-                    유튜브 등록
-                  </dt>
-                  <dd className="text-sm font-semibold text-red-800">
-                    {youtubeStats.registered.toLocaleString()}
-                  </dd>
+              {youtubeChannels.length === 0 ? (
+                <div className="px-4 py-3 text-xs text-red-500">
+                  연결된 유튜브 채널이 없습니다.
                 </div>
-                <div className="flex items-center justify-between px-4 py-2">
-                  <dt className="text-xs uppercase tracking-wide text-red-500">
-                    노래방 연동
-                  </dt>
-                  <dd className="text-sm font-semibold text-red-800">
-                    {youtubeStats.karaokeLinked.toLocaleString()}
-                  </dd>
+              ) : (
+                <div className="divide-y divide-red-100">
+                  {youtubeChannels.map((channel) => {
+                    const thumb =
+                      channel.thumbnails.default ??
+                      channel.thumbnails.medium ??
+                      channel.thumbnails.high ??
+                      null;
+                    const channelUrl = `https://www.youtube.com/channel/${channel.channelId}`;
+                    return (
+                      <a
+                        key={channel.id}
+                        href={channelUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 px-4 py-3 transition hover:bg-red-50/70"
+                      >
+                        <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-red-100">
+                          {thumb ? (
+                            <img
+                              src={thumb}
+                              alt={channel.title ?? channel.channelId}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-xs font-semibold text-red-500">
+                              YT
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-red-900">
+                            {channel.title ?? "채널 이름 없음"}
+                          </p>
+                          <p className="text-[11px] text-red-500">
+                            {channel.type} · {channel.channelId}
+                          </p>
+                        </div>
+                        {channel.subscriberCount ? (
+                          <span className="text-xs font-semibold text-red-700">
+                            {channel.subscriberCount.toLocaleString()}명
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-red-400">
+                            구독자 정보 없음
+                          </span>
+                        )}
+                      </a>
+                    );
+                  })}
                 </div>
-              </dl>
+              )}
             </div>
           </div>
         </div>
 
         <div className="flex h-full flex-1 min-h-0 flex-col overflow-hidden">
-          <h3 className="flex-shrink-0 px-4 py-4 text-lg font-semibold text-zinc-900">
+          <h3 className="flex-shrink-0 px-4 py-4 text-lg font-semibold text-zinc-900 border-b border-gray-200">
             전체 곡 목록 ({detail.songs.length.toLocaleString()})
           </h3>
           <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-y-auto pr-2">
@@ -246,17 +294,20 @@ export function CenterSection() {
             )}
             {detail.songs.map((song) => {
               const thumbnailSrc =
-                song.thumbnails.high ??
-                song.thumbnails.medium ??
                 song.thumbnails.default ??
+                song.thumbnails.medium ??
+                song.thumbnails.high ??
                 null;
+              const youtubeLink = song.youtubeVideoId
+                ? `https://www.youtube.com/watch?v=${song.youtubeVideoId}`
+                : null;
               return (
                 <div
                   key={song.id}
                   className="rounded-xl border border-zinc-100 bg-white/80 px-4 py-3"
                 >
                   <div className="flex gap-3">
-                    <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+                    <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100">
                       {thumbnailSrc ? (
                         <img
                           src={thumbnailSrc}
@@ -287,7 +338,23 @@ export function CenterSection() {
                             <span>
                               분류: {song.catalog ? song.catalog : "미분류"}
                             </span>
-                            <span>유튜브: {song.hasYoutube ? "있음" : "없음"}</span>
+                            {youtubeLink ? (
+                              <a
+                                href={youtubeLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 rounded-full border border-red-200 px-2 py-0.5 text-[11px] text-red-700"
+                              >
+                                YouTube
+                                <span className="text-[10px] text-red-500">
+                                  {song.youtubeVideoId}
+                                </span>
+                              </a>
+                            ) : (
+                              <span className="rounded-full bg-zinc-100 px-2 py-0.5">
+                                유튜브 없음
+                              </span>
+                            )}
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-1 text-[11px] text-zinc-600">

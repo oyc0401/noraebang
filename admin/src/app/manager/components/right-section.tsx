@@ -145,7 +145,7 @@ export function RightSection() {
 
   return (
     <section className="flex h-full min-h-0 flex-col overflow-hidden border border-zinc-200 bg-white text-sm text-zinc-700">
-      <div className="pt-4 px-4 flex items-center justify-between border-b border-zinc-100 pb-3">
+      <div className="pt-4 px-4 flex items-center justify-between border-b border-gray-200 pb-3">
         <div>
           <p className="text-xs uppercase tracking-widest text-zinc-400">
             Spotify Tracks
@@ -170,14 +170,16 @@ type SpotifyGroupCardProps = {
 
 function SpotifyGroupCard({ group }: SpotifyGroupCardProps) {
   return (
-    <div className="rounded-2xl border border-zinc-100 bg-white/80">
-      <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-2 text-xs text-zinc-500">
-        <span className="font-medium text-zinc-700">그룹 #{group.groupId}</span>
+    <div className="rounded-lg border border-zinc-100 bg-white p-3">
+      <div className="flex items-center justify-between text-xs text-zinc-500">
+        <span className="font-semibold text-zinc-800">
+          그룹 #{group.groupId}
+        </span>
         <span>
-          전체 {group.trackCount}곡 · 이 아티스트 {group.artistTrackCount}곡
+          {group.trackCount}곡 중 {group.artistTrackCount}곡 연동
         </span>
       </div>
-      <div className="p-4">
+      <div className="mt-3">
         <SpotifyTrackCard track={group.primaryTrack} groupId={group.groupId} />
       </div>
     </div>
@@ -191,17 +193,17 @@ type SpotifyTrackCardProps = {
 
 function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
   const durationLabel = formatDuration(track.durationMs);
-  const releaseLabel = track.releaseDate ?? "발매 정보 없음";
+  const releaseLabel = track.releaseDate ?? "-";
   const createdAtDate = track.createdAt ? new Date(track.createdAt) : null;
   const createdLabel =
     createdAtDate && !Number.isNaN(createdAtDate.getTime())
       ? createdAtDate.toLocaleDateString("ko-KR")
-      : "등록 정보 없음";
+      : "-";
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-zinc-100 bg-white p-3">
-      <div className="flex items-start gap-3">
-        <div className="relative h-16 w-16 overflow-hidden rounded-xl bg-zinc-100">
+    <div className="rounded-lg border border-zinc-100 bg-white p-3">
+      <div className="flex items-center gap-3">
+        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-zinc-100">
           {track.thumbnails?.length ? (
             <img
               src={track.thumbnails[0]}
@@ -209,63 +211,43 @@ function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-zinc-500">
+            <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-zinc-500">
               ♪
             </span>
           )}
         </div>
         <div className="flex flex-1 flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-base font-semibold text-zinc-900">
-              {track.name}
-            </p>
-            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500">
-              Track #{track.id}
-            </span>
-            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500">
-              Spotify {track.spotifyId}
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <p className="font-semibold text-zinc-900">{track.name}</p>
+            {groupId ? (
+              <span className="text-[11px] text-blue-600">그룹 #{groupId}</span>
+            ) : null}
           </div>
-          <div className="flex flex-wrap gap-3 text-xs text-zinc-500">
-            <span>발매: {releaseLabel}</span>
-            <span>등록: {createdLabel}</span>
-            <span>길이: {durationLabel}</span>
-            <span>인기도: {track.popularity ?? "-"}</span>
-            {groupId && (
-              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] text-blue-700">
-                그룹 #{groupId}
-              </span>
-            )}
+          <p className="text-[11px] text-zinc-500">
+            Track #{track.id} · Spotify {track.spotifyId}
+          </p>
+          <div className="flex flex-wrap gap-3 text-[11px] text-zinc-500">
+            <span>발매 {releaseLabel}</span>
+            <span>등록 {createdLabel}</span>
+            <span>길이 {durationLabel}</span>
+            <span>인기도 {track.popularity ?? "-"}</span>
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        {groupId ? (
-          <button
-            type="button"
-            className="rounded-xl border border-blue-200 px-3 py-1 text-[11px] font-medium text-blue-700 transition hover:border-blue-300 hover:text-blue-800"
-          >
-            그룹 상세 보기
-          </button>
-        ) : (
-          <span className="rounded-xl border border-dashed border-zinc-200 px-3 py-1 text-[11px] text-zinc-500">
-            그룹 없음
-          </span>
-        )}
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
         {track.spotifyUrl ? (
           <a
             href={track.spotifyUrl}
             target="_blank"
             rel="noreferrer"
-            className="rounded-xl border border-emerald-200 px-3 py-1 text-[11px] font-medium text-emerald-700 transition hover:border-emerald-300 hover:text-emerald-800"
+            className="text-emerald-700 underline"
           >
-            스포티파이에서 열기
+            스포티파이 열기
           </a>
         ) : (
-          <span className="rounded-xl border border-zinc-100 px-3 py-1 text-[11px] text-zinc-400">
-            스포티파이 URL 없음
-          </span>
+          <span className="text-zinc-400">스포티파이 URL 없음</span>
         )}
+        <span className="text-zinc-400">생성 {createdLabel}</span>
       </div>
     </div>
   );

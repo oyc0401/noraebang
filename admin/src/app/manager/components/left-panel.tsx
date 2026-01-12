@@ -140,7 +140,7 @@ export function LeftPanel() {
           <h2 className="text-lg font-semibold">아티스트 리스트</h2>
         </div>
 
-        <div className="space-y-3 border-b border-zinc-100 p-4">
+        <div className="space-y-3 border-b border-gray-200 p-4 ">
           <div className="relative">
             <input
               type="text"
@@ -201,7 +201,7 @@ export function LeftPanel() {
         </div>
 
         <div className="flex-1 min-h-0 overflow-hidden">
-          <div ref={scrollContainerRef} className="h-full overflow-y-auto">
+          <div ref={scrollContainerRef} className="h-full overflow-y-auto ">
             {artists.map((artist) => (
               <ArtistCard
                 key={artist.id}
