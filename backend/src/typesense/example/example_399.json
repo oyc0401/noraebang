@@ -8,9 +8,12 @@
     "4"
   ],
   "tjSongId": "68806",
+  "songPopularity": 122,
   "artistPopularity": 70,
+  "spotifyTrackPopularity": 47,
   "artistSpotifyPopularity": 68,
   "artistTjSongCount": 2,
+  "hasTjSong": true,
   "updatedAt": 1768240880,
   "q_song_ko_p": [
     "잔기"

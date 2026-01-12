@@ -17,18 +17,35 @@ export function calculateArtistPopularity(
   return basePopularity + tjSongCount;
 }
 
+interface SongPopularityInput {
+  artistPopularity?: number | null;
+  spotifyTrackPopularity?: number | null;
+  hasTjSong: boolean;
+}
+
 /**
  * 곡 인기도 계산
  *
- * @param spotifyPopularity Spotify 인기도 (0-100)
- * @param hasTjSong TJ 노래방 번호 존재 여부
- * @returns 최종 인기도 (spotifyPopularity + (hasTjSong ? 1 : 0))
+ * @returns artistPopularity + spotifyTrackPopularity + (hasTjSong ? 5 : 0)
+ *          단, 아무 정보도 없으면 undefined
  */
 export function calculateSongPopularity(
-  spotifyPopularity: number | undefined | null,
-  hasTjSong: boolean,
-): number {
-  const basePopularity = spotifyPopularity ?? 0;
-  const tjBonus = hasTjSong ? 1 : 0;
-  return basePopularity + tjBonus;
+  input: SongPopularityInput,
+): number | undefined {
+  const { artistPopularity, spotifyTrackPopularity, hasTjSong } = input;
+  const hasSource =
+    artistPopularity !== undefined && artistPopularity !== null
+      ? true
+      : spotifyTrackPopularity !== undefined && spotifyTrackPopularity !== null
+        ? true
+        : hasTjSong;
+
+  if (!hasSource) {
+    return undefined;
+  }
+
+  const artistScore = artistPopularity ?? 0;
+  const trackScore = spotifyTrackPopularity ?? 0;
+  const tjBonus = hasTjSong ? 5 : 0;
+  return artistScore + trackScore + tjBonus;
 }

@@ -96,10 +96,12 @@ export interface TypesenseSongDocument {
 
   tjSongId?: string;
 
-  popularity?: number;
+  songPopularity?: number;
   artistPopularity?: number;
+  spotifyTrackPopularity?: number;
   artistSpotifyPopularity?: number;
   artistTjSongCount?: number;
+  hasTjSong?: boolean;
   updatedAt: number;
 
   q_song_ko_p?: string[];
@@ -382,7 +384,8 @@ export function transformSongToDocument(
   const tjSongId = song.tjSongId ?? song.tjSong?.id ?? undefined;
 
   // 인기도
-  const popularity = song.spotifyTrack?.spotifyTrack?.popularity ?? undefined;
+  const spotifyTrackPopularity =
+    song.spotifyTrack?.spotifyTrack?.popularity ?? undefined;
   const artistSpotifyPopularity =
     mainArtist?.spotifyArtist?.popularity ?? undefined;
   const mainArtistTjSongCount = mainArtist?.tjSongs?.length ?? 0;
@@ -393,6 +396,12 @@ export function transformSongToDocument(
   const artistPopularity = hasArtistPopularitySource
     ? calculateArtistPopularity(artistSpotifyPopularity, artistTjSongCount ?? 0)
     : undefined;
+  const hasTjSong = Boolean(tjSongId);
+  const songPopularity = calculateSongPopularity({
+    artistPopularity,
+    spotifyTrackPopularity,
+    hasTjSong,
+  });
 
   // Combo 필드 (곡+아티스트 조합, 공백 제거)
   const q_combo_a: string[] = [];
@@ -675,10 +684,12 @@ export function transformSongToDocument(
 
     tjSongId,
 
-    popularity,
+    songPopularity,
     artistPopularity,
+    spotifyTrackPopularity,
     artistSpotifyPopularity,
     artistTjSongCount,
+    hasTjSong,
     updatedAt: Math.floor(song.updatedAt.getTime() / 1000),
 
     // 곡 별칭 필드

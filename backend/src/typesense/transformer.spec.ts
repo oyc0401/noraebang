@@ -341,7 +341,7 @@ describe("removeBrackets - Song", () => {
     expect(result.q_artist_ko_a).toContain("요아소비");
   });
 
-  it("tjSongId가 있으면 그대로 유지되고, 없으면 undefined", () => {
+  it("tjSongId와 인기도 구성 요소들이 songPopularity 계산에 반영되어야 함", () => {
     const songWithTjSong = {
       id: 1,
       title: "테스트",
@@ -362,7 +362,11 @@ describe("removeBrackets - Song", () => {
       ],
       tjSongId: "TJ12345",
       updatedAt: new Date("2025-01-01"),
-      spotifyTrack: null,
+      spotifyTrack: {
+        spotifyTrack: {
+          popularity: 30,
+        },
+      },
     };
 
     const songWithoutTjSong = {
@@ -380,10 +384,16 @@ describe("removeBrackets - Song", () => {
     expect(resultWithTjSong.artistSpotifyPopularity).toBe(42);
     expect(resultWithTjSong.artistTjSongCount).toBe(1);
     expect(resultWithTjSong.artistPopularity).toBe(43);
+    expect(resultWithTjSong.spotifyTrackPopularity).toBe(30);
+    expect(resultWithTjSong.hasTjSong).toBe(true);
+    expect(resultWithTjSong.songPopularity).toBe(78); // 43 + 30 + 5
     expect(resultWithoutTjSong.tjSongId).toBeUndefined();
+    expect(resultWithoutTjSong.hasTjSong).toBe(false);
     expect(resultWithoutTjSong.artistSpotifyPopularity).toBe(42);
     expect(resultWithoutTjSong.artistTjSongCount).toBe(1);
     expect(resultWithoutTjSong.artistPopularity).toBe(43);
+    expect(resultWithoutTjSong.spotifyTrackPopularity).toBe(30);
+    expect(resultWithoutTjSong.songPopularity).toBe(73); // 43 + 30
   });
 });
 
