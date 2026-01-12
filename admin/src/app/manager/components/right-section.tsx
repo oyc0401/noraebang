@@ -117,7 +117,7 @@ export function RightSection() {
         )}
 
         {data.orphanTracks.length > 0 && (
-          <div className="space-y-3">
+          <div className="px-4 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-zinc-800">
                 그룹 미지정 트랙 ({data.orphanTracks.length})
@@ -159,7 +159,7 @@ export function RightSection() {
         </span>
       </div>
 
-      <div className="mt-4 flex-1 min-h-0 overflow-hidden">{renderBody()}</div>
+      <div className="flex-1 min-h-0 overflow-hidden">{renderBody()}</div>
     </section>
   );
 }

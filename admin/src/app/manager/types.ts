@@ -29,6 +29,11 @@ export type ManagerArtistSongDetail = {
   titleKo?: string | null;
   catalog?: string | null;
   hasYoutube: boolean;
+  thumbnails: {
+    default?: string | null;
+    medium?: string | null;
+    high?: string | null;
+  };
   karaoke: Array<{
     provider: string;
     karaokeNo: string;
