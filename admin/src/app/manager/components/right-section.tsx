@@ -12,6 +12,10 @@ import { useManagerStore } from "../store";
 
 export function RightSection() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
+  const selectedGroupId = useManagerStore((state) => state.selectedGroupId);
+  const setSelectedGroupId = useManagerStore(
+    (state) => state.setSelectedGroupId,
+  );
   const [data, setData] = useState<ManagerSpotifyPanelData>({
     groups: [],
     orphanTracks: [],
@@ -25,6 +29,7 @@ export function RightSection() {
       setData({ groups: [], orphanTracks: [] });
       setIsLoading(false);
       setErrorMessage(null);
+      setSelectedGroupId(null);
       return;
     }
 
@@ -58,7 +63,17 @@ export function RightSection() {
     return () => {
       cancelled = true;
     };
-  }, [selectedArtistId]);
+  }, [selectedArtistId, setSelectedGroupId]);
+
+  useEffect(() => {
+    if (!selectedGroupId) {
+      return;
+    }
+    const element = document.getElementById(
+      `spotify-group-${selectedGroupId}`,
+    );
+    element?.scrollIntoView({ block: "nearest" });
+  }, [selectedGroupId, data.groups.length]);
 
   const hasContent = useMemo(
     () => data.groups.length > 0 || data.orphanTracks.length > 0,
@@ -170,22 +185,42 @@ type SpotifyGroupCardProps = {
 
 function SpotifyGroupCard({ group }: SpotifyGroupCardProps) {
   const openGroupDetail = useManagerStore((state) => state.openGroupDetail);
+  const selectedGroupId = useManagerStore((state) => state.selectedGroupId);
+  const setSelectedGroupId = useManagerStore(
+    (state) => state.setSelectedGroupId,
+  );
+  const isSelected = selectedGroupId === group.groupId;
   return (
-    <div className="border border-gray-100 bg-white p-3">
+    <div
+      id={`spotify-group-${group.groupId}`}
+      className={`border bg-white p-3 transition ${
+        isSelected ? "border-blue-400 bg-blue-50" : "border-gray-100"
+      }`}
+      onClick={() => setSelectedGroupId(group.groupId)}
+    >
       <div className="flex items-center justify_between text-xs text-zinc-500">
         <span className="font-semibold text-zinc-800">
           그룹 #{group.groupId}
         </span>
-        <button
-          type="button"
-          className="cursor-pointer rounded border border-zinc-200 px-2 py-0.5 text-[11px] text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
-          onClick={() => openGroupDetail(group.groupId, group.tracks)}
-        >
-          그룹 상세 보기
-        </button>
       </div>
       <div className="mt-3">
         <SpotifyTrackCard track={group.primaryTrack} groupId={group.groupId} />
+      </div>
+      <div className="mt-3 flex items-center justify-between text-[11px] text-zinc-500">
+        <span>
+          {group.trackCount}곡 중 {group.artistTrackCount}곡 연동
+        </span>
+        <button
+          type="button"
+          className="cursor-pointer rounded border border-zinc-200 px-2 py-0.5 text-[11px] text-blue-600 transition hover:border-blue-300 hover:text-blue-700"
+          onClick={(event) => {
+            event.stopPropagation();
+            setSelectedGroupId(group.groupId);
+            openGroupDetail(group.groupId, group.tracks);
+          }}
+        >
+          그룹 상세 보기
+        </button>
       </div>
     </div>
   );

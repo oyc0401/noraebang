@@ -19,6 +19,10 @@ export function CenterSection() {
   const openArtistNameDialog = useManagerStore(
     (state) => state.openArtistNameDialog,
   );
+  const selectedGroupId = useManagerStore((state) => state.selectedGroupId);
+  const setSelectedGroupId = useManagerStore(
+    (state) => state.setSelectedGroupId,
+  );
   const openDeleteArtistDialog = useManagerStore(
     (state) => state.openDeleteArtistDialog,
   );
@@ -94,6 +98,25 @@ export function CenterSection() {
   useEffect(() => {
     setIsActionMenuOpen(false);
   }, [detail?.id]);
+
+  useEffect(() => {
+    if (selectedGroupId && !detail?.songs.some((song) => song.spotifyGroup?.id === selectedGroupId)) {
+      setSelectedGroupId(null);
+    }
+  }, [detail?.songs, selectedGroupId, setSelectedGroupId]);
+
+  useEffect(() => {
+    if (!detail?.songs.length || !selectedGroupId) {
+      return;
+    }
+    const targetSong = detail.songs.find(
+      (song) => song.spotifyGroup?.id === selectedGroupId,
+    );
+    if (targetSong) {
+      const element = document.getElementById(`song-card-${targetSong.id}`);
+      element?.scrollIntoView({ block: "nearest" });
+    }
+  }, [detail?.songs, selectedGroupId]);
 
   const renderBody = () => {
     if (!selectedArtistId) {
@@ -245,10 +268,21 @@ export function CenterSection() {
               const youtubeLink = song.youtubeVideoId
                 ? `https://www.youtube.com/watch?v=${song.youtubeVideoId}`
                 : null;
+              const isGroupSelected =
+                song.spotifyGroup?.id &&
+                song.spotifyGroup.id === selectedGroupId;
               return (
                 <div
                   key={song.id}
-                  className="rounded-xl border border-zinc-100 bg-white/80 px-4 py-3"
+                  id={`song-card-${song.id}`}
+                  onClick={() =>
+                    setSelectedGroupId(song.spotifyGroup?.id ?? null)
+                  }
+                  className={`rounded-xl border px-4 py-3 transition ${
+                    isGroupSelected
+                      ? "border-blue-400 bg-blue-50"
+                      : "border-zinc-100 bg-white/80"
+                  }`}
                 >
                   <div className="flex gap-3">
                     <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100">
@@ -301,22 +335,33 @@ export function CenterSection() {
                             )}
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-1 text-[11px] text-zinc-600">
-                          {song.karaoke.length === 0 ? (
-                            <span className="rounded-full bg-zinc-100 px-2 py-0.5">
-                              노래방 등록 없음
+                        {song.spotifyGroup ? (
+                          <div className="text-right text-xs text-zinc-500">
+                            <p className="font-semibold text-blue-600">
+                              그룹 #{song.spotifyGroup.id}
+                            </p>
+                            <p>{
+                              song.spotifyGroup.primaryTrack?.name ??
+                              "Primary track 정보 없음"
+                            }</p>
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="flex flex-wrap gap-1 text-[11px] text-zinc-600">
+                        {song.karaoke.length === 0 ? (
+                          <span className="rounded-full bg-zinc-100 px-2 py-0.5">
+                            노래방 등록 없음
+                          </span>
+                        ) : (
+                          song.karaoke.map((item) => (
+                            <span
+                              key={`${song.id}-${item.provider}-${item.karaokeNo}`}
+                              className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700"
+                            >
+                              {item.provider}: {item.karaokeNo}
                             </span>
-                          ) : (
-                            song.karaoke.map((item) => (
-                              <span
-                                key={`${song.id}-${item.provider}-${item.karaokeNo}`}
-                                className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700"
-                              >
-                                {item.provider}: {item.karaokeNo}
-                              </span>
-                            ))
-                          )}
-                        </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   </div>
