@@ -46,6 +46,11 @@ export type ManagerArtistSongDetail = {
     id: number;
     primaryTrack: ManagerSpotifyTrackSummary | null;
   } | null;
+  tjSong?: {
+    id: string;
+    title?: string | null;
+    artist?: string | null;
+  } | null;
 };
 
 export type ManagerArtistYoutubeChannel = {

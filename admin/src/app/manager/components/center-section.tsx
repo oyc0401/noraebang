@@ -359,7 +359,7 @@ export function CenterSection() {
                               </span>
                             )}
                           </div>
-                          <div className="flex flex-wrap gap-1 text-[11px] text-zinc-600 pt-2">
+                          <div className="flex flex-wrap gap-2 text-[11px] text-zinc-600 pt-2">
                             {song.karaoke.length === 0 ? (
                               <span className="rounded-full bg-zinc-100 px-2 py-0.5">
                                 노래방 등록 없음
@@ -374,7 +374,21 @@ export function CenterSection() {
                                 </span>
                               ))
                             )}
-                            <span>TJ곡제목 - tj곡아티스트</span>
+                            {song.tjSong ? (
+                              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-800">
+                                <span>TJ {song.tjSong.id}</span>
+                                {"  "}
+                                <span>{song.tjSong.title ?? "제목 없음"}</span>
+                                {"  "}
+                                <span>
+                                  {song.tjSong.artist ?? "아티스트 미상"}
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-500">
+                                TJ 정보 없음
+                              </span>
+                            )}
                           </div>
                         </div>
                         {song.spotifyGroup ? (
@@ -394,12 +408,12 @@ export function CenterSection() {
                               그룹 #{song.spotifyGroup.id}
                             </p>
                             <div className="space-y-0.5">
-                              <p>인기도 {primaryTrack?.popularity ?? "-"} </p>
-
                               <p>
-                                <span>발매일 {primaryRelease}</span> 길이{" "}
-                                {primaryDuration}
+                                <span>길이 {primaryDuration} </span> / 인기도{" "}
+                                {primaryTrack?.popularity ?? "-"}{" "}
                               </p>
+
+                              <p>발매일 {primaryRelease}</p>
                             </div>
                           </div>
                         ) : null}
