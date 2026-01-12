@@ -250,30 +250,30 @@ export function CenterSection() {
                   >
                     편집
                   </button>
-                {isActionMenuOpen && (
-                  <div className="absolute right-0 z-20 mt-2 w-40 rounded-lg border border-zinc-200 bg-white py-1 text-sm shadow-lg">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsActionMenuOpen(false);
-                        openMergeArtistDialog();
-                      }}
-                      className="flex w-full items-center px-3 py-2 text-left text-amber-600 transition hover:bg-amber-50"
-                    >
-                      아티스트 병합
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsActionMenuOpen(false);
-                        openDeleteArtistDialog();
-                      }}
-                      className="flex w-full items-center px-3 py-2 text-left text-red-600 transition hover:bg-red-50"
-                    >
-                      아티스트 삭제
-                    </button>
-                  </div>
-                )}
+                  {isActionMenuOpen && (
+                    <div className="absolute right-0 z-20 mt-2 w-40 rounded-lg border border-zinc-200 bg-white py-1 text-sm shadow-lg">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsActionMenuOpen(false);
+                          openMergeArtistDialog();
+                        }}
+                        className="flex w-full items-center px-3 py-2 text-left text-amber-600 transition hover:bg-amber-50"
+                      >
+                        아티스트 병합
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsActionMenuOpen(false);
+                          openDeleteArtistDialog();
+                        }}
+                        className="flex w-full items-center px-3 py-2 text-left text-red-600 transition hover:bg-red-50"
+                      >
+                        아티스트 삭제
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -344,6 +344,11 @@ export function CenterSection() {
                             {song.titleKo && (
                               <span className="ml-2 text-sm text-zinc-500 font-normal">
                                 {`(${song.titleKo})`}
+                              </span>
+                            )}
+                            {song.titleLatin && (
+                              <span className="ml-2 text-sm text-zinc-500 font-normal">
+                                {`(${song.titleLatin})`}
                               </span>
                             )}
                           </p>

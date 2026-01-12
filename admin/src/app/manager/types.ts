@@ -30,6 +30,7 @@ export type ManagerArtistSongDetail = {
   id: number;
   title: string;
   titleKo?: string | null;
+  titleLatin?: string | null;
   catalog?: string | null;
   hasYoutube: boolean;
   youtubeVideoId?: string | null;
