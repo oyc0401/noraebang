@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import {
+  cleanText,
   detectJapaneseType,
   hasMixedKana,
   katakanaToHiragana,
@@ -203,7 +204,7 @@ function groupAliases(
 
     // tier 결정: P(Primary), A(Alias), A2(AI), F(Fuzzy)
     let tier: string;
-    if (kind === "SPOTIFY") {
+    if (kind === "SPOTIFY" || kind === "COMMON_NAME") {
       tier = "p";
     } else if (
       kind === "YOUTUBE" ||
@@ -292,29 +293,29 @@ export function transformSongToDocument(
     q_combo_a.push(`${romanNoSpace}${artistKoNoSpace}`);
   }
 
-  // Song 테이블의 제목만 q_song_*_p 필드에 추가 (원본 + 괄호 제거 버전)
+  // Song 테이블의 제목만 q_song_*_p 필드에 추가 (원본 + 괄호/구두점 제거 버전)
   const q_song_ko_p = titleKo
-    ? titleKo === removeBrackets(titleKo)
+    ? titleKo === cleanText(titleKo)
       ? [titleKo]
-      : [titleKo, removeBrackets(titleKo)]
+      : [titleKo, cleanText(titleKo)]
     : undefined;
 
   const q_song_ja_kanji_p = titleJaKanji
-    ? titleJaKanji === removeBrackets(titleJaKanji)
+    ? titleJaKanji === cleanText(titleJaKanji)
       ? [titleJaKanji]
-      : [titleJaKanji, removeBrackets(titleJaKanji)]
+      : [titleJaKanji, cleanText(titleJaKanji)]
     : undefined;
 
   const q_song_ja_kana_p = titleJaKana
-    ? titleJaKana === removeBrackets(titleJaKana)
+    ? titleJaKana === cleanText(titleJaKana)
       ? [titleJaKana]
-      : [titleJaKana, removeBrackets(titleJaKana)]
+      : [titleJaKana, cleanText(titleJaKana)]
     : undefined;
 
   const q_song_latin_p = titleLatin
-    ? titleLatin === removeBrackets(titleLatin)
+    ? titleLatin === cleanText(titleLatin)
       ? [titleLatin]
-      : [titleLatin, removeBrackets(titleLatin)]
+      : [titleLatin, cleanText(titleLatin)]
     : undefined;
 
   // 곡 제목의 정규화 버전을 _a 필드에 추가
@@ -431,59 +432,59 @@ export function transformSongToDocument(
   const q_artist_ja_kana_p_values: string[] = [];
 
   for (const artist of artists) {
-    // nameKo: 원본 + 괄호 제거
+    // nameKo: 원본 + 괄호/구두점 제거
     if (artist.nameKo) {
       if (!q_artist_ko_p_values.includes(artist.nameKo)) {
         q_artist_ko_p_values.push(artist.nameKo);
       }
-      const noBrackets = removeBrackets(artist.nameKo);
+      const cleaned = cleanText(artist.nameKo);
       if (
-        artist.nameKo !== noBrackets &&
-        !q_artist_ko_p_values.includes(noBrackets)
+        artist.nameKo !== cleaned &&
+        !q_artist_ko_p_values.includes(cleaned)
       ) {
-        q_artist_ko_p_values.push(noBrackets);
+        q_artist_ko_p_values.push(cleaned);
       }
     }
 
-    // nameLatin: 원본 + 괄호 제거
+    // nameLatin: 원본 + 괄호/구두점 제거
     if (artist.nameLatin) {
       if (!q_artist_raw_p_values.includes(artist.nameLatin)) {
         q_artist_raw_p_values.push(artist.nameLatin);
       }
-      const noBrackets = removeBrackets(artist.nameLatin);
+      const cleaned = cleanText(artist.nameLatin);
       if (
-        artist.nameLatin !== noBrackets &&
-        !q_artist_raw_p_values.includes(noBrackets)
+        artist.nameLatin !== cleaned &&
+        !q_artist_raw_p_values.includes(cleaned)
       ) {
-        q_artist_raw_p_values.push(noBrackets);
+        q_artist_raw_p_values.push(cleaned);
       }
     }
 
-    // nameJaKanji: 원본 + 괄호 제거
+    // nameJaKanji: 원본 + 괄호/구두점 제거
     if (artist.nameJaKanji) {
       if (!q_artist_ja_kanji_p_values.includes(artist.nameJaKanji)) {
         q_artist_ja_kanji_p_values.push(artist.nameJaKanji);
       }
-      const noBrackets = removeBrackets(artist.nameJaKanji);
+      const cleaned = cleanText(artist.nameJaKanji);
       if (
-        artist.nameJaKanji !== noBrackets &&
-        !q_artist_ja_kanji_p_values.includes(noBrackets)
+        artist.nameJaKanji !== cleaned &&
+        !q_artist_ja_kanji_p_values.includes(cleaned)
       ) {
-        q_artist_ja_kanji_p_values.push(noBrackets);
+        q_artist_ja_kanji_p_values.push(cleaned);
       }
     }
 
-    // nameJaKana: 원본 + 괄호 제거
+    // nameJaKana: 원본 + 괄호/구두점 제거
     if (artist.nameJaKana) {
       if (!q_artist_ja_kana_p_values.includes(artist.nameJaKana)) {
         q_artist_ja_kana_p_values.push(artist.nameJaKana);
       }
-      const noBrackets = removeBrackets(artist.nameJaKana);
+      const cleaned = cleanText(artist.nameJaKana);
       if (
-        artist.nameJaKana !== noBrackets &&
-        !q_artist_ja_kana_p_values.includes(noBrackets)
+        artist.nameJaKana !== cleaned &&
+        !q_artist_ja_kana_p_values.includes(cleaned)
       ) {
-        q_artist_ja_kana_p_values.push(noBrackets);
+        q_artist_ja_kana_p_values.push(cleaned);
       }
     }
   }
@@ -691,29 +692,29 @@ export function transformArtistToDocument(
   // 인기도
   const popularity = artist.spotifyArtist?.popularity ?? undefined;
 
-  // Artist 테이블의 컬럼만 q_name_*_p 필드에 추가 (원본 + 괄호 제거 버전)
+  // Artist 테이블의 컬럼만 q_name_*_p 필드에 추가 (원본 + 괄호/구두점 제거 버전)
   const q_name_ko_p = nameKo
-    ? nameKo === removeBrackets(nameKo)
+    ? nameKo === cleanText(nameKo)
       ? [nameKo]
-      : [nameKo, removeBrackets(nameKo)]
+      : [nameKo, cleanText(nameKo)]
     : undefined;
 
   const q_name_latin_p = nameLatin
-    ? nameLatin === removeBrackets(nameLatin)
+    ? nameLatin === cleanText(nameLatin)
       ? [nameLatin]
-      : [nameLatin, removeBrackets(nameLatin)]
+      : [nameLatin, cleanText(nameLatin)]
     : undefined;
 
   const q_name_ja_kanji_p = nameJaKanji
-    ? nameJaKanji === removeBrackets(nameJaKanji)
+    ? nameJaKanji === cleanText(nameJaKanji)
       ? [nameJaKanji]
-      : [nameJaKanji, removeBrackets(nameJaKanji)]
+      : [nameJaKanji, cleanText(nameJaKanji)]
     : undefined;
 
   const q_name_ja_kana_p = nameJaKana
-    ? nameJaKana === removeBrackets(nameJaKana)
+    ? nameJaKana === cleanText(nameJaKana)
       ? [nameJaKana]
-      : [nameJaKana, removeBrackets(nameJaKana)]
+      : [nameJaKana, cleanText(nameJaKana)]
     : undefined;
 
   // 아티스트 이름의 정규화 버전을 _a 필드에 추가
