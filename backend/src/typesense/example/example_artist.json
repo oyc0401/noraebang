@@ -7,18 +7,24 @@
   "nameJaKana": "よあそび",
   "nameLatin": "YOASOBI",
 
-  "popularity": 80.0,
+  "popularity": 82.0,
+  "spotifyPopularity": 80.0,
+  "tjSongCount": 2,
   "updatedAt": 1736419200,
 
   "q_name_ko_p": ["요아소비"],
   "q_name_ko_a": ["밤놀이"],
+  "q_name_ko_norm": ["요아소비"],
 
   "q_name_latin_p": ["YOASOBI"],
   "q_name_latin_a": ["yoasobi"],
+  "q_name_latin_norm": ["YOASOBI"],
 
   "q_name_ja_kanji_p": ["夜遊び"],
   "q_name_ja_kanji_a": [],
+  "q_name_ja_kanji_norm": ["夜遊び"],
 
   "q_name_ja_kana_p": ["よあそび"],
-  "q_name_ja_kana_a": ["ヨアソビ"]
+  "q_name_ja_kana_a": ["ヨアソビ"],
+  "q_name_ja_kana_norm": ["よあそび"]
 }

@@ -107,6 +107,7 @@ artistKo = "요아소비"
 
 - **TJ 곡 ID는 검색 안 함**: `tjSongId`는 `index: false`
 - **표시용 제목은 검색 안 함**: `titleKo`, `titleJaKanji` 등은 `index: false`
+- **아티스트 이름 공백 제거 버전**: `q_name_*_norm` 필드에 저장하고 infix 검색 전용으로 사용
 - **q_combo_a는 1~2개만**: 조합 폭발 방지
 - **F(Fuzzy)는 초기엔 비움**: 유저 로그 모인 후 추가
 

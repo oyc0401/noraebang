@@ -12,7 +12,9 @@
   "tjSongId": "12345",
 
   "popularity": 90.0,
-  "artistPopularity": 80.0,
+  "artistPopularity": 82.0,
+  "artistSpotifyPopularity": 80.0,
+  "artistTjSongCount": 2,
   "updatedAt": 1736419200,
 
   "q_song_ko_p": ["밤을 달리다"],

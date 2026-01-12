@@ -112,6 +112,7 @@ describe("transformArtistToDocument", () => {
     expect(result.nameKo).toBe("요아소비");
     expect(result.q_name_ko_p).toContain("요아소비"); // 기본 이름 포함
     expect(result.popularity).toBe(85);
+    expect(result.spotifyPopularity).toBe(85);
   });
 
   it("별칭이 없어도 기본 이름으로 검색 가능해야 함", () => {
@@ -178,6 +179,7 @@ describe("transformArtistToDocument", () => {
     const result = transformArtistToDocument(artist as any);
 
     expect(result.tjSongCount).toBe(1);
+    expect(result.spotifyPopularity).toBe(10);
     expect(result.popularity).toBe(11);
   });
 });
@@ -353,7 +355,8 @@ describe("removeBrackets - Song", () => {
             name: "아티스트",
             nameKo: "아티스트",
             aliases: [],
-            spotifyArtist: null,
+            spotifyArtist: { popularity: 42 },
+            tjSongs: [{ tjSongId: "TJ55555" }],
           },
         },
       ],
@@ -374,7 +377,13 @@ describe("removeBrackets - Song", () => {
     );
 
     expect(resultWithTjSong.tjSongId).toBe("TJ12345");
+    expect(resultWithTjSong.artistSpotifyPopularity).toBe(42);
+    expect(resultWithTjSong.artistTjSongCount).toBe(1);
+    expect(resultWithTjSong.artistPopularity).toBe(43);
     expect(resultWithoutTjSong.tjSongId).toBeUndefined();
+    expect(resultWithoutTjSong.artistSpotifyPopularity).toBe(42);
+    expect(resultWithoutTjSong.artistTjSongCount).toBe(1);
+    expect(resultWithoutTjSong.artistPopularity).toBe(43);
   });
 });
 
@@ -500,7 +509,7 @@ describe("혼합 가나 처리 - Song", () => {
 });
 
 describe("공백+특수문자 제거 - Artist", () => {
-  it("한국어 아티스트명의 공백+특수문자가 제거된 버전이 q_name_ko_a에 포함되어야 함", () => {
+  it("한국어 아티스트명의 공백+특수문자가 제거된 버전이 q_name_ko_norm에 포함되어야 함", () => {
     const artist = {
       id: 399,
       name: "계속 한밤중이면 좋을 텐데",
@@ -517,13 +526,12 @@ describe("공백+특수문자 제거 - Artist", () => {
     expect(result.q_name_ko_p).toContain("계속 한밤중이면 좋을 텐데。");
     expect(result.q_name_ko_p).toContain("계속 한밤중이면 좋을 텐데");
 
-    // Alias: 공백+특수문자 제거 버전만 (공백만 제거 버전도 포함됨)
-    expect(result.q_name_ko_a).toContain("계속한밤중이면좋을텐데"); // 최종 목표
-    // 공백만 제거 버전도 현재는 포함됨
-    expect(result.q_name_ko_a).toContain("계속한밤중이면좋을텐데。");
+    // Alias: 괄호/구두점 제거 버전은 _a에, 공백 제거 버전은 _norm에 존재해야 함
+    expect(result.q_name_ko_a).toContain("계속 한밤중이면 좋을 텐데");
+    expect(result.q_name_ko_norm).toContain("계속한밤중이면좋을텐데");
   });
 
-  it("라틴 아티스트명의 공백+특수문자가 제거된 버전이 q_name_latin_a에 포함되어야 함", () => {
+  it("라틴 아티스트명의 공백+특수문자가 제거된 버전이 q_name_latin_norm에 포함되어야 함", () => {
     const artist = {
       id: 1,
       name: "The Beatles!",
@@ -541,13 +549,12 @@ describe("공백+특수문자 제거 - Artist", () => {
     expect(result.q_name_latin_p).toContain("The Beatles!");
     expect(result.q_name_latin_p).toContain("The Beatles");
 
-    // Alias: 공백+특수문자 제거 버전만
-    expect(result.q_name_latin_a).toContain("TheBeatles");
-    // 공백만 제거 버전도 포함됨
-    expect(result.q_name_latin_a).toContain("TheBeatles!");
+    // Alias: 괄호/구두점 제거 버전은 _a에, 공백 제거 버전은 _norm에 존재해야 함
+    expect(result.q_name_latin_a).toContain("The Beatles");
+    expect(result.q_name_latin_norm).toContain("TheBeatles");
   });
 
-  it("일본어 한자 아티스트명의 공백+특수문자가 제거된 버전이 q_name_ja_kanji_a에 포함되어야 함", () => {
+  it("일본어 한자 아티스트명의 공백+특수문자가 제거된 버전이 q_name_ja_kanji_norm에 포함되어야 함", () => {
     const artist = {
       id: 1,
       name: "夜遊び。",
@@ -565,10 +572,9 @@ describe("공백+특수문자 제거 - Artist", () => {
     expect(result.q_name_ja_kanji_p).toContain("夜遊び。");
     expect(result.q_name_ja_kanji_p).toContain("夜遊び");
 
-    // Alias: 공백+특수문자 제거 버전 포함
+    // Alias: 괄호/구두점 제거 버전은 _a에, 공백 제거 버전은 _norm에 존재해야 함
     expect(result.q_name_ja_kanji_a).toContain("夜遊び");
-    // 공백만 제거 버전도 포함됨
-    expect(result.q_name_ja_kanji_a).toContain("夜遊び。");
+    expect(result.q_name_ja_kanji_norm).toContain("夜遊び");
   });
 });
 

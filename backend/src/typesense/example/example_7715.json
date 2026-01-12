@@ -1,0 +1,50 @@
+{
+  "id": "7715",
+  "catalog": "JPOP",
+  "titleKo": "굿 바이 바이",
+  "titleJaKana": "グッバイバイ",
+  "titleLatin": "Good bye-bye",
+  "artistIds": [
+    "244"
+  ],
+  "tjSongId": "68872",
+  "artistPopularity": 50,
+  "artistSpotifyPopularity": 50,
+  "updatedAt": 1768240882,
+  "q_song_ko_p": [
+    "굿 바이 바이"
+  ],
+  "q_song_ko_norm": [
+    "굿바이바이"
+  ],
+  "q_song_latin_p": [
+    "Good bye-bye"
+  ],
+  "q_song_latin_norm": [
+    "Goodbye-bye"
+  ],
+  "q_song_ja_kana_p": [
+    "グッバイバイ"
+  ],
+  "q_song_ja_kana_a": [
+    "ぐっばいばい"
+  ],
+  "q_song_ja_kana_norm": [
+    "グッバイバイ"
+  ],
+  "q_artist_ko_p": [
+    "토미오카 아이"
+  ],
+  "q_artist_raw_p": [
+    "TOMIOKA AI"
+  ],
+  "q_artist_ko_norm": [
+    "토미오카아이"
+  ],
+  "q_artist_raw_norm": [
+    "TOMIOKAAI"
+  ],
+  "q_combo_a": [
+    "굿바이바이토미오카아이"
+  ]
+}

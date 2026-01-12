@@ -64,6 +64,9 @@ async function main() {
                   popularity: true,
                 },
               },
+              tjSongs: {
+                select: { tjSongId: true },
+              },
             },
           },
         },

@@ -66,6 +66,9 @@ async function main() {
               spotifyArtist: {
                 select: { popularity: true },
               },
+              tjSongs: {
+                select: { tjSongId: true },
+              },
             },
           },
         },

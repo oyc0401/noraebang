@@ -33,6 +33,17 @@ export const songsCollectionSchema: CollectionCreateSchema = {
     // ===== 정렬/랭킹 필드 =====
     { name: "popularity", type: "float", optional: true }, // Spotify track popularity
     { name: "artistPopularity", type: "float", optional: true }, // 메인 아티스트 인기도
+    {
+      name: "artistSpotifyPopularity",
+      type: "float",
+      optional: true,
+    }, // 메인 아티스트 Spotify 인기도
+    {
+      name: "artistTjSongCount",
+      type: "int32",
+      optional: true,
+      index: false,
+    }, // 메인 아티스트 TJ 곡 수
     { name: "updatedAt", type: "int64" }, // Unix timestamp
 
     // ===== 검색 필드: 곡명 =====
@@ -113,6 +124,7 @@ export const artistsCollectionSchema: CollectionCreateSchema = {
 
     // ===== 정렬/랭킹 필드 =====
     { name: "popularity", type: "float", optional: true }, // Spotify artist popularity
+    { name: "spotifyPopularity", type: "float", optional: true, index: false },
     { name: "tjSongCount", type: "int32", optional: true, index: false }, // Number of TJ songs
     { name: "updatedAt", type: "int64" }, // Unix timestamp
 
@@ -121,24 +133,38 @@ export const artistsCollectionSchema: CollectionCreateSchema = {
     { name: "q_name_ko_a", type: "string[]", optional: true },
     { name: "q_name_ko_a2", type: "string[]", optional: true },
     { name: "q_name_ko_f", type: "string[]", optional: true },
+    { name: "q_name_ko_norm", type: "string[]", optional: true, infix: true },
 
     // ===== 검색 필드: 아티스트명 (라틴/원어) =====
     { name: "q_name_latin_p", type: "string[]", optional: true },
     { name: "q_name_latin_a", type: "string[]", optional: true },
     { name: "q_name_latin_a2", type: "string[]", optional: true },
     { name: "q_name_latin_f", type: "string[]", optional: true },
+    { name: "q_name_latin_norm", type: "string[]", optional: true, infix: true },
 
     // ===== 검색 필드: 아티스트명 (일본어 한자) =====
     { name: "q_name_ja_kanji_p", type: "string[]", optional: true },
     { name: "q_name_ja_kanji_a", type: "string[]", optional: true },
     { name: "q_name_ja_kanji_a2", type: "string[]", optional: true },
     { name: "q_name_ja_kanji_f", type: "string[]", optional: true },
+    {
+      name: "q_name_ja_kanji_norm",
+      type: "string[]",
+      optional: true,
+      infix: true,
+    },
 
     // ===== 검색 필드: 아티스트명 (일본어 가나) =====
     { name: "q_name_ja_kana_p", type: "string[]", optional: true },
     { name: "q_name_ja_kana_a", type: "string[]", optional: true },
     { name: "q_name_ja_kana_a2", type: "string[]", optional: true },
     { name: "q_name_ja_kana_f", type: "string[]", optional: true },
+    {
+      name: "q_name_ja_kana_norm",
+      type: "string[]",
+      optional: true,
+      infix: true,
+    },
   ],
   default_sorting_field: "updatedAt",
 };
