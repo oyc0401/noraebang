@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchManagerArtistDetail } from "../action";
 import type { ManagerArtistDetail } from "../types";
 import { useManagerStore } from "../store";
+import { ArtistAliasDialog } from "./artist-alias-dialog";
 import { ArtistDetailProvider } from "./artist-detail-context";
 import { ArtistDeleteDialog } from "./artist-delete-dialog";
 import { ArtistMergeDialog } from "./artist-merge-dialog";
@@ -30,6 +31,7 @@ export function CenterSection() {
   const openMergeArtistDialog = useManagerStore(
     (state) => state.openMergeArtistDialog,
   );
+  const openAliasDialog = useManagerStore((state) => state.openAliasDialog);
   const [detail, setDetail] = useState<ManagerArtistDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -52,6 +54,7 @@ export function CenterSection() {
     fetchIdRef.current = fetchId;
 
     async function run() {
+      if (!selectedArtistId) return;
       setIsLoading(true);
       setErrorMessage(null);
 
@@ -231,14 +234,22 @@ export function CenterSection() {
                   #{detail.id}
                 </p>
               </div>
-              <div className="relative" ref={actionMenuRef}>
+              <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsActionMenuOpen((previous) => !previous)}
+                  onClick={openAliasDialog}
                   className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-1 text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
                 >
-                  편집
+                  별칭 보기
                 </button>
+                <div className="relative" ref={actionMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsActionMenuOpen((previous) => !previous)}
+                    className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-1 text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
+                  >
+                    편집
+                  </button>
                 {isActionMenuOpen && (
                   <div className="absolute right-0 z-20 mt-2 w-40 rounded-lg border border-zinc-200 bg-white py-1 text-sm shadow-lg">
                     <button
@@ -263,6 +274,7 @@ export function CenterSection() {
                     </button>
                   </div>
                 )}
+                </div>
               </div>
             </div>
           </div>
@@ -465,6 +477,7 @@ export function CenterSection() {
       <ArtistDeleteDialog />
       <ArtistMergeDialog />
       <ArtistYoutubeDialog />
+      <ArtistAliasDialog />
     </ArtistDetailProvider>
   );
 }
