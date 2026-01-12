@@ -14,24 +14,24 @@ export function SpotifyTracksSection() {
 
   return (
     <div className="w-96 bg-white dark:bg-zinc-900 flex flex-col">
-        {selectedArtist ? (
-          <>
-            {/* Spotify Tracks Header */}
-            <div className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                  Spotify Groups
+      {selectedArtist ? (
+        <>
+          {/* Spotify Tracks Header */}
+          <div className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Spotify Groups
+              </div>
+              {spotifyArtistId && (
+                <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                  ({spotifyArtistId})
                 </div>
-                {spotifyArtistId && (
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                    ({spotifyArtistId})
-                  </div>
-                )}
-              </div>
-              <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                {spotifyGroups.length}개 그룹
-              </div>
+              )}
             </div>
+            <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+              {spotifyGroups.length}개 그룹
+            </div>
+          </div>
 
           {/* Spotify Groups List */}
           <div className="flex-1 overflow-y-auto">
@@ -74,15 +74,27 @@ export function SpotifyTracksSection() {
                           )}
                           {group.primaryTrack.durationMs && (
                             <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                              {Math.floor(group.primaryTrack.durationMs / 60000)}:
+                              {Math.floor(
+                                group.primaryTrack.durationMs / 60000,
+                              )}
+                              :
                               {String(
-                                Math.floor((group.primaryTrack.durationMs % 60000) / 1000),
+                                Math.floor(
+                                  (group.primaryTrack.durationMs % 60000) /
+                                    1000,
+                                ),
                               ).padStart(2, "0")}
                             </div>
                           )}
                           {group.primaryTrack.popularity !== undefined && (
                             <div className="text-xs text-zinc-500 dark:text-zinc-400">
                               인기도: {group.primaryTrack.popularity}
+                            </div>
+                          )}
+                          {group.primaryTrack.popularity !== undefined && (
+                            <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                              musicId:{" "}
+                              {group.primaryTrack.musicBrainzRecordingId}
                             </div>
                           )}
                         </div>

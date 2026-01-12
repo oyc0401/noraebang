@@ -24,8 +24,6 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { isDuplicateTrack } from "../../../lib/duplicate-track-detector.ts";
-import { findBestMatch } from "../../../lib/song-spotify-matcher.ts";
 import { normalizeTitle as normalizeTrackTitle } from "../../../lib/track-title-normalizer.ts";
 
 const pool = new Pool({
@@ -42,7 +40,6 @@ type TrackInfo = {
   popularity: number | null;
   groupId: number | null;
   releaseDate: string | null;
-  isDuplicateVariant: boolean; // 라이브, 리믹스 등 변형 버전 여부
 };
 
 function popularityScore(p: number | null | undefined): number {
@@ -143,7 +140,6 @@ async function main() {
   const tracksBySpotifyArtistId = new Map<number, TrackInfo[]>();
   const trackById = new Map<number, TrackInfo>();
 
-  let duplicateVariantCount = 0;
   let alreadyGroupedCount = 0;
 
   for (const row of links) {
@@ -155,10 +151,6 @@ async function main() {
       continue;
     }
 
-    // 변형 버전 여부 판단 (라이브, 리믹스, 인스트루멘탈 등)
-    const isDupVariant = isDuplicateTrack(t.name);
-    if (isDupVariant) duplicateVariantCount++;
-
     const info: TrackInfo = {
       id: t.id,
       spotifyId: t.spotifyId,
@@ -167,7 +159,6 @@ async function main() {
       popularity: t.popularity,
       groupId: t.groupId,
       releaseDate: t.releaseDate,
-      isDuplicateVariant: isDupVariant,
     };
 
     // per-artist grouping용
@@ -180,9 +171,6 @@ async function main() {
   }
 
   console.log(`✓ 이미 그룹에 속한 트랙: ${alreadyGroupedCount}개 (스킵)`);
-  console.log(
-    `✓ 변형 버전 트랙(라이브/리믹스 등): ${duplicateVariantCount}개 (그룹에 포함, primary 가능)`,
-  );
   console.log(`✓ 그룹화 대상 unique tracks: ${trackById.size}개\n`);
 
   if (trackById.size === 0) {
@@ -279,75 +267,6 @@ async function main() {
   console.log(`✓ 생성할 그룹 수: ${groupsToCreate.length}개`);
   console.log(`✓ 그룹화될 트랙 수: ${totalGroupedTracks}개\n`);
 
-  // 5) 변형 버전 솔로 그룹 재배치
-  // 주의: groupId가 null인 트랙만 대상이므로 이 로직은 실행되지 않음
-  console.log("Step 5: 변형 버전 솔로 그룹 재배치 중 ...");
-
-  type RelocateInfo = {
-    variantTrackId: number;
-    variantTrackName: string;
-    fromGroupId: number;
-    toGroupId: number;
-    matchedTrackName: string;
-  };
-
-  const relocateList: RelocateInfo[] = [];
-
-  for (const [spotifyArtistId, tracks] of tracksBySpotifyArtistId.entries()) {
-    // 변형 버전 트랙만 필터링
-    const variantTracks = tracks.filter((t) => t.isDuplicateVariant);
-
-    for (const variantTrack of variantTracks) {
-      // groupId가 null인 트랙만 대상이므로 여기서 모두 스킵됨
-      if (!variantTrack.groupId) continue;
-
-      // 해당 그룹에 속한 트랙 수 확인 (메모리에서 체크)
-      const groupTracks = tracks.filter(
-        (t) => t.groupId === variantTrack.groupId,
-      );
-
-      // 솔로가 아니면 스킵
-      if (groupTracks.length > 1) continue;
-
-      // 다른 원본 트랙들 (변형 아니고, 그룹이 있는 것들)
-      const originalTracks = tracks.filter(
-        (t) =>
-          t.id !== variantTrack.id &&
-          !t.isDuplicateVariant &&
-          t.groupId !== null,
-      );
-
-      if (originalTracks.length === 0) continue;
-
-      // findBestMatch로 매칭 시도
-      const candidates = originalTracks.map((t) => t.name);
-      const matchResult = findBestMatch(variantTrack.name, candidates);
-
-      if (matchResult.answer) {
-        // answer와 일치하는 트랙 찾기
-        const matchedTrack = originalTracks.find(
-          (t) => t.name === matchResult.answer,
-        );
-
-        if (matchedTrack?.groupId) {
-          // 재배치 정보 저장
-          relocateList.push({
-            variantTrackId: variantTrack.id,
-            variantTrackName: variantTrack.name,
-            fromGroupId: variantTrack.groupId,
-            toGroupId: matchedTrack.groupId,
-            matchedTrackName: matchedTrack.name,
-          });
-
-          // 메모리에서도 업데이트 (이후 DB 업데이트용)
-          variantTrack.groupId = matchedTrack.groupId;
-        }
-      }
-    }
-  }
-
-  console.log(`✓ 재배치할 변형 버전 트랙: ${relocateList.length}개\n`);
-
   if (isDryRun) {
     console.log("=== DRY RUN 샘플 (그룹 예시) ===");
 
@@ -411,21 +330,12 @@ async function main() {
       }
 
       console.log(
-        `  PRIMARY [${g.primary.id}] pop=${popularityScore(g.primary.popularity)} release=${g.primary.releaseDate || "없음"} groupId=${g.primary.groupId}${g.primary.isDuplicateVariant ? " [변형버전!]" : ""}`,
+        `  PRIMARY [${g.primary.id}] pop=${popularityScore(g.primary.popularity)} release=${g.primary.releaseDate || "없음"} groupId=${g.primary.groupId}`,
       );
       for (const t of g.tracks.filter((x) => x.id !== g.primary.id)) {
         console.log(
-          `          [${t.id}] pop=${popularityScore(t.popularity)} release=${t.releaseDate || "없음"} groupId=${t.groupId}${t.isDuplicateVariant ? " [변형]" : ""}`,
+          `          [${t.id}] pop=${popularityScore(t.popularity)} release=${t.releaseDate || "없음"} groupId=${t.groupId}`,
         );
-      }
-    }
-
-    if (relocateList.length > 0) {
-      console.log("\n=== DRY RUN 샘플 (변형 버전 재배치) ===");
-      for (const r of relocateList.slice(0, 10)) {
-        console.log(`\n트랙[${r.variantTrackId}] "${r.variantTrackName}"`);
-        console.log(`  그룹[${r.fromGroupId}] (솔로) → 그룹[${r.toGroupId}]`);
-        console.log(`  매칭된 원본: "${r.matchedTrackName}"`);
       }
     }
 
@@ -433,14 +343,13 @@ async function main() {
     return;
   }
 
-  // 6) DB 업데이트
-  console.log("Step 6: SpotifyTrackGroup 생성 및 트랙 업데이트 중 ...");
+  // 5) DB 업데이트
+  console.log("Step 5: SpotifyTrackGroup 생성 및 트랙 업데이트 중 ...");
 
   let createdGroupCount = 0;
   let updatedTrackCount = 0;
   let mergedGroupCount = 0;
   const groupIdMapping = new Map<number, number>(); // oldGroupId -> newGroupId
-  const createdOrUsedGroupIds: number[] = []; // primary 설정을 위해 추적
 
   for (const group of groupsToCreate) {
     // 여러 기존 그룹이 있는지 확인
@@ -512,8 +421,6 @@ async function main() {
       }
     }
 
-    createdOrUsedGroupIds.push(groupId);
-
     // 아직 이동 안 한 트랙들만 groupId 업데이트 (병합 시 이미 이동했으므로)
     const tracksToUpdate = group.tracks.filter((t) => t.groupId !== groupId);
     if (tracksToUpdate.length > 0) {
@@ -530,118 +437,95 @@ async function main() {
   console.log(`✓ 병합/삭제된 그룹: ${mergedGroupCount}개`);
   console.log(`✓ 업데이트된 트랙: ${updatedTrackCount}개\n`);
 
-  // 7) 변형 버전 재배치 처리
-  if (relocateList.length > 0) {
-    console.log("Step 7: 변형 버전 재배치 처리 중 ...");
+  // 6) 모든 그룹의 Primary 트랙 설정
+  console.log("Step 6: Primary 트랙 설정 중 ...");
 
-    // 재배치할 트랙들 groupId 업데이트
-    let relocatedCount = 0;
-    let skippedCount = 0;
-
-    for (const r of relocateList) {
-      // toGroupId가 병합되어 삭제되었는지 확인
-      let actualGroupId = r.toGroupId;
-
-      // 병합 매핑 체인 따라가기
-      while (groupIdMapping.has(actualGroupId)) {
-        actualGroupId = groupIdMapping.get(actualGroupId)!;
-      }
-
-      // actualGroupId가 실제 존재하는지 확인
-      const groupExists = await prisma.spotifyTrackGroup.findUnique({
-        where: { id: actualGroupId },
-        select: { id: true },
-      });
-
-      if (groupExists) {
-        await prisma.spotifyTrack.update({
-          where: { id: r.variantTrackId },
-          data: { groupId: actualGroupId },
-        });
-        relocatedCount++;
-      } else {
-        console.log(
-          `  ⚠️  트랙[${r.variantTrackId}] 재배치 스킵: 대상 그룹[${r.toGroupId}]이 존재하지 않음`,
-        );
-        skippedCount++;
-      }
-    }
-
-    console.log(`✓ 재배치된 트랙: ${relocatedCount}개`);
-    if (skippedCount > 0) {
-      console.log(`✓ 재배치 스킵된 트랙: ${skippedCount}개`);
-    }
-    console.log("ℹ️  기존 그룹은 삭제하지 않고 남겨둡니다 (고아 그룹 허용).\n");
-  }
-
-  if (createdOrUsedGroupIds.length > 0) {
-    console.log("Step 8: Primary 트랙 설정 중 ...");
-
-    const uniqueGroupIds = Array.from(new Set(createdOrUsedGroupIds));
-    let primaryUpdateCount = 0;
-    let skippedCount = 0;
-
-    for (const groupId of uniqueGroupIds) {
-      // 그룹이 아직 존재하는지 확인 (병합으로 삭제되었을 수 있음)
-      const groupExists = await prisma.spotifyTrackGroup.findUnique({
-        where: { id: groupId },
-        select: { id: true, primarySpotifyTrackId: true },
-      });
-
-      if (!groupExists) {
-        skippedCount++;
-        continue;
-      }
-
-      // 해당 그룹의 모든 트랙 조회
-      const tracks = await prisma.spotifyTrack.findMany({
-        where: { groupId },
+  // 먼저 잘못된 primary 정리 (자기 그룹에 속하지 않는 트랙을 가리키는 경우)
+  console.log("Step 6-1: 잘못된 primary 정리 중 ...");
+  const groupsWithPrimary = await prisma.spotifyTrackGroup.findMany({
+    where: {
+      primarySpotifyTrackId: { not: null },
+    },
+    select: {
+      id: true,
+      primarySpotifyTrackId: true,
+      primaryTrack: {
         select: {
-          id: true,
-          popularity: true,
-          releaseDate: true,
+          groupId: true,
         },
-      });
+      },
+    },
+  });
 
-      if (tracks.length === 0) {
-        skippedCount++;
-        continue;
-      }
-
-      // Popularity 높은 순, 같으면 최신 순, 같으면 id 작은 순
-      const primary = tracks.slice().sort((a, b) => {
-        const pa = popularityScore(a.popularity);
-        const pb = popularityScore(b.popularity);
-        if (pa !== pb) return pb - pa;
-
-        // releaseDate 비교 (최신이 먼저, null은 뒤로)
-        if (a.releaseDate && b.releaseDate) {
-          return b.releaseDate.localeCompare(a.releaseDate);
-        }
-        if (a.releaseDate && !b.releaseDate) return -1;
-        if (!a.releaseDate && b.releaseDate) return 1;
-
-        return a.id - b.id;
-      })[0]!;
-
-      // 이미 올바른 primary가 설정되어 있으면 스킵
-      if (groupExists.primarySpotifyTrackId === primary.id) {
-        continue;
-      }
-
+  let cleanedCount = 0;
+  for (const group of groupsWithPrimary) {
+    // primary 트랙이 이 그룹에 속하지 않으면 null로 초기화
+    if (group.primaryTrack?.groupId !== group.id) {
       await prisma.spotifyTrackGroup.update({
-        where: { id: groupId },
-        data: { primarySpotifyTrackId: primary.id },
+        where: { id: group.id },
+        data: { primarySpotifyTrackId: null },
       });
-      primaryUpdateCount++;
+      cleanedCount++;
+    }
+  }
+  console.log(`✓ 정리된 잘못된 primary: ${cleanedCount}개\n`);
+
+  // 트랙이 있는 모든 그룹 조회
+  const allGroups = await prisma.spotifyTrackGroup.findMany({
+    where: {
+      tracks: {
+        some: {},
+      },
+    },
+    select: { id: true, primarySpotifyTrackId: true },
+  });
+
+  console.log(`✓ 트랙이 있는 그룹: ${allGroups.length}개`);
+
+  let primaryUpdateCount = 0;
+
+  for (const group of allGroups) {
+    // 해당 그룹의 모든 트랙 조회
+    const tracks = await prisma.spotifyTrack.findMany({
+      where: { groupId: group.id },
+      select: {
+        id: true,
+        popularity: true,
+        releaseDate: true,
+      },
+    });
+
+    if (tracks.length === 0) continue;
+
+    // Popularity 높은 순, 같으면 최신 순, 같으면 id 작은 순
+    const primary = tracks.slice().sort((a, b) => {
+      const pa = popularityScore(a.popularity);
+      const pb = popularityScore(b.popularity);
+      if (pa !== pb) return pb - pa;
+
+      // releaseDate 비교 (최신이 먼저, null은 뒤로)
+      if (a.releaseDate && b.releaseDate) {
+        return b.releaseDate.localeCompare(a.releaseDate);
+      }
+      if (a.releaseDate && !b.releaseDate) return -1;
+      if (!a.releaseDate && b.releaseDate) return 1;
+
+      return a.id - b.id;
+    })[0]!;
+
+    // 이미 올바른 primary가 설정되어 있으면 스킵
+    if (group.primarySpotifyTrackId === primary.id) {
+      continue;
     }
 
-    console.log(`✓ primary 설정된 그룹: ${primaryUpdateCount}개`);
-    if (skippedCount > 0) {
-      console.log(`✓ 스킵된 그룹: ${skippedCount}개 (삭제되었거나 트랙 없음)`);
-    }
-    console.log("");
+    await prisma.spotifyTrackGroup.update({
+      where: { id: group.id },
+      data: { primarySpotifyTrackId: primary.id },
+    });
+    primaryUpdateCount++;
   }
+
+  console.log(`✓ primary 설정/업데이트된 그룹: ${primaryUpdateCount}개\n`);
 
   console.log(
     "\n✅ 완료: SpotifyTrackGroup 생성 및 트랙 그룹화가 완료되었습니다.",
