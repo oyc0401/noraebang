@@ -2,9 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  fetchManagerArtistSpotifyPanel,
-} from "../action";
+import { fetchManagerArtistSpotifyPanel } from "../action";
 import type {
   ManagerSpotifyGroupSummary,
   ManagerSpotifyPanelData,
@@ -101,9 +99,9 @@ export function RightSection() {
     }
 
     return (
-      <div className="flex h-full flex-col gap-4 overflow-y-auto pr-1">
+      <div className="flex h-full flex-1 min-h-0 flex-col gap-4 overflow-y-auto pr-1">
         {data.groups.length > 0 && (
-          <div className="space-y-3">
+          <div className="px-4 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-zinc-800">
                 스포티파이 그룹 ({data.groups.length})
@@ -146,8 +144,8 @@ export function RightSection() {
   };
 
   return (
-    <section className="flex h-full flex-col overflow-hidden border border-zinc-200 bg-white p-5 text-sm text-zinc-700">
-      <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+    <section className="flex h-full min-h-0 flex-col overflow-hidden border border-zinc-200 bg-white text-sm text-zinc-700">
+      <div className="pt-4 px-4 flex items-center justify-between border-b border-zinc-100 pb-3">
         <div>
           <p className="text-xs uppercase tracking-widest text-zinc-400">
             Spotify Tracks
@@ -161,7 +159,7 @@ export function RightSection() {
         </span>
       </div>
 
-      <div className="mt-4 flex-1">{renderBody()}</div>
+      <div className="mt-4 flex-1 min-h-0 overflow-hidden">{renderBody()}</div>
     </section>
   );
 }
@@ -194,9 +192,7 @@ type SpotifyTrackCardProps = {
 function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
   const durationLabel = formatDuration(track.durationMs);
   const releaseLabel = track.releaseDate ?? "발매 정보 없음";
-  const createdAtDate = track.createdAt
-    ? new Date(track.createdAt)
-    : null;
+  const createdAtDate = track.createdAt ? new Date(track.createdAt) : null;
   const createdLabel =
     createdAtDate && !Number.isNaN(createdAtDate.getTime())
       ? createdAtDate.toLocaleDateString("ko-KR")

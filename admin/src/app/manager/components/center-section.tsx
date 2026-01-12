@@ -112,7 +112,7 @@ export function CenterSection() {
 
     return (
       <>
-        <div className="flex flex-col gap-4 border-b border-zinc-100 pb-4">
+        <div className="flex flex-col gap-4 px-4  border-b border-zinc-100 pb-4">
           <div className="flex flex-col gap-4 md:flex-row">
             <div className="flex flex-1 gap-4">
               <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-zinc-100">
@@ -186,11 +186,11 @@ export function CenterSection() {
           ) : null}
         </div>
 
-        <div className="flex-1 overflow-hidden">
-          <h3 className="py-4 text-lg font-semibold text-zinc-900">
+        <div className="flex h-full flex-1 min-h-0 flex-col overflow-hidden">
+          <h3 className="flex-shrink-0 px-4 py-4 text-lg font-semibold text-zinc-900">
             전체 곡 목록 ({detail.songs.length.toLocaleString()})
           </h3>
-          <div className="flex h-[420px] flex-col gap-3 overflow-y-auto pr-2">
+          <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-y-auto pr-2">
             {detail.songs.length === 0 && (
               <div className="rounded-xl border border-dashed border-zinc-200 px-4 py-6 text-center text-sm text-zinc-500">
                 아직 등록된 곡이 없습니다.
@@ -218,9 +218,7 @@ export function CenterSection() {
                       <span>
                         분류: {song.catalog ? song.catalog : "미분류"}
                       </span>
-                      <span>
-                        유튜브: {song.hasYoutube ? "있음" : "없음"}
-                      </span>
+                      <span>유튜브: {song.hasYoutube ? "있음" : "없음"}</span>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1 text-xs text-zinc-600">
@@ -249,7 +247,7 @@ export function CenterSection() {
   };
 
   return (
-    <section className="flex flex-col border border-zinc-200 bg-white p-6 text-sm text-zinc-700">
+    <section className="flex h-full min-h-0 flex-col border border-zinc-200 bg-white pt-6 text-sm text-zinc-700">
       {renderBody()}
     </section>
   );
