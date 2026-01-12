@@ -101,8 +101,8 @@ export function RightSection() {
     return (
       <div className="flex h-full flex-1 min-h-0 flex-col gap-4 overflow-y-auto pr-1">
         {data.groups.length > 0 && (
-          <div className="px-4 space-y-3">
-            <div className="flex items-center justify-between">
+          <div className="pt-4">
+            <div className="px-4 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-zinc-800">
                 스포티파이 그룹 ({data.groups.length})
               </h3>
@@ -170,7 +170,7 @@ type SpotifyGroupCardProps = {
 
 function SpotifyGroupCard({ group }: SpotifyGroupCardProps) {
   return (
-    <div className="rounded-lg border border-zinc-100 bg-white p-3">
+    <div className="border border-gray-100 bg-white p-3">
       <div className="flex items-center justify-between text-xs text-zinc-500">
         <span className="font-semibold text-zinc-800">
           그룹 #{group.groupId}

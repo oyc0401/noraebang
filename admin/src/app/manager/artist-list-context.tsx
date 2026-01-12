@@ -33,6 +33,10 @@ type ManagerArtistsContextValue = {
   errorMessage: string | null;
   hasMore: boolean;
   loadMore: () => void;
+  updateArtistSummary: (
+    artistId: number,
+    patch: Partial<ManagerArtistSummary>,
+  ) => void;
 };
 
 const ManagerArtistsContext = createContext<ManagerArtistsContextValue | null>(
@@ -257,6 +261,17 @@ export function ManagerArtistsProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const handleUpdateArtistSummary = useCallback(
+    (artistId: number, patch: Partial<ManagerArtistSummary>) => {
+      setArtists((prev) =>
+        prev.map((artist) =>
+          artist.id === artistId ? { ...artist, ...patch } : artist,
+        ),
+      );
+    },
+    [],
+  );
+
   const value = useMemo<ManagerArtistsContextValue>(
     () => ({
       artists,
@@ -271,6 +286,7 @@ export function ManagerArtistsProvider({ children }: { children: ReactNode }) {
       errorMessage,
       hasMore,
       loadMore,
+      updateArtistSummary: handleUpdateArtistSummary,
     }),
     [
       artists,
@@ -285,6 +301,7 @@ export function ManagerArtistsProvider({ children }: { children: ReactNode }) {
       sortKey,
       totalArtistCount,
       loadMore,
+      handleUpdateArtistSummary,
     ],
   );
 

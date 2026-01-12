@@ -125,6 +125,8 @@ function mapArtistRecord(artist: Prisma.ArtistGetPayload<{ select: typeof artist
     nameKo: artist.nameKo,
     nameLatin: artist.nameLatin,
     nameJa: artist.nameJaKanji ?? artist.nameJaKana,
+    nameJaKana: artist.nameJaKana,
+    nameJaKanji: artist.nameJaKanji,
     catalog: artist.homeCatalog,
     songCount: artist._count.artistSongs,
     popularity: artist.spotifyArtist?.popularity ?? null,
@@ -519,4 +521,53 @@ export async function fetchManagerArtistSpotifyPanel(
     groups,
     orphanTracks: orphanTracks.sort((a, b) => a.name.localeCompare(b.name)),
   };
+}
+
+export type UpdateArtistNamesInput = {
+  artistId: number;
+  name: string;
+  nameKo: string;
+  nameJaKana?: string | null;
+  nameJaKanji?: string | null;
+  nameLatin?: string | null;
+};
+
+export async function updateArtistNames({
+  artistId,
+  name,
+  nameKo,
+  nameJaKana,
+  nameJaKanji,
+  nameLatin,
+}: UpdateArtistNamesInput) {
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+
+  const sanitized = {
+    name: name.trim(),
+    nameKo: nameKo.trim(),
+    nameJaKana: nameJaKana?.trim() || null,
+    nameJaKanji: nameJaKanji?.trim() || null,
+    nameLatin: nameLatin?.trim() || null,
+  };
+
+  if (!sanitized.name || !sanitized.nameKo) {
+    throw new Error("이름과 한국어 이름은 필수입니다.");
+  }
+
+  const artist = await prisma.artist.update({
+    where: { id: artistId },
+    data: sanitized,
+    select: {
+      id: true,
+      name: true,
+      nameKo: true,
+      nameJaKana: true,
+      nameJaKanji: true,
+      nameLatin: true,
+    },
+  });
+
+  return artist;
 }

@@ -59,6 +59,8 @@ export type ManagerArtistDetail = {
   name: string;
   nameKo: string;
   nameJa?: string | null;
+  nameJaKana?: string | null;
+  nameJaKanji?: string | null;
   nameLatin?: string | null;
   catalog?: string | null;
   songCount: number;

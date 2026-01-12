@@ -12,6 +12,7 @@ import {
 import { useManagerStore } from "../store";
 import { ArtistCard } from "./artist-card";
 import { FilterDialog } from "./filter-dialog";
+import Link from "next/link";
 
 export function LeftPanel() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -136,7 +137,13 @@ export function LeftPanel() {
   return (
     <>
       <section className="flex h-full min-h-0 flex-col border border-zinc-200 bg-white">
-        <div className="border-b border-zinc-100 pt-4 px-4 pb-2">
+        <div className="flex items-center border-b border-zinc-100 pt-4 px-4 gap-3">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-blue-400 hover:text-blue-600 cursor-pointer"
+          >
+            {`<`}
+          </Link>
           <h2 className="text-lg font-semibold">아티스트 리스트</h2>
         </div>
 
