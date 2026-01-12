@@ -41,10 +41,10 @@ type SongWithRelations = Awaited<
       } | null;
     };
   }>;
-  karaokeSongs: Array<{
-    provider: string;
-    karaokeNo: string;
-  }>;
+  tjSongId?: string | null;
+  tjSong?: {
+    id: string;
+  } | null;
   spotifyTrack?: {
     spotifyTrack: {
       popularity: number | null;
@@ -91,12 +91,10 @@ export interface TypesenseSongDocument {
 
   artistIds: string[];
 
-  karaokeNosTj?: string[];
-  karaokeNosKy?: string[];
+  tjSongId?: string;
 
   popularity?: number;
   artistPopularity?: number;
-  hasKaraokeNo?: boolean;
   updatedAt: number;
 
   q_song_ko_p?: string[];
@@ -370,13 +368,8 @@ export function transformSongToDocument(
   const titleJaKana = song.titleJaKana;
   const titleLatin = song.titleLatin;
 
-  // 노래방 번호
-  const karaokeNosTj = song.karaokeSongs
-    .filter((ks) => ks.provider === "TJ")
-    .map((ks) => ks.karaokeNo);
-  const karaokeNosKy = song.karaokeSongs
-    .filter((ks) => ks.provider === "KY")
-    .map((ks) => ks.karaokeNo);
+  // TJ 곡 ID
+  const tjSongId = song.tjSongId ?? song.tjSong?.id ?? undefined;
 
   // 인기도
   const popularity = song.spotifyTrack?.spotifyTrack?.popularity ?? undefined;
@@ -661,13 +654,10 @@ export function transformSongToDocument(
 
     artistIds: artists.map((a) => a.id.toString()),
 
-    karaokeNosTj: karaokeNosTj.length > 0 ? karaokeNosTj : undefined,
-    karaokeNosKy: karaokeNosKy.length > 0 ? karaokeNosKy : undefined,
+    tjSongId,
 
     popularity,
     artistPopularity,
-    hasKaraokeNo:
-      karaokeNosTj.length > 0 || karaokeNosKy.length > 0 || undefined,
     updatedAt: Math.floor(song.updatedAt.getTime() / 1000),
 
     // 곡 별칭 필드

@@ -9,8 +9,7 @@
 
   "artistIds": ["15509"],
 
-  "karaokeNosTj": ["12345"],
-  "karaokeNosKy": [],
+  "tjSongId": "12345",
 
   "popularity": 90.0,
   "artistPopularity": 80.0,

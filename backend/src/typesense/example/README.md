@@ -110,11 +110,10 @@ model SongAlias {
 * 문서에는 그냥 표시용으로 저장만 한다:
 
 ```json
-"karaokeNosTj": ["12345"],
-"karaokeNosKy": []
+"tjSongId": "TJ12345"
 ```
 
-(Typesense 스키마에서는 이 필드들 `index:false`로 두면 깔끔)
+(Typesense 스키마에서는 `index:false`)
 
 ---
 

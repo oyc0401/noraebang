@@ -98,7 +98,9 @@ export class TypesenseIndexingService {
             },
           },
         },
-        karaokeSongs: true,
+        tjSong: {
+          select: { id: true },
+        },
         spotifyTrackGroup: {
           include: {
             primaryTrack: {

@@ -68,7 +68,9 @@ async function main() {
           },
         },
       },
-      karaokeSongs: true,
+      tjSong: {
+        select: { id: true },
+      },
       spotifyTrackGroup: {
         include: {
           primaryTrack: {

@@ -8,7 +8,7 @@ export const ARTISTS_COLLECTION_NAME = "artists";
  *
  * README.md 참고:
  * - q_* 필드: 검색용 토큰 (P/A/A2/F 티어)
- * - karaokeNos*: 표시용만 (검색 안 함)
+ * - tjSongId: 표시용만 (검색 안 함)
  * - locale: KO, JA_KANA, JA_KANJI, LATIN
  */
 export const songsCollectionSchema: CollectionCreateSchema = {
@@ -27,14 +27,12 @@ export const songsCollectionSchema: CollectionCreateSchema = {
     // ===== 아티스트 ID (필터링용) =====
     { name: "artistIds", type: "string[]" },
 
-    // ===== 노래방 번호 (표시용만, 검색 안 함) =====
-    { name: "karaokeNosTj", type: "string[]", optional: true, index: false },
-    { name: "karaokeNosKy", type: "string[]", optional: true, index: false },
+    // ===== TJ 곡 ID (표시용만, 검색 안 함) =====
+    { name: "tjSongId", type: "string", optional: true, index: false },
 
     // ===== 정렬/랭킹 필드 =====
     { name: "popularity", type: "float", optional: true }, // Spotify track popularity
     { name: "artistPopularity", type: "float", optional: true }, // 메인 아티스트 인기도
-    { name: "hasKaraokeNo", type: "bool", optional: true }, // 노래방 번호 유무 (정렬용)
     { name: "updatedAt", type: "int64" }, // Unix timestamp
 
     // ===== 검색 필드: 곡명 =====
