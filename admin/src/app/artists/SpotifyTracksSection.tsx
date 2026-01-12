@@ -13,7 +13,7 @@ export function SpotifyTracksSection() {
   } = useArtistsStore();
 
   return (
-    <div className="w-96 bg-white dark:bg-zinc-900 flex flex-col">
+    <div className="w-96 bg-white dark:bg-zinc-900 flex flex-col min-h-0 overflow-hidden">
       {selectedArtist ? (
         <>
           {/* Spotify Tracks Header */}
