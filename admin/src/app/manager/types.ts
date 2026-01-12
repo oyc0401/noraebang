@@ -98,6 +98,8 @@ export type ManagerSpotifyTrackSummary = {
   durationMs?: number | null;
   releaseDate?: string | null;
   popularity?: number | null;
+  musicBrainzTitle?: string | null;
+  musicBrainzArtistId?: string | null;
   thumbnails: string[];
   createdAt: string;
   groupId?: number | null;

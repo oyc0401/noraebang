@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { fetchManagerArtistDetail } from "../action";
 import type { ManagerArtistDetail } from "../types";
@@ -100,23 +100,45 @@ export function CenterSection() {
   }, [detail?.id]);
 
   useEffect(() => {
-    if (selectedGroupId && !detail?.songs.some((song) => song.spotifyGroup?.id === selectedGroupId)) {
+    if (
+      selectedGroupId &&
+      !detail?.songs.some((song) => song.spotifyGroup?.id === selectedGroupId)
+    ) {
       setSelectedGroupId(null);
     }
   }, [detail?.songs, selectedGroupId, setSelectedGroupId]);
+
+  const sortedSongs = useMemo(() => {
+    if (!detail) return [];
+    return [...detail.songs].sort((a, b) => {
+      const tjA = a.karaoke.length > 0 ? 1 : 0;
+      const tjB = b.karaoke.length > 0 ? 1 : 0;
+      if (tjA !== tjB) {
+        return tjB - tjA;
+      }
+      const popA = a.spotifyGroup?.primaryTrack?.popularity ?? -1;
+      const popB = b.spotifyGroup?.primaryTrack?.popularity ?? -1;
+      if (popA !== popB) {
+        return popB - popA;
+      }
+      const releaseA = a.spotifyGroup?.primaryTrack?.releaseDate ?? "";
+      const releaseB = b.spotifyGroup?.primaryTrack?.releaseDate ?? "";
+      return releaseA.localeCompare(releaseB);
+    });
+  }, [detail]);
 
   useEffect(() => {
     if (!detail?.songs.length || !selectedGroupId) {
       return;
     }
-    const targetSong = detail.songs.find(
+    const targetSong = sortedSongs.find(
       (song) => song.spotifyGroup?.id === selectedGroupId,
     );
     if (targetSong) {
       const element = document.getElementById(`song-card-${targetSong.id}`);
       element?.scrollIntoView({ block: "nearest" });
     }
-  }, [detail?.songs, selectedGroupId]);
+  }, [sortedSongs, selectedGroupId]);
 
   const renderBody = () => {
     if (!selectedArtistId) {
@@ -254,12 +276,12 @@ export function CenterSection() {
             전체 곡 목록 ({detail.songs.length.toLocaleString()})
           </h3>
           <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-y-auto pr-2">
-            {detail.songs.length === 0 && (
+            {sortedSongs.length === 0 && (
               <div className="rounded-xl border border-dashed border-zinc-200 px-4 py-6 text-center text-sm text-zinc-500">
                 아직 등록된 곡이 없습니다.
               </div>
             )}
-            {detail.songs.map((song) => {
+            {sortedSongs.map((song) => {
               const thumbnailSrc =
                 song.thumbnails.default ??
                 song.thumbnails.medium ??
@@ -271,6 +293,9 @@ export function CenterSection() {
               const isGroupSelected =
                 song.spotifyGroup?.id &&
                 song.spotifyGroup.id === selectedGroupId;
+              const primaryTrack = song.spotifyGroup?.primaryTrack;
+              const primaryRelease = primaryTrack?.releaseDate ?? "-";
+              const primaryDuration = formatDuration(primaryTrack?.durationMs);
               return (
                 <div
                   key={song.id}
@@ -304,8 +329,8 @@ export function CenterSection() {
                           <p className="font-medium text-zinc-900">
                             {song.title}
                             {song.titleKo && (
-                              <span className="ml-2 text-sm text-zinc-500">
-                                {song.titleKo}
+                              <span className="ml-2 text-sm text-zinc-500 font-normal">
+                                {`(${song.titleKo})`}
                               </span>
                             )}
                           </p>
@@ -334,34 +359,50 @@ export function CenterSection() {
                               </span>
                             )}
                           </div>
+                          <div className="flex flex-wrap gap-1 text-[11px] text-zinc-600 pt-2">
+                            {song.karaoke.length === 0 ? (
+                              <span className="rounded-full bg-zinc-100 px-2 py-0.5">
+                                노래방 등록 없음
+                              </span>
+                            ) : (
+                              song.karaoke.map((item) => (
+                                <span
+                                  key={`${song.id}-${item.provider}-${item.karaokeNo}`}
+                                  className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700"
+                                >
+                                  {item.provider}: {item.karaokeNo}
+                                </span>
+                              ))
+                            )}
+                            <span>TJ곡제목 - tj곡아티스트</span>
+                          </div>
                         </div>
                         {song.spotifyGroup ? (
-                          <div className="text-right text-xs text-zinc-500">
-                            <p className="font-semibold text-blue-600">
+                          <div className="text-right text-[11px] text-zinc-500 space-y-1">
+                            {primaryTrack?.name ? (
+                              <p className="text-sm font-semibold text-black">
+                                {primaryTrack?.name}
+                                <span className="text-gray-400 text-xs">{` (${primaryTrack.musicBrainzTitle})`}</span>
+                              </p>
+                            ) : (
+                              <p className="font-semibold text-blue-600">
+                                {"Primary track 없음"}
+                              </p>
+                            )}
+
+                            <p className="text-xs">
                               그룹 #{song.spotifyGroup.id}
                             </p>
-                            <p>{
-                              song.spotifyGroup.primaryTrack?.name ??
-                              "Primary track 정보 없음"
-                            }</p>
+                            <div className="space-y-0.5">
+                              <p>인기도 {primaryTrack?.popularity ?? "-"} </p>
+
+                              <p>
+                                <span>발매일 {primaryRelease}</span> 길이{" "}
+                                {primaryDuration}
+                              </p>
+                            </div>
                           </div>
                         ) : null}
-                      </div>
-                      <div className="flex flex-wrap gap-1 text-[11px] text-zinc-600">
-                        {song.karaoke.length === 0 ? (
-                          <span className="rounded-full bg-zinc-100 px-2 py-0.5">
-                            노래방 등록 없음
-                          </span>
-                        ) : (
-                          song.karaoke.map((item) => (
-                            <span
-                              key={`${song.id}-${item.provider}-${item.karaokeNo}`}
-                              className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700"
-                            >
-                              {item.provider}: {item.karaokeNo}
-                            </span>
-                          ))
-                        )}
                       </div>
                     </div>
                   </div>
@@ -386,4 +427,12 @@ export function CenterSection() {
       <ArtistYoutubeDialog />
     </ArtistDetailProvider>
   );
+}
+
+function formatDuration(durationMs?: number | null) {
+  if (!durationMs || durationMs <= 0) return "-";
+  const totalSeconds = Math.floor(durationMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
