@@ -21,7 +21,7 @@ export function ArtistCard({ artist, selected, onSelect }: ArtistCardProps) {
       id={`artist-card-${artist.id}`}
       type="button"
       onClick={() => onSelect(artist.id)}
-      className={`flex w-full items-start gap-3 rounded-xl border px-3 py-3 text-left transition hover:border-blue-300 hover:bg-blue-50 cursor-pointer ${
+      className={`flex w-full items-start gap-3 border px-3 py-3 text-left transition hover:border-blue-300 hover:bg-blue-50 cursor-pointer ${
         selected ? "border-blue-500 bg-blue-50" : "border-zinc-200 bg-white"
       }`}
     >

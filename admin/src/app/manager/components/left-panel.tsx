@@ -135,7 +135,7 @@ export function LeftPanel() {
 
   return (
     <>
-      <section className="flex h-[min(900px,80vh)] flex-col border border-zinc-200 bg-white">
+      <section className="flex h-full min-h-0 flex-col border border-zinc-200 bg-white">
         <div className="border-b border-zinc-100 pt-4 px-4 pb-2">
           <h2 className="text-lg font-semibold">아티스트 리스트</h2>
         </div>
@@ -200,42 +200,37 @@ export function LeftPanel() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden">
-          <div
-            ref={scrollContainerRef}
-            className="h-full overflow-y-auto px-4 py-3"
-          >
-            <div className="space-y-3">
-              {artists.map((artist) => (
-                <ArtistCard
-                  key={artist.id}
-                  artist={artist}
-                  selected={artist.id === selectedArtistId}
-                  onSelect={setSelectedArtistId}
-                />
-              ))}
-              {errorMessage && (
-                <div className="rounded-xl border border-dashed border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {errorMessage}
-                </div>
-              )}
-              {!artists.length && !isLoading && !errorMessage && (
-                <div className="rounded-xl border border-dashed border-zinc-200 px-3 py-10 text-center text-sm text-zinc-500">
-                  조건을 만족하는 아티스트가 없습니다.
-                </div>
-              )}
-              <div ref={sentinelRef} className="h-6" />
-              {isLoading && (
-                <div className="pb-4 text-center text-xs text-zinc-400">
-                  불러오는 중...
-                </div>
-              )}
-              {!hasMore && artists.length > 0 && (
-                <div className="pb-2 text-center text-[11px] text-zinc-400">
-                  더 이상 데이터가 없습니다.
-                </div>
-              )}
-            </div>
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <div ref={scrollContainerRef} className="h-full overflow-y-auto">
+            {artists.map((artist) => (
+              <ArtistCard
+                key={artist.id}
+                artist={artist}
+                selected={artist.id === selectedArtistId}
+                onSelect={setSelectedArtistId}
+              />
+            ))}
+            {errorMessage && (
+              <div className="rounded-xl border border-dashed border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {errorMessage}
+              </div>
+            )}
+            {!artists.length && !isLoading && !errorMessage && (
+              <div className="rounded-xl border border-dashed border-zinc-200 px-3 py-10 text-center text-sm text-zinc-500">
+                조건을 만족하는 아티스트가 없습니다.
+              </div>
+            )}
+            <div ref={sentinelRef} className="h-6" />
+            {isLoading && (
+              <div className="pb-4 text-center text-xs text-zinc-400">
+                불러오는 중...
+              </div>
+            )}
+            {!hasMore && artists.length > 0 && (
+              <div className="pb-2 text-center text-[11px] text-zinc-400">
+                더 이상 데이터가 없습니다.
+              </div>
+            )}
           </div>
         </div>
       </section>
