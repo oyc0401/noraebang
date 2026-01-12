@@ -208,10 +208,11 @@ model SpotifyTrack {
   spotifyId                 String   @unique @map("spotify_id")
   spotifyUrl                String?  @map("spotify_url")
   name                      String
-  musicBrainzTitle          String?  @map("musicbrainz_title")
-  musicBrainzRecordingId    String?  @map("musicbrainz_recording_id")
-  musicBrainzArtistCreditId String?  @map("musicbrainz_artist_credit_id")
-  musicBrainzArtistId       String?  @map("musicbrainz_artist_id")
+  musicBrainzTitle          String?   @map("musicbrainz_title")
+  musicBrainzRecordingId    String?   @map("musicbrainz_recording_id")
+  musicBrainzArtistCreditId String?   @map("musicbrainz_artist_credit_id")
+  musicBrainzArtistId       String?   @map("musicbrainz_artist_id")
+  musicBrainzFetchedAt      DateTime? @map("musicbrainz_fetched_at")
   popularity                Int?
   previewUrl                String?  @map("preview_url")
   isrc                      String?
