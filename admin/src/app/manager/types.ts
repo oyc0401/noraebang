@@ -108,6 +108,11 @@ export type ManagerSpotifyTrackSummary = {
   thumbnails: string[];
   createdAt: string;
   groupId?: number | null;
+  artists: Array<{
+    artistId?: number | null;
+    spotifyName: string;
+    spotifyId: string;
+  }>;
 };
 
 export type ManagerSpotifyGroupSummary = {

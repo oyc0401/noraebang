@@ -269,6 +269,32 @@ function SpotifyTrackCard({ track, groupId }: SpotifyTrackCardProps) {
             <span>길이 {durationLabel}</span>
             <span>인기도 {track.popularity ?? "-"}</span>
           </div>
+          <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-zinc-500">
+            {track.artists.length === 0 ? (
+              <span className="text-zinc-400">연결된 아티스트 없음</span>
+            ) : (
+              track.artists
+                .sort((a, b) => {
+                  if (a?.artistId == null && b?.artistId == null) return 0;
+                  if (a?.artistId == null) return 1;
+                  if (b?.artistId == null) return -1;
+                  return a.artistId - b.artistId;
+                })
+                .map((artist) => (
+                  <span
+                    key={`${track.id}-${artist.spotifyId}-${artist.artistId ?? "none"}`}
+                    className="inline-flex items-center gap-1 rounded border border-zinc-200 px-2 py-0.5"
+                  >
+                    <span className="text-[10px] text-zinc-400">
+                      #{artist.artistId ?? "--"}
+                    </span>
+                    <span className="font-semibold text-zinc-700">
+                      {artist.spotifyName}
+                    </span>
+                  </span>
+                ))
+            )}
+          </div>
         </div>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">

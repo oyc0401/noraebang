@@ -375,12 +375,12 @@ export function CenterSection() {
                               ))
                             )}
                             {song.tjSong ? (
-                              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-800">
-                                <span>TJ {song.tjSong.id}</span>
-                                {"  "}
-                                <span>{song.tjSong.title ?? "제목 없음"}</span>
-                                {"  "}
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-800">
+                                <span className="text-[10px] text-emerald-600">
+                                  TJ #{song.tjSong.id}
+                                </span>
                                 <span>
+                                  {song.tjSong.title ?? "제목 없음"} ·{" "}
                                   {song.tjSong.artist ?? "아티스트 미상"}
                                 </span>
                               </span>
