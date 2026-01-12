@@ -10,7 +10,10 @@ import "dotenv/config";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Pool } from "pg";
-import { transformArtistToDocument } from "../transformer";
+import {
+  transformArtistToDocument,
+  type ArtistWithRelations,
+} from "../transformer";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -73,7 +76,7 @@ async function main() {
   console.log(`  - aliases: ${artist.aliases.length}`);
 
   console.log("\n📝 Transforming to Typesense document...");
-  const document = transformArtistToDocument(artist as any);
+  const document = transformArtistToDocument(artist as ArtistWithRelations);
   console.log("✓ Transformation complete");
 
   const outputPath = join(
