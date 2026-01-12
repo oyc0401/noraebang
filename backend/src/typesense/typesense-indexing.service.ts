@@ -94,6 +94,9 @@ export class TypesenseIndexingService {
                 spotifyArtist: {
                   select: { popularity: true },
                 },
+                tjSongs: {
+                  select: { tjSongId: true },
+                },
               },
             },
           },

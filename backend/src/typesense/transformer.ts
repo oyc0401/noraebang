@@ -39,6 +39,9 @@ type SongWithRelations = Awaited<
       spotifyArtist?: {
         popularity: number | null;
       } | null;
+      tjSongs?: Array<{
+        tjSongId: string;
+      }>;
     };
   }>;
   tjSongId?: string | null;
@@ -95,6 +98,8 @@ export interface TypesenseSongDocument {
 
   popularity?: number;
   artistPopularity?: number;
+  artistSpotifyPopularity?: number;
+  artistTjSongCount?: number;
   updatedAt: number;
 
   q_song_ko_p?: string[];
@@ -159,6 +164,7 @@ export interface TypesenseArtistDocument {
   nameLatin?: string;
 
   popularity?: number;
+  spotifyPopularity?: number;
   tjSongCount?: number;
   updatedAt: number;
 
@@ -166,21 +172,25 @@ export interface TypesenseArtistDocument {
   q_name_ko_a?: string[];
   q_name_ko_a2?: string[];
   q_name_ko_f?: string[];
+  q_name_ko_norm?: string[];
 
   q_name_latin_p?: string[];
   q_name_latin_a?: string[];
   q_name_latin_a2?: string[];
   q_name_latin_f?: string[];
+  q_name_latin_norm?: string[];
 
   q_name_ja_kanji_p?: string[];
   q_name_ja_kanji_a?: string[];
   q_name_ja_kanji_a2?: string[];
   q_name_ja_kanji_f?: string[];
+  q_name_ja_kanji_norm?: string[];
 
   q_name_ja_kana_p?: string[];
   q_name_ja_kana_a?: string[];
   q_name_ja_kana_a2?: string[];
   q_name_ja_kana_f?: string[];
+  q_name_ja_kana_norm?: string[];
 }
 
 // Backward compatibility
@@ -373,7 +383,16 @@ export function transformSongToDocument(
 
   // 인기도
   const popularity = song.spotifyTrack?.spotifyTrack?.popularity ?? undefined;
-  const artistPopularity = mainArtist?.spotifyArtist?.popularity ?? undefined;
+  const artistSpotifyPopularity =
+    mainArtist?.spotifyArtist?.popularity ?? undefined;
+  const mainArtistTjSongCount = mainArtist?.tjSongs?.length ?? 0;
+  const artistTjSongCount =
+    mainArtistTjSongCount > 0 ? mainArtistTjSongCount : undefined;
+  const hasArtistPopularitySource =
+    artistSpotifyPopularity !== undefined || artistTjSongCount !== undefined;
+  const artistPopularity = hasArtistPopularitySource
+    ? calculateArtistPopularity(artistSpotifyPopularity, artistTjSongCount ?? 0)
+    : undefined;
 
   // Combo 필드 (곡+아티스트 조합, 공백 제거)
   const q_combo_a: string[] = [];
@@ -658,6 +677,8 @@ export function transformSongToDocument(
 
     popularity,
     artistPopularity,
+    artistSpotifyPopularity,
+    artistTjSongCount,
     updatedAt: Math.floor(song.updatedAt.getTime() / 1000),
 
     // 곡 별칭 필드
@@ -762,12 +783,85 @@ export function transformArtistToDocument(
   const q_name_ja_kana_a_values = new Set<string>(
     nameAliases.q_name_ja_kana_a || [],
   );
+  if (nameKo) {
+    const cleanedKo = cleanText(nameKo);
+    if (cleanedKo && cleanedKo !== nameKo) {
+      q_name_ko_a_values.add(cleanedKo);
+    }
+  }
+  if (nameLatin) {
+    const cleanedLatin = cleanText(nameLatin);
+    if (cleanedLatin && cleanedLatin !== nameLatin) {
+      q_name_latin_a_values.add(cleanedLatin);
+    }
+  }
+  if (nameJaKanji) {
+    const cleanedJaKanji = cleanText(nameJaKanji);
+    if (cleanedJaKanji && cleanedJaKanji !== nameJaKanji) {
+      q_name_ja_kanji_a_values.add(cleanedJaKanji);
+    }
+  }
+  if (nameJaKana) {
+    const cleanedJaKana = cleanText(nameJaKana);
+    if (cleanedJaKana && cleanedJaKana !== nameJaKana) {
+      q_name_ja_kana_a_values.add(cleanedJaKana);
+    }
+  }
+  const q_name_ko_norm_values = new Set<string>();
+  const q_name_latin_norm_values = new Set<string>();
+  const q_name_ja_kanji_norm_values = new Set<string>();
+  const q_name_ja_kana_norm_values = new Set<string>();
+  for (const value of q_name_ko_a_values) {
+    const normalized = normalizeBasic(value);
+    if (normalized) {
+      q_name_ko_norm_values.add(normalized);
+    }
+  }
+  for (const value of q_name_latin_a_values) {
+    const normalized = normalizeBasic(value);
+    if (normalized) {
+      q_name_latin_norm_values.add(normalized);
+    }
+  }
+  for (const value of q_name_ja_kanji_a_values) {
+    const normalized = normalizeBasic(value);
+    if (normalized) {
+      q_name_ja_kanji_norm_values.add(normalized);
+    }
+  }
+  for (const value of q_name_ja_kana_a_values) {
+    const normalized = normalizeBasic(value);
+    if (normalized) {
+      q_name_ja_kana_norm_values.add(normalized);
+    }
+  }
 
-  addBasicNormalizedVariant(q_name_ko_a_values, nameKo);
-  addBasicNormalizedVariant(q_name_latin_a_values, nameLatin);
+  const normalizedNameKo = normalizeBasic(nameKo);
+  if (normalizedNameKo) {
+    q_name_ko_norm_values.add(normalizedNameKo);
+  }
 
-  addJapaneseVariants(q_name_ja_kanji_a_values, nameJaKanji);
-  addJapaneseVariants(q_name_ja_kana_a_values, nameJaKana);
+  const normalizedNameLatin = normalizeBasic(nameLatin);
+  if (normalizedNameLatin) {
+    q_name_latin_norm_values.add(normalizedNameLatin);
+  }
+
+  const normalizedNameJaKanji = normalizeBasic(nameJaKanji);
+  if (normalizedNameJaKanji) {
+    q_name_ja_kanji_norm_values.add(normalizedNameJaKanji);
+  }
+
+  const normalizedNameJaKana = normalizeBasic(nameJaKana);
+  if (normalizedNameJaKana) {
+    q_name_ja_kana_norm_values.add(normalizedNameJaKana);
+  }
+
+  addJapaneseVariants(q_name_ja_kanji_a_values, nameJaKanji, {
+    includeNormalized: false,
+  });
+  addJapaneseVariants(q_name_ja_kana_a_values, nameJaKana, {
+    includeNormalized: false,
+  });
 
   const q_name_ko_a =
     q_name_ko_a_values.size > 0 ? Array.from(q_name_ko_a_values) : undefined;
@@ -783,6 +877,22 @@ export function transformArtistToDocument(
     q_name_ja_kana_a_values.size > 0
       ? Array.from(q_name_ja_kana_a_values)
       : undefined;
+  const q_name_ko_norm =
+    q_name_ko_norm_values.size > 0
+      ? Array.from(q_name_ko_norm_values)
+      : undefined;
+  const q_name_latin_norm =
+    q_name_latin_norm_values.size > 0
+      ? Array.from(q_name_latin_norm_values)
+      : undefined;
+  const q_name_ja_kanji_norm =
+    q_name_ja_kanji_norm_values.size > 0
+      ? Array.from(q_name_ja_kanji_norm_values)
+      : undefined;
+  const q_name_ja_kana_norm =
+    q_name_ja_kana_norm_values.size > 0
+      ? Array.from(q_name_ja_kana_norm_values)
+      : undefined;
 
   return {
     id: artist.id.toString(),
@@ -794,6 +904,7 @@ export function transformArtistToDocument(
     nameLatin: nameLatin ?? undefined,
 
     popularity,
+    spotifyPopularity,
     tjSongCount,
     updatedAt: Math.floor(artist.updatedAt.getTime() / 1000),
 
@@ -802,23 +913,27 @@ export function transformArtistToDocument(
     q_name_ko_a,
     q_name_ko_a2: nameAliases.q_name_ko_a2,
     q_name_ko_f: nameAliases.q_name_ko_f,
+    q_name_ko_norm,
 
     // 이름 별칭 필드 (라틴)
     q_name_latin_p,
     q_name_latin_a,
     q_name_latin_a2: nameAliases.q_name_latin_a2,
     q_name_latin_f: nameAliases.q_name_latin_f,
+    q_name_latin_norm,
 
     // 이름 별칭 필드 (일본어 한자)
     q_name_ja_kanji_p,
     q_name_ja_kanji_a,
     q_name_ja_kanji_a2: nameAliases.q_name_ja_kanji_a2,
     q_name_ja_kanji_f: nameAliases.q_name_ja_kanji_f,
+    q_name_ja_kanji_norm,
 
     // 이름 별칭 필드 (일본어 가나)
     q_name_ja_kana_p,
     q_name_ja_kana_a,
     q_name_ja_kana_a2: nameAliases.q_name_ja_kana_a2,
     q_name_ja_kana_f: nameAliases.q_name_ja_kana_f,
+    q_name_ja_kana_norm,
   };
 }
