@@ -9,6 +9,7 @@ export function ArtistListSection() {
 
   const {
     sort,
+    searchQuery,
     artists,
     artistsLoading,
     loadingMoreArtists,
@@ -16,6 +17,7 @@ export function ArtistListSection() {
     selectedArtist,
     debouncedSearch,
     setSort,
+    setSearchQuery,
     setSelectedArtist,
     loadMoreArtists,
   } = useArtistsStore();
@@ -40,28 +42,43 @@ export function ArtistListSection() {
   }, [artistsHasMore, isFilteringArtists, loadMoreArtists]);
 
   return (
-    <div className="w-80 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col">
-      {/* Artist List Header */}
-      <div className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-2 flex items-center justify-between gap-2">
-        <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase">
-          Artists ({artists.length})
+    <div className="w-80 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col min-h-0 overflow-hidden">
+      {/* Artist List Header + Search */}
+      <div className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase">
+            Artists ({artists.length})
+          </div>
+          <div className="flex items-center gap-1 text-[10px] text-zinc-500 dark:text-zinc-400">
+            <label htmlFor="artists-sort" className="sr-only">
+              정렬
+            </label>
+            <select
+              id="artists-sort"
+              value={sort}
+              onChange={(event) => setSort(event.target.value as any)}
+              className="rounded border border-zinc-200 bg-white px-1.5 py-0.5 text-[10px] text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-zinc-500 dark:text-zinc-400">
-          <label htmlFor="artists-sort" className="sr-only">
-            정렬
+        <div>
+          <label htmlFor="artist-search" className="sr-only">
+            아티스트 검색
           </label>
-          <select
-            id="artists-sort"
-            value={sort}
-            onChange={(event) => setSort(event.target.value as any)}
-            className="rounded border border-zinc-200 bg-white px-1.5 py-0.5 text-[10px] text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400"
-          >
-            {SORT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <input
+            id="artist-search"
+            type="text"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="아티스트 검색..."
+            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
+          />
         </div>
       </div>
 

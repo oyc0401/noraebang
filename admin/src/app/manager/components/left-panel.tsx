@@ -136,19 +136,8 @@ export function LeftPanel() {
   return (
     <>
       <section className="flex h-[min(900px,80vh)] flex-col border border-zinc-200 bg-white">
-        <div className="border-b border-zinc-100 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">아티스트 리스트</h2>
-              <p className="text-sm text-zinc-500">
-                무한 스크롤 · 페이지 당 {MANAGER_PAGE_SIZE}명
-              </p>
-            </div>
-            <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600">
-              표시 중 {artists.length.toLocaleString()}명 / 총{" "}
-              {totalArtistCount.toLocaleString()}명
-            </span>
-          </div>
+        <div className="border-b border-zinc-100 pt-4 px-4 pb-2">
+          <h2 className="text-lg font-semibold">아티스트 리스트</h2>
         </div>
 
         <div className="space-y-3 border-b border-zinc-100 p-4">

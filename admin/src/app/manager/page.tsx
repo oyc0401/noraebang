@@ -43,7 +43,7 @@ function ManagerPageInner() {
           <div className="flex flex-wrap gap-3"></div>
         </header>
 
-        <div className="grid gap-0 lg:[grid-template-columns:420px_minmax(0,1fr)_320px] h-full">
+        <div className="grid gap-0 lg:[grid-template-columns:350px_minmax(0,1fr)_420px] h-full">
           <LeftPanel />
           <CenterSection />
 

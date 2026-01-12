@@ -221,7 +221,7 @@ export function ArtistDetailSection() {
 
   return (
     <>
-      <div className="flex-1 border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex flex-col">
+      <div className="flex-1 border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex flex-col min-h-0 overflow-hidden">
         {selectedArtist ? (
           <>
             {/* Artist Info Header */}
