@@ -25,7 +25,7 @@ function ManagerPageInner() {
     <div className="min-h-screen bg-zinc-50  text-zinc-900 h-[100vh]">
       <div className="mx-auto flex h-full min-h-0 flex-col">
         <header className="flex flex-col px-4 py-4">
-          <div className="flex flex-row justify-between md:items-end">
+          <div className="flex flex-row justify-between items-end">
             <div className="  flex flex-row">
               <h1 className=" text-3xl font-bold">아티스트 관리자</h1>
               <Link
@@ -43,11 +43,11 @@ function ManagerPageInner() {
           <div className="flex flex-wrap gap-3"></div>
         </header>
 
-        <div className="grid flex-1 min-h-0 gap-0 lg:[grid-template-columns:350px_minmax(0,1fr)_420px]">
+        <div className="grid flex-1 min-h-0 gap-0 [grid-template-columns:350px_minmax(0,1fr)_420px]">
           <LeftPanel />
-          {/* <CenterSection /> */}
+          <CenterSection />
 
-          {/* <RightSection /> */}
+          <RightSection />
         </div>
       </div>
     </div>
