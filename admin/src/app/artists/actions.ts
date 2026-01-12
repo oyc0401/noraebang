@@ -175,12 +175,20 @@ export async function getSongsByArtist(artistId: number) {
             ? {
                 id: as.song.spotifyTrackGroup.primaryTrack.id,
                 spotifyId: as.song.spotifyTrackGroup.primaryTrack.spotifyId,
-                spotifyUrl: as.song.spotifyTrackGroup.primaryTrack.spotifyUrl ?? undefined,
+                spotifyUrl:
+                  as.song.spotifyTrackGroup.primaryTrack.spotifyUrl ??
+                  undefined,
                 name: as.song.spotifyTrackGroup.primaryTrack.name,
                 thumbnails: as.song.spotifyTrackGroup.primaryTrack.thumbnails,
-                releaseDate: as.song.spotifyTrackGroup.primaryTrack.releaseDate ?? undefined,
-                durationMs: as.song.spotifyTrackGroup.primaryTrack.durationMs ?? undefined,
-                popularity: as.song.spotifyTrackGroup.primaryTrack.popularity ?? undefined,
+                releaseDate:
+                  as.song.spotifyTrackGroup.primaryTrack.releaseDate ??
+                  undefined,
+                durationMs:
+                  as.song.spotifyTrackGroup.primaryTrack.durationMs ??
+                  undefined,
+                popularity:
+                  as.song.spotifyTrackGroup.primaryTrack.popularity ??
+                  undefined,
               }
             : undefined,
         }
@@ -615,6 +623,7 @@ export async function getSpotifyTracksByArtist(artistId: number) {
     popularity: number | undefined;
     groupId: number | undefined;
     isPrimary: boolean;
+    musicBrainzRecordingId: string | undefined;
   };
 
   // 그룹별로 묶기
@@ -642,6 +651,7 @@ export async function getSpotifyTracksByArtist(artistId: number) {
       popularity: spotifyTrack.popularity ?? undefined,
       groupId: spotifyTrack.groupId ?? undefined,
       isPrimary: spotifyTrack.primaryForGroup !== null,
+      musicBrainzRecordingId: spotifyTrack.musicBrainzRecordingId ?? undefined,
     };
 
     if (spotifyTrack.groupId) {
@@ -684,7 +694,14 @@ export async function getSpotifyTracksByArtist(artistId: number) {
       genres: artist.spotifyArtist.genres,
       thumbnails: artist.spotifyArtist.thumbnails,
     },
-    groups: [...groups, ...ungroupedTracks.map((track) => ({ groupId: undefined, trackCount: 1, primaryTrack: track }))],
+    groups: [
+      ...groups,
+      ...ungroupedTracks.map((track) => ({
+        groupId: undefined,
+        trackCount: 1,
+        primaryTrack: track,
+      })),
+    ],
   };
 }
 
