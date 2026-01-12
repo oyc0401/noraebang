@@ -2,6 +2,7 @@ import { Injectable, type OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Client } from "typesense";
 import type { SearchResponse } from "typesense/lib/Typesense/Documents";
+import { preprocessSearchQuery } from "./lib/query-preprocessor";
 import type {
   TypesenseArtistDocument,
   TypesenseSongDocument,
@@ -60,12 +61,13 @@ export class TypesenseService implements OnModuleInit {
     params: TypesenseSearchParams,
   ): Promise<SearchResponse<TypesenseArtistDocument>> {
     const { query, page = 1, perPage = 20 } = params;
+    const preprocessedQuery = preprocessSearchQuery(query);
 
     return this.client
       .collections<TypesenseArtistDocument>("artists")
       .documents()
       .search({
-        q: query,
+        q: preprocessedQuery,
         query_by: [
           "q_name_ko_p",
           "q_name_ko_a",
@@ -88,12 +90,13 @@ export class TypesenseService implements OnModuleInit {
     params: TypesenseSearchParams,
   ): Promise<SearchResponse<TypesenseSongDocument>> {
     const { query, page = 1, perPage = 20 } = params;
+    const preprocessedQuery = preprocessSearchQuery(query);
 
     return this.client
       .collections<TypesenseSongDocument>("songs")
       .documents()
       .search({
-        q: query,
+        q: preprocessedQuery,
         query_by: [
           // 곡 제목
           "q_song_ko_p",
