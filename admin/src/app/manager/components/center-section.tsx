@@ -6,12 +6,28 @@ import { fetchManagerArtistDetail } from "../action";
 import type { ManagerArtistDetail } from "../types";
 import { useManagerStore } from "../store";
 import { ArtistDetailProvider } from "./artist-detail-context";
+import { ArtistCatalogDialog } from "./artist-catalog-dialog";
+import { ArtistDeleteDialog } from "./artist-delete-dialog";
+import { ArtistMergeDialog } from "./artist-merge-dialog";
 import { ArtistNameDialog } from "./artist-name-dialog";
+import { ArtistSpotifyIdDialog } from "./artist-spotify-id-dialog";
 
 export function CenterSection() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
   const openArtistNameDialog = useManagerStore(
     (state) => state.openArtistNameDialog,
+  );
+  const openSpotifyIdDialog = useManagerStore(
+    (state) => state.openSpotifyIdDialog,
+  );
+  const openCatalogDialog = useManagerStore(
+    (state) => state.openCatalogDialog,
+  );
+  const openDeleteArtistDialog = useManagerStore(
+    (state) => state.openDeleteArtistDialog,
+  );
+  const openMergeArtistDialog = useManagerStore(
+    (state) => state.openMergeArtistDialog,
   );
   const [detail, setDetail] = useState<ManagerArtistDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +81,7 @@ export function CenterSection() {
     if (!detail) return [];
     return [
       { label: "ID", value: `#${detail.id}` },
+      { label: "Slug", value: detail.slug ?? "-" },
       { label: "분류", value: detail.catalog ?? "미분류" },
     ];
   }, [detail]);
@@ -187,6 +204,36 @@ export function CenterSection() {
                   </p>
                 </div>
               ))}
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs">
+              <button
+                type="button"
+                onClick={openSpotifyIdDialog}
+                className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-1 text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
+              >
+                스포티파이 ID 편집
+              </button>
+              <button
+                type="button"
+                onClick={openCatalogDialog}
+                className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-1 text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
+              >
+                분류 편집
+              </button>
+              <button
+                type="button"
+                onClick={openMergeArtistDialog}
+                className="cursor-pointer rounded-lg border border-amber-200 px-3 py-1 text-amber-600 transition hover:border-amber-300 hover:text-amber-700"
+              >
+                아티스트 병합
+              </button>
+              <button
+                type="button"
+                onClick={openDeleteArtistDialog}
+                className="cursor-pointer rounded-lg border border-red-200 px-3 py-1 text-red-600 transition hover:border-red-300 hover:text-red-700"
+              >
+                아티스트 삭제
+              </button>
             </div>
           </div>
           <div className="grid gap-3 lg:grid-cols-2">
@@ -400,6 +447,10 @@ export function CenterSection() {
         {renderBody()}
       </section>
       <ArtistNameDialog />
+      <ArtistSpotifyIdDialog />
+      <ArtistCatalogDialog />
+      <ArtistDeleteDialog />
+      <ArtistMergeDialog />
     </ArtistDetailProvider>
   );
 }

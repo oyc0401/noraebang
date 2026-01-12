@@ -17,6 +17,7 @@ export function ArtistNameDialog() {
   const [nameJaKana, setNameJaKana] = useState("");
   const [nameJaKanji, setNameJaKanji] = useState("");
   const [nameLatin, setNameLatin] = useState("");
+  const [slug, setSlug] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -27,6 +28,7 @@ export function ArtistNameDialog() {
       setNameJaKana(detail.nameJaKana ?? "");
       setNameJaKanji(detail.nameJaKanji ?? "");
       setNameLatin(detail.nameLatin ?? "");
+      setSlug(detail.slug ?? "");
       setErrorMessage(null);
     }
   }, [detail, isOpen]);
@@ -53,6 +55,7 @@ export function ArtistNameDialog() {
           nameJaKana,
           nameJaKanji,
           nameLatin,
+          slug,
         });
 
         setDetail((prev) =>
@@ -65,6 +68,7 @@ export function ArtistNameDialog() {
                 nameJaKana: updated.nameJaKana,
                 nameJaKanji: updated.nameJaKanji,
                 nameLatin: updated.nameLatin,
+                slug: updated.slug,
               }
             : prev,
         );
@@ -73,6 +77,7 @@ export function ArtistNameDialog() {
           nameKo: updated.nameKo,
           nameLatin: updated.nameLatin ?? null,
           nameJa: updated.nameJaKanji ?? updated.nameJaKana ?? null,
+          slug: updated.slug ?? null,
         });
         closeDialog();
       } catch (error) {
@@ -163,6 +168,18 @@ export function ArtistNameDialog() {
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
               value={nameLatin}
               onChange={(event) => setNameLatin(event.target.value)}
+            />
+          </div>
+          <div className="space-y-1 text-sm">
+            <label className="text-xs font-semibold text-zinc-600">
+              slug
+            </label>
+            <input
+              type="text"
+              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              value={slug}
+              onChange={(event) => setSlug(event.target.value)}
+              placeholder="slug 입력 (비워두면 null)"
             />
           </div>
           {errorMessage && (
