@@ -31,8 +31,9 @@ export const songsCollectionSchema: CollectionCreateSchema = {
     { name: "tjSongId", type: "string", optional: true, index: false },
 
     // ===== 정렬/랭킹 필드 =====
-    { name: "popularity", type: "float", optional: true }, // Spotify track popularity
+    { name: "songPopularity", type: "float", optional: true }, // 최종 곡 인기도
     { name: "artistPopularity", type: "float", optional: true }, // 메인 아티스트 인기도
+    { name: "spotifyTrackPopularity", type: "float", optional: true }, // Spotify 트랙 인기도
     {
       name: "artistSpotifyPopularity",
       type: "float",
@@ -44,6 +45,12 @@ export const songsCollectionSchema: CollectionCreateSchema = {
       optional: true,
       index: false,
     }, // 메인 아티스트 TJ 곡 수
+    {
+      name: "hasTjSong",
+      type: "bool",
+      optional: true,
+      index: false,
+    }, // TJ 곡 유무
     { name: "updatedAt", type: "int64" }, // Unix timestamp
 
     // ===== 검색 필드: 곡명 =====
@@ -123,7 +130,7 @@ export const artistsCollectionSchema: CollectionCreateSchema = {
     { name: "nameLatin", type: "string", optional: true, index: false },
 
     // ===== 정렬/랭킹 필드 =====
-    { name: "popularity", type: "float", optional: true }, // Spotify artist popularity
+    { name: "popularity", type: "float", optional: true },
     { name: "spotifyPopularity", type: "float", optional: true, index: false },
     { name: "tjSongCount", type: "int32", optional: true, index: false }, // Number of TJ songs
     { name: "updatedAt", type: "int64" }, // Unix timestamp

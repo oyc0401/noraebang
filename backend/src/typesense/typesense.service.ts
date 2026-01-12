@@ -83,7 +83,7 @@ export class TypesenseService implements OnModuleInit {
           "q_name_ja_kana_a",
           "q_name_ja_kana_norm",
         ].join(","),
-        sort_by: "popularity:desc,_text_match:desc",
+        sort_by: "_text_match(bucket_size:5):desc,popularity:desc",
         page,
         per_page: perPage,
       });
@@ -152,7 +152,7 @@ export class TypesenseService implements OnModuleInit {
       .search({
         q: preprocessedQuery,
         query_by: songQueryFields.join(","),
-        sort_by: "_text_match:desc,popularity:desc",
+        sort_by: "_text_match:desc,songPopularity:desc",
         infix: infixModes,
         page,
         per_page: perPage,
