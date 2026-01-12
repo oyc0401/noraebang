@@ -22,7 +22,7 @@ const pool = new Pool({
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-const MAX_ARTIST_ID = 428;
+const MAX_ARTIST_ID = 429;
 
 async function main() {
   const args = process.argv.slice(2);

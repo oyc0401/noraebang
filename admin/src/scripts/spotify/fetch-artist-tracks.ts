@@ -214,21 +214,110 @@ async function processTrackBatch(
   return processedCount;
 }
 
+async function getFallbackStartArtistId() {
+  const latestTrack = await prisma.spotifyTrack.findFirst({
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      id: true,
+      name: true,
+      createdAt: true,
+      artists: {
+        select: {
+          spotifyArtist: {
+            select: {
+              id: true,
+              artists: {
+                select: {
+                  id: true,
+                  name: true,
+                  nameKo: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!latestTrack) {
+    return null;
+  }
+
+  const artistRecords =
+    latestTrack.artists
+      .flatMap((artistTrack) => artistTrack.spotifyArtist?.artists || [])
+      .filter((artist) => typeof artist.id === "number") ?? [];
+
+  if (artistRecords.length === 0) {
+    return null;
+  }
+
+  const uniqueArtistIds = [
+    ...new Set(artistRecords.map((artist) => artist.id)),
+  ];
+  const fallbackArtistId = Math.max(...uniqueArtistIds);
+
+  return {
+    artistId: fallbackArtistId,
+    trackId: latestTrack.id,
+    trackName: latestTrack.name,
+    createdAt: latestTrack.createdAt,
+    artistIds: uniqueArtistIds,
+    artistSummaries: artistRecords.map(
+      (artist) =>
+        `Artist ID ${artist.id}: ${artist.name} (${artist.nameKo ?? "이름 없음"})`,
+    ),
+  };
+}
+
 async function main() {
   const isDryRun = process.argv.includes("--dry-run");
   // process.argv[2]가 숫자면 시작 아티스트 ID로 사용
   const startArtistIdArg = process.argv[2];
-  const startArtistId =
+  const parsedStartArtistId =
     startArtistIdArg && !startArtistIdArg.includes("--")
       ? Number.parseInt(startArtistIdArg, 10)
       : undefined;
+
+  let startArtistId = Number.isNaN(parsedStartArtistId)
+    ? undefined
+    : parsedStartArtistId;
+  let startIdSource: "cli" | "latest" | "none" = "none";
+  let fallbackInfo:
+    | Awaited<ReturnType<typeof getFallbackStartArtistId>>
+    | null = null;
+
+  if (startArtistId) {
+    startIdSource = "cli";
+  } else {
+    fallbackInfo = await getFallbackStartArtistId();
+    if (fallbackInfo) {
+      startArtistId = fallbackInfo.artistId;
+      startIdSource = "latest";
+    }
+  }
 
   console.log(
     `\n=== Spotify Tracks 가져오기 ${isDryRun ? "(DRY RUN)" : ""} ===\n`,
   );
 
-  if (startArtistId) {
+  if (startArtistId && startIdSource === "cli") {
     console.log(`Starting from Artist ID: ${startArtistId}\n`);
+  } else if (startArtistId && startIdSource === "latest" && fallbackInfo) {
+    console.log(
+      `Starting from Artist ID: ${startArtistId} (latest SpotifyTrack ID ${fallbackInfo.trackId} "${fallbackInfo.trackName}" 기준)`,
+    );
+    console.log(
+      `Latest track created at: ${fallbackInfo.createdAt.toISOString()}`,
+    );
+    console.log(
+      `Latest track linked Artist IDs: ${fallbackInfo.artistIds.join(", ")}\n`,
+    );
+  } else {
+    console.log("Starting from the first available artist.\n");
   }
 
   // 1. Access Token
