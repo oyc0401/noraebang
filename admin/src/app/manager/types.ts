@@ -29,6 +29,7 @@ export type ManagerArtistSongDetail = {
   titleKo?: string | null;
   catalog?: string | null;
   hasYoutube: boolean;
+  youtubeVideoId?: string | null;
   thumbnails: {
     default?: string | null;
     medium?: string | null;
@@ -40,6 +41,19 @@ export type ManagerArtistSongDetail = {
   }>;
 };
 
+export type ManagerArtistYoutubeChannel = {
+  id: number;
+  type: string;
+  channelId: string;
+  title?: string | null;
+  subscriberCount?: number | null;
+  thumbnails: {
+    default?: string | null;
+    medium?: string | null;
+    high?: string | null;
+  };
+};
+
 export type ManagerArtistDetail = {
   id: number;
   name: string;
@@ -48,6 +62,7 @@ export type ManagerArtistDetail = {
   nameLatin?: string | null;
   catalog?: string | null;
   songCount: number;
+  spotifyId?: string | null;
   thumbnails: {
     default?: string | null;
     medium?: string | null;
@@ -59,6 +74,7 @@ export type ManagerArtistDetail = {
     genres: string[];
     url?: string | null;
   } | null;
+  youtubeChannels: ManagerArtistYoutubeChannel[];
   songs: ManagerArtistSongDetail[];
 };
 

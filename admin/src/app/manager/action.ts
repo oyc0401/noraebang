@@ -312,6 +312,7 @@ export async function fetchManagerArtistDetail(
       nameJaKana: true,
       nameJaKanji: true,
       homeCatalog: true,
+      spotifyId: true,
       thumbnailDefault: true,
       thumbnailMedium: true,
       thumbnailHigh: true,
@@ -346,6 +347,19 @@ export async function fetchManagerArtistDetail(
           },
         },
       },
+      youtubeChannels: {
+        orderBy: { type: "asc" },
+        select: {
+          id: true,
+          type: true,
+          channelId: true,
+          title: true,
+          subscriberCount: true,
+          thumbnailDefault: true,
+          thumbnailMedium: true,
+          thumbnailHigh: true,
+        },
+      },
       _count: { select: { artistSongs: true } },
     },
   });
@@ -360,6 +374,7 @@ export async function fetchManagerArtistDetail(
     titleKo: song.titleKo,
     catalog: song.catalog,
     hasYoutube: Boolean(song.youtubeVideoId),
+    youtubeVideoId: song.youtubeVideoId,
     thumbnails: {
       default: song.thumbnailDefault,
       medium: song.thumbnailMedium,
@@ -378,6 +393,7 @@ export async function fetchManagerArtistDetail(
     nameLatin: artist.nameLatin,
     nameJa: artist.nameJaKanji ?? artist.nameJaKana,
     catalog: artist.homeCatalog,
+    spotifyId: artist.spotifyId,
     songCount: artist._count.artistSongs,
     thumbnails: {
       default: artist.thumbnailDefault,
@@ -392,6 +408,18 @@ export async function fetchManagerArtistDetail(
           url: artist.spotifyArtist.spotifyUrl,
         }
       : null,
+    youtubeChannels: artist.youtubeChannels.map((channel) => ({
+      id: channel.id,
+      type: channel.type,
+      channelId: channel.channelId,
+      title: channel.title,
+      subscriberCount: channel.subscriberCount,
+      thumbnails: {
+        default: channel.thumbnailDefault,
+        medium: channel.thumbnailMedium,
+        high: channel.thumbnailHigh,
+      },
+    })),
     songs,
   };
 }
