@@ -5,11 +5,12 @@ import {
 } from "./lib/popularity";
 import { removeSpaces } from "./lib/text-utils";
 import {
-  addJapaneseNormalizedValues,
-  addNormalizedValue,
-  buildJapaneseNormalizedValues,
-  buildNormalizedValues,
-  buildPrimaryValues,
+  getJapaneseNormalizedValues,
+  getNormalizedValues,
+  getNormalizedValuesByList,
+  getPrimaryValues,
+  getPrimaryValuesByList,
+  isPresent,
 } from "./transformer-utils";
 
 export type SongWithRelations = Awaited<
@@ -31,7 +32,6 @@ export type SongWithRelations = Awaited<
       }>;
     };
   }>;
-  tjSongId?: string;
   tjSong?: {
     id: string;
   };
@@ -40,10 +40,6 @@ export type SongWithRelations = Awaited<
       popularity?: number;
     };
   };
-  titleKo?: string;
-  titleLatin?: string;
-  titleJaKana?: string;
-  titleJaKanji?: string;
 };
 
 type SongArtist = SongWithRelations["artistSongs"][number]["artist"];
@@ -93,16 +89,13 @@ export interface TypesenseSongDocument {
   q_artist_latin_a?: string[];
   q_artist_latin_norm?: string[];
 
-
-
-
   q_artist_ja_kanji_p?: string[];
   q_artist_ja_kanji_a?: string[];
-    q_artist_ja_kanji_norm?: string[];
+  q_artist_ja_kanji_norm?: string[];
 
   q_artist_ja_kana_p?: string[];
   q_artist_ja_kana_a?: string[];
-    q_artist_ja_kana_norm?: string[];
+  q_artist_ja_kana_norm?: string[];
 
   q_combo_a?: string[];
 }
@@ -111,25 +104,12 @@ function getSongArtists(song: SongWithRelations): SongArtist[] {
   return song.artistSongs.map((artistSong) => artistSong.artist);
 }
 
-function addPrimaryVariants(target: string[], value?: string) {
-  const variants = buildPrimaryValues(value);
-  if (!variants) {
-    return;
-  }
-  for (const variant of variants) {
-    if (!target.includes(variant)) {
-      target.push(variant);
-    }
-  }
-}
-
 /**
  * DB Song → Typesense Document 변환
  */
 export function transformSongToDocument(
   song: SongWithRelations,
 ): TypesenseSongDocument {
-
   const {
     songPopularity,
     artistPopularity,
@@ -197,130 +177,116 @@ export function transformSongToDocument(
 }
 
 const createQuerySongKoPrimary = (song: SongWithRelations) => {
-  return buildPrimaryValues(song.titleKo);
+  if (!song.titleKo) return undefined;
+  return getPrimaryValues(song.titleKo);
 };
-
-const createQuerySongKoAlias = (_song: SongWithRelations) => undefined;
 
 const createQuerySongKoNorm = (song: SongWithRelations) => {
-  return buildNormalizedValues(song.titleKo);
+  if (!song.titleKo) return undefined;
+  return getNormalizedValues(song.titleKo);
 };
+const createQuerySongKoAlias = (_song: SongWithRelations) => undefined;
 
 const createQuerySongLatinPrimary = (song: SongWithRelations) => {
-  return buildPrimaryValues(song.titleLatin);
+  if (!song.titleLatin) return undefined;
+  return getPrimaryValues(song.titleLatin);
 };
-
-const createQuerySongLatinAlias = (_song: SongWithRelations) => undefined;
 
 const createQuerySongLatinNorm = (song: SongWithRelations) => {
-  return buildNormalizedValues(song.titleLatin);
+  if (!song.titleLatin) return undefined;
+  return getNormalizedValues(song.titleLatin);
 };
+const createQuerySongLatinAlias = (_song: SongWithRelations) => undefined;
 
 const createQuerySongJaKanjiPrimary = (song: SongWithRelations) => {
-  return buildPrimaryValues(song.titleJaKanji);
+  if (!song.titleJaKanji) return undefined;
+  return getPrimaryValues(song.titleJaKanji);
 };
-
-const createQuerySongJaKanjiAlias = (_song: SongWithRelations) => undefined;
 
 const createQuerySongJaKanjiNorm = (song: SongWithRelations) => {
-  return buildJapaneseNormalizedValues(song.titleJaKanji);
+  if (!song.titleJaKanji) return undefined;
+  return getJapaneseNormalizedValues(song.titleJaKanji);
 };
+const createQuerySongJaKanjiAlias = (_song: SongWithRelations) => undefined;
 
 const createQuerySongJaKanaPrimary = (song: SongWithRelations) => {
-  return buildPrimaryValues(song.titleJaKana);
+  if (!song.titleJaKana) return undefined;
+  return getPrimaryValues(song.titleJaKana);
 };
-
-const createQuerySongJaKanaAlias = (_song: SongWithRelations) => undefined;
 
 const createQuerySongJaKanaNorm = (song: SongWithRelations) => {
-  return buildJapaneseNormalizedValues(song.titleJaKana);
+  if (!song.titleJaKana) return undefined;
+  return getJapaneseNormalizedValues(song.titleJaKana);
 };
+const createQuerySongJaKanaAlias = (_song: SongWithRelations) => undefined;
 
 const createQueryArtistKoPrimary = (song: SongWithRelations) => {
   const artists = getSongArtists(song);
-  const values: string[] = [];
-  for (const artist of artists) {
-    addPrimaryVariants(values, artist.nameKo);
-  }
-  return values.length > 0 ? values : undefined;
+  const arsistNameList = artists.map((a) => a.nameKo);
+  return getPrimaryValuesByList(arsistNameList);
+};
+
+const createQueryArtistKoNorm = (song: SongWithRelations) => {
+  const arsistNameList = getSongArtists(song).map((a) => a.nameKo);
+  return getNormalizedValuesByList(arsistNameList);
 };
 
 const createQueryArtistKoAlias = (_song: SongWithRelations) => undefined;
 
-const createQueryArtistKoNorm = (song: SongWithRelations) => {
-  const artists = getSongArtists(song);
-  const values = new Set<string>();
-  for (const artist of artists) {
-    addNormalizedValue(values, artist.nameKo);
-  }
-  return values.size > 0 ? Array.from(values) : undefined;
+const createQueryArtistLatinPrimary = (song: SongWithRelations) => {
+  const arsistNameList = getSongArtists(song)
+    .map((a) => a.nameLatin)
+    .filter(isPresent);
+  return getPrimaryValuesByList(arsistNameList);
 };
 
-const createQueryArtistLatinPrimary = (song: SongWithRelations) => {
-  const artists = getSongArtists(song);
-  const values: string[] = [];
-  for (const artist of artists) {
-    addPrimaryVariants(values, artist.nameLatin);
-  }
-  return values.length > 0 ? values : undefined;
+const createQueryArtistLatinNorm = (song: SongWithRelations) => {
+  const arsistNameList = getSongArtists(song)
+    .map((a) => a.nameLatin)
+    .filter(isPresent);
+  return getNormalizedValuesByList(arsistNameList);
 };
 
 const createQueryArtistLatinAlias = (_song: SongWithRelations) => undefined;
 
-const createQueryArtistLatinNorm = (song: SongWithRelations) => {
-  const artists = getSongArtists(song);
-  const values = new Set<string>();
-  for (const artist of artists) {
-    addNormalizedValue(values, artist.nameLatin);
-  }
-  return values.size > 0 ? Array.from(values) : undefined;
+const createQueryArtistJaKanjiPrimary = (song: SongWithRelations) => {
+  const arsistNameList = getSongArtists(song)
+    .map((a) => a.nameJaKanji)
+    .filter(isPresent);
+  return getPrimaryValuesByList(arsistNameList);
 };
 
-const createQueryArtistJaKanjiPrimary = (song: SongWithRelations) => {
-  const artists = getSongArtists(song);
-  const values: string[] = [];
-  for (const artist of artists) {
-    addPrimaryVariants(values, artist.nameJaKanji);
-  }
-  return values.length > 0 ? values : undefined;
+const createQueryArtistJaKanjiNorm = (song: SongWithRelations) => {
+  const arsistNameList = getSongArtists(song)
+    .map((a) => a.nameJaKanji)
+    .filter(isPresent);
+  return getNormalizedValuesByList(arsistNameList);
 };
 
 const createQueryArtistJaKanjiAlias = (_song: SongWithRelations) => undefined;
 
-const createQueryArtistJaKanjiNorm = (song: SongWithRelations) => {
-  const artists = getSongArtists(song);
-  const values = new Set<string>();
-  for (const artist of artists) {
-    addJapaneseNormalizedValues(values, artist.nameJaKanji);
-  }
-  return values.size > 0 ? Array.from(values) : undefined;
+const createQueryArtistJaKanaPrimary = (song: SongWithRelations) => {
+  const arsistNameList = getSongArtists(song)
+    .map((a) => a.nameJaKana)
+    .filter(isPresent);
+  return getPrimaryValuesByList(arsistNameList);
 };
 
-const createQueryArtistJaKanaPrimary = (song: SongWithRelations) => {
-  const artists = getSongArtists(song);
-  const values: string[] = [];
-  for (const artist of artists) {
-    addPrimaryVariants(values, artist.nameJaKana);
-  }
-  return values.length > 0 ? values : undefined;
+const createQueryArtistJaKanaNorm = (song: SongWithRelations) => {
+  const arsistNameList = getSongArtists(song)
+    .map((a) => a.nameJaKana)
+    .filter(isPresent);
+  return getNormalizedValuesByList(arsistNameList);
 };
 
 const createQueryArtistJaKanaAlias = (_song: SongWithRelations) => undefined;
 
-const createQueryArtistJaKanaNorm = (song: SongWithRelations) => {
-  const artists = getSongArtists(song);
-  const values = new Set<string>();
-  for (const artist of artists) {
-    addJapaneseNormalizedValues(values, artist.nameJaKana);
-  }
-  return values.size > 0 ? Array.from(values) : undefined;
-};
-
 const createQueryComboArtist = (song: SongWithRelations) => {
   const mainArtist = getSongArtists(song)[0];
   const titleKoNoSpace = song.titleKo ? removeSpaces(song.titleKo) : undefined;
-  const artistKoNoSpace =
-    mainArtist?.nameKo ? removeSpaces(mainArtist.nameKo) : undefined;
+  const artistKoNoSpace = mainArtist?.nameKo
+    ? removeSpaces(mainArtist.nameKo)
+    : undefined;
 
   if (!titleKoNoSpace || !artistKoNoSpace) {
     return undefined;
@@ -343,7 +309,10 @@ function createSongPopularity(song: SongWithRelations) {
   const hasArtistPopularitySource =
     artistSpotifyPopularity !== undefined || artistTjSongCount !== undefined;
   const artistPopularity = hasArtistPopularitySource
-    ? calculateArtistPopularity({spotifyPopularity: artistSpotifyPopularity,tjSongCount: artistTjSongCount ?? 0})
+    ? calculateArtistPopularity({
+        spotifyPopularity: artistSpotifyPopularity,
+        tjSongCount: artistTjSongCount ?? 0,
+      })
     : undefined;
 
   const hasTjSong = Boolean(song.tjSongId ?? song.tjSong?.id);
