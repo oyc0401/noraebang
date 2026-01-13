@@ -4,10 +4,8 @@ import { Client } from "typesense";
 import type { SearchResponse } from "typesense/lib/Typesense/Documents";
 import type { OperationMode } from "typesense/lib/Typesense/Types";
 import { preprocessSearchQuery } from "./lib/query-preprocessor";
-import type {
-  TypesenseArtistDocument,
-  TypesenseSongDocument,
-} from "./transformer";
+import type { TypesenseSongDocument } from "./transformer-song";
+import type { TypesenseArtistDocument } from "./transformer-artist";
 
 export interface TypesenseSearchParams {
   query: string;

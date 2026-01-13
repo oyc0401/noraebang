@@ -13,7 +13,7 @@ import { Pool } from "pg";
 import {
   transformArtistToDocument,
   type ArtistWithRelations,
-} from "../transformer";
+} from "../transformer-artist";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

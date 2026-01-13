@@ -1,9 +1,7 @@
 import type { Client } from "typesense";
 import type { CollectionCreateSchema } from "typesense/lib/Typesense/Collections";
-import type {
-  TypesenseArtistDocument,
-  TypesenseSongDocument,
-} from "./transformer";
+import type { TypesenseSongDocument } from "./transformer-song";
+import type { TypesenseArtistDocument } from "./transformer-artist";
 
 /**
  * Collection 재생성 (기존 삭제 → 새로 생성)
