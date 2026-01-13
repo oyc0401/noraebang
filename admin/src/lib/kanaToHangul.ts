@@ -335,7 +335,7 @@ export function kanaToHangul(input: string): string {
       const nextInfo = next?.info;
       const nextCons: ConsClass = nextInfo?.consClass ?? "t";
 
-      let jong = JONG.S;
+      let jong: number = JONG.S;
       if (nextCons === "p" || nextCons === "b") jong = JONG.B;
       else if (nextCons === "k" || nextCons === "g") {
         jong = prevV === "e" || prevV === "i" ? JONG.S : JONG.G;
@@ -382,7 +382,7 @@ export function kanaToHangul(input: string): string {
       const next = readMoraAt(i + 1);
       const nextInfo = next?.info;
 
-      let jong = JONG.N;
+      let jong: number = JONG.N;
       const hasPrevHangul =
         out.length > 0 && isHangulSyllable(out[out.length - 1]);
       if (!hasPrevHangul) {
@@ -398,15 +398,13 @@ export function kanaToHangul(input: string): string {
         else jong = lastMora?.wasYouon ? JONG.NG : JONG.N;
       } else {
         const nc = nextInfo.consClass;
-        if (nc === "vowel" || nc === "y" || nc === "w") {
+        if (nc === "k" || nc === "g") {
+          jong = JONG.NG;
+        } else if (nc === "vowel" || nc === "y" || nc === "w") {
           jong = JONG.N;
         } else if (isLabialStart(nc)) {
           if (lastMora?.vowelOnly) jong = JONG.N;
           else jong = JONG.M;
-        } else if (nc === "g") {
-          jong = JONG.NG;
-        } else if ((nc === "k" || nc === "g") && lastMora?.consClass === "r") {
-          jong = JONG.NG;
         } else {
           jong = JONG.N;
         }
@@ -532,18 +530,76 @@ function preRewriteParticles(s: string): string {
     if (ch === "へ") {
       const prev = chars[i - 1];
       const next = chars[i + 1];
-      if (!isHiraOrLong(prev ?? "") || !isHiraOrLong(next ?? "")) continue;
 
-      const tail = chars.slice(i + 1, Math.min(chars.length, i + 6)).join("");
-      // 테스트 범위: へいく / へかえる
-      if (
-        tail.startsWith("いく") ||
-        tail.startsWith("いき") ||
-        tail.startsWith("かえる") ||
-        tail.startsWith("かえ")
-      ) {
+      // 1) "단어로서 ...へ" 예외: 여기 걸리면 절대 치환 금지
+      const LEXICAL_HE_ENDINGS = [
+        "いにしへ",
+        "おきへ",
+        "もとへ",
+        "すえへ",
+        "すゑへ",
+        "かみへ",
+        "くにへ",
+        "きしへ",
+      ] as const;
+
+      // i 위치(へ 포함) 기준으로 lookback window에서 끝매칭
+      {
+        const lookback = 6;
+        const start = Math.max(0, i - lookback);
+        const window = chars.slice(start, i + 1).join("");
+        if (LEXICAL_HE_ENDINGS.some((w) => window.endsWith(w))) {
+          continue; // ✅ 단어면 그대로 'へ' 유지
+        }
+      }
+
+      // 2) (선택) 지명 패턴 "~のへ" 보호: 하치노헤 같은 케이스
+      // 지명은 한자가 더 흔하지만, 가나로 들어올 수 있음.
+      // "のへ" 자체가 조사처럼 보이기 쉬우니 보호해두면 안전합니다.
+      {
+        const lookback = 4;
+        const start = Math.max(0, i - lookback);
+        const window = chars.slice(start, i + 1).join("");
+        if (window.endsWith("のへ")) {
+          continue; // ✅ 지명 패턴 가능성: 그대로 'へ'
+        }
+      }
+
+      const isHiraOrLong = (x: string) => {
+        const c = x.codePointAt(0)!;
+        return (c >= 0x3040 && c <= 0x309f) || x === "ー";
+      };
+
+      const isKanji = (x: string) => {
+        const c = x.codePointAt(0)!;
+        return (c >= 0x4e00 && c <= 0x9fff) || (c >= 0x3400 && c <= 0x4dbf);
+      };
+
+      const isBoundary = (x: string | undefined) => {
+        if (!x) return true;
+        return /\s|[、。！？!?\(\)\[\]{}「」『』（）【】]/.test(x);
+      };
+
+      const isLikelyNounEnd = (x: string | undefined) => {
+        if (!x) return false;
+        if (isHiraOrLong(x) || isKanji(x)) return true;
+        return /[)\]」』）】]/.test(x) || /[0-9０-９]/.test(x);
+      };
+
+      // へ 뒤에서 자주 오는 이동/방향 동사(활용 시작 형태까지)
+      const tail = chars.slice(i + 1, Math.min(chars.length, i + 10)).join("");
+      const moveVerb =
+        /^(いく|いき|いっ|くる|きた|きて|きま|かえる|かえり|かえっ|むかう|むかい|むかっ|すすむ|すすみ|すすん|でかけ|でる|でた|でて|はいる|はいり|はいっ|うつる|うつり|うつっ|わたる|わたり|わたっ|のぼる|のぼり|のぼっ|あるく|あるい|はしる|はしり|はしっ)/.test(
+          tail,
+        );
+
+      // 3) ✅ 조사로 판단되면 え로
+      // - 명사 끝(한자/가나/괄호/숫자) + (이동동사 or 경계)면 조사 확률 높음
+      // - 단, 위에서 "단어/지명"은 이미 continue 처리됨
+      if (isLikelyNounEnd(prev) && (moveVerb || isBoundary(next))) {
         chars[i] = "え";
       }
+
       continue;
     }
   }
