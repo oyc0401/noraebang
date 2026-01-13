@@ -58,9 +58,6 @@ export interface TypesenseArtistDocument {
 export function transformArtistToDocument(
   artist: ArtistWithRelations,
 ): TypesenseArtistDocument {
-  const { popularity, spotifyPopularity, tjSongCount } =
-    createArtistPopularity(artist);
-
   return {
     id: artist.id.toString(),
     homeCatalog: artist.homeCatalog ?? undefined,
@@ -70,9 +67,9 @@ export function transformArtistToDocument(
     nameJaKana: artist.nameJaKana ?? undefined,
     nameLatin: artist.nameLatin ?? undefined,
 
-    popularity,
-    spotifyPopularity,
-    tjSongCount,
+    popularity: createArtistPopularity(artist),
+    spotifyPopularity: artist.spotifyArtist?.popularity ?? 0,
+    tjSongCount: createTjSongCount(artist),
     updatedAt: Math.floor(artist.updatedAt.getTime() / 1000),
 
     q_name_ko_p: createQueryNameKoPrimary(artist),
@@ -136,22 +133,24 @@ const createQueryNameJaKanaNorm = (artist: ArtistWithRelations) => {
 
 const createQueryNameJaKanaAlias = (_artist: ArtistWithRelations) => undefined;
 
-function createArtistPopularity(artist: ArtistWithRelations) {
+/**
+ * 인기도 계산
+ */
+function createTjSongCount(artist: ArtistWithRelations) {
   const artistSongs = artist.artistSongs ?? [];
-  const tjSongCount = artistSongs.reduce((count, artistSong) => {
+  return artistSongs.reduce((count, artistSong) => {
     return artistSong.song?.tjSong ? count + 1 : count;
   }, 0);
+}
 
-  const spotifyPopularity = artist.spotifyArtist?.popularity ?? undefined;
-  const hasPopularitySource =
-    spotifyPopularity !== undefined || tjSongCount > 0;
-  const popularity = hasPopularitySource
-    ? calculateArtistPopularity({ spotifyPopularity, tjSongCount })
-    : undefined;
+function createArtistPopularity(artist: ArtistWithRelations) {
+  const tjSongCount = createTjSongCount(artist);
 
-  return {
-    popularity,
+  const spotifyPopularity = artist.spotifyArtist?.popularity ?? 0;
+  const popularity = calculateArtistPopularity({
     spotifyPopularity,
     tjSongCount,
-  };
+  });
+
+  return popularity;
 }
