@@ -45,12 +45,6 @@ export const songsCollectionSchema: CollectionCreateSchema = {
       optional: true,
       index: false,
     }, // 메인 아티스트 TJ 곡 수
-    {
-      name: "hasTjSong",
-      type: "bool",
-      optional: true,
-      index: false,
-    }, // TJ 곡 유무
     { name: "updatedAt", type: "int64" }, // Unix timestamp
 
     // ===== 검색 필드: 곡명 =====

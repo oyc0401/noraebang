@@ -110,15 +110,6 @@ function getSongArtists(song: SongWithRelations): SongArtist[] {
 export function transformSongToDocument(
   song: SongWithRelations,
 ): TypesenseSongDocument {
-  const {
-    songPopularity,
-    artistPopularity,
-    artistSpotifyPopularity,
-    artistTjSongCount,
-    spotifyTrackPopularity,
-    hasTjSong,
-  } = createSongPopularity(song);
-
   return {
     id: song.id.toString(),
     catalog: song.catalog ?? undefined,
@@ -132,12 +123,14 @@ export function transformSongToDocument(
 
     tjSongId: song.tjSong?.id ?? undefined,
 
-    songPopularity,
-    artistPopularity,
-    spotifyTrackPopularity,
-    artistSpotifyPopularity,
-    artistTjSongCount,
-    hasTjSong,
+    songPopularity: createSongPopularity(song),
+    artistPopularity: calculateArtistPopularity({
+      spotifyPopularity: createArtistSpotifyPopularity(song),
+      tjSongCount: createTjSongCount(song),
+    }),
+    spotifyTrackPopularity: createSpotifyTrackPopularity(song),
+    artistSpotifyPopularity: createArtistSpotifyPopularity(song),
+    artistTjSongCount: createTjSongCount(song),
     updatedAt: Math.floor(song.updatedAt.getTime() / 1000),
 
     q_song_ko_p: createQuerySongKoPrimary(song),
@@ -294,40 +287,43 @@ const createQueryComboArtist = (song: SongWithRelations) => {
   return [`${titleKoNoSpace}${artistKoNoSpace}`];
 };
 
-function createSongPopularity(song: SongWithRelations) {
+/**
+ * 인기도 계산
+ */
+function createTjSongCount(song: SongWithRelations) {
   const artists = getSongArtists(song);
-  const mainArtist = artists[0];
+  const counts = artists.map((artist) => artist.tjSongs?.length ?? 0);
+  return counts.length > 0 ? Math.max(...counts) : 0;
+}
 
-  const spotifyTrackPopularity =
-    song.spotifyTrack?.spotifyTrack?.popularity ?? undefined;
-  const artistSpotifyPopularity =
-    mainArtist?.spotifyArtist?.popularity ?? undefined;
-  const mainArtistTjSongCount = mainArtist?.tjSongs?.length ?? 0;
-  const artistTjSongCount =
-    mainArtistTjSongCount > 0 ? mainArtistTjSongCount : undefined;
+function createArtistSpotifyPopularity(song: SongWithRelations) {
+  const artists = getSongArtists(song);
+  const popularities = artists
+    .map((artist) => artist.spotifyArtist?.popularity)
+    .filter(isPresent);
+  return popularities.length > 0 ? Math.max(...popularities) : 0;
+}
 
-  const hasArtistPopularitySource =
-    artistSpotifyPopularity !== undefined || artistTjSongCount !== undefined;
-  const artistPopularity = hasArtistPopularitySource
-    ? calculateArtistPopularity({
-        spotifyPopularity: artistSpotifyPopularity,
-        tjSongCount: artistTjSongCount ?? 0,
-      })
-    : undefined;
+function createSpotifyTrackPopularity(song: SongWithRelations) {
+  return song.spotifyTrack?.spotifyTrack?.popularity ?? 0;
+}
 
-  const hasTjSong = Boolean(song.tjSongId ?? song.tjSong?.id);
+function createSongPopularity(song: SongWithRelations) {
+  const spotifyTrackPopularity = createSpotifyTrackPopularity(song);
+  const artistSpotifyPopularity = createArtistSpotifyPopularity(song);
+  const tjSongCount = createTjSongCount(song);
+
+  const artistPopularity = calculateArtistPopularity({
+    spotifyPopularity: artistSpotifyPopularity,
+    tjSongCount,
+  });
+
+  const hasTjSong = tjSongCount > 0;
   const songPopularity = calculateSongPopularity({
     artistPopularity,
     spotifyTrackPopularity,
     hasTjSong,
   });
 
-  return {
-    songPopularity,
-    artistPopularity,
-    artistSpotifyPopularity,
-    artistTjSongCount,
-    spotifyTrackPopularity,
-    hasTjSong,
-  };
+  return songPopularity;
 }

@@ -8,10 +8,11 @@
     "244"
   ],
   "tjSongId": "68872",
-  "songPopularity": 55,
+  "songPopularity": 50,
   "artistPopularity": 50,
+  "spotifyTrackPopularity": 0,
   "artistSpotifyPopularity": 50,
-  "hasTjSong": true,
+  "artistTjSongCount": 0,
   "updatedAt": 1768240882,
   "q_song_ko_p": [
     "굿 바이 바이"
