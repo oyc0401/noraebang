@@ -770,3 +770,79 @@ describe("kanaToHangul - lexical words ending with へ (must end with 헤)", () 
     expect(kanaToHangul("くにへ")).not.toBe("쿠니에");
   });
 });
+describe("kanaToHangul - unicode normalization edge cases", () => {
+  it("NFD dakuten should behave like NFC", () => {
+    // がっこう = がっこう (NFD)
+    expect(kanaToHangul("か\u3099っこう")).toBe("각코");
+    // ぱ = ぱ (NFD handakuten)
+    expect(kanaToHangul("は\u309aん")).toBe("판");
+  });
+
+  it("halfwidth katakana should normalize", () => {
+    expect(kanaToHangul("ﾊﾝｶｸｶﾀｶﾅ")).toBe("항카쿠카타카나");
+  });
+});
+
+describe("kanaToHangul - prolonged sound mark variants", () => {
+  it("various dash-like marks should be treated like ー (drop)", () => {
+    expect(kanaToHangul("みゅｰじっく")).toBe("뮤지쿠"); // 'ｰ' U+FF70
+    expect(kanaToHangul("コ―ヒ―")).toBe("코히"); // '―' U+2015
+  });
+});
+describe("kanaToHangul - stray small kana", () => {
+  it("stray small kana should not crash and should be pass-through or policy-based", () => {
+    expect(() => kanaToHangul("ゃゅょ")).not.toThrow();
+    expect(() => kanaToHangul("ぁぃぅぇぉ")).not.toThrow();
+    expect(kanaToHangul("ゃ")).toBe("ゃ" as any); // 정책: 그대로 통과(권장)
+  });
+
+  it("small kana after non-i-row should not form youon incorrectly", () => {
+    // 예: かゃ 같은 건 보통 입력 오류 -> 그대로 처리하거나 최소한 크래시 금지
+    expect(() => kanaToHangul("かゃ")).not.toThrow();
+  });
+});
+describe("kanaToHangul - sokuon weird positions", () => {
+  it("sokuon at start or after punctuation should not crash", () => {
+    expect(() => kanaToHangul("っ")).not.toThrow();
+    expect(() => kanaToHangul("！っか")).not.toThrow();
+    expect(() => kanaToHangul("「っ」")).not.toThrow();
+  });
+
+  it("multiple sokuon should be stable", () => {
+    expect(() => kanaToHangul("っっっか")).not.toThrow();
+  });
+});
+describe("kanaToHangul - nasal boundary weirdness", () => {
+  it("ん before sokuon should be stable", () => {
+    expect(() => kanaToHangul("なんっか")).not.toThrow();
+    expect(() => kanaToHangul("こんっちは")).not.toThrow(); // こんにちは 변형 입력
+  });
+
+  it("double ん should not produce broken jamo", () => {
+    expect(() => kanaToHangul("んん")).not.toThrow();
+    expect(() => kanaToHangul("こんんな")).not.toThrow();
+  });
+});
+describe("kanaToHangul - particle false positives", () => {
+  it("へ in 'へや' must stay '헤' (not particle)", () => {
+    expect(kanaToHangul("へや")).toBe("헤야");
+    expect(kanaToHangul("へやへいく")).toBe("헤야에이쿠"); // 첫 へ: 단어, 둘째 へ: 조사
+  });
+
+  it("〜のへ pattern should stay '노헤' (placename-like)", () => {
+    expect(kanaToHangul("はちのへ")).toBe("하치노헤");
+    expect(kanaToHangul("さんのへ")).toBe("산노헤");
+  });
+
+  it("lexical …へ must not be rewritten even before punctuation", () => {
+    expect(kanaToHangul("いにしへ！")).toBe("이니시헤！");
+    expect(kanaToHangul("おきへ。")).toBe("오키헤。");
+  });
+});
+describe("kanaToHangul - loanword hard cases", () => {
+  it("combo + sokuon + long mark", () => {
+    expect(kanaToHangul("ファッション")).toBe("팟숑"); // っ + しょ + ん(어말) 규칙에 따라 달라질 수 있음
+    expect(kanaToHangul("ティッシュー")).toBe("팃슈"); // ー drop
+    expect(kanaToHangul("フォー")).toBe("포"); // ー drop
+  });
+});
