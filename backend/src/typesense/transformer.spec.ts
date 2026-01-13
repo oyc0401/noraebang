@@ -111,10 +111,18 @@ describe("transformSongToDocument", () => {
     const song = createSong();
     const result = transformSongToDocument(song as any);
 
-    expect(result.q_song_ko_p).toEqual(["밤을 달리다", "밤을달리다"]);
+    expect(result.q_song_ko_p).toEqual(["밤을 달리다"]);
     expect(result.q_song_ko_norm).toEqual(["밤을달리다"]);
     expect(result.q_song_latin_norm).toContain("yorunikakeru");
     expect(result.q_song_ja_kana_norm).toContain("よるにかける");
+  });
+
+  it("라틴 제목은 특수문자를 공백으로 정리한 값을 추가하고 norm에는 공백 제거 버전을 넣어야 함", () => {
+    const song = createSong({ titleLatin: "Good bye-bye" });
+    const result = transformSongToDocument(song as any);
+
+    expect(result.q_song_latin_p).toEqual(["Good bye-bye", "Good bye bye"]);
+    expect(result.q_song_latin_norm).toEqual(["Goodbyebye"]);
   });
 
   it("아티스트 이름 정규화와 콤보 필드를 생성해야 함", () => {

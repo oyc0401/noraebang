@@ -26,6 +26,21 @@ export function cleanText(text: string): string {
 }
 
 /**
+ * 공백을 완전히 제거
+ */
+export function removeSpaces(text: string): string {
+  return text.replace(/\s+/g, "");
+}
+
+/**
+ * 특수문자를 공백으로 바꾸고 연속 공백을 1칸으로 줄인 뒤 trim
+ */
+export function normalizeSpacing(text: string): string {
+  const replaced = text.replace(/[^\p{L}\p{N}]+/gu, " ");
+  return replaced.replace(/\s+/g, " ").trim();
+}
+
+/**
  * 카타카나를 히라가나로 변환
  */
 export function katakanaToHiragana(text: string): string {
