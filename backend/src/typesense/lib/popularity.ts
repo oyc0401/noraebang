@@ -9,9 +9,12 @@
  * @param tjSongCount 해당 아티스트가 가진 곡 중 TJ 노래방 번호가 있는 곡의 개수
  * @returns 최종 인기도 (spotifyPopularity + tjSongCount)
  */
-export function calculateArtistPopularity(
-  spotifyPopularity: number | undefined,
-  tjSongCount: number,
+export function calculateArtistPopularity({
+spotifyPopularity, 
+tjSongCount
+}:  {spotifyPopularity?: number ,
+  tjSongCount: number}
+
 ): number {
   const basePopularity = spotifyPopularity ?? 0;
   return basePopularity + tjSongCount;
@@ -27,11 +30,11 @@ interface SongPopularityInput {
  * 곡 인기도 계산
  *
  * @returns artistPopularity + spotifyTrackPopularity + (hasTjSong ? 5 : 0)
- *          단, 아무 정보도 없으면 undefined
+ *          단, 아무 정보도 없으면 0
  */
 export function calculateSongPopularity(
   input: SongPopularityInput,
-): number | undefined {
+): number {
   const { artistPopularity, spotifyTrackPopularity, hasTjSong } = input;
   const hasSource =
     artistPopularity !== undefined
@@ -41,7 +44,7 @@ export function calculateSongPopularity(
         : hasTjSong;
 
   if (!hasSource) {
-    return undefined;
+    return 0;
   }
 
   const artistScore = artistPopularity ?? 0;

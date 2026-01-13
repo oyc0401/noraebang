@@ -61,11 +61,83 @@ export interface TypesenseArtistDocument {
 export function transformArtistToDocument(
   artist: ArtistWithRelations,
 ): TypesenseArtistDocument {
-  const nameKo = artist.nameKo;
-  const nameLatin = artist.nameLatin;
-  const nameJaKanji = artist.nameJaKanji;
-  const nameJaKana = artist.nameJaKana;
+  const { popularity, spotifyPopularity, tjSongCount } =
+    createArtistPopularity(artist);
 
+  return {
+    id: artist.id.toString(),
+    homeCatalog: artist.homeCatalog ?? undefined,
+
+    nameKo: artist.nameKo ?? undefined,
+    nameJaKanji: artist.nameJaKanji ?? undefined,
+    nameJaKana: artist.nameJaKana ?? undefined,
+    nameLatin: artist.nameLatin ?? undefined,
+
+    popularity,
+    spotifyPopularity,
+    tjSongCount,
+    updatedAt: Math.floor(artist.updatedAt.getTime() / 1000),
+
+    q_name_ko_p: createQueryNameKoPrimary(artist),
+    q_name_ko_a: createQueryNameKoAlias(artist),
+    q_name_ko_norm: createQueryNameKoNorm(artist),
+
+    q_name_latin_p: createQueryNameLatinPrimary(artist),
+    q_name_latin_a: createQueryNameLatinAlias(artist),
+    q_name_latin_norm: createQueryNameLatinNorm(artist),
+
+    q_name_ja_kanji_p: createQueryNameJaKanjiPrimary(artist),
+    q_name_ja_kanji_a: createQueryNameJaKanjiAlias(artist),
+    q_name_ja_kanji_norm: createQueryNameJaKanjiNorm(artist),
+
+    q_name_ja_kana_p: createQueryNameJaKanaPrimary(artist),
+    q_name_ja_kana_a: createQueryNameJaKanaAlias(artist),
+    q_name_ja_kana_norm: createQueryNameJaKanaNorm(artist),
+  };
+}
+
+const createQueryNameKoPrimary = (artist: ArtistWithRelations) => {
+  return buildPrimaryValues(artist.nameKo);
+};
+
+const createQueryNameKoAlias = (_artist: ArtistWithRelations) => undefined;
+
+const createQueryNameKoNorm = (artist: ArtistWithRelations) => {
+  return buildNormalizedValues(artist.nameKo);
+};
+
+const createQueryNameLatinPrimary = (artist: ArtistWithRelations) => {
+  return buildPrimaryValues(artist.nameLatin);
+};
+
+const createQueryNameLatinAlias = (_artist: ArtistWithRelations) => undefined;
+
+const createQueryNameLatinNorm = (artist: ArtistWithRelations) => {
+  return buildNormalizedValues(artist.nameLatin);
+};
+
+const createQueryNameJaKanjiPrimary = (artist: ArtistWithRelations) => {
+  return buildPrimaryValues(artist.nameJaKanji);
+};
+
+const createQueryNameJaKanjiAlias = (_artist: ArtistWithRelations) =>
+  undefined;
+
+const createQueryNameJaKanjiNorm = (artist: ArtistWithRelations) => {
+  return buildJapaneseNormalizedValues(artist.nameJaKanji);
+};
+
+const createQueryNameJaKanaPrimary = (artist: ArtistWithRelations) => {
+  return buildPrimaryValues(artist.nameJaKana);
+};
+
+const createQueryNameJaKanaAlias = (_artist: ArtistWithRelations) => undefined;
+
+const createQueryNameJaKanaNorm = (artist: ArtistWithRelations) => {
+  return buildJapaneseNormalizedValues(artist.nameJaKana);
+};
+
+function createArtistPopularity(artist: ArtistWithRelations) {
   const artistSongs = artist.artistSongs ?? [];
   const tjSongCount = artistSongs.reduce((count, artistSong) => {
     return artistSong.song?.tjSong ? count + 1 : count;
@@ -75,43 +147,12 @@ export function transformArtistToDocument(
   const hasPopularitySource =
     spotifyPopularity !== undefined || tjSongCount > 0;
   const popularity = hasPopularitySource
-    ? calculateArtistPopularity(spotifyPopularity, tjSongCount)
+    ? calculateArtistPopularity({spotifyPopularity, tjSongCount})
     : undefined;
 
-  const q_name_ko_p = buildPrimaryValues(nameKo);
-  const q_name_latin_p = buildPrimaryValues(nameLatin);
-  const q_name_ja_kanji_p = buildPrimaryValues(nameJaKanji);
-  const q_name_ja_kana_p = buildPrimaryValues(nameJaKana);
-
-  const q_name_ko_norm = buildNormalizedValues(nameKo);
-  const q_name_latin_norm = buildNormalizedValues(nameLatin);
-  const q_name_ja_kanji_norm = buildJapaneseNormalizedValues(nameJaKanji);
-  const q_name_ja_kana_norm = buildJapaneseNormalizedValues(nameJaKana);
-
   return {
-    id: artist.id.toString(),
-    homeCatalog: artist.homeCatalog ?? undefined,
-
-    nameKo: nameKo ?? undefined,
-    nameJaKanji: nameJaKanji ?? undefined,
-    nameJaKana: nameJaKana ?? undefined,
-    nameLatin: nameLatin ?? undefined,
-
     popularity,
     spotifyPopularity,
     tjSongCount,
-    updatedAt: Math.floor(artist.updatedAt.getTime() / 1000),
-
-    q_name_ko_p,
-    q_name_ko_norm,
-
-    q_name_latin_p,
-    q_name_latin_norm,
-
-    q_name_ja_kanji_p,
-    q_name_ja_kanji_norm,
-
-    q_name_ja_kana_p,
-    q_name_ja_kana_norm,
   };
 }
