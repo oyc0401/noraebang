@@ -524,22 +524,60 @@ function preRewriteParticles(s: string): string {
     if (ch === "は") {
       const prev = chars[i - 1];
       const next = chars[i + 1];
-      if (!isHiraOrLong(prev ?? "") || !isHiraOrLong(next ?? "")) continue;
 
-      // 아주 약한 휴리스틱: 뒤쪽이 です/だ/형용사 い 로 종결되는 느낌이면 토픽으로 간주
+      if (!isHiraOrLong(prev ?? "")) continue;
+
+      // (1) next가 boundary일 때는 "무조건"이 아니라,
+      //     앞쪽이 '토픽 후보 어휘'일 때만 は→わ
+      if (isBoundary(next)) {
+        // それは。 / これは！ / あれは？ 같은 케이스만 잡자
+        // (문맥 없는 "さんは", 단어 "はは", 이상입력 "きっは" 같은 오탐 방지)
+        const TOPIC_ENDINGS = [
+          "それ",
+          "これ",
+          "あれ",
+          "どれ",
+          "ここ",
+          "そこ",
+          "あそこ",
+          "わたし",
+          "あなた",
+          "ぼく",
+          "おれ",
+          "きみ",
+          "みんな",
+          "いま",
+          "きょう",
+        ] as const;
+
+        const lookback = 6;
+        const start = Math.max(0, i - lookback);
+        const window = chars.slice(start, i).join(""); // 'は' 직전까지
+
+        if (TOPIC_ENDINGS.some((w) => window.endsWith(w))) {
+          chars[i] = "わ";
+        }
+        continue;
+      }
+
+      // (2) next가 가나가 아니면, (한자/숫자 등) 토픽 조사로 단정 안 함
+      if (!isHiraOrLong(next ?? "")) continue;
+
+      // (3) 기존 endish 휴리스틱 유지
       const tail = chars.slice(i + 1, Math.min(chars.length, i + 14)).join("");
       const endish =
         /です|でした|だ|だった/.test(tail) ||
-        // "...い(문장끝/구두점/공백/괄호)" 형태
         (() => {
-          // i 이후로 boundary까지 잘라서 마지막이 い인지
           let j = i + 1;
           while (j < chars.length && !isBoundary(chars[j])) j++;
           const seg = chars.slice(i + 1, j).join("");
           return seg.endsWith("い");
         })();
 
-      if (endish) chars[i] = "わ";
+      if (endish) {
+        chars[i] = "わ";
+      }
+
       continue;
     }
 

@@ -961,3 +961,143 @@ describe("kanaToHangul - more edge cases", () => {
     expect(out).not.toMatch(/[\u3099\u309A]/);
   });
 });
+
+describe("kanaToHangul - grammar extreme edge cases", () => {
+  // --------------------
+  // 1) Particles with boundaries: quotes / parentheses / punctuation
+  // --------------------
+  it("particle は (wa) with boundaries", () => {
+    expect(kanaToHangul("「これはペンです」はい。")).toBe(
+      "「코레와펜데스」하이。",
+    );
+    // ↑ 인용부호 안의 は는 조사로 보이면 わ, 밖의 はい는 단어(하이)로 보존
+    expect(kanaToHangul("（きょうはあつい）")).toBe("（쿄와아츠이）");
+    expect(kanaToHangul("それは。")).toBe("소레와。");
+  });
+
+  it("particle へ (e) when phrase ends with punctuation", () => {
+    expect(kanaToHangul("がっこうへ。")).toBe("각코에。");
+    expect(kanaToHangul("東京へ！")).toBe("東京에！"); // 한자 보존 + へ만 변환
+    expect(kanaToHangul("（がっこうへ）いく")).toBe("（각코에）이쿠");
+  });
+
+  it("particle を (o) with punctuation and spacing", () => {
+    expect(kanaToHangul("すしを、たべる")).toBe("스시오、타베루");
+    expect(kanaToHangul("みずを  のむ")).toBe("미즈오  노무");
+    expect(kanaToHangul("「パンを」たべる")).toBe("「판오」타베루");
+  });
+
+  // --------------------
+  // 2) ている / ておく / ていく : don't mis-drop てい
+  // --------------------
+  it("ている family should keep てい (not treated as long-vowel drop)", () => {
+    expect(kanaToHangul("たべている")).toBe("타베테이루");
+    expect(kanaToHangul("よんでいる")).toBe("욘데이루");
+    expect(kanaToHangul("している")).toBe("시테이루");
+  });
+
+  it("ていく / ておく boundaries", () => {
+    expect(kanaToHangul("もっていく")).toBe("못테이쿠"); // って + いく (い drop 금지!)
+    expect(kanaToHangul("かっておく")).toBe("캇테오쿠");
+    expect(kanaToHangul("やっておく")).toBe("얏테오쿠");
+  });
+
+  // --------------------
+  // 3) polite auxiliary: でしょう / ましょう : drop the trailing う only in those patterns
+  // --------------------
+  it("でしょう / ましょう should drop trailing う", () => {
+    expect(kanaToHangul("そうでしょう")).toBe("소데쇼");
+    expect(kanaToHangul("いいでしょうか")).toBe("이데쇼카");
+    expect(kanaToHangul("いきましょう")).toBe("이키마쇼");
+    expect(kanaToHangul("やりましょうか")).toBe("야리마쇼카");
+  });
+
+  // --------------------
+  // 4) Contractions / colloquial
+  // --------------------
+  it("てしまう / ちゃう / ちゃった (keep stable with sokuon)", () => {
+    expect(kanaToHangul("たべてしまう")).toBe("타베테시마우"); // う drop 정책이면 타베테시마
+    expect(kanaToHangul("たべちゃう")).toBe("타베챠우");
+    expect(kanaToHangul("みちゃった")).toBe("미챳타");
+    expect(kanaToHangul("やっちゃった")).toBe("얏챳타");
+  });
+
+  it("じゃ / じゃない / じゃん (dewa contraction family)", () => {
+    expect(kanaToHangul("それじゃ")).toBe("소레쟈");
+    expect(kanaToHangul("じゃない")).toBe("쟈나이");
+    expect(kanaToHangul("じゃなかった")).toBe("쟈나캇타");
+    expect(kanaToHangul("じゃん")).toBe("쟝"); // ん 어말 정책(ㄴ/ㅇ)은 구현에 맞춰 조정 가능
+  });
+
+  it("っす / っけ / っぽい / ってさ (very colloquial)", () => {
+    // 여기선 '정확 발음'이 아니라 '크래시/경계 안정'이 목표
+    expect(() => kanaToHangul("おつかれっす")).not.toThrow();
+    expect(() => kanaToHangul("どこだっけ")).not.toThrow();
+    expect(() => kanaToHangul("それっぽい")).not.toThrow();
+    expect(() => kanaToHangul("ってさ")).not.toThrow();
+  });
+
+  // --------------------
+  // 5) Negative forms with sokuon and boundaries
+  // --------------------
+  it("negatives: ない / なかった / なくて with sokuon stability", () => {
+    expect(kanaToHangul("いかない")).toBe("이카나이");
+    expect(kanaToHangul("いかなかった")).toBe("이카나캇타");
+    expect(kanaToHangul("いかなくて")).toBe("이카나쿠테");
+    expect(kanaToHangul("やらなかった")).toBe("야라나캇타");
+  });
+
+  // --------------------
+  // 6) Conditionals / connectors: たら / なら / ても / たり / ながら
+  // --------------------
+  it("conditionals/connectors should keep boundaries stable", () => {
+    expect(kanaToHangul("いったら")).toBe("잇타라");
+    expect(kanaToHangul("いくなら")).toBe("이쿠나라");
+    expect(kanaToHangul("いっても")).toBe("잇테모");
+    expect(kanaToHangul("たべたりのんだり")).toBe("타베타리논다리");
+    expect(kanaToHangul("あるきながら")).toBe("아루키나가라");
+  });
+
+  // --------------------
+  // 7) Sentence-final particles: ね/よ/かな/かい/さ/な
+  // --------------------
+  it("ending particles remain intact", () => {
+    expect(kanaToHangul("いいね")).toBe("이이네");
+    expect(kanaToHangul("いいよ")).toBe("이이요");
+    expect(kanaToHangul("いいかな")).toBe("이이카나");
+    expect(kanaToHangul("いいかい")).toBe("이이카이");
+    expect(kanaToHangul("そうさ")).toBe("소사");
+    expect(kanaToHangul("だめだな")).toBe("다메다나");
+  });
+
+  // --------------------
+  // 8) Tricky mora boundaries: ん + youon / ん + sokuon / ん + ちょっ
+  // --------------------
+  it("tricky boundaries with ん + youon/sokuon", () => {
+    expect(kanaToHangul("てんきゃく")).toBe("텡캬쿠");
+    expect(kanaToHangul("さんちょく")).toBe("산쵸쿠");
+    expect(kanaToHangul("まんちょっと")).toBe("만춋토");
+    expect(() => kanaToHangul("なんっか")).not.toThrow();
+  });
+
+  // --------------------
+  // 9) Mixed scripts: kanji + kana + particles + quotes
+  // --------------------
+  it("mixed scripts with particles should behave", () => {
+    expect(kanaToHangul("第3回(だいさんかい)へいく")).toBe(
+      "第3回(다이상카이)에이쿠",
+    );
+    expect(kanaToHangul("誕生日(たんじょうび)を祝う")).toBe(
+      "誕生日(탄죠비)오祝우",
+    ); // 한자 보존
+  });
+
+  // --------------------
+  // 10) "っ" isolated policy: never crash
+  // --------------------
+  it("isolated small っ should not crash", () => {
+    expect(() => kanaToHangul("っ")).not.toThrow();
+    expect(() => kanaToHangul("っあ")).not.toThrow();
+    expect(() => kanaToHangul("「っ」")).not.toThrow();
+  });
+});
