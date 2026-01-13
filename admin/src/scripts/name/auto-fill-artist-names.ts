@@ -12,18 +12,19 @@
  * 처리 순서:
  * 1. spotifyArtistName 언어 감지하여 해당 필드가 null일 때만 저장
  * 2. artist.name 언어 감지하여 해당 필드가 null일 때만 저장
- * 3. nameLatin이 null이고, 토픽 채널 이름이 영어면 nameLatin에 저장
+ * 3. 토픽 채널 이름 언어 감지하여 해당 필드가 null일 때만 저장
+ * 4. nameJaKanji가 있고 nameJaKana가 없으면 kuroshiro로 히라가나 변환 후 저장
  *
  * 예시:
  * - spotifyArtistName="Nanatsukaze" → nameLatin에 저장
  * - artist.name="ナナツカゼ" → nameJaKana에 저장
- * (두 개 모두 저장됨)
+ * - artist.name="中森明菜" → nameJaKanji에 저장, nameJaKana에 "なかもりあきな" 저장
  *
  * 언어 감지 규칙:
  * - 특수문자 제거 후 판단
  * - 전부 영어(라틴 문자)면 → nameLatin
  * - 일본어가 1개라도 있으면:
- *   - 한자가 하나라도 있으면 → nameJaKanji
+ *   - 한자가 하나라도 있으면 → nameJaKanji (+ kuroshiro로 히라가나 변환해서 nameJaKana에도 저장)
  *   - 한자가 없으면 → nameJaKana
  * - 둘 다 아니면 → nameKo
  *
@@ -37,6 +38,10 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { isKanji, isKana } from "wanakana";
+// @ts-ignore
+import Kuroshiro from "kuroshiro";
+// @ts-ignore
+import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -98,6 +103,13 @@ async function main() {
   console.log("======================================");
   console.log(`Mode: ${isDryRun ? "DRY RUN" : "PRODUCTION"}\n`);
 
+  // kuroshiro 초기화
+  console.log("🔧 Initializing kuroshiro...");
+  console.log(KuromojiAnalyzer);
+  const kuroshiro = new Kuroshiro.default();
+  await kuroshiro.init(new KuromojiAnalyzer());
+  console.log("✓ Kuroshiro initialized\n");
+
   // artistId가 300 이하인 아티스트만 가져오기 (SpotifyArtist, YoutubeChannel 정보 포함)
   console.log("📦 Fetching artists (id <= 300)...");
   const artists = await prisma.artist.findMany({
@@ -138,15 +150,27 @@ async function main() {
     function saveName(name: string, source: string) {
       const field = detectLanguageField(name);
 
-      if (field === "nameLatin" && artist.nameLatin === null && !updateData.nameLatin) {
+      if (
+        field === "nameLatin" &&
+        artist.nameLatin === null &&
+        !updateData.nameLatin
+      ) {
         updateData.nameLatin = name;
         logs.push(`nameLatin=${name} (${source})`);
       }
-      if (field === "nameJaKanji" && artist.nameJaKanji === null && !updateData.nameJaKanji) {
+      if (
+        field === "nameJaKanji" &&
+        artist.nameJaKanji === null &&
+        !updateData.nameJaKanji
+      ) {
         updateData.nameJaKanji = name;
         logs.push(`nameJaKanji=${name} (${source})`);
       }
-      if (field === "nameJaKana" && artist.nameJaKana === null && !updateData.nameJaKana) {
+      if (
+        field === "nameJaKana" &&
+        artist.nameJaKana === null &&
+        !updateData.nameJaKana
+      ) {
         updateData.nameJaKana = name;
         logs.push(`nameJaKana=${name} (${source})`);
       }
@@ -167,13 +191,21 @@ async function main() {
     }
 
     // 3. 토픽 채널 이름 처리
-    const topicChannel = artist.youtubeChannels.find(
-      (ch) => ch.title?.endsWith(" - Topic"),
+    const topicChannel = artist.youtubeChannels.find((ch) =>
+      ch.title?.endsWith(" - Topic"),
     );
     const topicChannelName = topicChannel?.title?.replace(" - Topic", "");
     if (topicChannelName) {
       saveName(topicChannelName, "topic");
     }
+
+    // // 4. nameJaKanji가 있고 nameJaKana가 없으면 히라가나로 변환 (정확도 때문에 비활성화.)
+    // const kanjiName = updateData.nameJaKanji || artist.nameJaKanji;
+    // if (kanjiName && artist.nameJaKana === null && !updateData.nameJaKana) {
+    //   const hiragana = await kuroshiro.convert(kanjiName, { to: "hiragana" });
+    //   updateData.nameJaKana = hiragana;
+    //   logs.push(`nameJaKana=${hiragana} (converted from kanji)`);
+    // }
 
     // 업데이트할 필드가 있을 때만 실행
     if (Object.keys(updateData).length > 0) {

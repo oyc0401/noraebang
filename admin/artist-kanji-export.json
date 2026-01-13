@@ -1,0 +1,572 @@
+[
+  {
+    "id": 2,
+    "nameLatin": "Gao",
+    "nameJaKanji": "我生",
+    "nameJaKana": "がお"
+  },
+  {
+    "id": 3,
+    "nameLatin": "kessoku band",
+    "nameJaKanji": "結束バンド",
+    "nameJaKana": "けっそくバンド"
+  },
+  {
+    "id": 4,
+    "nameLatin": "ZUTOMAYO",
+    "nameJaKanji": "ずっと真夜中でいいのに。",
+    "nameJaKana": "ずっとまよなかでいいのに。"
+  },
+  {
+    "id": 14,
+    "nameLatin": "Akina Nakamori",
+    "nameJaKanji": "中森明菜",
+    "nameJaKana": "なかもりあきな"
+  },
+  {
+    "id": 15,
+    "nameLatin": "Mika Nakashima",
+    "nameJaKanji": "中島美嘉",
+    "nameJaKana": "なかじまよしよしみ"
+  },
+  {
+    "id": 16,
+    "nameLatin": "Miyuki Nakajima",
+    "nameJaKanji": "中島みゆき",
+    "nameJaKana": "なかじまみゆき"
+  },
+  {
+    "id": 21,
+    "nameLatin": "noa",
+    "nameJaKanji": "乃紫",
+    "nameJaKana": "乃むらさき"
+  },
+  {
+    "id": 22,
+    "nameLatin": "Ryokuoushoku Shakai",
+    "nameJaKanji": "緑黄色社会",
+    "nameJaKana": "りょくおうしょくしゃかい"
+  },
+  {
+    "id": 26,
+    "nameLatin": "Riu Domura",
+    "nameJaKanji": "堂村璃羽",
+    "nameJaKana": "どうむら璃わ"
+  },
+  {
+    "id": 35,
+    "nameLatin": "Reina Washio",
+    "nameJaKanji": "鷲尾伶菜",
+    "nameJaKana": "わしお伶さい"
+  },
+  {
+    "id": 42,
+    "nameLatin": null,
+    "nameJaKanji": "莉犬",
+    "nameJaKana": "莉いぬ"
+  },
+  {
+    "id": 45,
+    "nameLatin": "Rinne",
+    "nameJaKanji": "Rin音",
+    "nameJaKana": "Rinおん"
+  },
+  {
+    "id": 49,
+    "nameLatin": "Seiko Matsuda",
+    "nameJaKanji": "松田聖子",
+    "nameJaKana": "まつだせいこ"
+  },
+  {
+    "id": 51,
+    "nameLatin": "Miki Matsubara",
+    "nameJaKanji": "松原みき",
+    "nameJaKana": "まつばらみき"
+  },
+  {
+    "id": 57,
+    "nameLatin": "mona (CV: Natsukawa Shiina)",
+    "nameJaKanji": "mona（CV：夏川椎菜）",
+    "nameJaKana": "mona（CV：なつかわしいさい）"
+  },
+  {
+    "id": 59,
+    "nameLatin": "Mulasaki Ima",
+    "nameJaKanji": "紫 今",
+    "nameJaKana": "むらさき いま"
+  },
+  {
+    "id": 60,
+    "nameLatin": "MUKADE",
+    "nameJaKanji": "百足",
+    "nameJaKana": "むかで"
+  },
+  {
+    "id": 62,
+    "nameLatin": "minami",
+    "nameJaKanji": "美波",
+    "nameJaKana": "みなみ"
+  },
+  {
+    "id": 67,
+    "nameLatin": "Yuu Miyashita",
+    "nameJaKanji": "宮下遊",
+    "nameJaKana": "みやした遊"
+  },
+  {
+    "id": 68,
+    "nameLatin": "Nana Mizuki",
+    "nameJaKanji": "水樹奈々",
+    "nameJaKana": "みずきなな"
+  },
+  {
+    "id": 72,
+    "nameLatin": "HO-KA-GO CLIMAX GIRLS",
+    "nameJaKanji": "放課後クライマックスガールズ",
+    "nameJaKana": "ほうかごクライマックスガールズ"
+  },
+  {
+    "id": 81,
+    "nameLatin": "Sawano Hiroyuki",
+    "nameJaKanji": "澤野弘之",
+    "nameJaKana": "さわのひろゆき"
+  },
+  {
+    "id": 84,
+    "nameLatin": "Kazuyoshi Saito",
+    "nameJaKanji": "斉藤和義",
+    "nameJaKana": "さいとうかずよし"
+  },
+  {
+    "id": 87,
+    "nameLatin": "Maaya Sakamoto",
+    "nameJaKanji": "坂本真綾",
+    "nameJaKana": "さかもとしんあや"
+  },
+  {
+    "id": 89,
+    "nameLatin": "Soutaiseiriron",
+    "nameJaKanji": "相対性理論",
+    "nameJaKana": "そうたいせいりろん"
+  },
+  {
+    "id": 90,
+    "nameLatin": "ATARASHII GAKKO!",
+    "nameJaKanji": "新しい学校のリーダーズ",
+    "nameJaKana": "あたらしいがっこうのリーダーズ"
+  },
+  {
+    "id": 95,
+    "nameLatin": "Kanano Senritsu",
+    "nameJaKanji": "戦慄かなの",
+    "nameJaKana": "せんりつかなの"
+  },
+  {
+    "id": 100,
+    "nameLatin": "tegacreampan",
+    "nameJaKanji": "手がクリームパン",
+    "nameJaKana": "てがクリームパン"
+  },
+  {
+    "id": 105,
+    "nameLatin": "Kei Sugawara",
+    "nameJaKanji": "菅原圭",
+    "nameJaKana": "すがわらけい"
+  },
+  {
+    "id": 106,
+    "nameLatin": "SUDA MASAKI",
+    "nameJaKanji": "菅田将暉",
+    "nameJaKana": "すげたすすむあきら"
+  },
+  {
+    "id": 107,
+    "nameLatin": "Keina Suda",
+    "nameJaKanji": "須田景凪",
+    "nameJaKana": "すだけいなぎ"
+  },
+  {
+    "id": 109,
+    "nameLatin": "suicide",
+    "nameJaKanji": "吸う彩度",
+    "nameJaKana": "すういろどりど"
+  },
+  {
+    "id": 110,
+    "nameLatin": "Suzukisuzuki",
+    "nameJaKanji": "鈴木鈴木",
+    "nameJaKana": "すずきすずき"
+  },
+  {
+    "id": 116,
+    "nameLatin": "Shota Shimizu",
+    "nameJaKanji": "清水翔太",
+    "nameJaKana": "しみずしょうた"
+  },
+  {
+    "id": 117,
+    "nameLatin": "Sheena Ringo",
+    "nameJaKanji": "椎名林檎",
+    "nameJaKana": "しいなりんご"
+  },
+  {
+    "id": 120,
+    "nameLatin": "Shinsei Kamattechan",
+    "nameJaKanji": "神聖かまってちゃん",
+    "nameJaKana": "しんせいかまってちゃん"
+  },
+  {
+    "id": 121,
+    "nameLatin": "KAMI WA SAIKORO WO FURANAI",
+    "nameJaKanji": "神はサイコロを振らない",
+    "nameJaKana": "かみはサイコロをふらない"
+  },
+  {
+    "id": 124,
+    "nameLatin": "Kazuto Araki",
+    "nameJaKanji": "荒木一仁",
+    "nameJaKana": "あらきかずひと"
+  },
+  {
+    "id": 127,
+    "nameLatin": "Amayadori",
+    "nameJaKanji": "雨宿り",
+    "nameJaKana": "あまやどり"
+  },
+  {
+    "id": 129,
+    "nameLatin": "Amatsuki",
+    "nameJaKanji": "天月-あまつき-",
+    "nameJaKana": "あまつき-あまつき-"
+  },
+  {
+    "id": 132,
+    "nameLatin": "asaco",
+    "nameJaKanji": "杏沙子",
+    "nameJaKana": "あんずいさご"
+  },
+  {
+    "id": 144,
+    "nameLatin": "Kiro Akiyama",
+    "nameJaKanji": "秋山黄色",
+    "nameJaKana": "あきやまきいろ"
+  },
+  {
+    "id": 146,
+    "nameLatin": "Anzen Chitai",
+    "nameJaKanji": "安全地帯",
+    "nameJaKana": "あんぜんちたい"
+  },
+  {
+    "id": 152,
+    "nameLatin": "Yamazaru",
+    "nameJaKanji": "山猿",
+    "nameJaKana": "やまざる"
+  },
+  {
+    "id": 161,
+    "nameLatin": "Eito",
+    "nameJaKanji": "瑛人",
+    "nameJaKana": "あきらじん"
+  },
+  {
+    "id": 164,
+    "nameLatin": "QUEEN BEE",
+    "nameJaKanji": "女王蜂",
+    "nameJaKana": "じょおうばち"
+  },
+  {
+    "id": 166,
+    "nameLatin": "Yu Orie",
+    "nameJaKanji": "織重 夕",
+    "nameJaKana": "おおも ゆう"
+  },
+  {
+    "id": 169,
+    "nameLatin": "Chippoke Ohashi",
+    "nameJaKanji": "大橋ちっぽけ",
+    "nameJaKana": "おおはしちっぽけ"
+  },
+  {
+    "id": 170,
+    "nameLatin": "Yutaka Ozaki",
+    "nameJaKanji": "尾崎豊",
+    "nameJaKana": "おざきゆたか"
+  },
+  {
+    "id": 171,
+    "nameLatin": "Masanori Otoda",
+    "nameJaKanji": "音田 雅則",
+    "nameJaKana": "おとだ まさのり"
+  },
+  {
+    "id": 172,
+    "nameLatin": "OFFICIAL HIGE DANDISM",
+    "nameJaKanji": "Official髭男dism",
+    "nameJaKana": "Officialひげおとこdism"
+  },
+  {
+    "id": 173,
+    "nameLatin": "Wanuka",
+    "nameJaKanji": "和ぬか",
+    "nameJaKana": "わぬか"
+  },
+  {
+    "id": 176,
+    "nameLatin": "Kenshi Yonezu",
+    "nameJaKanji": "米津玄師",
+    "nameJaKana": "よねつげんし"
+  },
+  {
+    "id": 182,
+    "nameLatin": "UshioReira",
+    "nameJaKanji": "汐れいら",
+    "nameJaKana": "しおれいら"
+  },
+  {
+    "id": 183,
+    "nameLatin": "Hikaru Utada",
+    "nameJaKanji": "宇多田ヒカル",
+    "nameJaKana": "うただヒカル"
+  },
+  {
+    "id": 186,
+    "nameLatin": "Yuuri",
+    "nameJaKanji": "優里",
+    "nameJaKana": "ゆり"
+  },
+  {
+    "id": 187,
+    "nameLatin": "uutubo",
+    "nameJaKanji": "悒うつぼ",
+    "nameJaKana": "悒うつぼ"
+  },
+  {
+    "id": 190,
+    "nameLatin": "YU-KA",
+    "nameJaKanji": "由薫",
+    "nameJaKana": "ゆかりかおる"
+  },
+  {
+    "id": 192,
+    "nameLatin": null,
+    "nameJaKanji": "五十嵐ハル",
+    "nameJaKana": "いがらしハル"
+  },
+  {
+    "id": 195,
+    "nameLatin": "Isekaijoucho",
+    "nameJaKanji": "ヰ世界情緒",
+    "nameJaKana": "ヰせかいじょうちょ"
+  },
+  {
+    "id": 197,
+    "nameLatin": "Lilas",
+    "nameJaKanji": "幾田りら",
+    "nameJaKana": "いくたりら"
+  },
+  {
+    "id": 199,
+    "nameLatin": "issey",
+    "nameJaKanji": "弌誠",
+    "nameJaKana": "弌まこと"
+  },
+  {
+    "id": 205,
+    "nameLatin": "Zushi San Kyoudai",
+    "nameJaKanji": "逗子三兄弟",
+    "nameJaKana": "ずしさんきょうだい"
+  },
+  {
+    "id": 209,
+    "nameLatin": "Tsukuyomi",
+    "nameJaKanji": "月詠み",
+    "nameJaKana": "つきよみ"
+  },
+  {
+    "id": 214,
+    "nameLatin": "KEN KAMIKITA",
+    "nameJaKanji": "上北健",
+    "nameJaKana": "かみきたけん"
+  },
+  {
+    "id": 215,
+    "nameLatin": "Takaya Kawasaki",
+    "nameJaKanji": "川崎鷹也",
+    "nameJaKana": "かわさきたか也"
+  },
+  {
+    "id": 216,
+    "nameLatin": "KAF",
+    "nameJaKanji": "花譜",
+    "nameJaKana": "はなふ"
+  },
+  {
+    "id": 221,
+    "nameLatin": "Keisuke Kuwata",
+    "nameJaKanji": "桑田佳祐",
+    "nameJaKana": "くわたけいすけ"
+  },
+  {
+    "id": 225,
+    "nameLatin": "Kinokoteikoku",
+    "nameJaKanji": "きのこ帝国",
+    "nameJaKana": "きのこていこく"
+  },
+  {
+    "id": 228,
+    "nameLatin": null,
+    "nameJaKanji": "北谷 琉喜",
+    "nameJaKana": "きたや 琉き"
+  },
+  {
+    "id": 229,
+    "nameLatin": "Akari Kito",
+    "nameJaKanji": "鬼頭明里",
+    "nameJaKana": "おにがしらあきらさと"
+  },
+  {
+    "id": 232,
+    "nameLatin": "Koji Tamaki",
+    "nameJaKanji": "玉置浩二",
+    "nameJaKana": "たまきこうじ"
+  },
+  {
+    "id": 234,
+    "nameLatin": "TakaseToya",
+    "nameJaKanji": "高瀬統也",
+    "nameJaKana": "たかせみつる也"
+  },
+  {
+    "id": 235,
+    "nameLatin": "Yu Takahashi",
+    "nameJaKanji": "高橋優",
+    "nameJaKana": "たかはしゆう"
+  },
+  {
+    "id": 236,
+    "nameLatin": "Mariya Takeuchi",
+    "nameJaKanji": "竹内まりや",
+    "nameJaKana": "たけうちまりや"
+  },
+  {
+    "id": 237,
+    "nameLatin": "Aoi Teshima",
+    "nameJaKanji": "手嶌葵",
+    "nameJaKana": "て嶌あおい"
+  },
+  {
+    "id": 242,
+    "nameLatin": "TOMONARI SORA\t",
+    "nameJaKanji": "友成空",
+    "nameJaKana": "ともなりそら"
+  },
+  {
+    "id": 244,
+    "nameLatin": "TOMIOKA AI",
+    "nameJaKanji": "冨岡 愛",
+    "nameJaKana": "とみおか あい"
+  },
+  {
+    "id": 246,
+    "nameLatin": "MIREI",
+    "nameJaKanji": "當山みれい",
+    "nameJaKana": "とうやまみれい"
+  },
+  {
+    "id": 253,
+    "nameLatin": "Pmarusama",
+    "nameJaKanji": "P丸様。",
+    "nameJaKana": "Pまるさま。"
+  },
+  {
+    "id": 255,
+    "nameLatin": "Pilaf Alien",
+    "nameJaKanji": "ピラフ星人",
+    "nameJaKana": "ピラフぼしじん"
+  },
+  {
+    "id": 256,
+    "nameLatin": "Harutya",
+    "nameJaKanji": "春茶",
+    "nameJaKana": "はるちゃ"
+  },
+  {
+    "id": 257,
+    "nameLatin": null,
+    "nameJaKanji": "浜野はるき",
+    "nameJaKana": "はまのはるき"
+  },
+  {
+    "id": 258,
+    "nameLatin": "Saori Hayami",
+    "nameJaKanji": "早見沙織",
+    "nameJaKana": "はやみさおり"
+  },
+  {
+    "id": 259,
+    "nameLatin": "Megumi Hayashibara",
+    "nameJaKanji": "林原めぐみ",
+    "nameJaKana": "はやしばらめぐみ"
+  },
+  {
+    "id": 260,
+    "nameLatin": "Motohiro Hata",
+    "nameJaKanji": "秦 基博",
+    "nameJaKana": "はた もとはく"
+  },
+  {
+    "id": 263,
+    "nameLatin": "Gen Hoshino",
+    "nameJaKanji": "星野源",
+    "nameJaKana": "ほしのはじめ"
+  },
+  {
+    "id": 264,
+    "nameLatin": "Manato Funatsu",
+    "nameJaKanji": "舟津真翔",
+    "nameJaKana": "ふなつましょう"
+  },
+  {
+    "id": 265,
+    "nameLatin": "Fujii Kaze",
+    "nameJaKanji": "藤井風",
+    "nameJaKana": "ふじいふう"
+  },
+  {
+    "id": 266,
+    "nameLatin": "Masaharu Fukuyama",
+    "nameJaKanji": "福山雅治",
+    "nameJaKana": "ふくやままさはる"
+  },
+  {
+    "id": 267,
+    "nameLatin": "Aya Hirano",
+    "nameJaKanji": "平野綾",
+    "nameJaKana": "ひらのあや"
+  },
+  {
+    "id": 268,
+    "nameLatin": "HIRAIDAI",
+    "nameJaKanji": "平井 大",
+    "nameJaKana": "ひらい だい"
+  },
+  {
+    "id": 269,
+    "nameLatin": "Ken Hirai",
+    "nameJaKanji": "平井 堅",
+    "nameJaKana": "ひらい けん"
+  },
+  {
+    "id": 271,
+    "nameLatin": "Hitsujibungaku",
+    "nameJaKanji": "羊文学",
+    "nameJaKana": "ひつじぶんがく"
+  },
+  {
+    "id": 272,
+    "nameLatin": "INMAN",
+    "nameJaKanji": "韻マン",
+    "nameJaKana": "いんマン"
+  }
+]

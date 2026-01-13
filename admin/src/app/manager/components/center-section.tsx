@@ -213,8 +213,11 @@ export function CenterSection() {
                 </h2>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                   {detail.nameKo && <span>{detail.nameKo}</span>}
-                  {detail.nameJa && (
-                    <span className="text-zinc-400">{detail.nameJa}</span>
+                  {detail.nameJaKanji && (
+                    <span className="text-zinc-400">{detail.nameJaKanji}</span>
+                  )}
+                  {detail.nameJaKana && (
+                    <span className="text-zinc-400">{detail.nameJaKana}</span>
                   )}
                   {detail.nameLatin && (
                     <span className="text-zinc-400">{detail.nameLatin}</span>
