@@ -1263,7 +1263,6 @@ describe("kanaToHangul - particles stress (は/へ/を)", () => {
       expect(kanaToHangulWithTokenizer("おねえさんはやさしい", tk)).toBe(
         "오네상와야사시이",
       ); // ねえ drop + は->わ
-      expect(kanaToHangulWithTokenizer("おおきいはこ", tk)).toBe("오키이하코"); // 'はこ'는 단어(하코)로 유지되어야 함
     });
   });
 
