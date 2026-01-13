@@ -13,7 +13,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { kanaToHangul } from "../../lib/kanaToHangul";
+import { KanaToHangulMaker } from "../../lib/kanaToHangul";
 
 // pnpm ts-node src/scripts/name/backfill-artist-name-ja-pronu.ts --max-id=300 --dry-run
 // pnpm ts-node src/scripts/name/backfill-artist-name-ja-pronu.ts --has-song-title-ja-kana --dry-run
@@ -89,6 +89,8 @@ async function main() {
     console.warn("⚠️  --dry-run 없이 실행됩니다. 실제 DB가 수정됩니다.");
   }
 
+  let kanaToHangul = await KanaToHangulMaker.init();
+
   console.log("======================================");
   console.log("Artist nameJaPronu Backfill");
   console.log("======================================");
@@ -141,7 +143,8 @@ async function main() {
     }
 
     const existing = artist.nameJaPronu?.trim() ?? "";
-    const shouldUpdate = options.force || existing.length === 0 || existing !== converted;
+    const shouldUpdate =
+      options.force || existing.length === 0 || existing !== converted;
     if (!shouldUpdate) {
       skippedSame++;
       continue;

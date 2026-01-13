@@ -14,9 +14,9 @@ import path from "path";
  *    - 「...」はい。 => はい의 'は'는 助詞 아님(대개 感動詞/名詞/動詞 등)이라 그대로 하
  */
 
-export type Tokenizer = kuromoji.Tokenizer<kuromoji.IpadicFeatures>;
+type Tokenizer = kuromoji.Tokenizer<kuromoji.IpadicFeatures>;
 
-export async function buildTokenizer(): Promise<Tokenizer> {
+async function buildTokenizer(): Promise<Tokenizer> {
   return new Promise((resolve, reject) => {
     // dicPath를 "node_modules/..."로 박아두면 pnpm/모노레포/번들러에서 깨질 수 있어 resolve 기반 권장
     const dicPath = path.join(require.resolve("kuromoji"), "..", "..", "dict");
@@ -31,7 +31,7 @@ export async function buildTokenizer(): Promise<Tokenizer> {
 // ⚠️ 라이브러리 내부 top-level await는 환경에 따라 골치아픔.
 //    앱/테스트에서 1회만 build 후 주입하는 방식을 권장.
 let _tokenizer: Tokenizer | null = null;
-export async function getTokenizer(): Promise<Tokenizer> {
+async function getTokenizer(): Promise<Tokenizer> {
   if (_tokenizer) return _tokenizer;
   _tokenizer = await buildTokenizer();
   return _tokenizer;
@@ -41,8 +41,31 @@ export async function getTokenizer(): Promise<Tokenizer> {
 // Public APIs
 // --------------------
 
-/** 권장: tokenizer를 외부에서 주입해서 쓰는 API */
-export function kanaToHangulWithTokenizer(
+export type KanaToHangul = (input: string) => string;
+
+let _kanaToHangulInstance: KanaToHangul | null = null;
+let _kanaToHangulInitPromise: Promise<KanaToHangul> | null = null;
+
+async function initKanaToHangul(): Promise<KanaToHangul> {
+  if (_kanaToHangulInstance) return _kanaToHangulInstance;
+  if (_kanaToHangulInitPromise) return _kanaToHangulInitPromise;
+
+  _kanaToHangulInitPromise = (async () => {
+    const tk = await getTokenizer();
+    const convert: KanaToHangul = (input: string) =>
+      kanaToHangulWithTokenizer(input, tk);
+    _kanaToHangulInstance = convert;
+    return convert;
+  })();
+
+  return _kanaToHangulInitPromise;
+}
+
+export const KanaToHangulMaker = Object.freeze({
+  init: initKanaToHangul,
+});
+
+function kanaToHangulWithTokenizer(
   input: string,
   tokenizer: Tokenizer,
 ): string {
@@ -50,15 +73,6 @@ export function kanaToHangulWithTokenizer(
   let s = normalizeToHiragana(input);
   s = rewriteParticlesWithKuromoji(s, tokenizer);
   return coreKanaToHangulConvert(s);
-}
-
-/**
- * 편의 API: 내부 캐시 tokenizer 사용(테스트/앱에서 await getTokenizer() 후 쓰는 걸 권장)
- * - 동기 API로 유지하고 싶으면, 외부에서 tokenizer 주입형만 쓰세요.
- */
-export async function kanaToHangulAsync(input: string): Promise<string> {
-  const tk = await getTokenizer();
-  return kanaToHangulWithTokenizer(input, tk);
 }
 
 // --------------------
@@ -189,8 +203,6 @@ export function rewriteParticlesWithKuromoji(
 ): string {
   const tokens = tokenizer.tokenize(s);
 
-  // ✅ split("") 금지: emoji(서로게이트) 때문에 인덱스가 터짐
-  // 토큰 스트림을 그대로 재조립하면서 필요한 토큰만 교체한다.
   let out = "";
 
   const isSingleKana = (x: string) =>
