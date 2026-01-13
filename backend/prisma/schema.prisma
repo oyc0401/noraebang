@@ -14,6 +14,7 @@ model Artist {
   nameLatin        String? @map("name_latin")
   nameJaKana       String? @map("name_ja_kana")
   nameJaKanji      String? @map("name_ja_kanji")
+  nameJaPronu     String? @map("name_ja_pronu")
   spotifyId        String? @map("spotify_id")
   homeCatalog      String? @map("home_catalog") // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
   tjSongRequestUrl String? @map("tj_song_request_url") // 이거보단 가장 많이등록된 tj아티스트명이 낫지 않을까?
@@ -41,6 +42,7 @@ model Song {
   titleLatin          String?   @map("title_latin")
   titleJaKana         String?   @map("title_ja_kana")
   titleJaKanji        String?   @map("title_ja_kanji")
+  titleJaPronu        String?   @map("title_ja_pronu")
   catalog             String? // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
   youtubeVideoId      String?   @map("youtube_video_id")
   youtubeFetchedAt    DateTime? @map("youtube_fetched_at")
