@@ -846,3 +846,118 @@ describe("kanaToHangul - loanword hard cases", () => {
     expect(kanaToHangul("フォー")).toBe("포"); // ー drop
   });
 });
+describe("kanaToHangul - more edge cases", () => {
+  // --------------------
+  // Unicode normalization (NFD/NFC) + punctuation preservation
+  // --------------------
+  it("NFD dakuten/handakuten should work (NFC normalize inside)", () => {
+    // がっこう (NFD)
+    expect(kanaToHangul("か\u3099っこう")).toBe("각코");
+    // ぱん (NFD)
+    expect(kanaToHangul("は\u309aん")).toBe("판");
+  });
+
+  it("should preserve non-Japanese punctuation/emoji as-is", () => {
+    expect(kanaToHangul("いにしへ！")).toBe("이니시헤！"); // 전각 ! 유지
+    expect(kanaToHangul("（おはよう）")).toBe("（오하요）"); // 전각 괄호 유지
+    expect(kanaToHangul("すごい👍")).toBe("스고이👍"); // 이모지 보존
+    expect(kanaToHangul("「へや」")).toBe("「헤야」"); // 단어 へや는 '헤'
+  });
+
+  // --------------------
+  // Halfwidth katakana: normalize only those chunks
+  // --------------------
+  it("halfwidth katakana should normalize (and apply nasal assimilation)", () => {
+    // ﾊﾝｶｸｶﾀｶﾅ => ハンカクカタカナ
+    // ン + カ(k) => ㅇ 느낌 => 항카쿠...
+    expect(kanaToHangul("ﾊﾝｶｸｶﾀｶﾅ")).toBe("항카쿠카타카나");
+  });
+
+  it("halfwidth with handakuten should normalize too (ﾊﾟ etc.)", () => {
+    // ﾊﾟﾝｹｰｷ => パンケーキ
+    // ン + ケ(k) => ㅇ => 팡..., ー drop
+    expect(kanaToHangul("ﾊﾟﾝｹｰｷ")).toBe("팡케키");
+    expect(kanaToHangul("パンケーキ")).toBe("팡케키");
+  });
+
+  // --------------------
+  // Prolonged sound mark variants
+  // --------------------
+  it("prolonged-sound variants should behave like ー (drop)", () => {
+    // FF70 'ｰ' should be treated like ー (drop)
+    expect(kanaToHangul("みゅｰじっく")).toBe("뮤지쿠");
+    // U+2015 '―' treated like ー (drop)
+    expect(kanaToHangul("コ―ヒ―")).toBe("코히");
+  });
+
+  // --------------------
+  // Particle false positives (へ)
+  // --------------------
+  it("へ in a lexical word should stay '헤' even with punctuation", () => {
+    expect(kanaToHangul("いにしへ。")).toBe("이니시헤。");
+    expect(kanaToHangul("もとへ、")).toBe("모토헤、");
+  });
+
+  it("へや must not be rewritten to えや", () => {
+    expect(kanaToHangul("へや")).toBe("헤야");
+    // first へ(へや)=헤, second へ(particle)=에
+    expect(kanaToHangul("へやへいく")).toBe("헤야에이쿠");
+  });
+
+  it("〜のへ should be protected as placename-like (optional policy)", () => {
+    expect(kanaToHangul("はちのへ")).toBe("하치노헤");
+    expect(kanaToHangul("さんのへ")).toBe("산노헤");
+  });
+
+  // --------------------
+  // ん assimilation torture (k/g, p/b/m, vowel boundary)
+  // --------------------
+  it("ん before k/g should lean to ㅇ (NG)", () => {
+    expect(kanaToHangul("しんがぽーる")).toBe("싱가포루"); // ん+が => ㅇ, ー drop
+    expect(kanaToHangul("りんぐ")).toBe("링구"); // ん+ぐ
+    expect(kanaToHangul("あんこ")).toBe("앙코"); // ん+こ
+  });
+
+  it("ん before p/b/m should become ㅁ (M) except vowelOnly policy", () => {
+    expect(kanaToHangul("しんぱい")).toBe("심파이"); // ん+ぱ => ㅁ
+    expect(kanaToHangul("さんぷる")).toBe("삼푸루"); // ん+ぷ => ㅁ
+    expect(kanaToHangul("しんぶん")).toBe("심분"); // ん+ぶ => ㅁ
+  });
+
+  it("ん before vowel/y/w should stay ㄴ (N)", () => {
+    expect(kanaToHangul("てんいん")).toBe("텐인");
+    expect(kanaToHangul("かんおん")).toBe("칸온");
+    expect(kanaToHangul("まんいち")).toBe("만이치");
+  });
+
+  // --------------------
+  // Small kana / weird sequences robustness
+  // --------------------
+  it("stray small kana should not crash and should be pass-through (policy)", () => {
+    expect(() => kanaToHangul("ゃ")).not.toThrow();
+    expect(() => kanaToHangul("ゅ")).not.toThrow();
+    expect(() => kanaToHangul("ょ")).not.toThrow();
+    expect(() => kanaToHangul("ぁぃぅぇぉ")).not.toThrow();
+
+    // 정책: 단독 small kana는 그대로 통과(원하면 바꿔도 됨)
+    expect(kanaToHangul("ゃ")).toBe("ゃ" as any);
+  });
+
+  it("iteration marks should not crash (usually pass-through)", () => {
+    expect(() => kanaToHangul("ゝゞヽヾ")).not.toThrow();
+    expect(kanaToHangul("ゝゞ")).toBe("ゝゞ" as any);
+  });
+
+  // --------------------
+  // Stress: long input should not hang (no infinite loops)
+  // --------------------
+  it("long repeated input should finish", () => {
+    const s = "がっこうへいく。".repeat(200); // 적당히 길게
+    expect(() => kanaToHangul(s)).not.toThrow();
+  });
+
+  it("output should not contain combining dakuten/handakuten", () => {
+    const out = kanaToHangul("か\u3099っこう は\u309aん");
+    expect(out).not.toMatch(/[\u3099\u309A]/);
+  });
+});

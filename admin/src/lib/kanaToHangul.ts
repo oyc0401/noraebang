@@ -1,7 +1,8 @@
 function normalizeHalfwidthKatakanaOnly(s: string): string {
-  // 반각 가타카나 블록(U+FF66..U+FF9D)만 NFKC를 적용해 전각으로 바꾼다.
-  // 나머지 문자는 그대로라서 "！" 같은 전각 구두점이 "!"로 안 바뀜.
-  return s.replace(/[\uFF66-\uFF9D]+/g, (chunk) => chunk.normalize("NFKC"));
+  // ✅ 반각 가타카나 + 탁점/반탁점(ﾞﾟ) + 반각 장음(ｰ)까지 함께 NFKC
+  return s.replace(/[\uFF66-\uFF9F\uFF70]+/g, (chunk) =>
+    chunk.normalize("NFKC"),
+  );
 }
 
 // kanaToHangul.ts
@@ -14,9 +15,7 @@ export function kanaToHangul(input: string): string {
   input = normalizeHalfwidthKatakanaOnly(input);
 
   // 3) 장음 기호 변종 최소 치환
-  input = input
-    .replace(/\uFF70/g, "ー") // ｰ (halfwidth prolonged) -> ー
-    .replace(/[\u2015\u2500]/g, "ー"); // ―, ─ 등 -> ー (원하면 더 추가)
+  input = input.replace(/[\u2015\u2500]/g, "ー");
 
   // ✅ particle/고정구문 프리패스 추가
   const s = preRewriteParticles(normalizeToHiragana(input));
