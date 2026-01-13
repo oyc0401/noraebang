@@ -1,5 +1,11 @@
 // test/kanaToHangul.test.ts
-import { kanaToHangul } from "./kanaToHangul";
+import { buildTokenizer, kanaToHangul, Tokenizer } from "./kanaToHangul";
+
+let tokenizer: Tokenizer;
+
+beforeAll(async () => {
+  tokenizer = await buildTokenizer();
+});
 
 describe("kanaToHangul", () => {
   it("basic hiragana", () => {
