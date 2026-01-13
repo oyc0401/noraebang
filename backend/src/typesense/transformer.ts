@@ -8,7 +8,8 @@ import {
   detectJapaneseType,
   hasMixedKana,
   katakanaToHiragana,
-  removeBrackets,
+  normalizeSpacing,
+  removeSpaces,
   toAllHiragana,
   toAllKatakana,
 } from "./lib/text-utils";
@@ -153,13 +154,6 @@ export interface TypesenseArtistDocument {
   q_name_ja_kana_norm?: string[];
 }
 
-/**
- * 공백 제거 (combo 필드용)
- */
-function removeSpaces(text: string): string {
-  return text.replace(/\s+/g, "");
-}
-
 function addJapaneseVariants(
   values: Set<string>,
   text?: string,
@@ -227,7 +221,11 @@ function normalizeBasic(text?: string) {
     return undefined;
   }
 
-  const normalized = cleanText(removeSpaces(text));
+  const spaced = normalizeSpacing(text);
+  if (!spaced) {
+    return undefined;
+  }
+  const normalized = removeSpaces(spaced);
   return normalized.length > 0 ? normalized : undefined;
 }
 
@@ -249,8 +247,27 @@ function buildPrimaryValues(value?: string): string[] | undefined {
     return undefined;
   }
 
-  const cleaned = cleanText(value);
-  return cleaned === value ? [value] : [value, cleaned];
+  const normalized = normalizeSpacing(value);
+  const results = new Set<string>();
+  if (value.trim().length > 0) {
+    results.add(value);
+  }
+  if (normalized && normalized !== value) {
+    results.add(normalized);
+  }
+  return results.size > 0 ? Array.from(results) : undefined;
+}
+
+function addPrimaryVariants(target: string[], value?: string) {
+  const variants = buildPrimaryValues(value);
+  if (!variants) {
+    return;
+  }
+  for (const variant of variants) {
+    if (!target.includes(variant)) {
+      target.push(variant);
+    }
+  }
 }
 
 /**
@@ -314,42 +331,10 @@ export function transformSongToDocument(
   const q_artist_ja_kana_p_values: string[] = [];
 
   for (const artist of artists) {
-    if (artist.nameKo) {
-      if (!q_artist_ko_p_values.includes(artist.nameKo)) {
-        q_artist_ko_p_values.push(artist.nameKo);
-      }
-      const cleaned = cleanText(artist.nameKo);
-      if (
-        artist.nameKo !== cleaned &&
-        !q_artist_ko_p_values.includes(cleaned)
-      ) {
-        q_artist_ko_p_values.push(cleaned);
-      }
-    }
-
-    if (artist.nameLatin) {
-      if (!q_artist_latin_p_values.includes(artist.nameLatin)) {
-        q_artist_latin_p_values.push(artist.nameLatin);
-      }
-      const cleaned = cleanText(artist.nameLatin);
-      if (
-        artist.nameLatin !== cleaned &&
-        !q_artist_latin_p_values.includes(cleaned)
-      ) {
-        q_artist_latin_p_values.push(cleaned);
-      }
-    }
-
-    if (artist.nameJaKanji) {
-      if (!q_artist_ja_kanji_p_values.includes(artist.nameJaKanji)) {
-        q_artist_ja_kanji_p_values.push(artist.nameJaKanji);
-      }
-    }
-    if (artist.nameJaKana) {
-      if (!q_artist_ja_kana_p_values.includes(artist.nameJaKana)) {
-        q_artist_ja_kana_p_values.push(artist.nameJaKana);
-      }
-    }
+    addPrimaryVariants(q_artist_ko_p_values, artist.nameKo);
+    addPrimaryVariants(q_artist_latin_p_values, artist.nameLatin);
+    addPrimaryVariants(q_artist_ja_kanji_p_values, artist.nameJaKanji);
+    addPrimaryVariants(q_artist_ja_kana_p_values, artist.nameJaKana);
   }
 
   const q_artist_ko_p =
