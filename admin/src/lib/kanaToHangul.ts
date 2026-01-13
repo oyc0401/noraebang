@@ -1,3 +1,70 @@
+import kuromoji from "kuromoji";
+
+export type Tokenizer = kuromoji.Tokenizer<kuromoji.IpadicFeatures>;
+
+export async function buildTokenizer(): Promise<Tokenizer> {
+  return new Promise((resolve, reject) => {
+    kuromoji
+      .builder({ dicPath: "node_modules/kuromoji/dict" })
+      .build((err, tk) => {
+        if (err || !tk) reject(err);
+        else resolve(tk);
+      });
+  });
+}
+
+const tokenizer = await buildTokenizer();
+
+// 조사만 치환: は/へ/を
+export function rewriteParticlesWithKuromoji(
+  s: string,
+  tokenizer: Tokenizer,
+): string {
+  const tokens = tokenizer.tokenize(s);
+
+  // kuromoji token.word_position: 1-based char index (JS string 기준)로 알려진 편이지만,
+  // 환경/버전에 따라 미묘할 수 있어 테스트로 꼭 확인하세요.
+  // 여기선 안전하게 "토큰 문자열 길이"로 누적하면서 재구성하는 방식 추천.
+
+  let out = "";
+  for (const t of tokens) {
+    const surf = t.surface_form;
+
+    // pos가 助詞인 것만
+    if (t.pos === "助詞") {
+      if (surf === "は") {
+        out += "わ";
+        continue;
+      }
+      if (surf === "へ") {
+        out += "え";
+        continue;
+      }
+      if (surf === "を") {
+        out += "お";
+        continue;
+      }
+    }
+
+    out += surf;
+  }
+  return out;
+}
+
+export function kanaToHangulWithTokenizer(
+  input: string,
+  tokenizer: Tokenizer,
+): string {
+  input = input.normalize("NFC");
+  input = normalizeHalfwidthKatakanaOnly(input);
+  input = input.replace(/[\u2015\u2500]/g, "ー");
+
+  let s = normalizeToHiragana(input);
+  s = rewriteParticlesWithKuromoji(s, tokenizer); // 여기서만 tokenizer 사용
+
+  return coreKanaToHangulConvert(s); // 기존 while 루프 부분을 함수로 빼서 그대로 호출
+}
+
 function normalizeHalfwidthKatakanaOnly(s: string): string {
   // ✅ 반각 가타카나 + 탁점/반탁점(ﾞﾟ) + 반각 장음(ｰ)까지 함께 NFKC
   return s.replace(/[\uFF66-\uFF9F\uFF70]+/g, (chunk) =>
@@ -18,7 +85,7 @@ export function kanaToHangul(input: string): string {
   input = input.replace(/[\u2015\u2500]/g, "ー");
 
   // ✅ particle/고정구문 프리패스 추가
-  const s = preRewriteParticles(normalizeToHiragana(input));
+  const s = rewriteParticlesWithKuromoji(normalizeToHiragana(input), tokenizer);
 
   // 테스트 요구: 특별 사전 매핑
   const SPECIAL: Array<[string, string]> = [
