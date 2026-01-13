@@ -2,10 +2,8 @@
 //
 // Typesense transformer 유틸리티 함수 테스트
 
-import {
-  transformArtistToDocument,
-  transformSongToDocument,
-} from "./transformer";
+import { transformSongToDocument } from "./transformer-song";
+import { transformArtistToDocument } from "./transformer-artist";
 
 describe("transformArtistToDocument", () => {
   it("카타카나 아티스트명은 히라가나 변환을 포함한 정규화 값을 생성해야 함", () => {

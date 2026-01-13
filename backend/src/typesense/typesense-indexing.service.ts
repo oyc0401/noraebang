@@ -3,11 +3,13 @@ import { PrismaService } from "../prisma/prisma.service";
 import { indexDocuments, recreateCollection } from "./indexer";
 import { artistsCollectionSchema, songsCollectionSchema } from "./schema";
 import {
-  transformArtistToDocument,
   transformSongToDocument,
-  type ArtistWithRelations,
   type SongWithRelations,
-} from "./transformer";
+} from "./transformer-song";
+import {
+  transformArtistToDocument,
+  type ArtistWithRelations,
+} from "./transformer-artist";
 import { TypesenseService } from "./typesense.service";
 
 interface ReindexOptions {

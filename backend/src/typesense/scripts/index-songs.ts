@@ -23,7 +23,7 @@ import { songsCollectionSchema } from "../schema";
 import {
   transformSongToDocument,
   type SongWithRelations,
-} from "../transformer";
+} from "../transformer-song";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
