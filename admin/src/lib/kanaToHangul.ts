@@ -642,6 +642,11 @@ function preRewriteParticles(s: string): string {
       // // ----------------------------
       if (!isLikelyNounEnd(prev)) continue;
 
+      if (prev === "ん" && isBoundary(next)) {
+        chars[i] = "わ";
+        continue;
+      }
+
       const tail = chars.slice(i + 1, Math.min(chars.length, i + 14)).join("");
       const endish =
         /です|でした|だ|だった/.test(tail) ||
@@ -652,17 +657,18 @@ function preRewriteParticles(s: string): string {
           return seg.endsWith("い");
         })();
 
-      // ✅ 가나-가나 케이스(さんは/あなたは/ぼくは...)도 topicEnding 없이 잡히게 하려면:
-      //    "は" 다음이 가나이고, 그 뒤 어딘가에 です/だ/…い 같은 문장종결 징후가 있으면 토픽으로 본다.
-      //    (さんは 단독이면 endish가 없어서 그대로 '하'인데, 테스트는 산와를 원하므로 아래 추가 규칙을 둠)
+      // (na-adj / noun predicate without copula) e.g. げんき, だいじょうぶ ...
+      const naPredish = (() => {
+        let j = i + 1;
+        while (j < chars.length && !isBoundary(chars[j])) j++;
+        const seg = chars.slice(i + 1, j).join(""); // は 다음부터 경계 전까지
+        // 너무 넓히면 오탐 늘어서 "자주 서술로 쓰이는 것"만
+        return /^(げんき|だいじょうぶ|だめ|ひま|すき|きらい|たいへん)$/.test(
+          seg,
+        );
+      })();
 
-      // "さんは" 같은 패턴: 'ん' 다음 'は'가 문장 경계(끝/구두점/공백/괄호 등)면 조사 확정
-      if (prev === "ん" && isBoundary(next)) {
-        chars[i] = "わ";
-        continue;
-      }
-
-      if (endish || matchesTopicEnding(chars, i)) {
+      if (endish || naPredish || matchesTopicEnding(chars, i)) {
         chars[i] = "わ";
       }
 
