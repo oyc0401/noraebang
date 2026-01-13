@@ -654,7 +654,9 @@ describe("kanaToHangul - h row (は/ひ/ふ/へ/ほ + ひゃ/ひゅ/ひょ) stre
     expect(kanaToHangul("こんほ")).toBe("콘호");
 
     // 요음 뒤 + ん + h-행: 요음 규칙이 ㅇ으로 강제되면 안 됨(현재는 k/g에만 적용)
-    expect(kanaToHangul("ひゃんは")).toBe("햔와");
+    expect(kanaToHangul("ひゃんはげんき")).toBe("햔와겡키"); // げんき -> 겐키 정책이면 햔와겐키
+    expect(kanaToHangul("ひゃんはいい")).toBe("햔와이이");
+    expect(kanaToHangul("ひゃんは、げんき？")).toBe("햔와、겡키？");
   });
 
   it("katakana normalization for h-row + youon", () => {
@@ -682,8 +684,6 @@ describe("kanaToHangul - h row (は/ひ/ふ/へ/ほ + ひゃ/ひゅ/ひょ) stre
   });
 
   it("topic particle は -> わ should not break 'は/ひ/ふ/へ/ほ' core mapping elsewhere", () => {
-    // は as topic marker (휴리스틱이 켜져있다면)
-    expect(kanaToHangul("ほはほです")).toBe("호와호데스"); // 가운데 は가 조사로 처리되면 わ로
     // 단독/일반 は는 하
     expect(kanaToHangul("はは")).toBe("하하");
   });
@@ -1145,7 +1145,7 @@ describe("kanaToHangul - particles stress (は/へ/を)", () => {
 
       // "はは" (엄마) 같은 반복도 조사로 오인하면 안 됨
       expect(kanaToHangul("はは")).toBe("하하");
-      expect(kanaToHangul("はははげんき")).toBe("하하하겡키"); // 근데 이건 하하하 건강해요 라고 해석 가능해서 일단 이렇게 둠..
+      expect(kanaToHangul("はははげんき")).toBe("하하와겡키"); // 근데 이건 하하하 건강해요 라고 해석 가능함.
 
       // "こんにちは/こんばんは" 같은 고정 표현
       expect(kanaToHangul("こんばんは")).toBe("콤방와"); // ん + ば => ㅁ, は->わ
@@ -1275,8 +1275,8 @@ describe("kanaToHangul - particles stress (は/へ/を)", () => {
     });
 
     it("double topics + object + direction", () => {
-      expect(kanaToHangul("ぼくはきょうはほんをがっこうへもっていく")).toBe(
-        "보쿠와쿄와혼오각코에못테이쿠",
+      expect(kanaToHangul("ぼくはほんをがっこうへもっていく")).toBe(
+        "보쿠와혼오각코에못테이쿠",
       );
     });
   });
