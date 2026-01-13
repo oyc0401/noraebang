@@ -37,7 +37,6 @@ export class TypesenseIndexingService {
     const artists = await this.prisma.artist.findMany({
       where: { id: { lte: maxArtistId } },
       include: {
-        aliases: true,
         artistSongs: {
           include: {
             song: {
@@ -89,12 +88,10 @@ export class TypesenseIndexingService {
         },
       },
       include: {
-        aliases: true,
         artistSongs: {
           include: {
             artist: {
               include: {
-                aliases: true,
                 spotifyArtist: {
                   select: { popularity: true },
                 },

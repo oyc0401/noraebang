@@ -21,9 +21,6 @@
   "q_song_latin_p": [
     "Time Left"
   ],
-  "q_song_latin_a": [
-    "TimeLeft"
-  ],
   "q_song_ja_kanji_p": [
     "残機"
   ],
@@ -31,13 +28,13 @@
     "계속 한밤중이면 좋을 텐데。",
     "계속 한밤중이면 좋을 텐데"
   ],
-  "q_artist_raw_p": [
-    "ZUTOMAYO"
-  ],
   "q_artist_ko_norm": [
     "계속한밤중이면좋을텐데"
   ],
   "q_combo_a": [
     "잔기계속한밤중이면좋을텐데。"
+  ],
+  "q_artist_latin_p": [
+    "ZUTOMAYO"
   ]
 }

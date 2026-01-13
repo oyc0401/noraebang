@@ -56,12 +56,10 @@ async function main() {
       },
     },
     include: {
-      aliases: true,
       artistSongs: {
         include: {
           artist: {
             include: {
-              aliases: true,
               spotifyArtist: {
                 select: {
                   popularity: true,

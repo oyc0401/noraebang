@@ -60,12 +60,10 @@ async function main() {
   const song = await prisma.song.findUnique({
     where: { id: songId },
     include: {
-      aliases: true,
       artistSongs: {
         include: {
           artist: {
             include: {
-              aliases: true,
               spotifyArtist: {
                 select: { popularity: true },
               },

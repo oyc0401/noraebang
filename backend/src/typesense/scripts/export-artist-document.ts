@@ -45,9 +45,8 @@ async function main() {
 
   const artist = await prisma.artist.findUnique({
     where: { id: artistId },
-    include: {
-      aliases: true,
-      artistSongs: {
+      include: {
+        artistSongs: {
         include: {
           song: {
             select: {
@@ -71,9 +70,13 @@ async function main() {
     process.exit(1);
   }
 
+  const tjSongCount = (artist.artistSongs ?? []).reduce((count, artistSong) => {
+    return artistSong.song?.tjSong ? count + 1 : count;
+  }, 0);
+
   console.log(`✓ Found artist: ${artist.name}`);
   console.log(`  - nameKo: ${artist.nameKo ?? "(없음)"}`);
-  console.log(`  - aliases: ${artist.aliases.length}`);
+  console.log(`  - tjSongCount: ${tjSongCount}`);
 
   console.log("\n📝 Transforming to Typesense document...");
   const document = transformArtistToDocument(artist as ArtistWithRelations);

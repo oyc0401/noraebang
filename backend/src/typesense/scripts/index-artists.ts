@@ -51,9 +51,8 @@ async function main() {
         lt: 300,
       },
     },
-    include: {
-      aliases: true,
-      artistSongs: {
+      include: {
+        artistSongs: {
         include: {
           song: {
             select: {
