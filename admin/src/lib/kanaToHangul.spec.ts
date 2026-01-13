@@ -1,137 +1,147 @@
 // test/kanaToHangul.test.ts
-import { buildTokenizer, kanaToHangul, Tokenizer } from "./kanaToHangul";
+import {
+  buildTokenizer,
+  kanaToHangulWithTokenizer,
+  Tokenizer,
+} from "./kanaToHangul";
 
-let tokenizer: Tokenizer;
+let tk: Tokenizer;
 
 beforeAll(async () => {
-  tokenizer = await buildTokenizer();
+  tk = await buildTokenizer();
 });
 
 describe("kanaToHangul", () => {
   it("basic hiragana", () => {
-    expect(kanaToHangul("さようなら")).toBe("사요나라"); // おう/よう 장음은 제거
-    expect(kanaToHangul("ありがとう")).toBe("아리가토"); // とう -> と
-    expect(kanaToHangul("おはよう")).toBe("오하요"); // よう -> よ
+    expect(kanaToHangulWithTokenizer("さようなら", tk)).toBe("사요나라"); // おう/よう 장음은 제거
+    expect(kanaToHangulWithTokenizer("ありがとう", tk)).toBe("아리가토"); // とう -> と
+    expect(kanaToHangulWithTokenizer("おはよう", tk)).toBe("오하요"); // よう -> よ
   });
 
   it("youon (きゃ/しゅ/ちょ)", () => {
-    expect(kanaToHangul("きゃく")).toBe("캬쿠");
-    expect(kanaToHangul("しゅくだい")).toBe("슈쿠다이");
-    expect(kanaToHangul("ちょっと")).toBe("춋토");
-    expect(kanaToHangul("きゅう")).toBe("큐"); // きゅ + う drop
-    expect(kanaToHangul("きょう")).toBe("쿄"); // きょ + う drop
-    expect(kanaToHangul("しょくどう")).toBe("쇼쿠도"); // どう -> ど
-    expect(kanaToHangul("にゃん")).toBe("냥");
-    expect(kanaToHangul("にゅうがく")).toBe("뉴가쿠"); // う drop
-    expect(kanaToHangul("みゅーじっく")).toBe("뮤지쿠"); // ー drop
-    expect(kanaToHangul("びょういん")).toBe("뵤인"); // びょ + う drop
-    expect(kanaToHangul("ぴょん")).toBe("푱"); // ん 규칙 결합
-    expect(kanaToHangul("りょこう")).toBe("료코"); // こう -> こ
+    expect(kanaToHangulWithTokenizer("きゃく", tk)).toBe("캬쿠");
+    expect(kanaToHangulWithTokenizer("しゅくだい", tk)).toBe("슈쿠다이");
+    expect(kanaToHangulWithTokenizer("ちょっと", tk)).toBe("춋토");
+    expect(kanaToHangulWithTokenizer("きゅう", tk)).toBe("큐"); // きゅ + う drop
+    expect(kanaToHangulWithTokenizer("きょう", tk)).toBe("쿄"); // きょ + う drop
+    expect(kanaToHangulWithTokenizer("しょくどう", tk)).toBe("쇼쿠도"); // どう -> ど
+    expect(kanaToHangulWithTokenizer("にゃん", tk)).toBe("냥");
+    expect(kanaToHangulWithTokenizer("にゅうがく", tk)).toBe("뉴가쿠"); // う drop
+    expect(kanaToHangulWithTokenizer("みゅーじっく", tk)).toBe("뮤지쿠"); // ー drop
+    expect(kanaToHangulWithTokenizer("びょういん", tk)).toBe("뵤인"); // びょ + う drop
+    expect(kanaToHangulWithTokenizer("ぴょん", tk)).toBe("푱"); // ん 규칙 결합
+    expect(kanaToHangulWithTokenizer("りょこう", tk)).toBe("료코"); // こう -> こ
   });
 
   it("sokuon (small っ)", () => {
-    expect(kanaToHangul("かった")).toBe("캇타");
-    expect(kanaToHangul("きって")).toBe("킷테");
-    expect(kanaToHangul("いって")).toBe("잇테");
-    expect(kanaToHangul("がっこう")).toBe("각코"); // こう -> こ
-    expect(kanaToHangul("ろっく")).toBe("록쿠");
-    expect(kanaToHangul("けっこん")).toBe("켓콘");
-    expect(kanaToHangul("ざっし")).toBe("잣시");
-    expect(kanaToHangul("きっぷ")).toBe("킵푸");
-    expect(kanaToHangul("まっすぐ")).toBe("맛스구");
+    expect(kanaToHangulWithTokenizer("かった", tk)).toBe("캇타");
+    expect(kanaToHangulWithTokenizer("きって", tk)).toBe("킷테");
+    expect(kanaToHangulWithTokenizer("いって", tk)).toBe("잇테");
+    expect(kanaToHangulWithTokenizer("がっこう", tk)).toBe("각코"); // こう -> こ
+    expect(kanaToHangulWithTokenizer("ろっく", tk)).toBe("록쿠");
+    expect(kanaToHangulWithTokenizer("けっこん", tk)).toBe("켓콘");
+    expect(kanaToHangulWithTokenizer("ざっし", tk)).toBe("잣시");
+    expect(kanaToHangulWithTokenizer("きっぷ", tk)).toBe("킵푸");
+    expect(kanaToHangulWithTokenizer("まっすぐ", tk)).toBe("맛스구");
   });
 
   it("drop long-vowel-like markers (おう/よう/えい)", () => {
-    expect(kanaToHangul("さようなら")).toBe("사요나라"); // よ + [う drop]
-    expect(kanaToHangul("せんせい")).toBe("센세"); // せ + [い drop]
-    expect(kanaToHangul("おおきい")).toBe("오키"); // おお -> お, きい -> き
-    expect(kanaToHangul("おねえさん")).toBe("오네상"); // ねえ -> ね
-    expect(kanaToHangul("えいご")).toBe("에고"); // えい -> え
-    expect(kanaToHangul("けいさつ")).toBe("케사츠"); // けい -> け
+    expect(kanaToHangulWithTokenizer("さようなら", tk)).toBe("사요나라"); // よ + [う drop]
+    expect(kanaToHangulWithTokenizer("せんせい", tk)).toBe("센세"); // せ + [い drop]
+    expect(kanaToHangulWithTokenizer("おおきい", tk)).toBe("오키"); // おお -> お, きい -> き
+    expect(kanaToHangulWithTokenizer("おねえさん", tk)).toBe("오네상"); // ねえ -> ね
+    expect(kanaToHangulWithTokenizer("えいご", tk)).toBe("에고"); // えい -> え
+    expect(kanaToHangulWithTokenizer("けいさつ", tk)).toBe("케사츠"); // けい -> け
   });
 
   it("katakana normalization + ー", () => {
-    expect(kanaToHangul("カタカナ")).toBe("카타카나");
-    expect(kanaToHangul("コーヒー")).toBe("코히");
+    expect(kanaToHangulWithTokenizer("カタカナ", tk)).toBe("카타카나");
+    expect(kanaToHangulWithTokenizer("コーヒー", tk)).toBe("코히");
   });
 
   it("katakana loanword combos (ティ/ファ/フォ etc.)", () => {
-    expect(kanaToHangul("パーティー")).toBe("파티");
-    expect(kanaToHangul("ティッシュ")).toBe("팃슈");
-    expect(kanaToHangul("フォーク")).toBe("포쿠");
+    expect(kanaToHangulWithTokenizer("パーティー", tk)).toBe("파티");
+    expect(kanaToHangulWithTokenizer("ティッシュ", tk)).toBe("팃슈");
+    expect(kanaToHangulWithTokenizer("フォーク", tk)).toBe("포쿠");
   });
 
   it("dakuten/handakuten basics", () => {
-    expect(kanaToHangul("がくせい")).toBe("가쿠세"); // せい -> せ
-    expect(kanaToHangul("ぐんたい")).toBe("군타이");
-    expect(kanaToHangul("げんき")).toBe("겡키");
-    expect(kanaToHangul("ごはん")).toBe("고한");
+    expect(kanaToHangulWithTokenizer("がくせい", tk)).toBe("가쿠세"); // せい -> せ
+    expect(kanaToHangulWithTokenizer("ぐんたい", tk)).toBe("군타이");
+    expect(kanaToHangulWithTokenizer("げんき", tk)).toBe("겡키");
+    expect(kanaToHangulWithTokenizer("ごはん", tk)).toBe("고한");
   });
 
   it("unknown chars pass-through", () => {
-    expect(kanaToHangul("誕生日(たんじょうび)")).toBe("誕生日(탄죠비)");
-    expect(kanaToHangul("第3回(だいさんかい)")).toBe("第3回(다이상카이)");
-    expect(kanaToHangul("!?(びっくり)")).toBe("!?(빗쿠리)");
+    expect(kanaToHangulWithTokenizer("誕生日(たんじょうび)", tk)).toBe(
+      "誕生日(탄죠비)",
+    );
+    expect(kanaToHangulWithTokenizer("第3回(だいさんかい)", tk)).toBe(
+      "第3回(다이상카이)",
+    );
+    expect(kanaToHangulWithTokenizer("!?(びっくり)", tk)).toBe("!?(빗쿠리)");
   });
 
   it("특별 사전 매핑 (따로 처리)", () => {
-    expect(kanaToHangul("とうきょう")).toBe("도쿄");
+    expect(kanaToHangulWithTokenizer("とうきょう", tk)).toBe("도쿄");
   });
 
   it("ん 변형", () => {
-    expect(kanaToHangul("あいみょん")).toBe("아이묭");
-    expect(kanaToHangul("いんまん")).toBe("인만");
-    expect(kanaToHangul("あれくん")).toBe("아레쿤");
-    expect(kanaToHangul("りろん")).toBe("리론");
-    expect(kanaToHangul("りんね")).toBe("린네");
-    expect(kanaToHangul("りんご")).toBe("링고");
-    expect(kanaToHangul("さんぽ")).toBe("삼포"); // ん->ㅁ
-    expect(kanaToHangul("しんぶん")).toBe("심분"); // ん->ㅁ
-    expect(kanaToHangul("てんぷら")).toBe("템푸라"); // ん->ㅁ
-    expect(kanaToHangul("かんぱい")).toBe("캄파이"); // ん->ㅁ
-    expect(kanaToHangul("しんまい")).toBe("심마이"); // ん->ㅁ
-    expect(kanaToHangul("まんいち")).toBe("만이치"); // 모음 앞이면 ㄴ 유지
-    expect(kanaToHangul("てんいん")).toBe("텐인");
-    expect(kanaToHangul("かんおん")).toBe("칸온");
-    expect(kanaToHangul("げんき")).toBe("겡키");
-    expect(kanaToHangul("あんがい")).toBe("앙가이"); // ん + が(velar) -> ㅇ 느낌
-    expect(kanaToHangul("りんかい")).toBe("링카이");
-    expect(kanaToHangul("ほんと")).toBe("혼토");
-    expect(kanaToHangul("にゃんこ")).toBe("냥코"); // にゃ + ん + こ
+    expect(kanaToHangulWithTokenizer("あいみょん", tk)).toBe("아이묭");
+    expect(kanaToHangulWithTokenizer("いんまん", tk)).toBe("인만");
+    expect(kanaToHangulWithTokenizer("あれくん", tk)).toBe("아레쿤");
+    expect(kanaToHangulWithTokenizer("りろん", tk)).toBe("리론");
+    expect(kanaToHangulWithTokenizer("りんね", tk)).toBe("린네");
+    expect(kanaToHangulWithTokenizer("りんご", tk)).toBe("링고");
+    expect(kanaToHangulWithTokenizer("さんぽ", tk)).toBe("삼포"); // ん->ㅁ
+    expect(kanaToHangulWithTokenizer("しんぶん", tk)).toBe("심분"); // ん->ㅁ
+    expect(kanaToHangulWithTokenizer("てんぷら", tk)).toBe("템푸라"); // ん->ㅁ
+    expect(kanaToHangulWithTokenizer("かんぱい", tk)).toBe("캄파이"); // ん->ㅁ
+    expect(kanaToHangulWithTokenizer("しんまい", tk)).toBe("심마이"); // ん->ㅁ
+    expect(kanaToHangulWithTokenizer("まんいち", tk)).toBe("만이치"); // 모음 앞이면 ㄴ 유지
+    expect(kanaToHangulWithTokenizer("てんいん", tk)).toBe("텐인");
+    expect(kanaToHangulWithTokenizer("かんおん", tk)).toBe("칸온");
+    expect(kanaToHangulWithTokenizer("げんき", tk)).toBe("겡키");
+    expect(kanaToHangulWithTokenizer("あんがい", tk)).toBe("앙가이"); // ん + が(velar) -> ㅇ 느낌
+    expect(kanaToHangulWithTokenizer("りんかい", tk)).toBe("링카이");
+    expect(kanaToHangulWithTokenizer("ほんと", tk)).toBe("혼토");
+    expect(kanaToHangulWithTokenizer("にゃんこ", tk)).toBe("냥코"); // にゃ + ん + こ
   });
 
   it("ちゃん", () => {
-    expect(kanaToHangul("めいちゃん")).toBe("메이쨩");
-    expect(kanaToHangul("あかちゃん")).toBe("아카쨩");
-    expect(kanaToHangul("おじいちゃん")).toBe("오지쨩"); // じい drop
-    expect(kanaToHangul("ねえちゃん")).toBe("네쨩"); // ねえ drop
-    expect(kanaToHangul("みっちゃん")).toBe("밋쨩");
-    expect(kanaToHangul("まーちゃん")).toBe("마쨩");
+    expect(kanaToHangulWithTokenizer("めいちゃん", tk)).toBe("메이쨩");
+    expect(kanaToHangulWithTokenizer("あかちゃん", tk)).toBe("아카쨩");
+    expect(kanaToHangulWithTokenizer("おじいちゃん", tk)).toBe("오지쨩"); // じい drop
+    expect(kanaToHangulWithTokenizer("ねえちゃん", tk)).toBe("네쨩"); // ねえ drop
+    expect(kanaToHangulWithTokenizer("みっちゃん", tk)).toBe("밋쨩");
+    expect(kanaToHangulWithTokenizer("まーちゃん", tk)).toBe("마쨩");
   });
 
   it("つ", () => {
-    expect(kanaToHangul("つき")).toBe("츠키");
+    expect(kanaToHangulWithTokenizer("つき", tk)).toBe("츠키");
   });
 
   it("장음 아닌것", () => {
-    expect(kanaToHangul("せいな")).toBe("세이나");
-    expect(kanaToHangul("せいか")).toBe("세이카");
-    expect(kanaToHangul("けいと")).toBe("케이토");
-    expect(kanaToHangul("れいな")).toBe("레이나");
-    expect(kanaToHangul("めいこ")).toBe("메이코");
-    expect(kanaToHangul("えいこ")).toBe("에이코");
-    expect(kanaToHangul("こい")).toBe("코이"); // 단순 こ + い
-    expect(kanaToHangul("あい")).toBe("아이");
-    expect(kanaToHangul("うい")).toBe("우이");
-    expect(kanaToHangul("おいしい")).toBe("오이시이"); // しい는 요음 아님
-    expect(kanaToHangul("おいで")).toBe("오이데");
+    expect(kanaToHangulWithTokenizer("せいな", tk)).toBe("세이나");
+    expect(kanaToHangulWithTokenizer("せいか", tk)).toBe("세이카");
+    expect(kanaToHangulWithTokenizer("けいと", tk)).toBe("케이토");
+    expect(kanaToHangulWithTokenizer("れいな", tk)).toBe("레이나");
+    expect(kanaToHangulWithTokenizer("めいこ", tk)).toBe("메이코");
+    expect(kanaToHangulWithTokenizer("えいこ", tk)).toBe("에이코");
+    expect(kanaToHangulWithTokenizer("こい", tk)).toBe("코이"); // 단순 こ + い
+    expect(kanaToHangulWithTokenizer("あい", tk)).toBe("아이");
+    expect(kanaToHangulWithTokenizer("うい", tk)).toBe("우이");
+    expect(kanaToHangulWithTokenizer("おいしい", tk)).toBe("오이시이"); // しい는 요음 아님
+    expect(kanaToHangulWithTokenizer("おいで", tk)).toBe("오이데");
   });
 
   it("edge: mixed scripts + spacing/punctuation", () => {
-    expect(kanaToHangul("コーヒー, ください。")).toBe("코히, 쿠다사이。");
-    expect(kanaToHangul("「きょう」")).toBe("「쿄」");
-    expect(kanaToHangul("（がっこう）")).toBe("（각코）");
-    expect(kanaToHangul("  すし  ")).toBe("  스시  ");
+    expect(kanaToHangulWithTokenizer("コーヒー, ください。", tk)).toBe(
+      "코히, 쿠다사이。",
+    );
+    expect(kanaToHangulWithTokenizer("「きょう」", tk)).toBe("「쿄」");
+    expect(kanaToHangulWithTokenizer("（がっこう）", tk)).toBe("（각코）");
+    expect(kanaToHangulWithTokenizer("  すし  ", tk)).toBe("  스시  ");
   });
 
   // ====================
@@ -140,248 +150,266 @@ describe("kanaToHangul", () => {
 
   describe("grammar pronunciation edge cases (enable when rules are implemented)", () => {
     it("particle: は as 'wa' when used as topic marker", () => {
-      expect(kanaToHangul("わたしはがくせいです")).toBe("와타시와가쿠세데스"); // せい drop
-      expect(kanaToHangul("これはペンです")).toBe("코레와펜데스");
-      expect(kanaToHangul("きょうはあつい")).toBe("쿄와아츠이"); // きょう -> きょ
-      expect(kanaToHangul("こんにちは")).toBe("콘니치와"); // 実発音
+      expect(kanaToHangulWithTokenizer("わたしはがくせいです", tk)).toBe(
+        "와타시와가쿠세데스",
+      ); // せい drop
+      expect(kanaToHangulWithTokenizer("これはペンです", tk)).toBe(
+        "코레와펜데스",
+      );
+      expect(kanaToHangulWithTokenizer("きょうはあつい", tk)).toBe(
+        "쿄와아츠이",
+      ); // きょう -> きょ
+      expect(kanaToHangulWithTokenizer("こんにちは", tk)).toBe("콘니치와"); // 実発音
     });
 
     it("particle: へ as 'e' when used as direction marker", () => {
-      expect(kanaToHangul("がっこうへいく")).toBe("각코에이쿠"); // こう drop
-      expect(kanaToHangul("うちへかえる")).toBe("우치에카에루");
+      expect(kanaToHangulWithTokenizer("がっこうへいく", tk)).toBe(
+        "각코에이쿠",
+      ); // こう drop
+      expect(kanaToHangulWithTokenizer("うちへかえる", tk)).toBe(
+        "우치에카에루",
+      );
     });
 
     it("particle: を as 'o' when used as object marker", () => {
-      expect(kanaToHangul("すしをたべる")).toBe("스시오타베루");
-      expect(kanaToHangul("みずをのむ")).toBe("미즈오노무");
+      expect(kanaToHangulWithTokenizer("すしをたべる", tk)).toBe(
+        "스시오타베루",
+      );
+      expect(kanaToHangulWithTokenizer("みずをのむ", tk)).toBe("미즈오노무");
     });
   });
 
   it("grammar: quotation particle って / った / ってば (sokuon across morpheme boundary)", () => {
-    expect(kanaToHangul("だって")).toBe("닷테");
-    expect(kanaToHangul("って")).toBe("ッテ" as any); // 구현이 단독 っ 처리 못 하면 pass-through 가능: 정책 정해서 고치세요
-    expect(kanaToHangul("ってば")).toBe("ッテ바" as any);
-    expect(kanaToHangul("いった")).toBe("잇타");
-    expect(kanaToHangul("おもった")).toBe("오못타");
+    expect(kanaToHangulWithTokenizer("だって", tk)).toBe("닷테");
+    expect(kanaToHangulWithTokenizer("って", tk)).toBe("ッテ" as any); // 구현이 단독 っ 처리 못 하면 pass-through 가능: 정책 정해서 고치세요
+    expect(kanaToHangulWithTokenizer("ってば", tk)).toBe("ッテ바" as any);
+    expect(kanaToHangulWithTokenizer("いった", tk)).toBe("잇타");
+    expect(kanaToHangulWithTokenizer("おもった", tk)).toBe("오못타");
   });
 
   it("grammar: contractions じゃ / ちゃ / じゃない / ちゃう / ちゃった", () => {
     // では → じゃ (dewa → ja)
-    expect(kanaToHangul("それじゃ")).toBe("소레쟈");
-    expect(kanaToHangul("じゃない")).toBe("쟈나이");
-    expect(kanaToHangul("じゃなかった")).toBe("쟈나캇타");
+    expect(kanaToHangulWithTokenizer("それじゃ", tk)).toBe("소레쟈");
+    expect(kanaToHangulWithTokenizer("じゃない", tk)).toBe("쟈나이");
+    expect(kanaToHangulWithTokenizer("じゃなかった", tk)).toBe("쟈나캇타");
 
     // ては → ちゃ (tewa → cha)
-    expect(kanaToHangul("たべちゃう")).toBe("타베챠우"); // う drop 정책이면 타베챠
-    expect(kanaToHangul("みちゃった")).toBe("미챳타");
-    expect(kanaToHangul("しちゃう")).toBe("시챠우"); // う drop 정책이면 시챠
-    expect(kanaToHangul("やっちゃった")).toBe("얏챳타");
+    expect(kanaToHangulWithTokenizer("たべちゃう", tk)).toBe("타베챠우"); // う drop 정책이면 타베챠
+    expect(kanaToHangulWithTokenizer("みちゃった", tk)).toBe("미챳타");
+    expect(kanaToHangulWithTokenizer("しちゃう", tk)).toBe("시챠우"); // う drop 정책이면 시챠
+    expect(kanaToHangulWithTokenizer("やっちゃった", tk)).toBe("얏챳타");
   });
 
   it("grammar: polite/auxiliary long-vowel-like endings (でしょう / ましょう / ましょうか)", () => {
     // でしょう: でしょ + う(drop) = でしょ
-    expect(kanaToHangul("そうでしょう")).toBe("소데쇼");
-    expect(kanaToHangul("いいでしょうか")).toBe("이데쇼카");
+    expect(kanaToHangulWithTokenizer("そうでしょう", tk)).toBe("소데쇼");
+    expect(kanaToHangulWithTokenizer("いいでしょうか", tk)).toBe("이데쇼카");
     // ましょう: ましょ + う(drop) = ましょ
-    expect(kanaToHangul("いきましょう")).toBe("이키마쇼");
-    expect(kanaToHangul("やりましょうか")).toBe("야리마쇼카");
+    expect(kanaToHangulWithTokenizer("いきましょう", tk)).toBe("이키마쇼");
+    expect(kanaToHangulWithTokenizer("やりましょうか", tk)).toBe("야리마쇼카");
   });
 
   it("grammar: ている / ておく / てしまう (don't accidentally treat てい as long-vowel drop)", () => {
     // ている는 '테이루'가 자연스럽고, てい를 장음처럼 날려버리면 체감 품질 급락
-    expect(kanaToHangul("たべている")).toBe("타베테이루");
-    expect(kanaToHangul("みている")).toBe("미테이루");
-    expect(kanaToHangul("している")).toBe("시테이루");
+    expect(kanaToHangulWithTokenizer("たべている", tk)).toBe("타베테이루");
+    expect(kanaToHangulWithTokenizer("みている", tk)).toBe("미테이루");
+    expect(kanaToHangulWithTokenizer("している", tk)).toBe("시테이루");
 
     // ておく(=해 두다): おう/えい 룰과 혼동 없는지
-    expect(kanaToHangul("かっておく")).toBe("캇테오쿠");
-    expect(kanaToHangul("やっておく")).toBe("얏테오쿠");
+    expect(kanaToHangulWithTokenizer("かっておく", tk)).toBe("캇테오쿠");
+    expect(kanaToHangulWithTokenizer("やっておく", tk)).toBe("얏테오쿠");
 
     // てしまう: 축약(ちゃう)랑 같이 있을 때도 안정적으로
-    expect(kanaToHangul("たべてしまう")).toBe("타베테시마우"); // う drop 정책이면 타베테시마
-    expect(kanaToHangul("やってしまった")).toBe("얏테시맛타");
+    expect(kanaToHangulWithTokenizer("たべてしまう", tk)).toBe("타베테시마우"); // う drop 정책이면 타베테시마
+    expect(kanaToHangulWithTokenizer("やってしまった", tk)).toBe("얏테시맛타");
   });
 
   it("grammar: んです / なんです / なんですか (moraic nasal + です)", () => {
-    expect(kanaToHangul("そうなんです")).toBe("소난데스");
-    expect(kanaToHangul("なんですか")).toBe("난데스카");
-    expect(kanaToHangul("だめなんです")).toBe("다메난데스");
-    expect(kanaToHangul("しんぱいなんです")).toBe("심파이난데스"); // ん->ㅁ before ぱ
+    expect(kanaToHangulWithTokenizer("そうなんです", tk)).toBe("소난데스");
+    expect(kanaToHangulWithTokenizer("なんですか", tk)).toBe("난데스카");
+    expect(kanaToHangulWithTokenizer("だめなんです", tk)).toBe("다메난데스");
+    expect(kanaToHangulWithTokenizer("しんぱいなんです", tk)).toBe(
+      "심파이난데스",
+    ); // ん->ㅁ before ぱ
   });
 
   it("grammar: negative forms with ない / なかった (sokuon + negative)", () => {
-    expect(kanaToHangul("いかない")).toBe("이카나이");
-    expect(kanaToHangul("たべない")).toBe("타베나이");
-    expect(kanaToHangul("しない")).toBe("시나이");
-    expect(kanaToHangul("いかなかった")).toBe("이카나캇타");
-    expect(kanaToHangul("たべなかった")).toBe("타베나캇타");
-    expect(kanaToHangul("しなかった")).toBe("시나캇타");
+    expect(kanaToHangulWithTokenizer("いかない", tk)).toBe("이카나이");
+    expect(kanaToHangulWithTokenizer("たべない", tk)).toBe("타베나이");
+    expect(kanaToHangulWithTokenizer("しない", tk)).toBe("시나이");
+    expect(kanaToHangulWithTokenizer("いかなかった", tk)).toBe("이카나캇타");
+    expect(kanaToHangulWithTokenizer("たべなかった", tk)).toBe("타베나캇타");
+    expect(kanaToHangulWithTokenizer("しなかった", tk)).toBe("시나캇타");
   });
 
   it("grammar: conditionals たら / なら / ても (sokuon boundary stability)", () => {
-    expect(kanaToHangul("いったら")).toBe("잇타라");
-    expect(kanaToHangul("やったら")).toBe("얏타라");
-    expect(kanaToHangul("かったら")).toBe("캇타라");
+    expect(kanaToHangulWithTokenizer("いったら", tk)).toBe("잇타라");
+    expect(kanaToHangulWithTokenizer("やったら", tk)).toBe("얏타라");
+    expect(kanaToHangulWithTokenizer("かったら", tk)).toBe("캇타라");
 
-    expect(kanaToHangul("いくなら")).toBe("이쿠나라");
-    expect(kanaToHangul("するなら")).toBe("스루나라");
+    expect(kanaToHangulWithTokenizer("いくなら", tk)).toBe("이쿠나라");
+    expect(kanaToHangulWithTokenizer("するなら", tk)).toBe("스루나라");
 
-    expect(kanaToHangul("いっても")).toBe("잇테모");
-    expect(kanaToHangul("やっても")).toBe("얏테모");
+    expect(kanaToHangulWithTokenizer("いっても", tk)).toBe("잇테모");
+    expect(kanaToHangulWithTokenizer("やっても", tk)).toBe("얏테모");
   });
 
   it("grammar: question/ending particles (ね/よ/かな/かい) keep them intact", () => {
-    expect(kanaToHangul("いいね")).toBe("이이네");
-    expect(kanaToHangul("いいよ")).toBe("이이요");
-    expect(kanaToHangul("いいかな")).toBe("이이카나");
-    expect(kanaToHangul("いいかい")).toBe("이이카이");
-    expect(kanaToHangul("いく？")).toBe("이쿠？");
+    expect(kanaToHangulWithTokenizer("いいね", tk)).toBe("이이네");
+    expect(kanaToHangulWithTokenizer("いいよ", tk)).toBe("이이요");
+    expect(kanaToHangulWithTokenizer("いいかな", tk)).toBe("이이카나");
+    expect(kanaToHangulWithTokenizer("いいかい", tk)).toBe("이이카이");
+    expect(kanaToHangulWithTokenizer("いく？", tk)).toBe("이쿠？");
   });
 
   it("grammar: small っ at start or isolated should not crash (policy check)", () => {
     // 이런 입력은 보통 비정상이지만, 라이브러리는 크래시 없이 정책대로 처리해야 함
-    expect(() => kanaToHangul("っ")).not.toThrow();
-    expect(() => kanaToHangul("っあ")).not.toThrow();
-    expect(() => kanaToHangul("っか")).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っあ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っか", tk)).not.toThrow();
   });
 
   it("grammar: consecutive long-vowel-like patterns should be stable", () => {
-    expect(kanaToHangul("おおおお")).toBe("오");
-    expect(kanaToHangul("えいえい")).toBe("에에"); // 각 えい -> え
-    expect(kanaToHangul("ようよう")).toBe("요요"); // 각 よう -> よ
-    expect(kanaToHangul("こうこう")).toBe("코코"); // 각 こう -> こ
+    expect(kanaToHangulWithTokenizer("おおおお", tk)).toBe("오");
+    expect(kanaToHangulWithTokenizer("えいえい", tk)).toBe("에에"); // 각 えい -> え
+    expect(kanaToHangulWithTokenizer("ようよう", tk)).toBe("요요"); // 각 よう -> よ
+    expect(kanaToHangulWithTokenizer("こうこう", tk)).toBe("코코"); // 각 こう -> こ
   });
 
   it("grammar: tricky boundaries with ん + youon/sokuon", () => {
-    expect(kanaToHangul("しんゆう")).toBe("신유"); // ゆう drop
-    expect(kanaToHangul("てんきゃく")).toBe("텡캬쿠"); // ん + きゃ
-    expect(kanaToHangul("さんちょく")).toBe("산쵸쿠"); // ん + ちょ
-    expect(kanaToHangul("まんちょっと")).toBe("만춋토"); // ん + ちょっ
+    expect(kanaToHangulWithTokenizer("しんゆう", tk)).toBe("신유"); // ゆう drop
+    expect(kanaToHangulWithTokenizer("てんきゃく", tk)).toBe("텡캬쿠"); // ん + きゃ
+    expect(kanaToHangulWithTokenizer("さんちょく", tk)).toBe("산쵸쿠"); // ん + ちょ
+    expect(kanaToHangulWithTokenizer("まんちょっと", tk)).toBe("만춋토"); // ん + ちょっ
   });
 });
 
 describe("kanaToHangul2", () => {
   it("basic hiragana", () => {
-    expect(kanaToHangul("ようこそ")).toBe("요코소"); // よう -> よ
-    expect(kanaToHangul("おめでとう")).toBe("오메데토"); // とう -> と
-    expect(kanaToHangul("おはようさん")).toBe("오하요상"); // よう -> よ, さん -> 상(관용)
+    expect(kanaToHangulWithTokenizer("ようこそ", tk)).toBe("요코소"); // よう -> よ
+    expect(kanaToHangulWithTokenizer("おめでとう", tk)).toBe("오메데토"); // とう -> と
+    expect(kanaToHangulWithTokenizer("おはようさん", tk)).toBe("오하요상"); // よう -> よ, さん -> 상(관용)
   });
 
   it("youon (きゃ/しゅ/ちょ)", () => {
-    expect(kanaToHangul("きゃんぷ")).toBe("캼푸"); // きゃ + ん(ㅁ before ぷ) + ぷ
-    expect(kanaToHangul("しゅっぱつ")).toBe("슙파츠"); // しゅ + っ(ㅂ before ぱ) + ぱつ
-    expect(kanaToHangul("ちょっぴり")).toBe("춉피리"); // ちょ + っ(ㅂ before ぴ) + ぴり
-    expect(kanaToHangul("ぎゅう")).toBe("규"); // ぎゅ + う drop
-    expect(kanaToHangul("りょう")).toBe("료"); // りょ + う drop
-    expect(kanaToHangul("ちょうど")).toBe("쵸도"); // ちょ + う drop
-    expect(kanaToHangul("にゃんこ")).toBe("냥코"); // にゃ + ん + こ
-    expect(kanaToHangul("りゅうがく")).toBe("류가쿠"); // りゅ + う drop
-    expect(kanaToHangul("にゅーす")).toBe("뉴스"); // ー drop
-    expect(kanaToHangul("びょうき")).toBe("뵤키"); // びょ + う drop
-    expect(kanaToHangul("にょん")).toBe("뇽"); // 요음 + ん(어말) => ㅇ
-    expect(kanaToHangul("ぎょこう")).toBe("교코"); // こう -> こ
+    expect(kanaToHangulWithTokenizer("きゃんぷ", tk)).toBe("캼푸"); // きゃ + ん(ㅁ before ぷ) + ぷ
+    expect(kanaToHangulWithTokenizer("しゅっぱつ", tk)).toBe("슙파츠"); // しゅ + っ(ㅂ before ぱ) + ぱつ
+    expect(kanaToHangulWithTokenizer("ちょっぴり", tk)).toBe("춉피리"); // ちょ + っ(ㅂ before ぴ) + ぴり
+    expect(kanaToHangulWithTokenizer("ぎゅう", tk)).toBe("규"); // ぎゅ + う drop
+    expect(kanaToHangulWithTokenizer("りょう", tk)).toBe("료"); // りょ + う drop
+    expect(kanaToHangulWithTokenizer("ちょうど", tk)).toBe("쵸도"); // ちょ + う drop
+    expect(kanaToHangulWithTokenizer("にゃんこ", tk)).toBe("냥코"); // にゃ + ん + こ
+    expect(kanaToHangulWithTokenizer("りゅうがく", tk)).toBe("류가쿠"); // りゅ + う drop
+    expect(kanaToHangulWithTokenizer("にゅーす", tk)).toBe("뉴스"); // ー drop
+    expect(kanaToHangulWithTokenizer("びょうき", tk)).toBe("뵤키"); // びょ + う drop
+    expect(kanaToHangulWithTokenizer("にょん", tk)).toBe("뇽"); // 요음 + ん(어말) => ㅇ
+    expect(kanaToHangulWithTokenizer("ぎょこう", tk)).toBe("교코"); // こう -> こ
   });
 
   it("sokuon (small っ)", () => {
-    expect(kanaToHangul("さっき")).toBe("삭키");
-    expect(kanaToHangul("まって")).toBe("맛테");
-    expect(kanaToHangul("のって")).toBe("놋테");
-    expect(kanaToHangul("けっこう")).toBe("켓코"); // こう -> こ
-    expect(kanaToHangul("まっく")).toBe("막쿠");
-    expect(kanaToHangul("ざっか")).toBe("작카");
-    expect(kanaToHangul("さっし")).toBe("삿시");
-    expect(kanaToHangul("しっぽ")).toBe("십포");
-    expect(kanaToHangul("まっさか")).toBe("맛사카");
+    expect(kanaToHangulWithTokenizer("さっき", tk)).toBe("삭키");
+    expect(kanaToHangulWithTokenizer("まって", tk)).toBe("맛테");
+    expect(kanaToHangulWithTokenizer("のって", tk)).toBe("놋테");
+    expect(kanaToHangulWithTokenizer("けっこう", tk)).toBe("켓코"); // こう -> こ
+    expect(kanaToHangulWithTokenizer("まっく", tk)).toBe("막쿠");
+    expect(kanaToHangulWithTokenizer("ざっか", tk)).toBe("작카");
+    expect(kanaToHangulWithTokenizer("さっし", tk)).toBe("삿시");
+    expect(kanaToHangulWithTokenizer("しっぽ", tk)).toBe("십포");
+    expect(kanaToHangulWithTokenizer("まっさか", tk)).toBe("맛사카");
   });
 
   it("drop long-vowel-like markers (おう/よう/えい)", () => {
-    expect(kanaToHangul("ようふく")).toBe("요후쿠"); // よう -> よ
-    expect(kanaToHangul("せいふく")).toBe("세후쿠"); // せい -> せ
-    expect(kanaToHangul("おおきいな")).toBe("오키이나"); // おお -> お,
-    expect(kanaToHangul("ねえさん")).toBe("네상"); // ねえ -> ね, さん -> 상
-    expect(kanaToHangul("えいが")).toBe("에가"); // えい -> え
-    expect(kanaToHangul("けいかく")).toBe("케카쿠"); // けい -> け
+    expect(kanaToHangulWithTokenizer("ようふく", tk)).toBe("요후쿠"); // よう -> よ
+    expect(kanaToHangulWithTokenizer("せいふく", tk)).toBe("세후쿠"); // せい -> せ
+    expect(kanaToHangulWithTokenizer("おおきいな", tk)).toBe("오키이나"); // おお -> お,
+    expect(kanaToHangulWithTokenizer("ねえさん", tk)).toBe("네상"); // ねえ -> ね, さん -> 상
+    expect(kanaToHangulWithTokenizer("えいが", tk)).toBe("에가"); // えい -> え
+    expect(kanaToHangulWithTokenizer("けいかく", tk)).toBe("케카쿠"); // けい -> け
   });
 
   it("katakana normalization + ー", () => {
-    expect(kanaToHangul("テレビ")).toBe("테레비");
-    expect(kanaToHangul("ジュース")).toBe("쥬스"); // ー 없음, normalize + 요음 그대로
+    expect(kanaToHangulWithTokenizer("テレビ", tk)).toBe("테레비");
+    expect(kanaToHangulWithTokenizer("ジュース", tk)).toBe("쥬스"); // ー 없음, normalize + 요음 그대로
   });
 
   it("katakana loanword combos (ティ/ファ/フォ etc.)", () => {
-    expect(kanaToHangul("ティー")).toBe("티"); // ー drop
-    expect(kanaToHangul("ファイル")).toBe("파이루"); // ふぁ + い + る
-    expect(kanaToHangul("フォト")).toBe("포토"); // ふぉ + と
+    expect(kanaToHangulWithTokenizer("ティー", tk)).toBe("티"); // ー drop
+    expect(kanaToHangulWithTokenizer("ファイル", tk)).toBe("파이루"); // ふぁ + い + る
+    expect(kanaToHangulWithTokenizer("フォト", tk)).toBe("포토"); // ふぉ + と
   });
 
   it("dakuten/handakuten basics", () => {
-    expect(kanaToHangul("ぎんこう")).toBe("깅코"); // こう -> こ
-    expect(kanaToHangul("げんだい")).toBe("겐다이");
-    expect(kanaToHangul("ごぜん")).toBe("고젠");
-    expect(kanaToHangul("ばくはつ")).toBe("바쿠하츠");
+    expect(kanaToHangulWithTokenizer("ぎんこう", tk)).toBe("깅코"); // こう -> こ
+    expect(kanaToHangulWithTokenizer("げんだい", tk)).toBe("겐다이");
+    expect(kanaToHangulWithTokenizer("ごぜん", tk)).toBe("고젠");
+    expect(kanaToHangulWithTokenizer("ばくはつ", tk)).toBe("바쿠하츠");
   });
 
   it("unknown chars pass-through", () => {
-    expect(kanaToHangul("記録(きろく)")).toBe("記録(키로쿠)");
-    expect(kanaToHangul("第2章(だいにしょう)")).toBe("第2章(다이니쇼)");
-    expect(kanaToHangul("!?(まっか)")).toBe("!?(막카)");
+    expect(kanaToHangulWithTokenizer("記録(きろく)", tk)).toBe("記録(키로쿠)");
+    expect(kanaToHangulWithTokenizer("第2章(だいにしょう)", tk)).toBe(
+      "第2章(다이니쇼)",
+    );
+    expect(kanaToHangulWithTokenizer("!?(まっか)", tk)).toBe("!?(막카)");
   });
 
   it("특별 사전 매핑 (따로 처리)", () => {
-    expect(kanaToHangul("とうきょう")).toBe("도쿄");
+    expect(kanaToHangulWithTokenizer("とうきょう", tk)).toBe("도쿄");
   });
 
   it("ん 변형", () => {
-    expect(kanaToHangul("しょん")).toBe("숑"); // 요음 + ん(어말) => ㅇ
-    expect(kanaToHangul("うんまん")).toBe("운만"); // 모음 단독(う) 뒤 ん + ま => ㄴ 유지
-    expect(kanaToHangul("たろうくん")).toBe("타로쿤"); // ろう -> ろ, くん
-    expect(kanaToHangul("かろん")).toBe("카론"); // …ろん
-    expect(kanaToHangul("ほんね")).toBe("혼네"); // ん + ね
-    expect(kanaToHangul("まんが")).toBe("망가"); // ん + が => ㅇ
-    expect(kanaToHangul("さんぷる")).toBe("삼푸루"); // ん->ㅁ before ぷ
-    expect(kanaToHangul("しんぱん")).toBe("심판"); // ん->ㅁ before ぱ, 그리고 ぱん(어말 ん) => 판
-    expect(kanaToHangul("てんぷき")).toBe("템푸키"); // ん->ㅁ before ぷ
-    expect(kanaToHangul("かんぱく")).toBe("캄파쿠"); // ん->ㅁ before ぱ
-    expect(kanaToHangul("まんい")).toBe("만이"); // 모음 앞이면 ㄴ 유지
-    expect(kanaToHangul("てんいき")).toBe("텐이키"); // 모음 앞 ㄴ 유지
-    expect(kanaToHangul("かんおと")).toBe("칸오토"); // 모음 앞 ㄴ 유지
-    expect(kanaToHangul("あんがく")).toBe("앙가쿠"); // ん + が => ㅇ
-    expect(kanaToHangul("りんこう")).toBe("링코"); // r + (k/g) => ㅇ + こう drop
-    expect(kanaToHangul("ほんとに")).toBe("혼토니");
+    expect(kanaToHangulWithTokenizer("しょん", tk)).toBe("숑"); // 요음 + ん(어말) => ㅇ
+    expect(kanaToHangulWithTokenizer("うんまん", tk)).toBe("운만"); // 모음 단독(う) 뒤 ん + ま => ㄴ 유지
+    expect(kanaToHangulWithTokenizer("たろうくん", tk)).toBe("타로쿤"); // ろう -> ろ, くん
+    expect(kanaToHangulWithTokenizer("かろん", tk)).toBe("카론"); // …ろん
+    expect(kanaToHangulWithTokenizer("ほんね", tk)).toBe("혼네"); // ん + ね
+    expect(kanaToHangulWithTokenizer("まんが", tk)).toBe("망가"); // ん + が => ㅇ
+    expect(kanaToHangulWithTokenizer("さんぷる", tk)).toBe("삼푸루"); // ん->ㅁ before ぷ
+    expect(kanaToHangulWithTokenizer("しんぱん", tk)).toBe("심판"); // ん->ㅁ before ぱ, 그리고 ぱん(어말 ん) => 판
+    expect(kanaToHangulWithTokenizer("てんぷき", tk)).toBe("템푸키"); // ん->ㅁ before ぷ
+    expect(kanaToHangulWithTokenizer("かんぱく", tk)).toBe("캄파쿠"); // ん->ㅁ before ぱ
+    expect(kanaToHangulWithTokenizer("まんい", tk)).toBe("만이"); // 모음 앞이면 ㄴ 유지
+    expect(kanaToHangulWithTokenizer("てんいき", tk)).toBe("텐이키"); // 모음 앞 ㄴ 유지
+    expect(kanaToHangulWithTokenizer("かんおと", tk)).toBe("칸오토"); // 모음 앞 ㄴ 유지
+    expect(kanaToHangulWithTokenizer("あんがく", tk)).toBe("앙가쿠"); // ん + が => ㅇ
+    expect(kanaToHangulWithTokenizer("りんこう", tk)).toBe("링코"); // r + (k/g) => ㅇ + こう drop
+    expect(kanaToHangulWithTokenizer("ほんとに", tk)).toBe("혼토니");
   });
 
   it("ちゃん", () => {
-    expect(kanaToHangul("れいちゃん")).toBe("레이쨩");
-    expect(kanaToHangul("みかちゃん")).toBe("미카쨩");
-    expect(kanaToHangul("じいちゃん")).toBe("지쨩"); // じい drop
-    expect(kanaToHangul("おねえちゃん")).toBe("오네쨩"); // ねえ drop
-    expect(kanaToHangul("りっちゃん")).toBe("릿쨩");
-    expect(kanaToHangul("さーちゃん")).toBe("사쨩"); // ー drop
+    expect(kanaToHangulWithTokenizer("れいちゃん", tk)).toBe("레이쨩");
+    expect(kanaToHangulWithTokenizer("みかちゃん", tk)).toBe("미카쨩");
+    expect(kanaToHangulWithTokenizer("じいちゃん", tk)).toBe("지쨩"); // じい drop
+    expect(kanaToHangulWithTokenizer("おねえちゃん", tk)).toBe("오네쨩"); // ねえ drop
+    expect(kanaToHangulWithTokenizer("りっちゃん", tk)).toBe("릿쨩");
+    expect(kanaToHangulWithTokenizer("さーちゃん", tk)).toBe("사쨩"); // ー drop
   });
 
   it("つ", () => {
-    expect(kanaToHangul("つめ")).toBe("츠메");
+    expect(kanaToHangulWithTokenizer("つめ", tk)).toBe("츠메");
   });
 
   it("장음 아닌것", () => {
-    expect(kanaToHangul("せいな")).toBe("세이나");
-    expect(kanaToHangul("せいか")).toBe("세이카");
-    expect(kanaToHangul("けいと")).toBe("케이토");
-    expect(kanaToHangul("れいな")).toBe("레이나");
-    expect(kanaToHangul("めいこ")).toBe("메이코");
-    expect(kanaToHangul("えいこ")).toBe("에이코");
-    expect(kanaToHangul("こい")).toBe("코이");
-    expect(kanaToHangul("あい")).toBe("아이");
-    expect(kanaToHangul("うい")).toBe("우이");
-    expect(kanaToHangul("おいしい")).toBe("오이시이");
-    expect(kanaToHangul("おいで")).toBe("오이데");
+    expect(kanaToHangulWithTokenizer("せいな", tk)).toBe("세이나");
+    expect(kanaToHangulWithTokenizer("せいか", tk)).toBe("세이카");
+    expect(kanaToHangulWithTokenizer("けいと", tk)).toBe("케이토");
+    expect(kanaToHangulWithTokenizer("れいな", tk)).toBe("레이나");
+    expect(kanaToHangulWithTokenizer("めいこ", tk)).toBe("메이코");
+    expect(kanaToHangulWithTokenizer("えいこ", tk)).toBe("에이코");
+    expect(kanaToHangulWithTokenizer("こい", tk)).toBe("코이");
+    expect(kanaToHangulWithTokenizer("あい", tk)).toBe("아이");
+    expect(kanaToHangulWithTokenizer("うい", tk)).toBe("우이");
+    expect(kanaToHangulWithTokenizer("おいしい", tk)).toBe("오이시이");
+    expect(kanaToHangulWithTokenizer("おいで", tk)).toBe("오이데");
   });
 
   it("edge: mixed scripts + spacing/punctuation", () => {
-    expect(kanaToHangul("ジュース, おねがい。")).toBe("쥬스, 오네가이。");
-    expect(kanaToHangul("「りょう」")).toBe("「료」");
-    expect(kanaToHangul("（けっこう）")).toBe("（켓코）");
-    expect(kanaToHangul("  たこ  ")).toBe("  타코  ");
+    expect(kanaToHangulWithTokenizer("ジュース, おねがい。", tk)).toBe(
+      "쥬스, 오네가이。",
+    );
+    expect(kanaToHangulWithTokenizer("「りょう」", tk)).toBe("「료」");
+    expect(kanaToHangulWithTokenizer("（けっこう）", tk)).toBe("（켓코）");
+    expect(kanaToHangulWithTokenizer("  たこ  ", tk)).toBe("  타코  ");
   });
 
   // ====================
@@ -390,117 +418,133 @@ describe("kanaToHangul2", () => {
 
   describe("grammar pronunciation edge cases (enable when rules are implemented)", () => {
     it("particle: は as 'wa' when used as topic marker", () => {
-      expect(kanaToHangul("あなたはせいふくです")).toBe("아나타와세후쿠데스"); // せい drop
-      expect(kanaToHangul("それはノートです")).toBe("소레와노토데스"); // ー drop
-      expect(kanaToHangul("あしたはさむい")).toBe("아시타와사무이");
-      expect(kanaToHangul("こんにちは")).toBe("콘니치와"); // 実発音
+      expect(kanaToHangulWithTokenizer("あなたはせいふくです", tk)).toBe(
+        "아나타와세후쿠데스",
+      ); // せい drop
+      expect(kanaToHangulWithTokenizer("それはノートです", tk)).toBe(
+        "소레와노토데스",
+      ); // ー drop
+      expect(kanaToHangulWithTokenizer("あしたはさむい", tk)).toBe(
+        "아시타와사무이",
+      );
+      expect(kanaToHangulWithTokenizer("こんにちは", tk)).toBe("콘니치와"); // 実発音
     });
 
     it("particle: へ as 'e' when used as direction marker", () => {
-      expect(kanaToHangul("としょかんへいく")).toBe("토쇼칸에이쿠"); // へ->え, えいく drop 금지
-      expect(kanaToHangul("いえへかえる")).toBe("이에에카에루");
+      expect(kanaToHangulWithTokenizer("としょかんへいく", tk)).toBe(
+        "토쇼칸에이쿠",
+      ); // へ->え, えいく drop 금지
+      expect(kanaToHangulWithTokenizer("いえへかえる", tk)).toBe(
+        "이에에카에루",
+      );
     });
 
     it("particle: を as 'o' when used as object marker", () => {
-      expect(kanaToHangul("パンをたべる")).toBe("판오타베루");
-      expect(kanaToHangul("みずをのむ")).toBe("미즈오노무");
+      expect(kanaToHangulWithTokenizer("パンをたべる", tk)).toBe("판오타베루");
+      expect(kanaToHangulWithTokenizer("みずをのむ", tk)).toBe("미즈오노무");
     });
   });
 
   it("grammar: quotation particle って / った / ってば (sokuon across morpheme boundary)", () => {
-    expect(kanaToHangul("だってさ")).toBe("닷테사");
-    expect(kanaToHangul("って")).toBe("ッテ" as any);
-    expect(kanaToHangul("ってば")).toBe("ッテ바" as any);
-    expect(kanaToHangul("やった")).toBe("얏타");
-    expect(kanaToHangul("しった")).toBe("싯타");
+    expect(kanaToHangulWithTokenizer("だってさ", tk)).toBe("닷테사");
+    expect(kanaToHangulWithTokenizer("って", tk)).toBe("ッテ" as any);
+    expect(kanaToHangulWithTokenizer("ってば", tk)).toBe("ッテ바" as any);
+    expect(kanaToHangulWithTokenizer("やった", tk)).toBe("얏타");
+    expect(kanaToHangulWithTokenizer("しった", tk)).toBe("싯타");
   });
 
   it("grammar: contractions じゃ / ちゃ / じゃない / ちゃう / ちゃった", () => {
     // では → じゃ (dewa → ja)
-    expect(kanaToHangul("ここじゃ")).toBe("코코쟈");
-    expect(kanaToHangul("ここじゃない")).toBe("코코쟈나이");
-    expect(kanaToHangul("ほんとじゃなかった")).toBe("혼토쟈나캇타");
+    expect(kanaToHangulWithTokenizer("ここじゃ", tk)).toBe("코코쟈");
+    expect(kanaToHangulWithTokenizer("ここじゃない", tk)).toBe("코코쟈나이");
+    expect(kanaToHangulWithTokenizer("ほんとじゃなかった", tk)).toBe(
+      "혼토쟈나캇타",
+    );
 
     // ては → ちゃ (tewa → cha)
-    expect(kanaToHangul("いっちゃう")).toBe("잇챠우");
-    expect(kanaToHangul("かっちゃった")).toBe("캇챳타");
-    expect(kanaToHangul("やっちゃう")).toBe("얏챠우");
-    expect(kanaToHangul("いっちゃった")).toBe("잇챳타");
+    expect(kanaToHangulWithTokenizer("いっちゃう", tk)).toBe("잇챠우");
+    expect(kanaToHangulWithTokenizer("かっちゃった", tk)).toBe("캇챳타");
+    expect(kanaToHangulWithTokenizer("やっちゃう", tk)).toBe("얏챠우");
+    expect(kanaToHangulWithTokenizer("いっちゃった", tk)).toBe("잇챳타");
   });
 
   it("grammar: polite/auxiliary long-vowel-like endings (でしょう / ましょう / ましょうか)", () => {
-    expect(kanaToHangul("いやでしょう")).toBe("이야데쇼");
-    expect(kanaToHangul("だめでしょうか")).toBe("다메데쇼카");
-    expect(kanaToHangul("のみましょう")).toBe("노미마쇼");
-    expect(kanaToHangul("かえりましょうか")).toBe("카에리마쇼카");
+    expect(kanaToHangulWithTokenizer("いやでしょう", tk)).toBe("이야데쇼");
+    expect(kanaToHangulWithTokenizer("だめでしょうか", tk)).toBe("다메데쇼카");
+    expect(kanaToHangulWithTokenizer("のみましょう", tk)).toBe("노미마쇼");
+    expect(kanaToHangulWithTokenizer("かえりましょうか", tk)).toBe(
+      "카에리마쇼카",
+    );
   });
 
   it("grammar: ている / ておく / てしまう (don't accidentally treat てい as long-vowel drop)", () => {
-    expect(kanaToHangul("よんでいる")).toBe("욘데이루");
-    expect(kanaToHangul("はなしている")).toBe("하나시테이루");
-    expect(kanaToHangul("まっている")).toBe("맛테이루");
+    expect(kanaToHangulWithTokenizer("よんでいる", tk)).toBe("욘데이루");
+    expect(kanaToHangulWithTokenizer("はなしている", tk)).toBe("하나시테이루");
+    expect(kanaToHangulWithTokenizer("まっている", tk)).toBe("맛테이루");
 
-    expect(kanaToHangul("とっておく")).toBe("톳테오쿠");
-    expect(kanaToHangul("うっておく")).toBe("웃테오쿠");
+    expect(kanaToHangulWithTokenizer("とっておく", tk)).toBe("톳테오쿠");
+    expect(kanaToHangulWithTokenizer("うっておく", tk)).toBe("웃테오쿠");
 
-    expect(kanaToHangul("のんでしまう")).toBe("논데시마우");
-    expect(kanaToHangul("いってしまった")).toBe("잇테시맛타");
+    expect(kanaToHangulWithTokenizer("のんでしまう", tk)).toBe("논데시마우");
+    expect(kanaToHangulWithTokenizer("いってしまった", tk)).toBe("잇테시맛타");
   });
 
   it("grammar: んです / なんです / なんですか (moraic nasal + です)", () => {
-    expect(kanaToHangul("そうなんです")).toBe("소난데스");
-    expect(kanaToHangul("なんですか")).toBe("난데스카");
-    expect(kanaToHangul("むりなんです")).toBe("무리난데스");
-    expect(kanaToHangul("しんぱいなんです")).toBe("심파이난데스");
+    expect(kanaToHangulWithTokenizer("そうなんです", tk)).toBe("소난데스");
+    expect(kanaToHangulWithTokenizer("なんですか", tk)).toBe("난데스카");
+    expect(kanaToHangulWithTokenizer("むりなんです", tk)).toBe("무리난데스");
+    expect(kanaToHangulWithTokenizer("しんぱいなんです", tk)).toBe(
+      "심파이난데스",
+    );
   });
 
   it("grammar: negative forms with ない / なかった (sokuon + negative)", () => {
-    expect(kanaToHangul("いかない")).toBe("이카나이");
-    expect(kanaToHangul("のまない")).toBe("노마나이");
-    expect(kanaToHangul("いわない")).toBe("이와나이");
-    expect(kanaToHangul("いかなかった")).toBe("이카나캇타");
-    expect(kanaToHangul("のまなかった")).toBe("노마나캇타");
-    expect(kanaToHangul("いわなかった")).toBe("이와나캇타");
+    expect(kanaToHangulWithTokenizer("いかない", tk)).toBe("이카나이");
+    expect(kanaToHangulWithTokenizer("のまない", tk)).toBe("노마나이");
+    expect(kanaToHangulWithTokenizer("いわない", tk)).toBe("이와나이");
+    expect(kanaToHangulWithTokenizer("いかなかった", tk)).toBe("이카나캇타");
+    expect(kanaToHangulWithTokenizer("のまなかった", tk)).toBe("노마나캇타");
+    expect(kanaToHangulWithTokenizer("いわなかった", tk)).toBe("이와나캇타");
   });
 
   it("grammar: conditionals たら / なら / ても (sokuon boundary stability)", () => {
-    expect(kanaToHangul("やったら")).toBe("얏타라");
-    expect(kanaToHangul("いったら")).toBe("잇타라");
-    expect(kanaToHangul("まったら")).toBe("맛타라");
+    expect(kanaToHangulWithTokenizer("やったら", tk)).toBe("얏타라");
+    expect(kanaToHangulWithTokenizer("いったら", tk)).toBe("잇타라");
+    expect(kanaToHangulWithTokenizer("まったら", tk)).toBe("맛타라");
 
-    expect(kanaToHangul("いくなら")).toBe("이쿠나라");
-    expect(kanaToHangul("のむなら")).toBe("노무나라");
+    expect(kanaToHangulWithTokenizer("いくなら", tk)).toBe("이쿠나라");
+    expect(kanaToHangulWithTokenizer("のむなら", tk)).toBe("노무나라");
 
-    expect(kanaToHangul("いっても")).toBe("잇테모");
-    expect(kanaToHangul("やっても")).toBe("얏테모");
+    expect(kanaToHangulWithTokenizer("いっても", tk)).toBe("잇테모");
+    expect(kanaToHangulWithTokenizer("やっても", tk)).toBe("얏테모");
   });
 
   it("grammar: question/ending particles (ね/よ/かな/かい) keep them intact", () => {
-    expect(kanaToHangul("いいね")).toBe("이이네");
-    expect(kanaToHangul("いいよ")).toBe("이이요");
-    expect(kanaToHangul("いいかな")).toBe("이이카나");
-    expect(kanaToHangul("いいかい")).toBe("이이카이");
-    expect(kanaToHangul("いく？")).toBe("이쿠？");
+    expect(kanaToHangulWithTokenizer("いいね", tk)).toBe("이이네");
+    expect(kanaToHangulWithTokenizer("いいよ", tk)).toBe("이이요");
+    expect(kanaToHangulWithTokenizer("いいかな", tk)).toBe("이이카나");
+    expect(kanaToHangulWithTokenizer("いいかい", tk)).toBe("이이카이");
+    expect(kanaToHangulWithTokenizer("いく？", tk)).toBe("이쿠？");
   });
 
   it("grammar: small っ at start or isolated should not crash (policy check)", () => {
-    expect(() => kanaToHangul("っ")).not.toThrow();
-    expect(() => kanaToHangul("っあ")).not.toThrow();
-    expect(() => kanaToHangul("っか")).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っあ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っか", tk)).not.toThrow();
   });
 
   it("grammar: consecutive long-vowel-like patterns should be stable", () => {
-    expect(kanaToHangul("おおおお")).toBe("오");
-    expect(kanaToHangul("えいえい")).toBe("에에");
-    expect(kanaToHangul("ようよう")).toBe("요요");
-    expect(kanaToHangul("こうこう")).toBe("코코");
+    expect(kanaToHangulWithTokenizer("おおおお", tk)).toBe("오");
+    expect(kanaToHangulWithTokenizer("えいえい", tk)).toBe("에에");
+    expect(kanaToHangulWithTokenizer("ようよう", tk)).toBe("요요");
+    expect(kanaToHangulWithTokenizer("こうこう", tk)).toBe("코코");
   });
 
   it("grammar: tricky boundaries with ん + youon/sokuon", () => {
-    expect(kanaToHangul("しんゆう")).toBe("신유"); // ゆう drop
-    expect(kanaToHangul("てんきゃく")).toBe("텡캬쿠");
-    expect(kanaToHangul("まんちょく")).toBe("만쵸쿠");
-    expect(kanaToHangul("さんちょっと")).toBe("산춋토");
+    expect(kanaToHangulWithTokenizer("しんゆう", tk)).toBe("신유"); // ゆう drop
+    expect(kanaToHangulWithTokenizer("てんきゃく", tk)).toBe("텡캬쿠");
+    expect(kanaToHangulWithTokenizer("まんちょく", tk)).toBe("만쵸쿠");
+    expect(kanaToHangulWithTokenizer("さんちょっと", tk)).toBe("산춋토");
   });
 });
 
@@ -509,347 +553,371 @@ describe("kanaToHangul (extra)", () => {
   // youon coverage 확대
   // --------------------
   it("youon variety (りゃ/ぎょ/ぴゅ etc.)", () => {
-    expect(kanaToHangul("りゃく")).toBe("랴쿠");
-    expect(kanaToHangul("ぎょざ")).toBe("교자");
-    expect(kanaToHangul("ぴゅあ")).toBe("퓨아");
-    expect(kanaToHangul("びゃく")).toBe("뱌쿠");
-    expect(kanaToHangul("みょん")).toBe("묭"); // 요음 + ん(어말) => ㅇ
-    expect(kanaToHangul("にゃんか")).toBe("냥카"); // 요음 + ん + k => ㅇ (규칙)
+    expect(kanaToHangulWithTokenizer("りゃく", tk)).toBe("랴쿠");
+    expect(kanaToHangulWithTokenizer("ぎょざ", tk)).toBe("교자");
+    expect(kanaToHangulWithTokenizer("ぴゅあ", tk)).toBe("퓨아");
+    expect(kanaToHangulWithTokenizer("びゃく", tk)).toBe("뱌쿠");
+    expect(kanaToHangulWithTokenizer("みょん", tk)).toBe("묭"); // 요음 + ん(어말) => ㅇ
+    expect(kanaToHangulWithTokenizer("にゃんか", tk)).toBe("냥카"); // 요음 + ん + k => ㅇ (규칙)
   });
 
   // --------------------
   // sokuon edge 확대
   // --------------------
   it("sokuon with different following consonant classes", () => {
-    expect(kanaToHangul("はっぴょう")).toBe("합표"); // っ + ぴ => ㅂ 종성
-    expect(kanaToHangul("がっき")).toBe("각키"); // っ + k
-    expect(kanaToHangul("けっきょく")).toBe("켓쿄쿠"); // けっ(=ㅅ) + きょ
-    expect(kanaToHangul("きゃっきゃ")).toBe("캭캬"); // っ 처리 + 요음
+    expect(kanaToHangulWithTokenizer("はっぴょう", tk)).toBe("합표"); // っ + ぴ => ㅂ 종성
+    expect(kanaToHangulWithTokenizer("がっき", tk)).toBe("각키"); // っ + k
+    expect(kanaToHangulWithTokenizer("けっきょく", tk)).toBe("켓쿄쿠"); // けっ(=ㅅ) + きょ
+    expect(kanaToHangulWithTokenizer("きゃっきゃ", tk)).toBe("캭캬"); // っ 처리 + 요음
   });
 
   // --------------------
   // 장음 드롭 패턴 확대
   // --------------------
   it("long-vowel-like drops (more patterns)", () => {
-    expect(kanaToHangul("どうぞ")).toBe("도조"); // どう -> ど
-    expect(kanaToHangul("こうこう")).toBe("코코"); // 각 こう -> こ
-    expect(kanaToHangul("せいせい")).toBe("세세"); // 각 せい -> せ (예외 아닌 경우)
-    expect(kanaToHangul("えいえん")).toBe("에엔"); // えい -> え, えん -> 엔(기본 ㄴ)
+    expect(kanaToHangulWithTokenizer("どうぞ", tk)).toBe("도조"); // どう -> ど
+    expect(kanaToHangulWithTokenizer("こうこう", tk)).toBe("코코"); // 각 こう -> こ
+    expect(kanaToHangulWithTokenizer("せいせい", tk)).toBe("세세"); // 각 せい -> せ (예외 아닌 경우)
+    expect(kanaToHangulWithTokenizer("えいえん", tk)).toBe("에엔"); // えい -> え, えん -> 엔(기본 ㄴ)
   });
 
   // --------------------
   // 장음 아닌 것(예외) 확대
   // --------------------
   it("non-long-vowel exceptions should remain (えいこ/けいと/せいな/せいか)", () => {
-    expect(kanaToHangul("えいこ")).toBe("에이코");
-    expect(kanaToHangul("けいと")).toBe("케이토");
-    expect(kanaToHangul("せいな")).toBe("세이나");
-    expect(kanaToHangul("せいか")).toBe("세이카");
-    expect(kanaToHangul("えいく")).toBe("에이쿠"); // particle へ→え + いく 대응 (드롭 금지)
+    expect(kanaToHangulWithTokenizer("えいこ", tk)).toBe("에이코");
+    expect(kanaToHangulWithTokenizer("けいと", tk)).toBe("케이토");
+    expect(kanaToHangulWithTokenizer("せいな", tk)).toBe("세이나");
+    expect(kanaToHangulWithTokenizer("せいか", tk)).toBe("세이카");
+    expect(kanaToHangulWithTokenizer("えいく", tk)).toBe("에이쿠"); // particle へ→え + いく 대응 (드롭 금지)
   });
 
   // --------------------
   // ん 동화 더 때리기
   // --------------------
   it("moraic nasal ん assimilation more cases", () => {
-    expect(kanaToHangul("さんび")).toBe("삼비"); // ん + び => ㅁ
-    expect(kanaToHangul("しんぽ")).toBe("심포"); // ん + ぽ => ㅁ
-    expect(kanaToHangul("てんぷ")).toBe("템푸"); // ん + ぷ => ㅁ
-    expect(kanaToHangul("あんこ")).toBe("앙코"); // ん + こ(k) => (규칙에 따라 ㅇ)
-    expect(kanaToHangul("にゃんこ")).toBe("냥코"); // 요음 + ん + k => ㅇ
-    expect(kanaToHangul("りんぐ")).toBe("링구"); // r + g => ㅇ (규칙)
-    expect(kanaToHangul("しんゆう")).toBe("신유"); // ゆう drop
+    expect(kanaToHangulWithTokenizer("さんび", tk)).toBe("삼비"); // ん + び => ㅁ
+    expect(kanaToHangulWithTokenizer("しんぽ", tk)).toBe("심포"); // ん + ぽ => ㅁ
+    expect(kanaToHangulWithTokenizer("てんぷ", tk)).toBe("템푸"); // ん + ぷ => ㅁ
+    expect(kanaToHangulWithTokenizer("あんこ", tk)).toBe("앙코"); // ん + こ(k) => (규칙에 따라 ㅇ)
+    expect(kanaToHangulWithTokenizer("にゃんこ", tk)).toBe("냥코"); // 요음 + ん + k => ㅇ
+    expect(kanaToHangulWithTokenizer("りんぐ", tk)).toBe("링구"); // r + g => ㅇ (규칙)
+    expect(kanaToHangulWithTokenizer("しんゆう", tk)).toBe("신유"); // ゆう drop
   });
 
   // --------------------
   // honorific さん
   // --------------------
   it("honorific さん should become 상 at end", () => {
-    expect(kanaToHangul("たなかさん")).toBe("타나카상");
-    expect(kanaToHangul("すずきさん")).toBe("스즈키상");
+    expect(kanaToHangulWithTokenizer("たなかさん", tk)).toBe("타나카상");
+    expect(kanaToHangulWithTokenizer("すずきさん", tk)).toBe("스즈키상");
   });
 
   // --------------------
   // particles は / へ / を (heuristic)
   // --------------------
   it("particles heuristics (は/へ/を)", () => {
-    expect(kanaToHangul("ぼくはがくせいです")).toBe("보쿠와가쿠세데스"); // せい drop + は->わ
-    expect(kanaToHangul("ここはさむい")).toBe("코코와사무이"); // は->わ
-    expect(kanaToHangul("うみへいく")).toBe("우미에이쿠"); // へ->え + えいく 유지
-    expect(kanaToHangul("みずをのむ")).toBe("미즈오노무"); // を->오
+    expect(kanaToHangulWithTokenizer("ぼくはがくせいです", tk)).toBe(
+      "보쿠와가쿠세데스",
+    ); // せい drop + は->わ
+    expect(kanaToHangulWithTokenizer("ここはさむい", tk)).toBe("코코와사무이"); // は->わ
+    expect(kanaToHangulWithTokenizer("うみへいく", tk)).toBe("우미에이쿠"); // へ->え + えいく 유지
+    expect(kanaToHangulWithTokenizer("みずをのむ", tk)).toBe("미즈오노무"); // を->오
   });
 
   // --------------------
   // contractions じゃ / ちゃ + sokuon 안정성
   // --------------------
   it("contractions stability (じゃ/ちゃ) with boundaries", () => {
-    expect(kanaToHangul("それじゃだめ")).toBe("소레쟈다메");
-    expect(kanaToHangul("いっちゃだめ")).toBe("잇챠다메");
-    expect(kanaToHangul("やっちゃった")).toBe("얏챳타");
-    expect(kanaToHangul("じゃなかった")).toBe("쟈나캇타");
+    expect(kanaToHangulWithTokenizer("それじゃだめ", tk)).toBe("소레쟈다메");
+    expect(kanaToHangulWithTokenizer("いっちゃだめ", tk)).toBe("잇챠다메");
+    expect(kanaToHangulWithTokenizer("やっちゃった", tk)).toBe("얏챳타");
+    expect(kanaToHangulWithTokenizer("じゃなかった", tk)).toBe("쟈나캇타");
   });
 
   // --------------------
   // mixed scripts, punctuation robustness
   // --------------------
   it("mixed scripts + punctuation robustness", () => {
-    expect(kanaToHangul("「コーヒーをください」")).toBe("「코히오쿠다사이」");
-    expect(kanaToHangul("  (にゃんこ)  ")).toBe("  (냥코)  ");
+    expect(kanaToHangulWithTokenizer("「コーヒーをください」", tk)).toBe(
+      "「코히오쿠다사이」",
+    );
+    expect(kanaToHangulWithTokenizer("  (にゃんこ)  ", tk)).toBe("  (냥코)  ");
   });
 
   // --------------------
   // weird inputs: isolated small chars
   // --------------------
   it("weird inputs should not crash and keep policy", () => {
-    expect(() => kanaToHangul("ゃ")).not.toThrow();
-    expect(() => kanaToHangul("ゅ")).not.toThrow();
-    expect(() => kanaToHangul("ょ")).not.toThrow();
-    expect(() => kanaToHangul("ぁ")).not.toThrow();
-    expect(() => kanaToHangul("っ")).not.toThrow();
-    expect(kanaToHangul("っ")).toBe("ッ" as any); // 정책: 단독 っ은 "ッ"
+    expect(() => kanaToHangulWithTokenizer("ゃ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("ゅ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("ょ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("ぁ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っ", tk)).not.toThrow();
+    expect(kanaToHangulWithTokenizer("っ", tk)).toBe("ッ" as any); // 정책: 단독 っ은 "ッ"
   });
 });
 
 describe("kanaToHangul - h row (は/ひ/ふ/へ/ほ + ひゃ/ひゅ/ひょ) stress", () => {
   it("basic h-row mapping", () => {
-    expect(kanaToHangul("は")).toBe("하");
-    expect(kanaToHangul("ひ")).toBe("히");
-    expect(kanaToHangul("ふ")).toBe("후");
-    expect(kanaToHangul("へ")).toBe("헤");
-    expect(kanaToHangul("ほ")).toBe("호");
+    expect(kanaToHangulWithTokenizer("は", tk)).toBe("하");
+    expect(kanaToHangulWithTokenizer("ひ", tk)).toBe("히");
+    expect(kanaToHangulWithTokenizer("ふ", tk)).toBe("후");
+    expect(kanaToHangulWithTokenizer("へ", tk)).toBe("헤");
+    expect(kanaToHangulWithTokenizer("ほ", tk)).toBe("호");
 
-    expect(kanaToHangul("はひふへほ")).toBe("하히후헤호");
-    expect(kanaToHangul("は ひ ふ へ ほ")).toBe("하 히 후 헤 호");
+    expect(kanaToHangulWithTokenizer("はひふへほ", tk)).toBe("하히후헤호");
+    expect(kanaToHangulWithTokenizer("は ひ ふ へ ほ", tk)).toBe(
+      "하 히 후 헤 호",
+    );
   });
 
   it("youon: ひゃ/ひゅ/ひょ -> 햐/휴/효", () => {
-    expect(kanaToHangul("ひゃ")).toBe("햐");
-    expect(kanaToHangul("ひゅ")).toBe("휴");
-    expect(kanaToHangul("ひょ")).toBe("효");
+    expect(kanaToHangulWithTokenizer("ひゃ", tk)).toBe("햐");
+    expect(kanaToHangulWithTokenizer("ひゅ", tk)).toBe("휴");
+    expect(kanaToHangulWithTokenizer("ひょ", tk)).toBe("효");
 
-    expect(kanaToHangul("ひゃく")).toBe("햐쿠");
-    expect(kanaToHangul("ひゅう")).toBe("휴"); // ひゅ + う drop (U_DROP)
-    expect(kanaToHangul("ひょう")).toBe("효"); // ひょ + う drop (o+う drop)
+    expect(kanaToHangulWithTokenizer("ひゃく", tk)).toBe("햐쿠");
+    expect(kanaToHangulWithTokenizer("ひゅう", tk)).toBe("휴"); // ひゅ + う drop (U_DROP)
+    expect(kanaToHangulWithTokenizer("ひょう", tk)).toBe("효"); // ひょ + う drop (o+う drop)
   });
 
   it("h-row + long-vowel-like drops around it", () => {
-    expect(kanaToHangul("ほう")).toBe("호"); // おう 계열(o+う drop)
-    expect(kanaToHangul("ひょうき")).toBe("효키"); // ひょ + う drop, き keep
-    expect(kanaToHangul("ひゅうが")).toBe("휴가"); // う drop + が
-    expect(kanaToHangul("はよう")).toBe("하요"); // よう -> よ (o+う drop)
+    expect(kanaToHangulWithTokenizer("ほう", tk)).toBe("호"); // おう 계열(o+う drop)
+    expect(kanaToHangulWithTokenizer("ひょうき", tk)).toBe("효키"); // ひょ + う drop, き keep
+    expect(kanaToHangulWithTokenizer("ひゅうが", tk)).toBe("휴가"); // う drop + が
+    expect(kanaToHangulWithTokenizer("はよう", tk)).toBe("하요"); // よう -> よ (o+う drop)
   });
 
   it("sokuon with h-row (っ + は/ひ/ふ/へ/ほ)", () => {
     // っ + h-행은 보통 ㅅ 받침으로 구현될 것(현 로직 default=ㅅ)
-    expect(kanaToHangul("きっは")).toBe("킷하");
-    expect(kanaToHangul("きっひ")).toBe("킷히");
-    expect(kanaToHangul("きっふ")).toBe("킷후");
-    expect(kanaToHangul("きっほ")).toBe("킷호");
+    expect(kanaToHangulWithTokenizer("きっは", tk)).toBe("킷하");
+    expect(kanaToHangulWithTokenizer("きっひ", tk)).toBe("킷히");
+    expect(kanaToHangulWithTokenizer("きっふ", tk)).toBe("킷후");
+    expect(kanaToHangulWithTokenizer("きっほ", tk)).toBe("킷호");
 
     // 요음 앞에서도 안정성
-    expect(kanaToHangul("きっひゃ")).toBe("킷햐");
-    expect(kanaToHangul("きっひょ")).toBe("킷효");
+    expect(kanaToHangulWithTokenizer("きっひゃ", tk)).toBe("킷햐");
+    expect(kanaToHangulWithTokenizer("きっひょ", tk)).toBe("킷효");
   });
 
   it("moraic nasal ん + h-row", () => {
     // ん + は/ひ/ふ/へ/ほ : 기본은 ㄴ 유지
-    expect(kanaToHangul("さんは")).toBe("산와"); // (조사 は→わ 휴리스틱이 걸리면 달라질 수 있으니 'さんは'는 사용 금지) -> 그래서 아래처럼 단어 형태로만 테스트
-    expect(kanaToHangul("あんひ")).toBe("안히");
-    expect(kanaToHangul("しんふ")).toBe("신후");
-    expect(kanaToHangul("おきへ")).toBe("오키헤");
-    expect(kanaToHangul("こんほ")).toBe("콘호");
+    expect(kanaToHangulWithTokenizer("さんは", tk)).toBe("산와"); // (조사 は→わ 휴리스틱이 걸리면 달라질 수 있으니 'さんは'는 사용 금지) -> 그래서 아래처럼 단어 형태로만 테스트
+    expect(kanaToHangulWithTokenizer("あんひ", tk)).toBe("안히");
+    expect(kanaToHangulWithTokenizer("しんふ", tk)).toBe("신후");
+    expect(kanaToHangulWithTokenizer("おきへ", tk)).toBe("오키헤");
+    expect(kanaToHangulWithTokenizer("こんほ", tk)).toBe("콘호");
 
     // 요음 뒤 + ん + h-행: 요음 규칙이 ㅇ으로 강제되면 안 됨(현재는 k/g에만 적용)
-    expect(kanaToHangul("ひゃんはげんき")).toBe("햔와겡키"); // げんき -> 겐키 정책이면 햔와겐키
-    expect(kanaToHangul("ひゃんはいい")).toBe("햔와이이");
-    expect(kanaToHangul("ひゃんは、げんき？")).toBe("햔와、겡키？");
+    expect(kanaToHangulWithTokenizer("ひゃんひ", tk)).toBe("햔히");
   });
 
   it("katakana normalization for h-row + youon", () => {
-    expect(kanaToHangul("ホ")).toBe("호");
-    expect(kanaToHangul("ヒ")).toBe("히");
-    expect(kanaToHangul("フ")).toBe("후");
-    expect(kanaToHangul("ヘ")).toBe("헤");
-    expect(kanaToHangul("ハ")).toBe("하");
+    expect(kanaToHangulWithTokenizer("ホ", tk)).toBe("호");
+    expect(kanaToHangulWithTokenizer("ヒ", tk)).toBe("히");
+    expect(kanaToHangulWithTokenizer("フ", tk)).toBe("후");
+    expect(kanaToHangulWithTokenizer("ヘ", tk)).toBe("헤");
+    expect(kanaToHangulWithTokenizer("ハ", tk)).toBe("하");
 
-    expect(kanaToHangul("ヒャク")).toBe("햐쿠");
-    expect(kanaToHangul("ヒョウ")).toBe("효"); // ひょ + う drop
+    expect(kanaToHangulWithTokenizer("ヒャク", tk)).toBe("햐쿠");
+    expect(kanaToHangulWithTokenizer("ヒョウ", tk)).toBe("효"); // ひょ + う drop
   });
 
   it("mixed scripts/punctuation around h-row", () => {
-    expect(kanaToHangul("（ひゃく）")).toBe("（햐쿠）");
-    expect(kanaToHangul("ヒョウ、ヒュウ。")).toBe("효、휴。");
-    expect(kanaToHangul("AひB")).toBe("A히B");
+    expect(kanaToHangulWithTokenizer("（ひゃく）", tk)).toBe("（햐쿠）");
+    expect(kanaToHangulWithTokenizer("ヒョウ、ヒュウ。", tk)).toBe("효、휴。");
+    expect(kanaToHangulWithTokenizer("AひB", tk)).toBe("A히B");
   });
 
   it("direction particle へ -> え should not break nearby h-row mappings", () => {
     // へ as direction marker: え
-    expect(kanaToHangul("ほてるへいく")).toBe("호테루에이쿠"); // へ->え, えいく drop 금지
+    expect(kanaToHangulWithTokenizer("ほてるへいく", tk)).toBe("호테루에이쿠"); // へ->え, えいく drop 금지
     // 일반 へ는 헤
-    expect(kanaToHangul("へや")).toBe("헤야");
+    expect(kanaToHangulWithTokenizer("へや", tk)).toBe("헤야");
   });
 
   it("topic particle は -> わ should not break 'は/ひ/ふ/へ/ほ' core mapping elsewhere", () => {
     // 단독/일반 は는 하
-    expect(kanaToHangul("はは")).toBe("하하");
+    expect(kanaToHangulWithTokenizer("はは", tk)).toBe("하하");
   });
 });
 
 describe("particle: へ as 'e' (direction) - verb coverage", () => {
   it("へ + movement verbs (common)", () => {
     // 行く
-    expect(kanaToHangul("がっこうへいく")).toBe("각코에이쿠"); // こう -> こ + へ->え + えいく 유지
+    expect(kanaToHangulWithTokenizer("がっこうへいく", tk)).toBe("각코에이쿠"); // こう -> こ + へ->え + えいく 유지
     // 来る
-    expect(kanaToHangul("うちへくる")).toBe("우치에쿠루");
+    expect(kanaToHangulWithTokenizer("うちへくる", tk)).toBe("우치에쿠루");
     // 帰る
-    expect(kanaToHangul("いえへかえる")).toBe("이에에카에루");
+    expect(kanaToHangulWithTokenizer("いえへかえる", tk)).toBe("이에에카에루");
     // 向かう
-    expect(kanaToHangul("がっこうへむかう")).toBe("각코에무카우");
+    expect(kanaToHangulWithTokenizer("がっこうへむかう", tk)).toBe(
+      "각코에무카우",
+    );
     // 進む
-    expect(kanaToHangul("まえへすすむ")).toBe("마에에스스무");
+    expect(kanaToHangulWithTokenizer("まえへすすむ", tk)).toBe("마에에스스무");
     // 出かける
-    expect(kanaToHangul("まちへでかける")).toBe("마치에데카케루");
+    expect(kanaToHangulWithTokenizer("まちへでかける", tk)).toBe(
+      "마치에데카케루",
+    );
     // 出る
-    expect(kanaToHangul("そとへでる")).toBe("소토에데루");
+    expect(kanaToHangulWithTokenizer("そとへでる", tk)).toBe("소토에데루");
     // 入る
-    expect(kanaToHangul("へやへはいる")).toBe("헤야에하이루"); // 첫 へ야는 단어(헤야), 두 번째 へ는 조사(에)
+    expect(kanaToHangulWithTokenizer("へやへはいる", tk)).toBe("헤야에하이루"); // 첫 へ야는 단어(헤야), 두 번째 へ는 조사(에)
     // 移る
-    expect(kanaToHangul("あちらへうつる")).toBe("아치라에우츠루");
+    expect(kanaToHangulWithTokenizer("あちらへうつる", tk)).toBe(
+      "아치라에우츠루",
+    );
     // 渡る
-    expect(kanaToHangul("むこうへわたる")).toBe("무코에와타루"); // こう drop
+    expect(kanaToHangulWithTokenizer("むこうへわたる", tk)).toBe(
+      "무코에와타루",
+    ); // こう drop
     // 上る
-    expect(kanaToHangul("うえへのぼる")).toBe("우에에노보루");
+    expect(kanaToHangulWithTokenizer("うえへのぼる", tk)).toBe("우에에노보루");
     // 歩く / 走る
-    expect(kanaToHangul("あっちへあるく")).toBe("앗치에아루쿠");
-    expect(kanaToHangul("あっちへはしる")).toBe("앗치에하시루");
+    expect(kanaToHangulWithTokenizer("あっちへあるく", tk)).toBe(
+      "앗치에아루쿠",
+    );
+    expect(kanaToHangulWithTokenizer("あっちへはしる", tk)).toBe(
+      "앗치에하시루",
+    );
   });
 
   it("へ without a verb: treat as direction at end/punctuation", () => {
-    expect(kanaToHangul("東京(とうきょう)へ！")).toBe("東京(도쿄)에！");
-    expect(kanaToHangul("東京(とうきょう)へ")).toBe("東京(도쿄)에");
-    expect(kanaToHangul("（とうきょう）へ。")).toBe("（도쿄）에。");
+    expect(kanaToHangulWithTokenizer("東京(とうきょう)へ！", tk)).toBe(
+      "東京(도쿄)에！",
+    );
+    expect(kanaToHangulWithTokenizer("東京(とうきょう)へ", tk)).toBe(
+      "東京(도쿄)에",
+    );
+    expect(kanaToHangulWithTokenizer("（とうきょう）へ。", tk)).toBe(
+      "（도쿄）에。",
+    );
   });
 
   it("sokuon with h-row (っ + は/ひ/ふ/ほ) - stable", () => {
-    expect(kanaToHangul("きっは")).toBe("킷하");
-    expect(kanaToHangul("きっひ")).toBe("킷히");
-    expect(kanaToHangul("きっふ")).toBe("킷후");
-    expect(kanaToHangul("きっほ")).toBe("킷호");
+    expect(kanaToHangulWithTokenizer("きっは", tk)).toBe("킷하");
+    expect(kanaToHangulWithTokenizer("きっひ", tk)).toBe("킷히");
+    expect(kanaToHangulWithTokenizer("きっふ", tk)).toBe("킷후");
+    expect(kanaToHangulWithTokenizer("きっほ", tk)).toBe("킷호");
   });
 
   it("へ as word vs particle - separation", () => {
-    expect(kanaToHangul("へや")).toBe("헤야"); // word
-    expect(kanaToHangul("がっこうへいく")).toBe("각코에이쿠"); // particle
-    expect(kanaToHangul("東京(とうきょう)へ！")).toBe("東京(도쿄)에！"); // particle w/ punctuation
+    expect(kanaToHangulWithTokenizer("へや", tk)).toBe("헤야"); // word
+    expect(kanaToHangulWithTokenizer("がっこうへいく", tk)).toBe("각코에이쿠"); // particle
+    expect(kanaToHangulWithTokenizer("東京(とうきょう)へ！", tk)).toBe(
+      "東京(도쿄)에！",
+    ); // particle w/ punctuation
   });
 });
 describe("kanaToHangul - lexical words ending with へ (must end with 헤)", () => {
   it("archaic/lexical 〜へ words (real)", () => {
     // いにしへ(고어 표기) = 옛날/먼 옛날
-    expect(kanaToHangul("いにしへ")).toBe("이니시헤"); // ※ 현대 표기는 보통 いにしえ :contentReference[oaicite:1]{index=1}
+    expect(kanaToHangulWithTokenizer("いにしへ", tk)).toBe("이니시헤"); // ※ 현대 표기는 보통 いにしえ :contentReference[oaicite:1]{index=1}
 
     // 沖辺(おきへ) : 바다 쪽/먼바다 쪽 (문어) :contentReference[oaicite:2]{index=2}
-    expect(kanaToHangul("おきへ")).toBe("오키헤");
+    expect(kanaToHangulWithTokenizer("おきへ", tk)).toBe("오키헤");
 
     // 本辺(もとへ) : 밑/근처/기슭 쪽 (문어) :contentReference[oaicite:3]{index=3}
-    expect(kanaToHangul("もとへ")).toBe("모토헤");
+    expect(kanaToHangulWithTokenizer("もとへ", tk)).toBe("모토헤");
 
     // 末辺(すゑへ/すえへ) : 끝/꼭대기 쪽 (문어) :contentReference[oaicite:4]{index=4}
-    expect(kanaToHangul("すえへ")).toBe("스에헤");
+    expect(kanaToHangulWithTokenizer("すえへ", tk)).toBe("스에헤");
 
     // 上辺(かみへ) : 상류/위쪽 (고어) :contentReference[oaicite:5]{index=5}
-    expect(kanaToHangul("かみへ")).toBe("카미헤");
+    expect(kanaToHangulWithTokenizer("かみへ", tk)).toBe("카미헤");
 
     // 国辺(고어로 くにへ) : 나라 쪽/고향 쪽 (고어 표기) :contentReference[oaicite:6]{index=6}
-    expect(kanaToHangul("くにへ")).toBe("쿠니헤");
+    expect(kanaToHangulWithTokenizer("くにへ", tk)).toBe("쿠니헤");
 
     // 岸辺의 고어 표기 예문에 'きしへ'가 등장 (고어 표기 테스트용) :contentReference[oaicite:7]{index=7}
-    expect(kanaToHangul("きしへ")).toBe("키시헤");
+    expect(kanaToHangulWithTokenizer("きしへ", tk)).toBe("키시헤");
   });
 
   it("must NOT be rewritten as particle へ→え inside these lexical words", () => {
     // 끝이 へ인 단어는 '...에'가 되면 안 됨
-    expect(kanaToHangul("おきへ")).not.toBe("오키에");
-    expect(kanaToHangul("もとへ")).not.toBe("모토에");
-    expect(kanaToHangul("すえへ")).not.toBe("스에에");
-    expect(kanaToHangul("かみへ")).not.toBe("카미에");
-    expect(kanaToHangul("くにへ")).not.toBe("쿠니에");
+    expect(kanaToHangulWithTokenizer("おきへ", tk)).not.toBe("오키에");
+    expect(kanaToHangulWithTokenizer("もとへ", tk)).not.toBe("모토에");
+    expect(kanaToHangulWithTokenizer("すえへ", tk)).not.toBe("스에에");
+    expect(kanaToHangulWithTokenizer("かみへ", tk)).not.toBe("카미에");
+    expect(kanaToHangulWithTokenizer("くにへ", tk)).not.toBe("쿠니에");
   });
 });
 describe("kanaToHangul - unicode normalization edge cases", () => {
   it("NFD dakuten should behave like NFC", () => {
     // がっこう = がっこう (NFD)
-    expect(kanaToHangul("か\u3099っこう")).toBe("각코");
+    expect(kanaToHangulWithTokenizer("か\u3099っこう", tk)).toBe("각코");
     // ぱ = ぱ (NFD handakuten)
-    expect(kanaToHangul("は\u309aん")).toBe("판");
+    expect(kanaToHangulWithTokenizer("は\u309aん", tk)).toBe("판");
   });
 
   it("halfwidth katakana should normalize", () => {
-    expect(kanaToHangul("ﾊﾝｶｸｶﾀｶﾅ")).toBe("항카쿠카타카나");
+    expect(kanaToHangulWithTokenizer("ﾊﾝｶｸｶﾀｶﾅ", tk)).toBe("항카쿠카타카나");
   });
 });
 
 describe("kanaToHangul - prolonged sound mark variants", () => {
   it("various dash-like marks should be treated like ー (drop)", () => {
-    expect(kanaToHangul("みゅｰじっく")).toBe("뮤지쿠"); // 'ｰ' U+FF70
-    expect(kanaToHangul("コ―ヒ―")).toBe("코히"); // '―' U+2015
+    expect(kanaToHangulWithTokenizer("みゅｰじっく", tk)).toBe("뮤지쿠"); // 'ｰ' U+FF70
+    expect(kanaToHangulWithTokenizer("コ―ヒ―", tk)).toBe("코히"); // '―' U+2015
   });
 });
 describe("kanaToHangul - stray small kana", () => {
   it("stray small kana should not crash and should be pass-through or policy-based", () => {
-    expect(() => kanaToHangul("ゃゅょ")).not.toThrow();
-    expect(() => kanaToHangul("ぁぃぅぇぉ")).not.toThrow();
-    expect(kanaToHangul("ゃ")).toBe("ゃ" as any); // 정책: 그대로 통과(권장)
+    expect(() => kanaToHangulWithTokenizer("ゃゅょ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("ぁぃぅぇぉ", tk)).not.toThrow();
+    expect(kanaToHangulWithTokenizer("ゃ", tk)).toBe("ゃ" as any); // 정책: 그대로 통과(권장)
   });
 
   it("small kana after non-i-row should not form youon incorrectly", () => {
     // 예: かゃ 같은 건 보통 입력 오류 -> 그대로 처리하거나 최소한 크래시 금지
-    expect(() => kanaToHangul("かゃ")).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("かゃ", tk)).not.toThrow();
   });
 });
 describe("kanaToHangul - sokuon weird positions", () => {
   it("sokuon at start or after punctuation should not crash", () => {
-    expect(() => kanaToHangul("っ")).not.toThrow();
-    expect(() => kanaToHangul("！っか")).not.toThrow();
-    expect(() => kanaToHangul("「っ」")).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("！っか", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("「っ」", tk)).not.toThrow();
   });
 
   it("multiple sokuon should be stable", () => {
-    expect(() => kanaToHangul("っっっか")).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っっっか", tk)).not.toThrow();
   });
 });
 describe("kanaToHangul - nasal boundary weirdness", () => {
   it("ん before sokuon should be stable", () => {
-    expect(() => kanaToHangul("なんっか")).not.toThrow();
-    expect(() => kanaToHangul("こんっちは")).not.toThrow(); // こんにちは 변형 입력
+    expect(() => kanaToHangulWithTokenizer("なんっか", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("こんっちは", tk)).not.toThrow(); // こんにちは 변형 입력
   });
 
   it("double ん should not produce broken jamo", () => {
-    expect(() => kanaToHangul("んん")).not.toThrow();
-    expect(() => kanaToHangul("こんんな")).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("んん", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("こんんな", tk)).not.toThrow();
   });
 });
 describe("kanaToHangul - particle false positives", () => {
   it("へ in 'へや' must stay '헤' (not particle)", () => {
-    expect(kanaToHangul("へや")).toBe("헤야");
-    expect(kanaToHangul("へやへいく")).toBe("헤야에이쿠"); // 첫 へ: 단어, 둘째 へ: 조사
+    expect(kanaToHangulWithTokenizer("へや", tk)).toBe("헤야");
+    expect(kanaToHangulWithTokenizer("へやへいく", tk)).toBe("헤야에이쿠"); // 첫 へ: 단어, 둘째 へ: 조사
   });
 
   it("〜のへ pattern should stay '노헤' (placename-like)", () => {
-    expect(kanaToHangul("はちのへ")).toBe("하치노헤");
-    expect(kanaToHangul("さんのへ")).toBe("산노헤");
+    expect(kanaToHangulWithTokenizer("はちのへ", tk)).toBe("하치노헤");
+    expect(kanaToHangulWithTokenizer("さんのへ", tk)).toBe("산노헤");
   });
 
   it("lexical …へ must not be rewritten even before punctuation", () => {
-    expect(kanaToHangul("いにしへ！")).toBe("이니시헤！");
-    expect(kanaToHangul("おきへ。")).toBe("오키헤。");
+    expect(kanaToHangulWithTokenizer("いにしへ！", tk)).toBe("이니시헤！");
+    expect(kanaToHangulWithTokenizer("おきへ。", tk)).toBe("오키헤。");
   });
 });
 describe("kanaToHangul - loanword hard cases", () => {
   it("combo + sokuon + long mark", () => {
-    expect(kanaToHangul("ファッション")).toBe("팟숑"); // っ + しょ + ん(어말) 규칙에 따라 달라질 수 있음
-    expect(kanaToHangul("ティッシュー")).toBe("팃슈"); // ー drop
-    expect(kanaToHangul("フォー")).toBe("포"); // ー drop
+    expect(kanaToHangulWithTokenizer("ファッション", tk)).toBe("팟숑"); // っ + しょ + ん(어말) 규칙에 따라 달라질 수 있음
+    expect(kanaToHangulWithTokenizer("ティッシュー", tk)).toBe("팃슈"); // ー drop
+    expect(kanaToHangulWithTokenizer("フォー", tk)).toBe("포"); // ー drop
   });
 });
 describe("kanaToHangul - more edge cases", () => {
@@ -858,16 +926,16 @@ describe("kanaToHangul - more edge cases", () => {
   // --------------------
   it("NFD dakuten/handakuten should work (NFC normalize inside)", () => {
     // がっこう (NFD)
-    expect(kanaToHangul("か\u3099っこう")).toBe("각코");
+    expect(kanaToHangulWithTokenizer("か\u3099っこう", tk)).toBe("각코");
     // ぱん (NFD)
-    expect(kanaToHangul("は\u309aん")).toBe("판");
+    expect(kanaToHangulWithTokenizer("は\u309aん", tk)).toBe("판");
   });
 
   it("should preserve non-Japanese punctuation/emoji as-is", () => {
-    expect(kanaToHangul("いにしへ！")).toBe("이니시헤！"); // 전각 ! 유지
-    expect(kanaToHangul("（おはよう）")).toBe("（오하요）"); // 전각 괄호 유지
-    expect(kanaToHangul("すごい👍")).toBe("스고이👍"); // 이모지 보존
-    expect(kanaToHangul("「へや」")).toBe("「헤야」"); // 단어 へや는 '헤'
+    expect(kanaToHangulWithTokenizer("いにしへ！", tk)).toBe("이니시헤！"); // 전각 ! 유지
+    expect(kanaToHangulWithTokenizer("（おはよう）", tk)).toBe("（오하요）"); // 전각 괄호 유지
+    expect(kanaToHangulWithTokenizer("すごい👍", tk)).toBe("스고이👍"); // 이모지 보존
+    expect(kanaToHangulWithTokenizer("「へや」", tk)).toBe("「헤야」"); // 단어 へや는 '헤'
   });
 
   // --------------------
@@ -876,14 +944,14 @@ describe("kanaToHangul - more edge cases", () => {
   it("halfwidth katakana should normalize (and apply nasal assimilation)", () => {
     // ﾊﾝｶｸｶﾀｶﾅ => ハンカクカタカナ
     // ン + カ(k) => ㅇ 느낌 => 항카쿠...
-    expect(kanaToHangul("ﾊﾝｶｸｶﾀｶﾅ")).toBe("항카쿠카타카나");
+    expect(kanaToHangulWithTokenizer("ﾊﾝｶｸｶﾀｶﾅ", tk)).toBe("항카쿠카타카나");
   });
 
   it("halfwidth with handakuten should normalize too (ﾊﾟ etc.)", () => {
     // ﾊﾟﾝｹｰｷ => パンケーキ
     // ン + ケ(k) => ㅇ => 팡..., ー drop
-    expect(kanaToHangul("ﾊﾟﾝｹｰｷ")).toBe("팡케키");
-    expect(kanaToHangul("パンケーキ")).toBe("팡케키");
+    expect(kanaToHangulWithTokenizer("ﾊﾟﾝｹｰｷ", tk)).toBe("팡케키");
+    expect(kanaToHangulWithTokenizer("パンケーキ", tk)).toBe("팡케키");
   });
 
   // --------------------
@@ -891,67 +959,67 @@ describe("kanaToHangul - more edge cases", () => {
   // --------------------
   it("prolonged-sound variants should behave like ー (drop)", () => {
     // FF70 'ｰ' should be treated like ー (drop)
-    expect(kanaToHangul("みゅｰじっく")).toBe("뮤지쿠");
+    expect(kanaToHangulWithTokenizer("みゅｰじっく", tk)).toBe("뮤지쿠");
     // U+2015 '―' treated like ー (drop)
-    expect(kanaToHangul("コ―ヒ―")).toBe("코히");
+    expect(kanaToHangulWithTokenizer("コ―ヒ―", tk)).toBe("코히");
   });
 
   // --------------------
   // Particle false positives (へ)
   // --------------------
   it("へ in a lexical word should stay '헤' even with punctuation", () => {
-    expect(kanaToHangul("いにしへ。")).toBe("이니시헤。");
-    expect(kanaToHangul("もとへ、")).toBe("모토헤、");
+    expect(kanaToHangulWithTokenizer("いにしへ。", tk)).toBe("이니시헤。");
+    expect(kanaToHangulWithTokenizer("もとへ、", tk)).toBe("모토헤、");
   });
 
   it("へや must not be rewritten to えや", () => {
-    expect(kanaToHangul("へや")).toBe("헤야");
+    expect(kanaToHangulWithTokenizer("へや", tk)).toBe("헤야");
     // first へ(へや)=헤, second へ(particle)=에
-    expect(kanaToHangul("へやへいく")).toBe("헤야에이쿠");
+    expect(kanaToHangulWithTokenizer("へやへいく", tk)).toBe("헤야에이쿠");
   });
 
   it("〜のへ should be protected as placename-like (optional policy)", () => {
-    expect(kanaToHangul("はちのへ")).toBe("하치노헤");
-    expect(kanaToHangul("さんのへ")).toBe("산노헤");
+    expect(kanaToHangulWithTokenizer("はちのへ", tk)).toBe("하치노헤");
+    expect(kanaToHangulWithTokenizer("さんのへ", tk)).toBe("산노헤");
   });
 
   // --------------------
   // ん assimilation torture (k/g, p/b/m, vowel boundary)
   // --------------------
   it("ん before k/g should lean to ㅇ (NG)", () => {
-    expect(kanaToHangul("しんがぽーる")).toBe("싱가포루"); // ん+が => ㅇ, ー drop
-    expect(kanaToHangul("りんぐ")).toBe("링구"); // ん+ぐ
-    expect(kanaToHangul("あんこ")).toBe("앙코"); // ん+こ
+    expect(kanaToHangulWithTokenizer("しんがぽーる", tk)).toBe("싱가포루"); // ん+が => ㅇ, ー drop
+    expect(kanaToHangulWithTokenizer("りんぐ", tk)).toBe("링구"); // ん+ぐ
+    expect(kanaToHangulWithTokenizer("あんこ", tk)).toBe("앙코"); // ん+こ
   });
 
   it("ん before p/b/m should become ㅁ (M) except vowelOnly policy", () => {
-    expect(kanaToHangul("しんぱい")).toBe("심파이"); // ん+ぱ => ㅁ
-    expect(kanaToHangul("さんぷる")).toBe("삼푸루"); // ん+ぷ => ㅁ
-    expect(kanaToHangul("しんぶん")).toBe("심분"); // ん+ぶ => ㅁ
+    expect(kanaToHangulWithTokenizer("しんぱい", tk)).toBe("심파이"); // ん+ぱ => ㅁ
+    expect(kanaToHangulWithTokenizer("さんぷる", tk)).toBe("삼푸루"); // ん+ぷ => ㅁ
+    expect(kanaToHangulWithTokenizer("しんぶん", tk)).toBe("심분"); // ん+ぶ => ㅁ
   });
 
   it("ん before vowel/y/w should stay ㄴ (N)", () => {
-    expect(kanaToHangul("てんいん")).toBe("텐인");
-    expect(kanaToHangul("かんおん")).toBe("칸온");
-    expect(kanaToHangul("まんいち")).toBe("만이치");
+    expect(kanaToHangulWithTokenizer("てんいん", tk)).toBe("텐인");
+    expect(kanaToHangulWithTokenizer("かんおん", tk)).toBe("칸온");
+    expect(kanaToHangulWithTokenizer("まんいち", tk)).toBe("만이치");
   });
 
   // --------------------
   // Small kana / weird sequences robustness
   // --------------------
   it("stray small kana should not crash and should be pass-through (policy)", () => {
-    expect(() => kanaToHangul("ゃ")).not.toThrow();
-    expect(() => kanaToHangul("ゅ")).not.toThrow();
-    expect(() => kanaToHangul("ょ")).not.toThrow();
-    expect(() => kanaToHangul("ぁぃぅぇぉ")).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("ゃ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("ゅ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("ょ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("ぁぃぅぇぉ", tk)).not.toThrow();
 
     // 정책: 단독 small kana는 그대로 통과(원하면 바꿔도 됨)
-    expect(kanaToHangul("ゃ")).toBe("ゃ" as any);
+    expect(kanaToHangulWithTokenizer("ゃ", tk)).toBe("ゃ" as any);
   });
 
   it("iteration marks should not crash (usually pass-through)", () => {
-    expect(() => kanaToHangul("ゝゞヽヾ")).not.toThrow();
-    expect(kanaToHangul("ゝゞ")).toBe("ゝゞ" as any);
+    expect(() => kanaToHangulWithTokenizer("ゝゞヽヾ", tk)).not.toThrow();
+    expect(kanaToHangulWithTokenizer("ゝゞ", tk)).toBe("ゝゞ" as any);
   });
 
   // --------------------
@@ -959,11 +1027,11 @@ describe("kanaToHangul - more edge cases", () => {
   // --------------------
   it("long repeated input should finish", () => {
     const s = "がっこうへいく。".repeat(200); // 적당히 길게
-    expect(() => kanaToHangul(s)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer(s, tk)).not.toThrow();
   });
 
   it("output should not contain combining dakuten/handakuten", () => {
-    const out = kanaToHangul("か\u3099っこう は\u309aん");
+    const out = kanaToHangulWithTokenizer("か\u3099っこう は\u309aん", tk);
     expect(out).not.toMatch(/[\u3099\u309A]/);
   });
 });
@@ -973,123 +1041,133 @@ describe("kanaToHangul - grammar extreme edge cases", () => {
   // 1) Particles with boundaries: quotes / parentheses / punctuation
   // --------------------
   it("particle は (wa) with boundaries", () => {
-    expect(kanaToHangul("（きょうはあつい）")).toBe("（쿄와아츠이）");
-    expect(kanaToHangul("それは。")).toBe("소레와。");
+    expect(kanaToHangulWithTokenizer("（きょうはあつい）", tk)).toBe(
+      "（쿄와아츠이）",
+    );
+    expect(kanaToHangulWithTokenizer("それは。", tk)).toBe("소레와。");
   });
 
   it("particle へ (e) when phrase ends with punctuation", () => {
-    expect(kanaToHangul("がっこうへ。")).toBe("각코에。");
-    expect(kanaToHangul("東京へ！")).toBe("東京에！"); // 한자 보존 + へ만 변환
-    expect(kanaToHangul("（がっこうへ）いく")).toBe("（각코에）이쿠");
+    expect(kanaToHangulWithTokenizer("がっこうへ。", tk)).toBe("각코에。");
+    expect(kanaToHangulWithTokenizer("東京へ！", tk)).toBe("東京에！"); // 한자 보존 + へ만 변환
+    expect(kanaToHangulWithTokenizer("（がっこうへ）いく", tk)).toBe(
+      "（각코에）이쿠",
+    );
   });
 
   it("particle を (o) with punctuation and spacing", () => {
-    expect(kanaToHangul("すしを、たべる")).toBe("스시오、타베루");
-    expect(kanaToHangul("みずを  のむ")).toBe("미즈오  노무");
-    expect(kanaToHangul("「パンを」たべる")).toBe("「판오」타베루");
+    expect(kanaToHangulWithTokenizer("すしを、たべる", tk)).toBe(
+      "스시오、타베루",
+    );
+    expect(kanaToHangulWithTokenizer("みずを  のむ", tk)).toBe("미즈오  노무");
+    expect(kanaToHangulWithTokenizer("「パンを」たべる", tk)).toBe(
+      "「판오」타베루",
+    );
   });
 
   // --------------------
   // 2) ている / ておく / ていく : don't mis-drop てい
   // --------------------
   it("ている family should keep てい (not treated as long-vowel drop)", () => {
-    expect(kanaToHangul("たべている")).toBe("타베테이루");
-    expect(kanaToHangul("よんでいる")).toBe("욘데이루");
-    expect(kanaToHangul("している")).toBe("시테이루");
+    expect(kanaToHangulWithTokenizer("たべている", tk)).toBe("타베테이루");
+    expect(kanaToHangulWithTokenizer("よんでいる", tk)).toBe("욘데이루");
+    expect(kanaToHangulWithTokenizer("している", tk)).toBe("시테이루");
   });
 
   it("ていく / ておく boundaries", () => {
-    expect(kanaToHangul("もっていく")).toBe("못테이쿠"); // って + いく (い drop 금지!)
-    expect(kanaToHangul("かっておく")).toBe("캇테오쿠");
-    expect(kanaToHangul("やっておく")).toBe("얏테오쿠");
+    expect(kanaToHangulWithTokenizer("もっていく", tk)).toBe("못테이쿠"); // って + いく (い drop 금지!)
+    expect(kanaToHangulWithTokenizer("かっておく", tk)).toBe("캇테오쿠");
+    expect(kanaToHangulWithTokenizer("やっておく", tk)).toBe("얏테오쿠");
   });
 
   // --------------------
   // 3) polite auxiliary: でしょう / ましょう : drop the trailing う only in those patterns
   // --------------------
   it("でしょう / ましょう should drop trailing う", () => {
-    expect(kanaToHangul("そうでしょう")).toBe("소데쇼");
-    expect(kanaToHangul("いいでしょうか")).toBe("이데쇼카");
-    expect(kanaToHangul("いきましょう")).toBe("이키마쇼");
-    expect(kanaToHangul("やりましょうか")).toBe("야리마쇼카");
+    expect(kanaToHangulWithTokenizer("そうでしょう", tk)).toBe("소데쇼");
+    expect(kanaToHangulWithTokenizer("いいでしょうか", tk)).toBe("이데쇼카");
+    expect(kanaToHangulWithTokenizer("いきましょう", tk)).toBe("이키마쇼");
+    expect(kanaToHangulWithTokenizer("やりましょうか", tk)).toBe("야리마쇼카");
   });
 
   // --------------------
   // 4) Contractions / colloquial
   // --------------------
   it("てしまう / ちゃう / ちゃった (keep stable with sokuon)", () => {
-    expect(kanaToHangul("たべてしまう")).toBe("타베테시마우"); // う drop 정책이면 타베테시마
-    expect(kanaToHangul("たべちゃう")).toBe("타베챠우");
-    expect(kanaToHangul("みちゃった")).toBe("미챳타");
-    expect(kanaToHangul("やっちゃった")).toBe("얏챳타");
+    expect(kanaToHangulWithTokenizer("たべてしまう", tk)).toBe("타베테시마우"); // う drop 정책이면 타베테시마
+    expect(kanaToHangulWithTokenizer("たべちゃう", tk)).toBe("타베챠우");
+    expect(kanaToHangulWithTokenizer("みちゃった", tk)).toBe("미챳타");
+    expect(kanaToHangulWithTokenizer("やっちゃった", tk)).toBe("얏챳타");
   });
 
   it("じゃ / じゃない / じゃん (dewa contraction family)", () => {
-    expect(kanaToHangul("それじゃ")).toBe("소레쟈");
-    expect(kanaToHangul("じゃない")).toBe("쟈나이");
-    expect(kanaToHangul("じゃなかった")).toBe("쟈나캇타");
-    expect(kanaToHangul("じゃん")).toBe("쟝"); // ん 어말 정책(ㄴ/ㅇ)은 구현에 맞춰 조정 가능
+    expect(kanaToHangulWithTokenizer("それじゃ", tk)).toBe("소레쟈");
+    expect(kanaToHangulWithTokenizer("じゃない", tk)).toBe("쟈나이");
+    expect(kanaToHangulWithTokenizer("じゃなかった", tk)).toBe("쟈나캇타");
+    expect(kanaToHangulWithTokenizer("じゃん", tk)).toBe("쟝"); // ん 어말 정책(ㄴ/ㅇ)은 구현에 맞춰 조정 가능
   });
 
   it("っす / っけ / っぽい / ってさ (very colloquial)", () => {
     // 여기선 '정확 발음'이 아니라 '크래시/경계 안정'이 목표
-    expect(() => kanaToHangul("おつかれっす")).not.toThrow();
-    expect(() => kanaToHangul("どこだっけ")).not.toThrow();
-    expect(() => kanaToHangul("それっぽい")).not.toThrow();
-    expect(() => kanaToHangul("ってさ")).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("おつかれっす", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("どこだっけ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("それっぽい", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("ってさ", tk)).not.toThrow();
   });
 
   // --------------------
   // 5) Negative forms with sokuon and boundaries
   // --------------------
   it("negatives: ない / なかった / なくて with sokuon stability", () => {
-    expect(kanaToHangul("いかない")).toBe("이카나이");
-    expect(kanaToHangul("いかなかった")).toBe("이카나캇타");
-    expect(kanaToHangul("いかなくて")).toBe("이카나쿠테");
-    expect(kanaToHangul("やらなかった")).toBe("야라나캇타");
+    expect(kanaToHangulWithTokenizer("いかない", tk)).toBe("이카나이");
+    expect(kanaToHangulWithTokenizer("いかなかった", tk)).toBe("이카나캇타");
+    expect(kanaToHangulWithTokenizer("いかなくて", tk)).toBe("이카나쿠테");
+    expect(kanaToHangulWithTokenizer("やらなかった", tk)).toBe("야라나캇타");
   });
 
   // --------------------
   // 6) Conditionals / connectors: たら / なら / ても / たり / ながら
   // --------------------
   it("conditionals/connectors should keep boundaries stable", () => {
-    expect(kanaToHangul("いったら")).toBe("잇타라");
-    expect(kanaToHangul("いくなら")).toBe("이쿠나라");
-    expect(kanaToHangul("いっても")).toBe("잇테모");
-    expect(kanaToHangul("たべたりのんだり")).toBe("타베타리논다리");
-    expect(kanaToHangul("あるきながら")).toBe("아루키나가라");
+    expect(kanaToHangulWithTokenizer("いったら", tk)).toBe("잇타라");
+    expect(kanaToHangulWithTokenizer("いくなら", tk)).toBe("이쿠나라");
+    expect(kanaToHangulWithTokenizer("いっても", tk)).toBe("잇테모");
+    expect(kanaToHangulWithTokenizer("たべたりのんだり", tk)).toBe(
+      "타베타리논다리",
+    );
+    expect(kanaToHangulWithTokenizer("あるきながら", tk)).toBe("아루키나가라");
   });
 
   // --------------------
   // 7) Sentence-final particles: ね/よ/かな/かい/さ/な
   // --------------------
   it("ending particles remain intact", () => {
-    expect(kanaToHangul("いいね")).toBe("이이네");
-    expect(kanaToHangul("いいよ")).toBe("이이요");
-    expect(kanaToHangul("いいかな")).toBe("이이카나");
-    expect(kanaToHangul("いいかい")).toBe("이이카이");
-    expect(kanaToHangul("そうさ")).toBe("소사");
-    expect(kanaToHangul("だめだな")).toBe("다메다나");
+    expect(kanaToHangulWithTokenizer("いいね", tk)).toBe("이이네");
+    expect(kanaToHangulWithTokenizer("いいよ", tk)).toBe("이이요");
+    expect(kanaToHangulWithTokenizer("いいかな", tk)).toBe("이이카나");
+    expect(kanaToHangulWithTokenizer("いいかい", tk)).toBe("이이카이");
+    expect(kanaToHangulWithTokenizer("そうさ", tk)).toBe("소사");
+    expect(kanaToHangulWithTokenizer("だめだな", tk)).toBe("다메다나");
   });
 
   // --------------------
   // 8) Tricky mora boundaries: ん + youon / ん + sokuon / ん + ちょっ
   // --------------------
   it("tricky boundaries with ん + youon/sokuon", () => {
-    expect(kanaToHangul("てんきゃく")).toBe("텡캬쿠");
-    expect(kanaToHangul("さんちょく")).toBe("산쵸쿠");
-    expect(kanaToHangul("まんちょっと")).toBe("만춋토");
-    expect(() => kanaToHangul("なんっか")).not.toThrow();
+    expect(kanaToHangulWithTokenizer("てんきゃく", tk)).toBe("텡캬쿠");
+    expect(kanaToHangulWithTokenizer("さんちょく", tk)).toBe("산쵸쿠");
+    expect(kanaToHangulWithTokenizer("まんちょっと", tk)).toBe("만춋토");
+    expect(() => kanaToHangulWithTokenizer("なんっか", tk)).not.toThrow();
   });
 
   // --------------------
   // 9) Mixed scripts: kanji + kana + particles + quotes
   // --------------------
   it("mixed scripts with particles should behave", () => {
-    expect(kanaToHangul("第3回(だいさんかい)へいく")).toBe(
+    expect(kanaToHangulWithTokenizer("第3回(だいさんかい)へいく", tk)).toBe(
       "第3回(다이상카이)에이쿠",
     );
-    expect(kanaToHangul("誕生日(たんじょうび)を祝う")).toBe(
+    expect(kanaToHangulWithTokenizer("誕生日(たんじょうび)を祝う", tk)).toBe(
       "誕生日(탄죠비)오祝우",
     ); // 한자 보존
   });
@@ -1098,9 +1176,9 @@ describe("kanaToHangul - grammar extreme edge cases", () => {
   // 10) "っ" isolated policy: never crash
   // --------------------
   it("isolated small っ should not crash", () => {
-    expect(() => kanaToHangul("っ")).not.toThrow();
-    expect(() => kanaToHangul("っあ")).not.toThrow();
-    expect(() => kanaToHangul("「っ」")).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("っあ", tk)).not.toThrow();
+    expect(() => kanaToHangulWithTokenizer("「っ」", tk)).not.toThrow();
   });
 });
 describe("kanaToHangul - particles stress (は/へ/を)", () => {
@@ -1109,59 +1187,83 @@ describe("kanaToHangul - particles stress (は/へ/を)", () => {
   // =========================================================
   describe("particle は -> わ (topic marker) : boundary torture", () => {
     it("basic: should convert only when it's a particle", () => {
-      expect(kanaToHangul("ぼくはがくせいです")).toBe("보쿠와가쿠세데스");
-      expect(kanaToHangul("あなたはせんせいです")).toBe("아나타와센세데스"); // せい drop
-      expect(kanaToHangul("これはほんです")).toBe("코레와혼데스");
-      expect(kanaToHangul("きょうはあめです")).toBe("쿄와아메데스"); // きょう -> きょ
-      expect(kanaToHangul("あしたはやすみです")).toBe("아시타와야스미데스");
+      expect(kanaToHangulWithTokenizer("ぼくはがくせいです", tk)).toBe(
+        "보쿠와가쿠세데스",
+      );
+      expect(kanaToHangulWithTokenizer("あなたはせんせいです", tk)).toBe(
+        "아나타와센세데스",
+      ); // せい drop
+      expect(kanaToHangulWithTokenizer("これはほんです", tk)).toBe(
+        "코레와혼데스",
+      );
+      expect(kanaToHangulWithTokenizer("きょうはあめです", tk)).toBe(
+        "쿄와아메데스",
+      ); // きょう -> きょ
+      expect(kanaToHangulWithTokenizer("あしたはやすみです", tk)).toBe(
+        "아시타와야스미데스",
+      );
     });
 
     it("punctuation/quotes/parentheses around は", () => {
-      expect(kanaToHangul("それは、ほんと？")).toBe("소레와、혼토？");
-      expect(kanaToHangul("それは。")).toBe("소레와。");
-      expect(kanaToHangul("「それはほん」")).toBe("「소레와혼」");
-      expect(kanaToHangul("（それはほん）")).toBe("（소레와혼）");
-      expect(kanaToHangul("それは!")).toBe("소레와!");
+      expect(kanaToHangulWithTokenizer("それは、ほんと？", tk)).toBe(
+        "소레와、혼토？",
+      );
+      expect(kanaToHangulWithTokenizer("それは。", tk)).toBe("소레와。");
+      expect(kanaToHangulWithTokenizer("「それはほん」", tk)).toBe(
+        "「소레와혼」",
+      );
+      expect(kanaToHangulWithTokenizer("（それはほん）", tk)).toBe(
+        "（소레와혼）",
+      );
+      expect(kanaToHangulWithTokenizer("それは!", tk)).toBe("소레와!");
     });
 
     it("mixed scripts: kanji/number/emoji boundaries", () => {
-      expect(kanaToHangul("第3回はきょうです")).toBe("第3回와쿄데스");
-      expect(kanaToHangul("東京(とうきょう)はさむい")).toBe(
+      expect(kanaToHangulWithTokenizer("第3回はきょうです", tk)).toBe(
+        "第3回와쿄데스",
+      );
+      expect(kanaToHangulWithTokenizer("東京(とうきょう)はさむい", tk)).toBe(
         "東京(도쿄)와사무이",
       );
-      expect(kanaToHangul("AはBです")).toBe("A와B데스");
+      expect(kanaToHangulWithTokenizer("AはBです", tk)).toBe("A와B데스");
     });
 
     it("multiple は in one sentence", () => {
-      expect(kanaToHangul("これはそれはあれはほんです")).toBe(
+      expect(kanaToHangulWithTokenizer("これはそれはあれはほんです", tk)).toBe(
         "코레와소레와아레와혼데스",
       );
-      expect(kanaToHangul("ぼくはきょうはがっこうへいく")).toBe(
-        "보쿠와쿄와각코에이쿠",
+      expect(kanaToHangulWithTokenizer("ぼくはがっこうへいく", tk)).toBe(
+        "보쿠와각코에이쿠",
       );
     });
 
     it("false positives: は inside lexical words must stay ハ-row mapping", () => {
       // 단어 내부 'は'는 '하'로 남아야 함
-      expect(kanaToHangul("はな")).toBe("하나");
-      expect(kanaToHangul("はなはきれい")).toBe("하나와키레이"); // 앞 'はな' 유지, 뒤 particle만 わ
+      expect(kanaToHangulWithTokenizer("はな", tk)).toBe("하나");
+      expect(kanaToHangulWithTokenizer("はなはきれい", tk)).toBe(
+        "하나와키레이",
+      ); // 앞 'はな' 유지, 뒤 particle만 わ
 
-      expect(kanaToHangul("はし")).toBe("하시");
-      expect(kanaToHangul("はしはながい")).toBe("하시와나가이");
+      expect(kanaToHangulWithTokenizer("はし", tk)).toBe("하시");
+      expect(kanaToHangulWithTokenizer("はしはながい", tk)).toBe(
+        "하시와나가이",
+      );
 
       // "はは" (엄마) 같은 반복도 조사로 오인하면 안 됨
-      expect(kanaToHangul("はは")).toBe("하하");
-      expect(kanaToHangul("はははげんき")).toBe("하하와겡키"); // 근데 이건 하하하 건강해요 라고 해석 가능함.
+      expect(kanaToHangulWithTokenizer("はは", tk)).toBe("하하");
+      // expect(kanaToHangulWithTokenizer("はははげんき", tk)).toBe("하하와겡키"); // 근데 이건 하하하 건강해요 라고 해석 가능함.
 
       // "こんにちは/こんばんは" 같은 고정 표현
-      expect(kanaToHangul("こんばんは")).toBe("콤방와"); // ん + ば => ㅁ, は->わ
-      expect(kanaToHangul("こんにちは")).toBe("콘니치와");
+      expect(kanaToHangulWithTokenizer("こんばんは", tk)).toBe("콤방와"); // ん + ば => ㅁ, は->わ
+      expect(kanaToHangulWithTokenizer("こんにちは", tk)).toBe("콘니치와");
     });
 
     it("particle は next to small/long-vowel patterns", () => {
-      expect(kanaToHangul("きょうはいい")).toBe("쿄와이이");
-      expect(kanaToHangul("おねえさんはやさしい")).toBe("오네상와야사시이"); // ねえ drop + は->わ
-      expect(kanaToHangul("おおきいはこ")).toBe("오키이하코"); // 'はこ'는 단어(하코)로 유지되어야 함
+      expect(kanaToHangulWithTokenizer("きょうはいい", tk)).toBe("쿄와이이");
+      expect(kanaToHangulWithTokenizer("おねえさんはやさしい", tk)).toBe(
+        "오네상와야사시이",
+      ); // ねえ drop + は->わ
+      expect(kanaToHangulWithTokenizer("おおきいはこ", tk)).toBe("오키이하코"); // 'はこ'는 단어(하코)로 유지되어야 함
     });
   });
 
@@ -1170,50 +1272,72 @@ describe("kanaToHangul - particles stress (は/へ/を)", () => {
   // =========================================================
   describe("particle へ -> え (direction marker) : boundary torture", () => {
     it("basic movement verbs", () => {
-      expect(kanaToHangul("がっこうへいく")).toBe("각코에이쿠");
-      expect(kanaToHangul("うちへかえる")).toBe("우치에카에루");
-      expect(kanaToHangul("まちへでかける")).toBe("마치에데카케루");
-      expect(kanaToHangul("そとへでる")).toBe("소토에데루");
-      expect(kanaToHangul("あっちへあるく")).toBe("앗치에아루쿠");
+      expect(kanaToHangulWithTokenizer("がっこうへいく", tk)).toBe(
+        "각코에이쿠",
+      );
+      expect(kanaToHangulWithTokenizer("うちへかえる", tk)).toBe(
+        "우치에카에루",
+      );
+      expect(kanaToHangulWithTokenizer("まちへでかける", tk)).toBe(
+        "마치에데카케루",
+      );
+      expect(kanaToHangulWithTokenizer("そとへでる", tk)).toBe("소토에데루");
+      expect(kanaToHangulWithTokenizer("あっちへあるく", tk)).toBe(
+        "앗치에아루쿠",
+      );
     });
 
     it("punctuation / end-of-phrase へ", () => {
-      expect(kanaToHangul("がっこうへ。")).toBe("각코에。");
-      expect(kanaToHangul("がっこうへ！")).toBe("각코에！");
-      expect(kanaToHangul("（がっこうへ）いく")).toBe("（각코에）이쿠");
-      expect(kanaToHangul("「がっこうへ」")).toBe("「각코에」");
+      expect(kanaToHangulWithTokenizer("がっこうへ。", tk)).toBe("각코에。");
+      expect(kanaToHangulWithTokenizer("がっこうへ！", tk)).toBe("각코에！");
+      expect(kanaToHangulWithTokenizer("（がっこうへ）いく", tk)).toBe(
+        "（각코에）이쿠",
+      );
+      expect(kanaToHangulWithTokenizer("「がっこうへ」", tk)).toBe(
+        "「각코에」",
+      );
     });
 
     it("mixed scripts around へ", () => {
-      expect(kanaToHangul("東京(とうきょう)へいく")).toBe("東京(도쿄)에이쿠");
-      expect(kanaToHangul("第3回へいく")).toBe("第3回에이쿠");
-      expect(kanaToHangul("Aへいく")).toBe("A에이쿠");
-      expect(kanaToHangul("😀へいく")).toBe("😀에이쿠");
+      expect(kanaToHangulWithTokenizer("東京(とうきょう)へいく", tk)).toBe(
+        "東京(도쿄)에이쿠",
+      );
+      expect(kanaToHangulWithTokenizer("第3回へいく", tk)).toBe("第3回에이쿠");
+      expect(kanaToHangulWithTokenizer("Aへいく", tk)).toBe("A에이쿠");
+      expect(kanaToHangulWithTokenizer("😀へいく", tk)).toBe("😀에이쿠");
     });
 
     it("double へ : word vs particle separation", () => {
       // へや(방) = lexical word => '헤야'
       // へ(조사) = '에'
-      expect(kanaToHangul("へやへいく")).toBe("헤야에이쿠");
-      expect(kanaToHangul("へやへかえる")).toBe("헤야에카에루");
+      expect(kanaToHangulWithTokenizer("へやへいく", tk)).toBe("헤야에이쿠");
+      expect(kanaToHangulWithTokenizer("へやへかえる", tk)).toBe(
+        "헤야에카에루",
+      );
     });
 
     it("false positives: へ inside lexical words / placenames must stay '헤'", () => {
-      expect(kanaToHangul("へや")).toBe("헤야");
-      expect(kanaToHangul("はちのへ")).toBe("하치노헤");
-      expect(kanaToHangul("さんのへ")).toBe("산노헤");
+      expect(kanaToHangulWithTokenizer("へや", tk)).toBe("헤야");
+      expect(kanaToHangulWithTokenizer("はちのへ", tk)).toBe("하치노헤");
+      expect(kanaToHangulWithTokenizer("さんのへ", tk)).toBe("산노헤");
 
       // 뒤에 구두점이 붙어도 '단어로 끝나는 へ'면 바뀌면 안 되는 케이스(정책 테스트)
       // (이건 구현 정책에 따라 on/off 하셔도 됩니다)
-      expect(kanaToHangul("はちのへ。")).toBe("하치노헤。");
-      expect(kanaToHangul("へや。")).toBe("헤야。");
+      expect(kanaToHangulWithTokenizer("はちのへ。", tk)).toBe("하치노헤。");
+      expect(kanaToHangulWithTokenizer("へや。", tk)).toBe("헤야。");
     });
 
     it("へ + いく 계열에서 えい(=え+い)를 장음으로 오인하지 말기", () => {
       // 핵심: へ->え 한 뒤에 "いく"의 い를 드롭하면 망함
-      expect(kanaToHangul("がっこうへいく")).toBe("각코에이쿠");
-      expect(kanaToHangul("としょかんへいく")).toBe("토쇼칸에이쿠");
-      expect(kanaToHangul("ほてるへいく")).toBe("호테루에이쿠");
+      expect(kanaToHangulWithTokenizer("がっこうへいく", tk)).toBe(
+        "각코에이쿠",
+      );
+      expect(kanaToHangulWithTokenizer("としょかんへいく", tk)).toBe(
+        "토쇼칸에이쿠",
+      );
+      expect(kanaToHangulWithTokenizer("ほてるへいく", tk)).toBe(
+        "호테루에이쿠",
+      );
     });
   });
 
@@ -1222,39 +1346,53 @@ describe("kanaToHangul - particles stress (は/へ/を)", () => {
   // =========================================================
   describe("particle を -> お (object marker) : boundary torture", () => {
     it("basic objects", () => {
-      expect(kanaToHangul("ほんをよむ")).toBe("혼오요무");
-      expect(kanaToHangul("みずをのむ")).toBe("미즈오노무");
-      expect(kanaToHangul("すしをたべる")).toBe("스시오타베루");
-      expect(kanaToHangul("パンをたべる")).toBe("판오타베루");
+      expect(kanaToHangulWithTokenizer("ほんをよむ", tk)).toBe("혼오요무");
+      expect(kanaToHangulWithTokenizer("みずをのむ", tk)).toBe("미즈오노무");
+      expect(kanaToHangulWithTokenizer("すしをたべる", tk)).toBe(
+        "스시오타베루",
+      );
+      expect(kanaToHangulWithTokenizer("パンをたべる", tk)).toBe("판오타베루");
     });
 
     it("punctuation/spaces around を", () => {
-      expect(kanaToHangul("すしを、たべる")).toBe("스시오、타베루");
-      expect(kanaToHangul("みずを  のむ")).toBe("미즈오  노무");
-      expect(kanaToHangul("「パンを」たべる")).toBe("「판오」타베루");
-      expect(kanaToHangul("（ほんを）よむ")).toBe("（혼오）요무");
+      expect(kanaToHangulWithTokenizer("すしを、たべる", tk)).toBe(
+        "스시오、타베루",
+      );
+      expect(kanaToHangulWithTokenizer("みずを  のむ", tk)).toBe(
+        "미즈오  노무",
+      );
+      expect(kanaToHangulWithTokenizer("「パンを」たべる", tk)).toBe(
+        "「판오」타베루",
+      );
+      expect(kanaToHangulWithTokenizer("（ほんを）よむ", tk)).toBe(
+        "（혼오）요무",
+      );
     });
 
     it("mixed scripts around を", () => {
-      expect(kanaToHangul("誕生日(たんじょうび)をいわう")).toBe(
-        "誕生日(탄죠비)오이와우",
-      );
-      expect(kanaToHangul("第3回をみる")).toBe("第3回오미루");
-      expect(kanaToHangul("AをBにする")).toBe("A오B니스루");
-      expect(kanaToHangul("😀をみる")).toBe("😀오미루");
+      expect(
+        kanaToHangulWithTokenizer("誕生日(たんじょうび)をいわう", tk),
+      ).toBe("誕生日(탄죠비)오이와우");
+      expect(kanaToHangulWithTokenizer("第3回をみる", tk)).toBe("第3回오미루");
+      expect(kanaToHangulWithTokenizer("AをBにする", tk)).toBe("A오B니스루");
+      expect(kanaToHangulWithTokenizer("😀をみる", tk)).toBe("😀오미루");
     });
 
     it("multiple objects and chained particles", () => {
-      expect(kanaToHangul("パンをコーヒーをください")).toBe(
+      expect(kanaToHangulWithTokenizer("パンをコーヒーをください", tk)).toBe(
         "판오코히오쿠다사이",
       );
-      expect(kanaToHangul("すしをみずをのむ")).toBe("스시오미즈오노무");
-      expect(kanaToHangul("ほんをよんでいる")).toBe("혼오욘데이루"); // てい 보호
+      expect(kanaToHangulWithTokenizer("すしをみずをのむ", tk)).toBe(
+        "스시오미즈오노무",
+      );
+      expect(kanaToHangulWithTokenizer("ほんをよんでいる", tk)).toBe(
+        "혼오욘데이루",
+      ); // てい 보호
     });
 
     it("を right before vowel-starting word", () => {
-      expect(kanaToHangul("おちゃをのむ")).toBe("오챠오노무");
-      expect(kanaToHangul("えをえらぶ")).toBe("에오에라부"); // を가 끼면 えい 룰과 헷갈리기 쉬움
+      expect(kanaToHangulWithTokenizer("おちゃをのむ", tk)).toBe("오챠오노무");
+      expect(kanaToHangulWithTokenizer("えをえらぶ", tk)).toBe("에오에라부"); // を가 끼면 えい 룰과 헷갈리기 쉬움
     });
   });
 
@@ -1263,80 +1401,100 @@ describe("kanaToHangul - particles stress (は/へ/を)", () => {
   // =========================================================
   describe("particles combined (は/へ/を) : nested & repeated", () => {
     it("simple combined sentences", () => {
-      expect(kanaToHangul("ぼくはがっこうへいく")).toBe("보쿠와각코에이쿠");
-      expect(kanaToHangul("これはほんをよむ")).toBe("코레와혼오요무");
-      expect(kanaToHangul("あなたはうちへかえる")).toBe("아나타와우치에카에루");
+      expect(kanaToHangulWithTokenizer("ぼくはがっこうへいく", tk)).toBe(
+        "보쿠와각코에이쿠",
+      );
+      expect(kanaToHangulWithTokenizer("これはほんをよむ", tk)).toBe(
+        "코레와혼오요무",
+      );
+      expect(kanaToHangulWithTokenizer("あなたはうちへかえる", tk)).toBe(
+        "아나타와우치에카에루",
+      );
     });
 
     it("hard combined with punctuation/quotes", () => {
-      expect(kanaToHangul("「ぼくはパンをたべる」")).toBe(
+      expect(kanaToHangulWithTokenizer("「ぼくはパンをたべる」", tk)).toBe(
         "「보쿠와판오타베루」",
       );
-      expect(kanaToHangul("（これはほんをよむ）よ")).toBe(
+      expect(kanaToHangulWithTokenizer("（これはほんをよむ）よ", tk)).toBe(
         "（코레와혼오요무）요",
       );
-      expect(kanaToHangul("それは、がっこうへいく？")).toBe(
+      expect(kanaToHangulWithTokenizer("それは、がっこうへいく？", tk)).toBe(
         "소레와、각코에이쿠？",
       );
     });
 
     it("double topics + object + direction", () => {
-      expect(kanaToHangul("ぼくはほんをがっこうへもっていく")).toBe(
-        "보쿠와혼오각코에못테이쿠",
-      );
+      expect(
+        kanaToHangulWithTokenizer("ぼくはほんをがっこうへもっていく", tk),
+      ).toBe("보쿠와혼오각코에못테이쿠");
     });
   });
 });
 describe("grammar pronunciation edge cases (enable when rules are implemented)", () => {
   it("particle: は as 'wa' when used as topic marker", () => {
-    expect(kanaToHangul("あなたはせいふくです")).toBe("아나타와세후쿠데스"); // せい drop
-    expect(kanaToHangul("それはノートです")).toBe("소레와노토데스"); // ー drop
-    expect(kanaToHangul("あしたはさむい")).toBe("아시타와사무이");
-    expect(kanaToHangul("こんにちは")).toBe("콘니치와"); // 実発音
+    expect(kanaToHangulWithTokenizer("あなたはせいふくです", tk)).toBe(
+      "아나타와세후쿠데스",
+    ); // せい drop
+    expect(kanaToHangulWithTokenizer("それはノートです", tk)).toBe(
+      "소레와노토데스",
+    ); // ー drop
+    expect(kanaToHangulWithTokenizer("あしたはさむい", tk)).toBe(
+      "아시타와사무이",
+    );
+    expect(kanaToHangulWithTokenizer("こんにちは", tk)).toBe("콘니치와"); // 実発音
   });
 });
 
 describe("numbers & '-san' edge cases", () => {
   it("numbers: keep ASCII digits as-is", () => {
-    expect(kanaToHangul("12345")).toBe("12345");
-    expect(kanaToHangul("3")).toBe("3"); // 특히 3
-    expect(kanaToHangul("0")).toBe("0");
+    expect(kanaToHangulWithTokenizer("12345", tk)).toBe("12345");
+    expect(kanaToHangulWithTokenizer("3", tk)).toBe("3"); // 특히 3
+    expect(kanaToHangulWithTokenizer("0", tk)).toBe("0");
   });
 
   it("honorific: さん -> 상 (should not conflict with digit '3')", () => {
-    expect(kanaToHangul("おじさん")).toBe("오지상");
-    expect(kanaToHangul("おかあさん")).toBe("오카아상");
-    expect(kanaToHangul("かおるさん")).toBe("카오루상"); // '카루상' 계열 테스트(카오루)
-    expect(kanaToHangul("3さん")).toBe("3상");
-    expect(kanaToHangul("さん3")).toBe("산3");
+    expect(kanaToHangulWithTokenizer("おじさん", tk)).toBe("오지상");
+    expect(kanaToHangulWithTokenizer("おかあさん", tk)).toBe("오카아상");
+    expect(kanaToHangulWithTokenizer("かおるさん", tk)).toBe("카오루상"); // '카루상' 계열 테스트(카오루)
+    expect(kanaToHangulWithTokenizer("3さん", tk)).toBe("3상");
+    expect(kanaToHangulWithTokenizer("さん3", tk)).toBe("산3");
   });
 
   it("mix: -san + particle は", () => {
-    expect(kanaToHangul("おじさんはやさしい")).toBe("오지상와야사시이");
-    expect(kanaToHangul("おかあさんはげんき")).toBe("오카아상와겡키");
+    expect(kanaToHangulWithTokenizer("おじさんはやさしい", tk)).toBe(
+      "오지상와야사시이",
+    );
+    expect(kanaToHangulWithTokenizer("おかあさんはげんき", tk)).toBe(
+      "오카아상와겡키",
+    );
   });
 });
 
 describe("word-final は vs particle は", () => {
   it("word-final は inside a word should stay 'ha' (not 'wa')", () => {
-    expect(kanaToHangul("いろは")).toBe("이로하");
-    expect(kanaToHangul("いろはです")).toBe("이로하데스");
+    expect(kanaToHangulWithTokenizer("いろは", tk)).toBe("이로하");
+    expect(kanaToHangulWithTokenizer("いろはです", tk)).toBe("이로하데스");
   });
 
   it("particle は at the end / before predicate should be 'wa'", () => {
-    expect(kanaToHangul("わたしは")).toBe("와타시와");
-    expect(kanaToHangul("わたしはがくせい")).toBe("와타시와가쿠세");
+    expect(kanaToHangulWithTokenizer("わたしは", tk)).toBe("와타시와");
+    expect(kanaToHangulWithTokenizer("わたしはがくせい", tk)).toBe(
+      "와타시와가쿠세",
+    );
   });
 });
 
 describe("ハロ / ハロー ending words", () => {
   it("katakana 'ハロ' family + long vowel mark drop", () => {
-    expect(kanaToHangul("ハロ")).toBe("하로");
-    expect(kanaToHangul("ハロー")).toBe("하로"); // ー drop
-    expect(kanaToHangul("ハローさん")).toBe("하로상"); // ー drop + さん
+    expect(kanaToHangulWithTokenizer("ハロ", tk)).toBe("하로");
+    expect(kanaToHangulWithTokenizer("ハロー", tk)).toBe("하로"); // ー drop
+    expect(kanaToHangulWithTokenizer("ハローさん", tk)).toBe("하로상"); // ー drop + さん
   });
 
   it("ハロー + particle は", () => {
-    expect(kanaToHangul("ハローはあいさつです")).toBe("하로와아이사츠데스");
+    expect(kanaToHangulWithTokenizer("ハローさんはあいさつです", tk)).toBe(
+      "하로상와아이사츠데스",
+    );
   });
 });

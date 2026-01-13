@@ -1,68 +1,84 @@
+// lib/kanaToHangul.ts
 import kuromoji from "kuromoji";
+import path from "path";
+
+/**
+ * 1) normalize(NFC) + halfwidth-katakana NFKC + dash variants normalize
+ * 2) katakana -> hiragana
+ * 3) kuromoji로 "助詞"인 は/へ/を만 わ/え/お로 치환
+ * 4) 기존 core 변환(모라/촉음/ん/장음 drop 등) 그대로 수행
+ *
+ * ✅ 핵심: は를 휴리스틱으로 때려맞추지 않고, "품사=助詞"일 때만 바꿉니다.
+ *    - おねえさんは... / おかあさんは... / ひゃんは... => は는 助詞라 わ
+ *    - いろはです => 'は'는 단어 일부(助詞 아님)라 그대로 하
+ *    - 「...」はい。 => はい의 'は'는 助詞 아님(대개 感動詞/名詞/動詞 등)이라 그대로 하
+ */
 
 export type Tokenizer = kuromoji.Tokenizer<kuromoji.IpadicFeatures>;
 
 export async function buildTokenizer(): Promise<Tokenizer> {
   return new Promise((resolve, reject) => {
-    kuromoji
-      .builder({ dicPath: "node_modules/kuromoji/dict" })
-      .build((err, tk) => {
-        if (err || !tk) reject(err);
-        else resolve(tk);
-      });
+    // dicPath를 "node_modules/..."로 박아두면 pnpm/모노레포/번들러에서 깨질 수 있어 resolve 기반 권장
+    const dicPath = path.join(require.resolve("kuromoji"), "..", "..", "dict");
+
+    kuromoji.builder({ dicPath }).build((err, tk) => {
+      if (err || !tk) reject(err);
+      else resolve(tk);
+    });
   });
 }
 
-const tokenizer = await buildTokenizer();
-
-// 조사만 치환: は/へ/を
-export function rewriteParticlesWithKuromoji(
-  s: string,
-  tokenizer: Tokenizer,
-): string {
-  const tokens = tokenizer.tokenize(s);
-
-  // kuromoji token.word_position: 1-based char index (JS string 기준)로 알려진 편이지만,
-  // 환경/버전에 따라 미묘할 수 있어 테스트로 꼭 확인하세요.
-  // 여기선 안전하게 "토큰 문자열 길이"로 누적하면서 재구성하는 방식 추천.
-
-  let out = "";
-  for (const t of tokens) {
-    const surf = t.surface_form;
-
-    // pos가 助詞인 것만
-    if (t.pos === "助詞") {
-      if (surf === "は") {
-        out += "わ";
-        continue;
-      }
-      if (surf === "へ") {
-        out += "え";
-        continue;
-      }
-      if (surf === "を") {
-        out += "お";
-        continue;
-      }
-    }
-
-    out += surf;
-  }
-  return out;
+// ⚠️ 라이브러리 내부 top-level await는 환경에 따라 골치아픔.
+//    앱/테스트에서 1회만 build 후 주입하는 방식을 권장.
+let _tokenizer: Tokenizer | null = null;
+export async function getTokenizer(): Promise<Tokenizer> {
+  if (_tokenizer) return _tokenizer;
+  _tokenizer = await buildTokenizer();
+  return _tokenizer;
 }
 
+// --------------------
+// Public APIs
+// --------------------
+
+/** 권장: tokenizer를 외부에서 주입해서 쓰는 API */
 export function kanaToHangulWithTokenizer(
   input: string,
   tokenizer: Tokenizer,
 ): string {
+  input = normalizeInput(input);
+  let s = normalizeToHiragana(input);
+  s = rewriteParticlesWithKuromoji(s, tokenizer);
+  return coreKanaToHangulConvert(s);
+}
+
+/**
+ * 편의 API: 내부 캐시 tokenizer 사용(테스트/앱에서 await getTokenizer() 후 쓰는 걸 권장)
+ * - 동기 API로 유지하고 싶으면, 외부에서 tokenizer 주입형만 쓰세요.
+ */
+export async function kanaToHangulAsync(input: string): Promise<string> {
+  const tk = await getTokenizer();
+  return kanaToHangulWithTokenizer(input, tk);
+}
+
+// --------------------
+// Step 1: normalization
+// --------------------
+
+function normalizeInput(input: string): string {
+  // 1) NFD 결합문자(が/ぱ 등) 합성
   input = input.normalize("NFC");
+
+  // 2) 반각 가타카나만 전각으로 (구두점/특수문자 최대한 보존)
   input = normalizeHalfwidthKatakanaOnly(input);
+
+  // 3) 장음 기호 변종 최소 치환
+  // - U+2015 HORIZONTAL BAR
+  // - U+2500 BOX DRAWINGS LIGHT HORIZONTAL
   input = input.replace(/[\u2015\u2500]/g, "ー");
 
-  let s = normalizeToHiragana(input);
-  s = rewriteParticlesWithKuromoji(s, tokenizer); // 여기서만 tokenizer 사용
-
-  return coreKanaToHangulConvert(s); // 기존 while 루프 부분을 함수로 빼서 그대로 호출
+  // (원하면) FF70 'ｰ'도 halfwidth chunk에서 NFKC로 대부분 'ー'로 정규화됩니다.
+  return input;
 }
 
 function normalizeHalfwidthKatakanaOnly(s: string): string {
@@ -72,21 +88,204 @@ function normalizeHalfwidthKatakanaOnly(s: string): string {
   );
 }
 
-// kanaToHangul.ts
-export function kanaToHangul(input: string): string {
-  // ✅ NFD(분해형) → NFC(합성형), 반각카나 포함 변환까지 커버
-  // 1) NFD(が/ぱ) 같은 결합부호를 합성형으로
-  input = input.normalize("NFC");
+function normalizeToHiragana(str: string): string {
+  let out = "";
+  for (const ch of str) {
+    const c = ch.codePointAt(0)!;
+    // カタカナ → ひらがな
+    if (c >= 0x30a1 && c <= 0x30f6) {
+      out += String.fromCodePoint(c - 0x60);
+      continue;
+    }
+    if (ch === "ー") {
+      out += ch;
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
 
-  // 2) 반각 카타카나만 전각으로(특수문자/구두점은 그대로 둠)
-  input = normalizeHalfwidthKatakanaOnly(input);
+function hiraToKata(hira: string): string {
+  const c = hira.codePointAt(0)!;
+  if (c >= 0x3041 && c <= 0x3096) {
+    return String.fromCodePoint(c + 0x60);
+  }
+  return hira;
+}
 
-  // 3) 장음 기호 변종 최소 치환
-  input = input.replace(/[\u2015\u2500]/g, "ー");
+// --------------------
+// Step 2: particle rewrite via kuromoji (NO heuristics)
+// --------------------
+const HARD_BOUNDARY_SURF = new Set([
+  "。",
+  "、",
+  "！",
+  "？",
+  "!",
+  "?",
+  " ",
+  "　",
+]);
+const HARD_BOUNDARY_DETAIL1 = new Set([
+  "句点",
+  "読点",
+  "括弧開",
+  "括弧閉",
+  "空白",
+]);
 
-  // ✅ particle/고정구문 프리패스 추가
-  const s = rewriteParticlesWithKuromoji(normalizeToHiragana(input), tokenizer);
+function isHardBoundaryToken(t: kuromoji.IpadicFeatures): boolean {
+  if (t.pos !== "記号") return false;
+  if (HARD_BOUNDARY_SURF.has(t.surface_form)) return true;
+  return HARD_BOUNDARY_DETAIL1.has(t.pos_detail_1 ?? "");
+}
 
+// emoji/로마자 같은 "記号"도 kuromoji가 찍어버리는 경우가 있어서,
+// "문장부호"만 boundary로 보고 나머지 記号는 content로 취급합니다.
+function isContentToken(t: kuromoji.IpadicFeatures): boolean {
+  if (t.pos === "記号") return !isHardBoundaryToken(t);
+  return true;
+}
+
+function prevContentIdx(tokens: kuromoji.IpadicFeatures[], i: number): number {
+  for (let j = i - 1; j >= 0; j--) if (isContentToken(tokens[j])) return j;
+  return -1;
+}
+
+function nextContentIdx(tokens: kuromoji.IpadicFeatures[], i: number): number {
+  for (let j = i + 1; j < tokens.length; j++)
+    if (isContentToken(tokens[j])) return j;
+  return -1;
+}
+
+function nextBoundaryOrEnd(
+  tokens: kuromoji.IpadicFeatures[],
+  i: number,
+): boolean {
+  // i 뒤에 남은 토큰이 전부 boundary(또는 없음)인 경우 true
+  for (let j = i + 1; j < tokens.length; j++) {
+    if (isHardBoundaryToken(tokens[j])) continue;
+    return false;
+  }
+  return true;
+}
+
+const LEXICAL_HE_ENDINGS = [
+  "いにしへ",
+  "おきへ",
+  "もとへ",
+  "すえへ",
+  "すゑへ",
+  "かみへ",
+  "くにへ",
+  "きしへ",
+] as const;
+
+// 조사만 치환: は/へ/を (문맥 확정일 때만)
+export function rewriteParticlesWithKuromoji(
+  s: string,
+  tokenizer: Tokenizer,
+): string {
+  const tokens = tokenizer.tokenize(s);
+
+  // ✅ split("") 금지: emoji(서로게이트) 때문에 인덱스가 터짐
+  // 토큰 스트림을 그대로 재조립하면서 필요한 토큰만 교체한다.
+  let out = "";
+
+  const isSingleKana = (x: string) =>
+    x.length === 1 && /^[\u3040-\u309F\u30A0-\u30FF]$/.test(x);
+
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    const surf = t.surface_form;
+
+    let replaced = surf;
+
+    // -----------------
+    // は : topic marker (は -> わ)
+    // -----------------
+    if (t.pos === "助詞" && surf === "は") {
+      // ✅ "はは" 같은 반복(lexical) 보호: 앞/뒤가 바로 'は'면 변환 금지
+      if (i > 0 && tokens[i - 1].surface_form === "は") {
+        out += surf;
+        continue;
+      }
+      if (i + 1 < tokens.length && tokens[i + 1].surface_form === "は") {
+        out += surf;
+        continue;
+      }
+
+      const p = prevContentIdx(tokens, i);
+      if (p >= 0) {
+        const n = nextContentIdx(tokens, i);
+        const hasNextContent = n >= 0;
+        const isEndOrPunct = nextBoundaryOrEnd(tokens, i);
+
+        const prev = tokens[p];
+        const prevSurf = prev.surface_form;
+
+        if (!prevSurf.includes("っ")) {
+          if (t.pos_detail_1 === "係助詞") {
+            if (hasNextContent || isEndOrPunct) {
+              if (prev.pos !== "助詞") {
+                out += "わ";
+                continue;
+              }
+            }
+          }
+        }
+      }
+      out += surf;
+      continue;
+    }
+
+    // -----------------
+    // へ : direction marker (へ -> え)  ✅ 이전에 고친 로직 유지
+    // -----------------
+    if (t.pos === "助詞" && surf === "へ") {
+      const p = prevContentIdx(tokens, i);
+      if (p >= 0) {
+        const n = nextContentIdx(tokens, i);
+        const hasNextContent = n >= 0;
+        const isEndOrPunct = nextBoundaryOrEnd(tokens, i);
+
+        const prevSurf = tokens[p].surface_form;
+
+        // lexical "...へ" 보호 (prevSurf+へ로 보강)
+        if (LEXICAL_HE_ENDINGS.some((w) => (prevSurf + "へ").endsWith(w))) {
+          // keep
+        } else if (prevSurf.endsWith("の")) {
+          // "…のへ" 보호 (지명 패턴)
+        } else if (t.pos_detail_1 === "格助詞") {
+          const nextPos = hasNextContent ? tokens[n].pos : "";
+          const looksDirectionalByVerb =
+            nextPos === "動詞" || nextPos === "助動詞";
+
+          // 가나 나열 오탐 방지: 다음 내용 토큰이 1글자 가나면 변환 금지
+          const nextSurf = hasNextContent ? tokens[n].surface_form : "";
+          const nextIsSingleKana = hasNextContent && isSingleKana(nextSurf);
+
+          if (!nextIsSingleKana && (looksDirectionalByVerb || isEndOrPunct)) {
+            replaced = "え";
+          }
+        }
+      }
+    }
+
+    // (을: 이번 턴은 안 건드림)
+
+    out += replaced;
+  }
+
+  return out;
+}
+
+// --------------------
+// Step 3: core conversion (your existing while-loop, extracted)
+// --------------------
+
+function coreKanaToHangulConvert(s: string): string {
   // 테스트 요구: 특별 사전 매핑
   const SPECIAL: Array<[string, string]> = [
     ["とうきょう", "도쿄"],
@@ -94,7 +293,6 @@ export function kanaToHangul(input: string): string {
     ["いいでしょう", "이데쇼"],
     ["こんにちは", "콘니치와"],
     ["こんばんは", "콤방와"],
-    ["こんばんわ", "콤방와"],
   ];
 
   // --- Hangul utilities ---
@@ -106,7 +304,6 @@ export function kanaToHangul(input: string): string {
     return c >= HANGUL_BASE && c <= HANGUL_END;
   }
 
-  // 종성 인덱스 (Unicode Hangul Syllables)
   const JONG = {
     NONE: 0,
     G: 1, // ㄱ
@@ -358,6 +555,11 @@ export function kanaToHangul(input: string): string {
     return cons === "m" || cons === "b" || cons === "p";
   }
 
+  const isBoundary = (ch: string | undefined): boolean => {
+    if (!ch) return true;
+    return /\s|[、。！？!?\(\)\[\]{}「」『』（）【】]/.test(ch);
+  };
+
   let out = "";
   let i = 0;
 
@@ -368,7 +570,11 @@ export function kanaToHangul(input: string): string {
     let matchedSpecial = false;
     for (const [k, v] of SPECIAL) {
       if (s.startsWith(k, i)) {
-        out += v;
+        // SPECIAL 값도 "가나" 형태로 들어와야 테이블이 자연스럽게 이어짐.
+        // 여기서는 그대로 한글로 박는 기존 정책 유지.
+        out += v
+          .replaceAll("こんばんわ", "콤방와")
+          .replaceAll("こんにちわ", "콘니치와");
         i += k.length;
         lastMora = null;
         matchedSpecial = true;
@@ -435,7 +641,7 @@ export function kanaToHangul(input: string): string {
       continue;
     }
 
-    // 비가나: 그대로 (원문 인덱스가 어긋나는 경우가 있어 s 기준으로 보존)
+    // 비가나: 그대로
     if (!isKana(ch)) {
       out += ch;
       i += 1;
@@ -466,31 +672,8 @@ export function kanaToHangul(input: string): string {
     }
 
     if (mora.key === "ん") {
-      const nextChar = s[i + 1]; // 'ん' 다음 문자
-      const prevChar = s[i - 1]; // 'ん' 이전 문자 (예: さ)
-      const prev2Char = s[i - 2]; // 'さ' 이전 문자 (이름 접두 유무)
-
-      const isBoundaryLike = (x: string | undefined) => {
-        if (!x) return true;
-        return /\s|[、。！？!?\(\)\[\]{}「」『』（）【】]/.test(x);
-      };
-
-      const isParticle = (x: string | undefined) =>
-        x === "は" ||
-        x === "わ" ||
-        x === "へ" ||
-        x === "を" ||
-        x === "が" ||
-        x === "の" ||
-        x === "に" ||
-        x === "で" ||
-        x === "と" ||
-        x === "も" ||
-        x === "や" ||
-        x === "か" ||
-        x === "よ" ||
-        x === "ね" ||
-        x === "な";
+      const next = readMoraAt(i + 1);
+      const nextInfo = next?.info;
 
       let jong: number = JONG.N;
       const hasPrevHangul =
@@ -502,31 +685,11 @@ export function kanaToHangul(input: string): string {
         continue;
       }
 
-      // ✅ "이름 + さん"만 '상' 처리:
-      // - 지금이 'ん'이고, 직전이 'さ' (즉 'さん')
-      // - 'さ' 앞에 무언가(경계가 아닌 문자)가 존재 (=> 맨 앞 "さん..."은 제외)
-      // - 다음이 조사/경계면 호칭으로 간주 ("おねえさんは", "たなかさん。" 등)
-      if (
-        hasPrevHangul &&
-        lastMora?.out === "사" &&
-        prevChar === "さ" &&
-        !!prev2Char &&
-        !isBoundaryLike(prev2Char) &&
-        (isParticle(nextChar) || isBoundaryLike(nextChar))
-      ) {
-        out = replaceLastHangul(out, JONG.NG); // 사 -> 상
-        i += 1;
-        lastMora = null;
-        continue;
-      }
-
-      const next = readMoraAt(i + 1);
-      const nextInfo = next?.info;
-
+      // 여기의 "さん => 상" 같은 정책은 "형태소 분석"을 이미 도입했으니
+      // 최소화하는 게 낫습니다. 다만 기존 동작 유지.
       if (!next || !nextInfo || !isKana(next.key[0])) {
-        // honorific "さん" => "상"
-
-        jong = lastMora?.wasYouon ? JONG.NG : JONG.N;
+        if (lastMora?.out === "사") jong = JONG.NG;
+        else jong = lastMora?.wasYouon ? JONG.NG : JONG.N;
       } else {
         const nc = nextInfo.consClass;
         if (nc === "k" || nc === "g") {
@@ -582,7 +745,6 @@ export function kanaToHangul(input: string): string {
           continue;
         }
       } else if (mora.key === "え") {
-        // 예외: えいこ, (particle へ + いく/いき) => えいく/えいき 는 drop 하면 안 됨
         if (afterLen !== "こ" && afterLen !== "く" && afterLen !== "き") {
           i += mora.len + 1;
           continue;
@@ -591,13 +753,11 @@ export function kanaToHangul(input: string): string {
         i += mora.len + 1;
         continue;
       } else if (mora.key === "き") {
-        // ✅ "おおきい" 단독/경계에서는 줄여도 되지만,
-        //    "おおきいはこ"처럼 뒤에 이어지면 きい 유지
+        // "おおきい" 줄임 정책 유지: 뒤에 이어지면 keep
         if (isBoundary(afterLen) || !afterLen) {
-          i += mora.len + 1; // drop
+          i += mora.len + 1;
           continue;
         }
-        // else: keep
       }
     }
 
@@ -610,222 +770,4 @@ export function kanaToHangul(input: string): string {
   }
 
   return out;
-}
-const isBoundary = (ch: string | undefined): boolean => {
-  if (!ch) return true;
-  // 공백/구두점/괄호 등
-  return /\s|[、。！？!?\(\)\[\]{}「」『』（）【】]/.test(ch);
-};
-
-// --------------------
-// Particle/phrase prepass (heuristics)
-// --------------------
-function preRewriteParticles(s: string): string {
-  // 관용 발음
-
-  const isHiraOrLong = (ch: string): boolean => {
-    const c = ch.codePointAt(0)!;
-    return (c >= 0x3040 && c <= 0x309f) || ch === "ー";
-  };
-
-  const isKanji = (x: string): boolean => {
-    const c = x.codePointAt(0)!;
-    return (c >= 0x4e00 && c <= 0x9fff) || (c >= 0x3400 && c <= 0x4dbf);
-  };
-
-  const isLikelyNounEnd = (x: string | undefined): boolean => {
-    if (!x) return false;
-    if (isHiraOrLong(x) || isKanji(x)) return true;
-    if (/[)\]」』）】]/.test(x)) return true;
-    if (/[0-9０-９]/.test(x)) return true;
-
-    // ✅ A / 😀 같은 "비가나"도 명사 끝으로 취급 (へ/は 둘 다에 필요)
-    if (!isBoundary(x) && !isHiraOrLong(x) && !isKanji(x)) return true;
-
-    return false;
-  };
-
-  const TOPIC_ENDINGS = [
-    "それ",
-    "これ",
-    "あれ",
-    "どれ",
-    "ここ",
-    "そこ",
-    "あそこ",
-    "わたし",
-    "あなた",
-    "ぼく",
-    "おれ",
-    "きみ",
-    "みんな",
-    "いま",
-    "きょう",
-  ] as const;
-
-  const matchesTopicEnding = (chars: string[], i: number) => {
-    const lookback = 8;
-    const start = Math.max(0, i - lookback);
-    const window = chars.slice(start, i).join("");
-    return TOPIC_ENDINGS.some((w) => window.endsWith(w));
-  };
-
-  const chars = Array.from(s);
-  for (let i = 0; i < chars.length; i++) {
-    const ch = chars[i];
-
-    // は: 토픽 조사로 보이면 わ로
-    if (ch === "は") {
-      const prev = chars[i - 1];
-      const next = chars[i + 1];
-
-      // prev가 없으면 스킵
-      if (!prev) continue;
-
-      // ---------------------------------------------
-      // (A') "いろは + です/でした/だ/だった" 는 관용구/표현으로 보고
-      //      endish 휴리스틱으로 は→わ 되는 걸 막는다.
-      //      ex) いろはです => 이로하데스
-      // ---------------------------------------------
-      if (i >= 2 && chars[i - 2] === "い" && chars[i - 1] === "ろ") {
-        const tail = chars.slice(i + 1, Math.min(chars.length, i + 8)).join("");
-        if (/^(です|でした|だ|だった)/.test(tail)) {
-          continue; // ✅ 여기서는 は를 조사로 바꾸지 않음
-        }
-      }
-
-      // ---------------------------------------------
-      // (B) "-san + particle は" 강제: "...さんは..." 는 は→わ
-      //     ex) おかあさんはげんき / おじさんはやさしい / (이름)さんは...
-      // ---------------------------------------------
-      if (i >= 2 && chars[i - 2] === "さ" && chars[i - 1] === "ん") {
-        chars[i] = "わ";
-        continue;
-      }
-
-      // // ----------------------------
-      // // 2) 일반 토픽 판정: prev가 '명사 끝'이고, 뒤쪽이 문장처럼 이어지면 は→わ
-      // //    - endish(です/だ/…い) 또는 topicEnding(これ/それ/きょう/ぼく...)면 토픽 처리
-      // // ----------------------------
-      if (!isLikelyNounEnd(prev)) continue;
-
-      if (prev === "ん" && isBoundary(next)) {
-        chars[i] = "わ";
-        continue;
-      }
-
-      const tail = chars.slice(i + 1, Math.min(chars.length, i + 14)).join("");
-      const endish =
-        /です|でした|だ|だった/.test(tail) ||
-        (() => {
-          let j = i + 1;
-          while (j < chars.length && !isBoundary(chars[j])) j++;
-          const seg = chars.slice(i + 1, j).join("");
-          return seg.endsWith("い");
-        })();
-
-      // (na-adj / noun predicate without copula) e.g. げんき, だいじょうぶ ...
-      const naPredish = (() => {
-        let j = i + 1;
-        while (j < chars.length && !isBoundary(chars[j])) j++;
-        const seg = chars.slice(i + 1, j).join(""); // は 다음부터 경계 전까지
-        // 너무 넓히면 오탐 늘어서 "자주 서술로 쓰이는 것"만
-        return /^(げんき|だいじょうぶ|だめ|ひま|すき|きらい|たいへん)$/.test(
-          seg,
-        );
-      })();
-
-      if (endish || naPredish || matchesTopicEnding(chars, i)) {
-        chars[i] = "わ";
-      }
-
-      continue;
-    }
-
-    // へ: 방향 조사로 보이면 え로
-    if (ch === "へ") {
-      const prev = chars[i - 1];
-      const next = chars[i + 1];
-
-      // 1) "단어로서 ...へ" 예외: 여기 걸리면 절대 치환 금지
-      const LEXICAL_HE_ENDINGS = [
-        "いにしへ",
-        "おきへ",
-        "もとへ",
-        "すえへ",
-        "すゑへ",
-        "かみへ",
-        "くにへ",
-        "きしへ",
-      ] as const;
-
-      // i 위치(へ 포함) 기준으로 lookback window에서 끝매칭
-      {
-        const lookback = 6;
-        const start = Math.max(0, i - lookback);
-        const window = chars.slice(start, i + 1).join("");
-        if (LEXICAL_HE_ENDINGS.some((w) => window.endsWith(w))) {
-          continue; // ✅ 단어면 그대로 'へ' 유지
-        }
-      }
-
-      // 2) (선택) 지명 패턴 "~のへ" 보호: 하치노헤 같은 케이스
-      // 지명은 한자가 더 흔하지만, 가나로 들어올 수 있음.
-      // "のへ" 자체가 조사처럼 보이기 쉬우니 보호해두면 안전합니다.
-      {
-        const lookback = 4;
-        const start = Math.max(0, i - lookback);
-        const window = chars.slice(start, i + 1).join("");
-        if (window.endsWith("のへ")) {
-          continue; // ✅ 지명 패턴 가능성: 그대로 'へ'
-        }
-      }
-
-      // へ 뒤에서 자주 오는 이동/방향 동사(활용 시작 형태까지)
-      const tail = chars.slice(i + 1, Math.min(chars.length, i + 10)).join("");
-      const moveVerb =
-        /^(いく|いき|いっ|くる|きた|きて|きま|かえる|かえり|かえっ|むかう|むかい|むかっ|すすむ|すすみ|すすん|でかけ|でる|でた|でて|はいる|はいり|はいっ|うつる|うつり|うつっ|わたる|わたり|わたっ|のぼる|のぼり|のぼっ|あるく|あるい|はしる|はしり|はしっ|もっていく|もってい|もっ|もって)/.test(
-          tail,
-        );
-
-      // 3) ✅ 조사로 판단되면 え로
-      // - 명사 끝(한자/가나/괄호/숫자) + (이동동사 or 경계)면 조사 확률 높음
-      // - 단, 위에서 "단어/지명"은 이미 continue 처리됨
-      if (isLikelyNounEnd(prev) && (moveVerb || isBoundary(next))) {
-        chars[i] = "え";
-      }
-
-      continue;
-    }
-  }
-
-  return chars.join("");
-}
-
-// --------------------
-// Normalization helpers
-// --------------------
-function normalizeToHiragana(str: string): string {
-  let out = "";
-  for (const ch of str) {
-    const c = ch.codePointAt(0)!;
-    if (c >= 0x30a1 && c <= 0x30f6) {
-      out += String.fromCodePoint(c - 0x60);
-      continue;
-    }
-    if (ch === "ー") {
-      out += ch;
-      continue;
-    }
-    out += ch;
-  }
-  return out;
-}
-
-function hiraToKata(hira: string): string {
-  const c = hira.codePointAt(0)!;
-  if (c >= 0x3041 && c <= 0x3096) {
-    return String.fromCodePoint(c + 0x60);
-  }
-  return hira;
 }
