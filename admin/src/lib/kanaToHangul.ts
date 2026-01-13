@@ -685,11 +685,39 @@ function coreKanaToHangulConvert(s: string): string {
         continue;
       }
 
-      // 여기의 "さん => 상" 같은 정책은 "형태소 분석"을 이미 도입했으니
-      // 최소화하는 게 낫습니다. 다만 기존 동작 유지.
+      // ✅ "さん"(호칭)일 때만 '상'(받침 ㅇ)
+      // 주의: 조사 리라이트가 먼저라서 다음 글자가 'は'가 아니라 'わ'일 수 있음!
+      if (lastMora?.out === "사") {
+        const nextCh = s[i + 1];
+
+        const isBoundaryOrEnd =
+          !nextCh || /\s|[、。！？!?\(\)\[\]{}「」『』（）【】]/.test(nextCh);
+
+        // 원문 조사 + 리라이트된 조사까지 모두 허용
+        const isParticleAfterSan =
+          nextCh === "は" ||
+          nextCh === "へ" ||
+          nextCh === "を" ||
+          nextCh === "わ" ||
+          nextCh === "え" ||
+          nextCh === "お";
+
+        // ✅ 핵심: "사" 앞에 뭔가가 있어야(-san) 인정.
+        // out는 지금 "...사" 까지 찍힌 상태.
+        // "さんは"는 out === "사"라서 여기서 걸러져야 함.
+        const hasPrefixBeforeSan = out.length >= 2;
+
+        // 숫자/로마자 앞도 허용해야 "3さん" => 3상 유지됨
+        if (hasPrefixBeforeSan && (isBoundaryOrEnd || isParticleAfterSan)) {
+          out = replaceLastHangul(out, JONG.NG); // 사 + ん => 상
+          i += 1;
+          continue;
+        }
+      }
+
+      // --- 기존 ん 규칙 ---
       if (!next || !nextInfo || !isKana(next.key[0])) {
-        if (lastMora?.out === "사") jong = JONG.NG;
-        else jong = lastMora?.wasYouon ? JONG.NG : JONG.N;
+        jong = lastMora?.wasYouon ? JONG.NG : JONG.N;
       } else {
         const nc = nextInfo.consClass;
         if (nc === "k" || nc === "g") {
