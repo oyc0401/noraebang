@@ -18,6 +18,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "typesense": "^2.1.0",
+    "wanakana": "^5.3.1",
     "youtube-music-ts-api": "^1.8.4",
     "zustand": "^5.0.9"
   },
