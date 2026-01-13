@@ -47,6 +47,9 @@ importers:
       typesense:
         specifier: ^2.1.0
         version: 2.1.0(@babel/runtime@7.28.4)
+      wanakana:
+        specifier: ^5.3.1
+        version: 5.3.1
       youtube-music-ts-api:
         specifier: ^1.8.4
         version: 1.8.4
