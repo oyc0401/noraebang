@@ -30,8 +30,8 @@
     "グッバイバイ"
   ],
   "q_song_ja_kana_norm": [
-    "ぐっばいばい",
-    "グッバイバイ"
+    "グッバイバイ",
+    "ぐっばいばい"
   ],
   "q_artist_ko_p": [
     "토미오카 아이"
@@ -45,6 +45,10 @@
   "q_artist_latin_norm": [
     "TOMIOKAAI"
   ],
+  "q_artist_ja_kanji_p": [],
+  "q_artist_ja_kanji_norm": [],
+  "q_artist_ja_kana_p": [],
+  "q_artist_ja_kana_norm": [],
   "q_combo_a": [
     "굿바이바이토미오카아이"
   ]

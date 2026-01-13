@@ -1,141 +1,69 @@
 import { toHiragana, toKatakana } from "wanakana";
-import { cleanText, normalizeSpacing, removeSpaces } from "./lib/text-utils";
+import { removePunctuation, normalizeBasic } from "./lib/text-utils";
 
 /**
- * 기준 값과 다른 변형 문자열을 Set에 추가한다.
+ * undefinded 필터링하는 타입.
+ * ex) list.filter(isDefinded);
  */
-const addIfDifferent = (
-  values: Set<string>,
-  candidate?: string,
-  reference?: string,
-) => {
-  if (!candidate) {
-    return;
-  }
-  if (!reference || candidate !== reference) {
-    values.add(candidate);
-  }
-};
+export const isPresent = <T>(v: T | null | undefined): v is T =>
+  v !== null && v !== undefined;
 
 /**
- * 일본어 문자열에서 공백과 구두점을 제거해 정규화한다.
+ * 원본과 툭수문자 정규화 버전을 포함한 기본 검색 값을 생성한다.
  */
-const normalizeJapaneseSource = (text?: string) => {
-  if (!text) {
-    return undefined;
-  }
-  const normalized = cleanText(removeSpaces(text));
-  return normalized.length > 0 ? normalized : undefined;
-};
-
-/**
- * 히라가나/카타카나 변환과 공백 제거 버전을 모두 Set에 저장한다.
- */
-function addJapaneseVariants(
-  values: Set<string>,
-  text?: string,
-  options?: { includeNormalized?: boolean },
-) {
-  if (!text) {
-    return;
-  }
-
-  const includeNormalized = options?.includeNormalized ?? true;
-  const normalized = includeNormalized ? normalizeJapaneseSource(text) : undefined;
-
-  addIfDifferent(values, toHiragana(text, { passRomaji: true }), text);
-  addIfDifferent(values, toKatakana(text, { passRomaji: true }), text);
-
-  if (!normalized) {
-    return;
-  }
-
-  addIfDifferent(values, normalized, text);
-  addIfDifferent(values, toHiragana(normalized, { passRomaji: true }), normalized);
-  addIfDifferent(values, toKatakana(normalized, { passRomaji: true }), normalized);
-}
-
-/**
- * 공백과 특수문자를 제거한 정규화 텍스트를 반환한다.
- */
-function normalizeBasic(text?: string) {
-  if (!text) {
-    return undefined;
-  }
-
-  const spaced = normalizeSpacing(text);
-  if (!spaced) {
-    return undefined;
-  }
-  const normalized = removeSpaces(spaced);
-  return normalized.length > 0 ? normalized : undefined;
-}
-
-/**
- * 정규화된 문자열을 Set에 추가한다.
- */
-export function addNormalizedValue(values: Set<string>, text?: string) {
-  const normalized = normalizeBasic(text);
-  if (normalized) {
-    values.add(normalized);
-  }
-}
-
-/**
- * 일본어 변형과 정규화 버전을 모두 Set에 추가한다.
- */
-export function addJapaneseNormalizedValues(
-  values: Set<string>,
-  text?: string,
-) {
-  if (!text) {
-    return;
-  }
-  addJapaneseVariants(values, text);
-  const normalized = normalizeBasic(text);
-  if (normalized) {
-    values.add(normalized);
-  }
-}
-
-/**
- * 단일 정규화 값 배열을 생성한다.
- */
-export function buildNormalizedValues(
-  value?: string,
-): string[] | undefined {
-  const normalized = normalizeBasic(value);
-  return normalized ? [normalized] : undefined;
-}
-
-/**
- * 일본어 변형을 모두 포함한 정규화 값 배열을 생성한다.
- */
-export function buildJapaneseNormalizedValues(
-  value?: string,
-): string[] | undefined {
-  const values = new Set<string>();
-  addJapaneseNormalizedValues(values, value);
-  return values.size > 0 ? Array.from(values) : undefined;
-}
-
-/**
- * 원본과 공백 정규화 버전을 포함한 기본 검색 값을 생성한다.
- */
-export function buildPrimaryValues(
-  value?: string,
-): string[] | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  const normalized = normalizeSpacing(value);
+export function getPrimaryValues(text: string): string[] {
   const results = new Set<string>();
-  if (value.trim().length > 0) {
-    results.add(value);
+  results.add(text);
+  results.add(removePunctuation(text));
+
+  return Array.from(results);
+}
+
+export function getPrimaryValuesByList(textList: string[]): string[] {
+  const results = new Set<string>();
+
+  for (const text of textList) {
+    results.add(text);
+    results.add(removePunctuation(text));
   }
-  if (normalized && normalized !== value) {
-    results.add(normalized);
+
+  return Array.from(results);
+}
+
+export function getNormalizedValues(text: string): string[] {
+  const results = new Set<string>();
+  results.add(normalizeBasic(text));
+
+  return Array.from(results);
+}
+
+export function getNormalizedValuesByList(textList: string[]): string[] {
+  const results = new Set<string>();
+
+  for (const text of textList) {
+    results.add(normalizeBasic(text));
   }
-  return results.size > 0 ? Array.from(results) : undefined;
+
+  return Array.from(results);
+}
+
+/**
+ * 일본어 정규화 버전 검색값을 생성한다.
+ */
+export function getJapaneseNormalizedValues(text: string): string[] {
+  const values = new Set<string>();
+
+  const noPunctation = removePunctuation(text);
+
+  values.add(noPunctation);
+  values.add(toHiragana(noPunctation, { passRomaji: true }));
+  values.add(toKatakana(noPunctation, { passRomaji: true }));
+
+  const normalized = normalizeBasic(text);
+
+  values.add(normalized);
+  values.add(toHiragana(normalized, { passRomaji: true }));
+  values.add(toKatakana(normalized, { passRomaji: true }));
+
+  return Array.from(values);
 }

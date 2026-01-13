@@ -1,9 +1,9 @@
 import type { PrismaClient } from "@prisma/client";
 import { calculateArtistPopularity } from "./lib/popularity";
 import {
-  buildJapaneseNormalizedValues,
-  buildNormalizedValues,
-  buildPrimaryValues,
+  getPrimaryValues,
+  getJapaneseNormalizedValues,
+  getNormalizedValues,
 } from "./transformer-utils";
 
 export type ArtistWithRelations = Awaited<
@@ -19,9 +19,6 @@ export type ArtistWithRelations = Awaited<
   spotifyArtist?: {
     popularity?: number;
   };
-  nameLatin?: string;
-  nameJaKana?: string;
-  nameJaKanji?: string;
 };
 
 export interface TypesenseArtistDocument {
@@ -97,45 +94,47 @@ export function transformArtistToDocument(
 }
 
 const createQueryNameKoPrimary = (artist: ArtistWithRelations) => {
-  return buildPrimaryValues(artist.nameKo);
+  return getPrimaryValues(artist.nameKo);
 };
-
-const createQueryNameKoAlias = (_artist: ArtistWithRelations) => undefined;
 
 const createQueryNameKoNorm = (artist: ArtistWithRelations) => {
-  return buildNormalizedValues(artist.nameKo);
+  return getNormalizedValues(artist.nameKo);
 };
+const createQueryNameKoAlias = (_artist: ArtistWithRelations) => undefined;
 
 const createQueryNameLatinPrimary = (artist: ArtistWithRelations) => {
-  return buildPrimaryValues(artist.nameLatin);
+  if (!artist.nameLatin) return undefined;
+  return getPrimaryValues(artist.nameLatin);
 };
-
-const createQueryNameLatinAlias = (_artist: ArtistWithRelations) => undefined;
 
 const createQueryNameLatinNorm = (artist: ArtistWithRelations) => {
-  return buildNormalizedValues(artist.nameLatin);
+  if (!artist.nameLatin) return undefined;
+  return getNormalizedValues(artist.nameLatin);
 };
+const createQueryNameLatinAlias = (_artist: ArtistWithRelations) => undefined;
 
 const createQueryNameJaKanjiPrimary = (artist: ArtistWithRelations) => {
-  return buildPrimaryValues(artist.nameJaKanji);
+  if (!artist.nameJaKanji) return undefined;
+  return getPrimaryValues(artist.nameJaKanji);
 };
-
-const createQueryNameJaKanjiAlias = (_artist: ArtistWithRelations) =>
-  undefined;
 
 const createQueryNameJaKanjiNorm = (artist: ArtistWithRelations) => {
-  return buildJapaneseNormalizedValues(artist.nameJaKanji);
+  if (!artist.nameJaKanji) return undefined;
+  return getJapaneseNormalizedValues(artist.nameJaKanji);
 };
+const createQueryNameJaKanjiAlias = (_artist: ArtistWithRelations) => undefined;
 
 const createQueryNameJaKanaPrimary = (artist: ArtistWithRelations) => {
-  return buildPrimaryValues(artist.nameJaKana);
+  if (!artist.nameJaKana) return undefined;
+  return getPrimaryValues(artist.nameJaKana);
+};
+
+const createQueryNameJaKanaNorm = (artist: ArtistWithRelations) => {
+  if (!artist.nameJaKana) return undefined;
+  return getJapaneseNormalizedValues(artist.nameJaKana);
 };
 
 const createQueryNameJaKanaAlias = (_artist: ArtistWithRelations) => undefined;
-
-const createQueryNameJaKanaNorm = (artist: ArtistWithRelations) => {
-  return buildJapaneseNormalizedValues(artist.nameJaKana);
-};
 
 function createArtistPopularity(artist: ArtistWithRelations) {
   const artistSongs = artist.artistSongs ?? [];
@@ -147,7 +146,7 @@ function createArtistPopularity(artist: ArtistWithRelations) {
   const hasPopularitySource =
     spotifyPopularity !== undefined || tjSongCount > 0;
   const popularity = hasPopularitySource
-    ? calculateArtistPopularity({spotifyPopularity, tjSongCount})
+    ? calculateArtistPopularity({ spotifyPopularity, tjSongCount })
     : undefined;
 
   return {
