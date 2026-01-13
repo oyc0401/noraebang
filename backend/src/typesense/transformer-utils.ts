@@ -1,11 +1,36 @@
-import {
-  cleanText,
-  normalizeSpacing,
-  removeSpaces,
-  toAllHiragana,
-  toAllKatakana,
-} from "./lib/text-utils";
+import { toHiragana, toKatakana } from "wanakana";
+import { cleanText, normalizeSpacing, removeSpaces } from "./lib/text-utils";
 
+/**
+ * 기준 값과 다른 변형 문자열을 Set에 추가한다.
+ */
+const addIfDifferent = (
+  values: Set<string>,
+  candidate?: string,
+  reference?: string,
+) => {
+  if (!candidate) {
+    return;
+  }
+  if (!reference || candidate !== reference) {
+    values.add(candidate);
+  }
+};
+
+/**
+ * 일본어 문자열에서 공백과 구두점을 제거해 정규화한다.
+ */
+const normalizeJapaneseSource = (text?: string) => {
+  if (!text) {
+    return undefined;
+  }
+  const normalized = cleanText(removeSpaces(text));
+  return normalized.length > 0 ? normalized : undefined;
+};
+
+/**
+ * 히라가나/카타카나 변환과 공백 제거 버전을 모두 Set에 저장한다.
+ */
 function addJapaneseVariants(
   values: Set<string>,
   text?: string,
@@ -16,40 +41,23 @@ function addJapaneseVariants(
   }
 
   const includeNormalized = options?.includeNormalized ?? true;
-  const noSpaceAndPunct = cleanText(removeSpaces(text));
-  if (includeNormalized && noSpaceAndPunct !== text) {
-    values.add(noSpaceAndPunct);
+  const normalized = includeNormalized ? normalizeJapaneseSource(text) : undefined;
+
+  addIfDifferent(values, toHiragana(text, { passRomaji: true }), text);
+  addIfDifferent(values, toKatakana(text, { passRomaji: true }), text);
+
+  if (!normalized) {
+    return;
   }
 
-  const hiragana = toAllHiragana(text);
-  if (hiragana !== text) {
-    values.add(hiragana);
-  }
-
-  const katakana = toAllKatakana(text);
-  if (katakana !== text) {
-    values.add(katakana);
-  }
-
-  if (includeNormalized) {
-    const noSpaceAndPunctHiragana = toAllHiragana(noSpaceAndPunct);
-    if (
-      noSpaceAndPunctHiragana !== noSpaceAndPunct &&
-      noSpaceAndPunctHiragana !== hiragana
-    ) {
-      values.add(noSpaceAndPunctHiragana);
-    }
-
-    const noSpaceAndPunctKatakana = toAllKatakana(noSpaceAndPunct);
-    if (
-      noSpaceAndPunctKatakana !== noSpaceAndPunct &&
-      noSpaceAndPunctKatakana !== katakana
-    ) {
-      values.add(noSpaceAndPunctKatakana);
-    }
-  }
+  addIfDifferent(values, normalized, text);
+  addIfDifferent(values, toHiragana(normalized, { passRomaji: true }), normalized);
+  addIfDifferent(values, toKatakana(normalized, { passRomaji: true }), normalized);
 }
 
+/**
+ * 공백과 특수문자를 제거한 정규화 텍스트를 반환한다.
+ */
 function normalizeBasic(text?: string) {
   if (!text) {
     return undefined;
@@ -63,6 +71,9 @@ function normalizeBasic(text?: string) {
   return normalized.length > 0 ? normalized : undefined;
 }
 
+/**
+ * 정규화된 문자열을 Set에 추가한다.
+ */
 export function addNormalizedValue(values: Set<string>, text?: string) {
   const normalized = normalizeBasic(text);
   if (normalized) {
@@ -70,6 +81,9 @@ export function addNormalizedValue(values: Set<string>, text?: string) {
   }
 }
 
+/**
+ * 일본어 변형과 정규화 버전을 모두 Set에 추가한다.
+ */
 export function addJapaneseNormalizedValues(
   values: Set<string>,
   text?: string,
@@ -84,6 +98,9 @@ export function addJapaneseNormalizedValues(
   }
 }
 
+/**
+ * 단일 정규화 값 배열을 생성한다.
+ */
 export function buildNormalizedValues(
   value?: string,
 ): string[] | undefined {
@@ -91,6 +108,9 @@ export function buildNormalizedValues(
   return normalized ? [normalized] : undefined;
 }
 
+/**
+ * 일본어 변형을 모두 포함한 정규화 값 배열을 생성한다.
+ */
 export function buildJapaneseNormalizedValues(
   value?: string,
 ): string[] | undefined {
@@ -99,6 +119,9 @@ export function buildJapaneseNormalizedValues(
   return values.size > 0 ? Array.from(values) : undefined;
 }
 
+/**
+ * 원본과 공백 정규화 버전을 포함한 기본 검색 값을 생성한다.
+ */
 export function buildPrimaryValues(
   value?: string,
 ): string[] | undefined {
