@@ -8,11 +8,9 @@
     "244"
   ],
   "tjSongId": "68872",
-  "songPopularity": 87,
-  "artistPopularity": 53,
-  "spotifyTrackPopularity": 29,
+  "songPopularity": 55,
+  "artistPopularity": 50,
   "artistSpotifyPopularity": 50,
-  "artistTjSongCount": 3,
   "hasTjSong": true,
   "updatedAt": 1768240882,
   "q_song_ko_p": [
@@ -30,22 +28,20 @@
   "q_song_ja_kana_p": [
     "グッバイバイ"
   ],
-  "q_song_ja_kana_a": [
-    "ぐっばいばい"
-  ],
   "q_song_ja_kana_norm": [
+    "ぐっばいばい",
     "グッバイバイ"
   ],
   "q_artist_ko_p": [
     "토미오카 아이"
   ],
-  "q_artist_raw_p": [
-    "TOMIOKA AI"
-  ],
   "q_artist_ko_norm": [
     "토미오카아이"
   ],
-  "q_artist_raw_norm": [
+  "q_artist_latin_p": [
+    "TOMIOKA AI"
+  ],
+  "q_artist_latin_norm": [
     "TOMIOKAAI"
   ],
   "q_combo_a": [

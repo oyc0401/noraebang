@@ -43,32 +43,12 @@ pnpm ts-node src/typesense/scripts/index-songs.ts
 
 ## 📊 변환 로직
 
-### SongAlias/ArtistAlias → q_* 필드 매핑
+### 기본 컬럼 → q_* 필드
 
-**locale 매핑:**
-- `KO` → `q_*_ko_*`
-- `JA_KANA` → `q_*_ja_kana_*`
-- `JA_KANJI` → `q_*_ja_kanji_*`
-- `LATIN` → `q_song_latin_*` / `q_artist_raw_*`
-
-**kind → tier 매핑:**
-- `SPOTIFY` → `_p` (Primary)
-- `YOUTUBE`, `ROMANIZATION`, `TRANSLATION`, `TJ_NAME`, `NICKNAME` → `_a` (Alias)
-- `source=AI`일 때 → `_a2` (AI Alias)
-
-**예시:**
-
-```typescript
-// DB
-{ songId: 1, alias: "밤을 달리다", locale: "KO", kind: "TRANSLATION", source: "OPERATOR" }
-// → Typesense
-q_song_ko_a = ["밤을 달리다"]
-
-// DB
-{ artistId: 123, alias: "YOASOBI", locale: "LATIN", kind: "SPOTIFY", source: "SYSTEM" }
-// → Typesense
-q_artist_raw_p = ["YOASOBI"]
-```
+- `_p` (primary) 필드는 DB 원본 + 괄호/구두점 제거 버전을 그대로 저장합니다.
+- `_norm` 필드는 `cleanText(removeSpaces())`로 만든 토큰을 저장하며 infix 검색을 위해 사용합니다.
+- 일본어 필드는 히라가나/가타카나 변환을 자동으로 추가합니다.
+- 더 이상 별칭(SongAlias/ArtistAlias)을 Typesense에 넣지 않습니다. 운영 데이터를 정제된 기본 컬럼만 사용합니다.
 
 ### q_combo_a (조합 검색)
 
@@ -83,22 +63,20 @@ artistKo = "요아소비"
 
 ## 🔍 검색 쿼리 예시
 
-### 기본 검색 (P + A만)
-
 ```typescript
 {
   q: "밤을달리다",
-  query_by: "q_song_ko_p,q_song_ko_a,q_artist_ko_p,q_artist_ko_a",
-  sort_by: "_text_match:desc,popularity:desc,updatedAt:desc"
-}
-```
-
-### AI 별칭 포함 (0 hit일 때만)
-
-```typescript
-{
-  q: "밤을달리다",
-  query_by: "q_song_ko_p,q_song_ko_a,q_song_ko_a2,q_artist_ko_p,q_artist_ko_a,q_artist_ko_a2",
+  query_by: [
+    "q_song_ko_p",
+    "q_song_ko_norm",
+    "q_song_latin_p",
+    "q_song_latin_norm",
+    "q_artist_ko_p",
+    "q_artist_ko_norm",
+    "q_artist_latin_p",
+    "q_artist_latin_norm",
+    "q_combo_a"
+  ].join(","),
   sort_by: "_text_match:desc,popularity:desc,updatedAt:desc"
 }
 ```
@@ -117,8 +95,8 @@ artistKo = "요아소비"
 | 항목 | 레거시 | 새 구조 |
 |------|--------|---------|
 | 파일 구조 | 단일 파일 | 모듈 분리 |
-| 별칭 지원 | ❌ | ✅ (SongAlias, ArtistAlias) |
-| 티어 분리 | ❌ | ✅ (P/A/A2/F) |
+| 별칭 의존 | ✅ | ❌ (기본 컬럼만 사용) |
+| 정규화 필드 | 제한적 | KO/LATIN/JA 전체 지원 |
 | Spotify 인기도 | ❌ | ✅ |
 | 조합 검색 | ❌ | ✅ (q_combo_a) |
 | 타입 안정성 | 약함 | 강함 |
