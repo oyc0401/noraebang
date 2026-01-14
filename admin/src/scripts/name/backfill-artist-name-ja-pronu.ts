@@ -1,7 +1,7 @@
 /**
  * Artist.nameJaKana → Artist.nameJaPronu 한글 발음 채우기 스크립트
  *
- * kanaToHangul 라이브러리를 이용하여 일본어 가나 이름을
+ * KanaBarum 라이브러리를 이용하여 일본어 가나 이름을
  * 검색 친화적인 한글 표기로 변환합니다.
  * - Artist.nameJaKana가 존재하는 행만 처리합니다.
  * - 기본적으로 artistId, name, nameJaKana, nameJaPronu만 조회합니다.
@@ -13,7 +13,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { KanaToHangulMaker } from "../../lib/kanaToHangul.ts";
+import { KanaBarum } from "kanabarum";
 
 // pnpm ts-node src/scripts/name/backfill-artist-name-ja-pronu.ts
 // pnpm ts-node src/scripts/name/backfill-artist-name-ja-pronu.ts --dry-run
@@ -53,7 +53,7 @@ async function main() {
     console.warn("⚠️  --dry-run 없이 실행됩니다. 실제 DB가 수정됩니다.");
   }
 
-  let kanaToHangul = await KanaToHangulMaker.init();
+  const kanaToHangul = await KanaBarum.init();
 
   console.log("======================================");
   console.log("Artist nameJaPronu Backfill");
