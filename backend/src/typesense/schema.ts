@@ -177,6 +177,9 @@ export const artistsCollectionSchema: CollectionCreateSchema = {
       optional: true,
       infix: true,
     },
+
+    // ===== 검색 필드: 아티스트 발음 =====
+    { name: "q_artist_pron", type: "string[]", optional: true },
   ],
   default_sorting_field: "updatedAt",
 };

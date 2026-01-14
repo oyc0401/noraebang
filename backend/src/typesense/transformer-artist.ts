@@ -50,6 +50,8 @@ export interface TypesenseArtistDocument {
   q_name_ja_kana_p?: string[];
   q_name_ja_kana_a?: string[];
   q_name_ja_kana_norm?: string[];
+
+  q_artist_pron?: string[];
 }
 
 /**
@@ -87,6 +89,8 @@ export function transformArtistToDocument(
     q_name_ja_kana_p: createQueryNameJaKanaPrimary(artist),
     q_name_ja_kana_a: createQueryNameJaKanaAlias(artist),
     q_name_ja_kana_norm: createQueryNameJaKanaNorm(artist),
+
+    q_artist_pron: createQueryArtistPron(artist),
   };
 }
 
@@ -132,6 +136,17 @@ const createQueryNameJaKanaNorm = (artist: ArtistWithRelations) => {
 };
 
 const createQueryNameJaKanaAlias = (_artist: ArtistWithRelations) => undefined;
+
+const createQueryArtistPron = (artist: ArtistWithRelations) => {
+  const pron = artist.nameJaPronu?.trim();
+  if (!pron) return undefined;
+
+  const results = new Set<string>();
+  getPrimaryValues(pron)?.forEach((value) => results.add(value));
+  getNormalizedValues(pron)?.forEach((value) => results.add(value));
+
+  return results.size > 0 ? Array.from(results) : undefined;
+};
 
 /**
  * 인기도 계산

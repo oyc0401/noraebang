@@ -55,6 +55,25 @@ describe("transformArtistToDocument", () => {
     expect(result.spotifyPopularity).toBe(80);
     expect(result.tjSongCount).toBe(2);
   });
+
+  it("아티스트 발음 토큰을 세 가지 버전으로 생성해야 함", () => {
+    const artist = {
+      id: 3,
+      name: "Kana Artist",
+      nameKo: "카나 아티스트",
+      nameJaPronu: "ラブ-ラブ!!",
+      updatedAt: new Date("2025-01-01"),
+      artistSongs: [],
+      spotifyArtist: null,
+    };
+
+    const result = transformArtistToDocument(artist as any);
+
+    expect(result.q_artist_pron).toBeDefined();
+    expect(result.q_artist_pron).toEqual(
+      expect.arrayContaining(["ラブ-ラブ!!", "ラブ ラブ", "ラブラブ"]),
+    );
+  });
 });
 
 describe("transformSongToDocument", () => {
