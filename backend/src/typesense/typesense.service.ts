@@ -122,6 +122,7 @@ export class TypesenseService implements OnModuleInit {
       "q_artist_ja_kana_p",
       "q_artist_ja_kana_a",
       "q_artist_ja_kana_norm",
+      "q_artist_pron",
       "q_combo_a",
     ];
 

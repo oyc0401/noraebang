@@ -8,6 +8,7 @@ import {
   getJapaneseNormalizedValues,
   getNormalizedValues,
   getNormalizedValuesByList,
+  getPronunciationValues,
   getPrimaryValues,
   getPrimaryValuesByList,
   isPresent,
@@ -24,6 +25,7 @@ export type SongWithRelations = Awaited<
       nameLatin?: string;
       nameJaKana?: string;
       nameJaKanji?: string;
+      nameJaPronu?: string | null;
       spotifyArtist?: {
         popularity?: number;
       };
@@ -97,6 +99,8 @@ export interface TypesenseSongDocument {
   q_artist_ja_kana_a?: string[];
   q_artist_ja_kana_norm?: string[];
 
+  q_artist_pron?: string[];
+
   q_combo_a?: string[];
 }
 
@@ -164,6 +168,8 @@ export function transformSongToDocument(
     q_artist_ja_kana_p: createQueryArtistJaKanaPrimary(song),
     q_artist_ja_kana_a: createQueryArtistJaKanaAlias(song),
     q_artist_ja_kana_norm: createQueryArtistJaKanaNorm(song),
+
+    q_artist_pron: createQueryArtistPron(song),
 
     q_combo_a: createQueryComboArtist(song),
   };
@@ -273,6 +279,25 @@ const createQueryArtistJaKanaNorm = (song: SongWithRelations) => {
 };
 
 const createQueryArtistJaKanaAlias = (_song: SongWithRelations) => undefined;
+
+const createQueryArtistPron = (song: SongWithRelations) => {
+  const prons = getSongArtists(song)
+    .map((artist) => artist.nameJaPronu)
+    .filter(isPresent)
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+
+  if (prons.length === 0) return undefined;
+
+  const results = new Set<string>();
+  for (const pron of prons) {
+    for (const token of getPronunciationValues(pron)) {
+      results.add(token);
+    }
+  }
+
+  return results.size > 0 ? Array.from(results) : undefined;
+};
 
 const createQueryComboArtist = (song: SongWithRelations) => {
   const mainArtist = getSongArtists(song)[0];

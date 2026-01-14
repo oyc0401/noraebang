@@ -46,10 +46,22 @@
   "q_artist_latin_norm": [
     "TOMIOKAAI"
   ],
-  "q_artist_ja_kanji_p": [],
-  "q_artist_ja_kanji_norm": [],
-  "q_artist_ja_kana_p": [],
-  "q_artist_ja_kana_norm": [],
+  "q_artist_ja_kanji_p": [
+    "冨岡 愛"
+  ],
+  "q_artist_ja_kanji_norm": [
+    "冨岡愛"
+  ],
+  "q_artist_ja_kana_p": [
+    "とみおか あい"
+  ],
+  "q_artist_ja_kana_norm": [
+    "とみおかあい"
+  ],
+  "q_artist_pron": [
+    "토미오카 아이",
+    "토미오카아이"
+  ],
   "q_combo_a": [
     "굿바이바이토미오카아이"
   ]
