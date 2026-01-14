@@ -5,7 +5,7 @@
  * 검색 친화적인 한글 표기로 변환합니다.
  * - Artist.nameJaKana가 존재하는 행만 처리합니다.
  * - 기본적으로 artistId, name, nameJaKana, nameJaPronu만 조회합니다.
- * - 옵션으로 artistId 제한 및 titleJaKana가 있는 곡을 가진 아티스트만 선택할 수 있습니다.
+ * - 아티스트 ID는 300 미만만 조회하고, titleJaKana가 있는 곡을 가진 아티스트만 조회합니다.
  * - 항상 --dry-run 모드로 결과를 검토한 뒤 실제 업데이트하세요.
  */
 
@@ -13,58 +13,22 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { KanaToHangulMaker } from "../../lib/kanaToHangul";
+import { KanaToHangulMaker } from "../../lib/kanaToHangul.ts";
 
-// pnpm ts-node src/scripts/name/backfill-artist-name-ja-pronu.ts --max-id=300 --dry-run
-// pnpm ts-node src/scripts/name/backfill-artist-name-ja-pronu.ts --has-song-title-ja-kana --dry-run
+// pnpm ts-node src/scripts/name/backfill-artist-name-ja-pronu.ts
+// pnpm ts-node src/scripts/name/backfill-artist-name-ja-pronu.ts --dry-run
 
 type CliOptions = {
-  maxId?: number;
-  requireSongTitleJaKana: boolean;
   dryRun: boolean;
-  force: boolean;
 };
 
 function parseArgs(argv: string[]): CliOptions {
-  const options: CliOptions = {
-    requireSongTitleJaKana: false,
-    dryRun: false,
-    force: false,
-  };
+  const options: CliOptions = { dryRun: false };
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-
     if (arg === "--dry-run") {
       options.dryRun = true;
-      continue;
-    }
-
-    if (arg === "--force") {
-      options.force = true;
-      continue;
-    }
-
-    if (arg === "--has-song-title-ja-kana") {
-      options.requireSongTitleJaKana = true;
-      continue;
-    }
-
-    if (arg.startsWith("--max-id")) {
-      let value: string | undefined;
-      if (arg.includes("=")) {
-        [, value] = arg.split("=");
-      } else {
-        value = argv[++i];
-      }
-      if (!value) {
-        throw new Error("--max-id 옵션에는 숫자를 입력해야 합니다.");
-      }
-      const parsed = Number(value);
-      if (Number.isNaN(parsed)) {
-        throw new Error("--max-id 옵션은 숫자여야 합니다.");
-      }
-      options.maxId = parsed;
       continue;
     }
 
@@ -98,19 +62,13 @@ async function main() {
 
   const where: Prisma.ArtistWhereInput = {
     nameJaKana: { not: null },
-  };
-
-  if (typeof options.maxId === "number") {
-    where.id = { ...(where.id ?? {}), lte: options.maxId };
-  }
-
-  if (options.requireSongTitleJaKana) {
-    where.artistSongs = {
+    id: { lt: 300 },
+    artistSongs: {
       some: {
         song: { titleJaKana: { not: null } },
       },
-    };
-  }
+    },
+  };
 
   console.log("📦 Fetching artists...");
   const artists = await prisma.artist.findMany({
@@ -143,8 +101,7 @@ async function main() {
     }
 
     const existing = artist.nameJaPronu?.trim() ?? "";
-    const shouldUpdate =
-      options.force || existing.length === 0 || existing !== converted;
+    const shouldUpdate = existing.length === 0 || existing !== converted;
     if (!shouldUpdate) {
       skippedSame++;
       continue;

@@ -1,11 +1,11 @@
-import { removeBrackets } from "../../typesense/lib/text-utils";
-
 const FEAT_PATTERN_IN_BRACKETS = /\((?:feat\.?|featuring|ft\.?)\s*[^)]*\)/gi;
 const FEAT_PATTERN_INLINE = /\b(?:feat\.?|featuring|ft\.?)\s*[^\s/・、]+/gi;
 const BRACKET_WITH_CONTENT_PATTERN = /[【「[()（]([^】」\])）]*)[】」\])）]/g;
 const SEPARATOR_PATTERN = /[/・_,、|]+/g;
 const SUFFIX_PATTERN = /\s*MV$/i;
-
+function removeBrackets(text: string): string {
+  return text.replace(/[『』「」【】［］()（）[\]<>《》{}]/g, "").trim();
+}
 export function sanitizeSearchText(value?: string | null): string {
   if (!value) {
     return "";

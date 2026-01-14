@@ -80,6 +80,7 @@ export class TypesenseService implements OnModuleInit {
           "q_name_ja_kana_p",
           "q_name_ja_kana_a",
           "q_name_ja_kana_norm",
+          "q_artist_pron",
         ].join(","),
         sort_by: "_text_match(bucket_size:5):desc,popularity:desc",
         page,

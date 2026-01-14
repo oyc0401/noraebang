@@ -2,11 +2,13 @@
   "id": "244",
   "homeCatalog": "JPOP",
   "nameKo": "토미오카 아이",
+  "nameJaKanji": "冨岡 愛",
+  "nameJaKana": "とみおか あい",
   "nameLatin": "TOMIOKA AI",
   "popularity": 53,
   "spotifyPopularity": 50,
   "tjSongCount": 3,
-  "updatedAt": 1768051837,
+  "updatedAt": 1768378966,
   "q_name_ko_p": [
     "토미오카 아이"
   ],
@@ -18,5 +20,25 @@
   ],
   "q_name_latin_norm": [
     "TOMIOKAAI"
+  ],
+  "q_name_ja_kanji_p": [
+    "冨岡 愛"
+  ],
+  "q_name_ja_kanji_norm": [
+    "冨岡 愛",
+    "冨岡愛"
+  ],
+  "q_name_ja_kana_p": [
+    "とみおか あい"
+  ],
+  "q_name_ja_kana_norm": [
+    "とみおか あい",
+    "トミオカ アイ",
+    "とみおかあい",
+    "トミオカアイ"
+  ],
+  "q_artist_pron": [
+    "토미오카 아이",
+    "토미오카아이"
   ]
 }
