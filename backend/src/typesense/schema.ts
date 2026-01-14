@@ -111,6 +111,8 @@ export const songsCollectionSchema: CollectionCreateSchema = {
       infix: true,
     },
 
+    { name: "q_artist_pron", type: "string[]", optional: true },
+
     // ===== 조합 검색 (곡+아티스트) =====
     { name: "q_combo_a", type: "string[]", optional: true },
   ],

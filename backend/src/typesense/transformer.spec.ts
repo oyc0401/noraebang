@@ -96,6 +96,7 @@ describe("transformSongToDocument", () => {
             nameLatin: "YOASOBI",
             nameJaKanji: "夜遊び",
             nameJaKana: "よあそび",
+            nameJaPronu: "요아소비",
             spotifyArtist: { popularity: 80 },
             tjSongs: [{ tjSongId: "TJ001" }],
           },
@@ -108,6 +109,7 @@ describe("transformSongToDocument", () => {
             nameLatin: "Ikura",
             nameJaKanji: "幾田",
             nameJaKana: "いくだ",
+            nameJaPronu: "이쿠라",
             spotifyArtist: null,
             tjSongs: [],
           },
@@ -152,6 +154,23 @@ describe("transformSongToDocument", () => {
     expect(result.q_artist_ja_kanji_norm).toContain("夜遊び");
     expect(result.q_artist_ja_kana_norm).toContain("よあそび");
     expect(result.q_combo_a).toEqual(["밤을달리다요아소비"]);
+  });
+
+  it("아티스트 발음 검색 필드를 생성해야 함", () => {
+    const song = createSong();
+    song.artistSongs[0].artist.nameJaPronu = "즛토마요-나카데이이노니。";
+    song.artistSongs[1].artist.nameJaPronu = undefined;
+
+    const result = transformSongToDocument(song as any);
+
+    expect(result.q_artist_pron).toBeDefined();
+    expect(result.q_artist_pron).toEqual(
+      expect.arrayContaining([
+        "즛토마요-나카데이이노니。",
+        "즛토마요 나카데이이노니",
+        "즛토마요나카데이이노니",
+      ]),
+    );
   });
 
   it("인기도 정보를 통합해 songPopularity를 계산해야 함", () => {

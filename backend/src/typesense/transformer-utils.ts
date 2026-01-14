@@ -67,3 +67,23 @@ export function getJapaneseNormalizedValues(text: string): string[] {
 
   return Array.from(values);
 }
+
+/**
+ * 발음 검색용 토큰 생성
+ */
+export function getPronunciationValues(text: string): string[] {
+  const values = new Set<string>();
+  const add = (value?: string) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return;
+    if (trimmed.length > 0) {
+      values.add(trimmed);
+    }
+  };
+
+  add(text);
+  add(removePunctuation(text));
+  add(normalizeBasic(text));
+
+  return Array.from(values);
+}
