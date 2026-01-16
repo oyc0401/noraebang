@@ -84,7 +84,7 @@ export function SpotifySection() {
     setExpandedGroups((prev) => {
       const next: Record<number, boolean> = {};
       data.groups.forEach((group) => {
-        next[group.groupId] = prev[group.groupId] ?? true;
+        next[group.groupId] = prev[group.groupId] ?? false;
       });
       return next;
     });

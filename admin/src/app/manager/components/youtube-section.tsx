@@ -73,7 +73,7 @@ export function YoutubeSection() {
     setExpandedGroups((prev) => {
       const next: Record<number, boolean> = {};
       data.groups.forEach((group) => {
-        next[group.groupIndex] = prev[group.groupIndex] ?? true;
+        next[group.groupIndex] = prev[group.groupIndex] ?? false;
       });
       return next;
     });
