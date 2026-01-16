@@ -9,10 +9,10 @@ import { saveTJPropose } from "../savePropose";
 
 // 여기에 데이터를 직접 입력하세요
 const proposeData = {
-  singer: "ロクデナシ",
-  title: "イオ",
-  name: "헤쿠2",
-  content: "너무 부르고싶어요",
+  singer: "ずっと真夜中でいいのに。",
+  title: "勘冴えて悔しいわ",
+  name: "헤쿠",
+  content: "부르고싶어요",
   email1: "oyc0401",
   email2: "gmail.com",
 };
