@@ -433,7 +433,9 @@ export function CenterSection() {
                                       <span className="text-sm font-semibold text-zinc-900 group-hover:text-emerald-600">
                                         {primaryTrack?.name}
                                       </span>
-                                      <span className="block text-[11px] text-zinc-400 truncate">{`(${primaryTrack.musicBrainzTitle})`}</span>
+                                      {primaryTrack.musicBrainzTitle && (
+                                        <span className="block text-[11px] text-zinc-400 truncate">{`(${primaryTrack.musicBrainzTitle})`}</span>
+                                      )}
                                     </a>
                                   ) : (
                                     <div>

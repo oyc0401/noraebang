@@ -1,11 +1,15 @@
 import { create } from "zustand";
 import type { ManagerSpotifyTrackSummary } from "./types";
 
+export type RightSectionType = "spotify" | "youtube";
+
 type ManagerStoreState = {
   selectedArtistId: number | null;
   setSelectedArtistId: (artistId: number | null) => void;
   selectedGroupId: number | null;
   setSelectedGroupId: (groupId: number | null) => void;
+  rightSectionType: RightSectionType;
+  setRightSectionType: (type: RightSectionType) => void;
   isArtistNameDialogOpen: boolean;
   openArtistNameDialog: () => void;
   closeArtistNameDialog: () => void;
@@ -40,6 +44,8 @@ export const useManagerStore = create<ManagerStoreState>((set) => ({
   setSelectedArtistId: (selectedArtistId) => set({ selectedArtistId }),
   selectedGroupId: null,
   setSelectedGroupId: (selectedGroupId) => set({ selectedGroupId }),
+  rightSectionType: "spotify",
+  setRightSectionType: (rightSectionType) => set({ rightSectionType }),
   isArtistNameDialogOpen: false,
   openArtistNameDialog: () => set({ isArtistNameDialogOpen: true }),
   closeArtistNameDialog: () => set({ isArtistNameDialogOpen: false }),

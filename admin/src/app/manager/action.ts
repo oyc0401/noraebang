@@ -12,6 +12,7 @@ import {
   type ManagerSpotifyPanelData,
   type ManagerSpotifyTrackSummary,
   type ManagerSortKey,
+  type ManagerYoutubePanelData,
 } from "./types";
 
 export type ManagerQueryParams = {
@@ -898,4 +899,68 @@ export async function fetchArtistAliases(
   });
 
   return aliases;
+}
+
+export async function fetchManagerArtistYoutubePanel(
+  artistId: number,
+): Promise<ManagerYoutubePanelData> {
+  if (!artistId || Number.isNaN(artistId)) {
+    return { channel: null, videos: [] };
+  }
+
+  const topicChannel = await prisma.youtubeChannel.findFirst({
+    where: { artistId, type: "TOPIC" },
+    select: {
+      id: true,
+      channelId: true,
+      title: true,
+      thumbnailMedium: true,
+      subscriberCount: true,
+      videoCount: true,
+    },
+  });
+
+  if (!topicChannel) {
+    return { channel: null, videos: [] };
+  }
+
+  const channelVideos = await prisma.youtubeChannelVideo.findMany({
+    where: { youtubeChannelId: topicChannel.id },
+    select: {
+      youtubeVideo: {
+        select: {
+          videoId: true,
+          title: true,
+          publishedAt: true,
+          thumbnailMedium: true,
+          thumbnailHigh: true,
+          viewCount: true,
+          likeCount: true,
+          durationSeconds: true,
+        },
+      },
+    },
+    orderBy: { youtubeVideo: { publishedAt: "desc" } },
+  });
+
+  return {
+    channel: {
+      id: topicChannel.id,
+      channelId: topicChannel.channelId,
+      title: topicChannel.title,
+      thumbnailMedium: topicChannel.thumbnailMedium,
+      subscriberCount: topicChannel.subscriberCount,
+      videoCount: topicChannel.videoCount,
+    },
+    videos: channelVideos.map((v) => ({
+      videoId: v.youtubeVideo.videoId,
+      title: v.youtubeVideo.title,
+      publishedAt: v.youtubeVideo.publishedAt?.toISOString() ?? null,
+      thumbnailMedium: v.youtubeVideo.thumbnailMedium,
+      thumbnailHigh: v.youtubeVideo.thumbnailHigh,
+      viewCount: v.youtubeVideo.viewCount?.toString() ?? null,
+      likeCount: v.youtubeVideo.likeCount,
+      durationSeconds: v.youtubeVideo.durationSeconds,
+    })),
+  };
 }
