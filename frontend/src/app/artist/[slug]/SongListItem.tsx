@@ -53,7 +53,7 @@ export function SongListItem({ song, isSelected, onClick }: SongListItemProps) {
           </div>
         )}
       </div>
-      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 select-text">
         <p className="truncate text-base font-bold leading-normal text-white">
           {song.title}
         </p>
