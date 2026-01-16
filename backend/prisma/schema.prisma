@@ -148,11 +148,60 @@ model YoutubeChannel {
   createdAt             DateTime    @default(now()) @map("created_at")
   updatedAt             DateTime    @updatedAt @map("updated_at")
   artist                Artist      @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  videos                YoutubeChannelVideo[]
 
   @@unique([artistId, type])
   @@index([channelId])
   @@index([subscriberCount(sort: Desc)]) // 정렬 인덱스 없어도 될 텐데
   @@map("youtube_channel")
+}
+
+model YoutubeVideo {
+  videoId                String    @id @map("video_id") // YouTube video ID (11자리)
+  ownerChannelId         String?   @map("owner_channel_id") // 실제 비디오 소유 채널 ID
+  title                  String?
+  description            String?
+  publishedAt            DateTime? @map("published_at")
+
+  // 썸네일 (5종)
+  thumbnailDefault       String?   @map("thumbnail_default")
+  thumbnailMedium        String?   @map("thumbnail_medium")
+  thumbnailHigh          String?   @map("thumbnail_high")
+  thumbnailStandard      String?   @map("thumbnail_standard")
+  thumbnailMaxres        String?   @map("thumbnail_maxres")
+
+  // statistics
+  viewCount              BigInt?   @map("view_count")
+  likeCount              Int?      @map("like_count")
+  commentCount           Int?      @map("comment_count")
+
+  // contentDetails
+  durationSeconds        Int?      @map("duration_seconds")
+  definition             String?   // "hd" | "sd"
+  caption                Boolean?  // 자막 여부
+
+  fetchedAt              DateTime? @map("fetched_at")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  channels               YoutubeChannelVideo[]
+
+  @@map("youtube_video")
+}
+
+model YoutubeChannelVideo {
+  id               Int      @id @default(autoincrement())
+  youtubeChannelId Int      @map("youtube_channel_id")
+  youtubeVideoId   String   @map("youtube_video_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  youtubeChannel   YoutubeChannel @relation(fields: [youtubeChannelId], references: [id], onDelete: Cascade)
+  youtubeVideo     YoutubeVideo   @relation(fields: [youtubeVideoId], references: [videoId], onDelete: Cascade)
+
+  @@unique([youtubeChannelId, youtubeVideoId])
+  @@index([youtubeChannelId])
+  @@index([youtubeVideoId])
+  @@map("youtube_channel_video")
 }
 
 model SpotifyArtist {
