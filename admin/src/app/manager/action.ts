@@ -1174,3 +1174,97 @@ export async function fetchManagerArtistYoutubePanel(
     orphanVideos,
   };
 }
+
+export type UpdateSongInput = {
+  songId: number;
+  title?: string;
+  titleKo?: string;
+  titleLatin?: string;
+  catalog?: string;
+  youtubeVideoId?: string;
+};
+
+export async function updateSong(input: UpdateSongInput) {
+  const { songId, ...data } = input;
+
+  if (!songId || Number.isNaN(songId)) {
+    throw new Error("유효한 곡 ID가 필요합니다.");
+  }
+
+  const sanitizedData = {
+    title: data.title?.trim(),
+    titleKo: data.titleKo?.trim(),
+    titleLatin: data.titleLatin?.trim() || null,
+    catalog: data.catalog?.trim() || null,
+    youtubeVideoId: data.youtubeVideoId?.trim() || null,
+  };
+
+  const updatedSong = await prisma.song.update({
+    where: { id: songId },
+    data: sanitizedData,
+    select: {
+      id: true,
+      title: true,
+      titleKo: true,
+      titleLatin: true,
+      catalog: true,
+      youtubeVideoId: true,
+      thumbnailDefault: true,
+      thumbnailMedium: true,
+      thumbnailHigh: true,
+      tjSong: {
+        select: {
+          id: true,
+          title: true,
+          artist: true,
+        },
+      },
+      spotifyTrackGroup: {
+        select: {
+          id: true,
+          primaryTrack: { select: spotifyTrackBaseSelect },
+        },
+      },
+      karaokeSongs: {
+        select: {
+          provider: true,
+          karaokeNo: true,
+        },
+      },
+    },
+  });
+
+  return {
+    id: updatedSong.id,
+    title: updatedSong.title,
+    titleKo: updatedSong.titleKo,
+    titleLatin: updatedSong.titleLatin,
+    catalog: updatedSong.catalog,
+    hasYoutube: Boolean(updatedSong.youtubeVideoId),
+    youtubeVideoId: updatedSong.youtubeVideoId,
+    thumbnails: {
+      default: updatedSong.thumbnailDefault,
+      medium: updatedSong.thumbnailMedium,
+      high: updatedSong.thumbnailHigh,
+    },
+    spotifyGroup: updatedSong.spotifyTrackGroup
+      ? {
+          id: updatedSong.spotifyTrackGroup.id,
+          primaryTrack: updatedSong.spotifyTrackGroup.primaryTrack
+            ? mapSpotifyTrackSummary(updatedSong.spotifyTrackGroup.primaryTrack)
+            : null,
+        }
+      : null,
+    tjSong: updatedSong.tjSong
+      ? {
+          id: updatedSong.tjSong.id,
+          title: updatedSong.tjSong.title,
+          artist: updatedSong.tjSong.artist,
+        }
+      : null,
+    karaoke: updatedSong.karaokeSongs.map((item) => ({
+      provider: String(item.provider),
+      karaokeNo: item.karaokeNo,
+    })),
+  };
+}

@@ -76,9 +76,9 @@ export function normalizeTitle(title: string): string {
     /[(（]re[:：].+[)）]/gi,
 
     // 괄호 안 모든 내용 제거 (위 패턴에서 안 걸린 것들)
-    /\([^)]*\)/g,   // 소괄호
-    /\[[^\]]*\]/g,  // 대괄호
-    /\{[^}]*\}/g,   // 중괄호
+    /\([^)]*\)/g, // 소괄호
+    /\[[^\]]*\]/g, // 대괄호
+    /\{[^}]*\}/g, // 중괄호
   ];
 
   for (const pattern of patternsToRemove) {
@@ -89,9 +89,7 @@ export function normalizeTitle(title: string): string {
   normalized = normalized.toLowerCase();
 
   // 공백, 괄호, 하이픈, 특수문자 등 제거
-  normalized = normalized
-    .replace(/[\s\-_()[\]{}・~]/g, "")
-    .trim();
+  normalized = normalized.replace(/[\s\-_()[\]{}・~。『』]/g, "").trim();
 
   return normalized;
 }
