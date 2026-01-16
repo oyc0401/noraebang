@@ -133,3 +133,26 @@ export type ManagerSpotifyPanelData = {
   groups: ManagerSpotifyGroupSummary[];
   orphanTracks: ManagerSpotifyTrackSummary[];
 };
+
+export type ManagerYoutubeVideoSummary = {
+  videoId: string;
+  title?: string | null;
+  publishedAt?: string | null;
+  thumbnailMedium?: string | null;
+  thumbnailHigh?: string | null;
+  viewCount?: string | null;
+  likeCount?: number | null;
+  durationSeconds?: number | null;
+};
+
+export type ManagerYoutubePanelData = {
+  channel: {
+    id: number;
+    channelId: string;
+    title?: string | null;
+    thumbnailMedium?: string | null;
+    subscriberCount?: number | null;
+    videoCount?: number | null;
+  } | null;
+  videos: ManagerYoutubeVideoSummary[];
+};
