@@ -145,6 +145,16 @@ export type ManagerYoutubeVideoSummary = {
   durationSeconds?: number | null;
 };
 
+export type ManagerYoutubeGroupSummary = {
+  groupIndex: number;
+  videos: ManagerYoutubeVideoSummary[];
+  linkedSongs: Array<{
+    id: number;
+    title: string;
+    titleKo?: string | null;
+  }>;
+};
+
 export type ManagerYoutubePanelData = {
   channel: {
     id: number;
@@ -154,5 +164,6 @@ export type ManagerYoutubePanelData = {
     subscriberCount?: number | null;
     videoCount?: number | null;
   } | null;
-  videos: ManagerYoutubeVideoSummary[];
+  groups: ManagerYoutubeGroupSummary[];
+  orphanVideos: ManagerYoutubeVideoSummary[];
 };
