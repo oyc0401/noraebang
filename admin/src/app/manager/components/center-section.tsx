@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { fetchManagerArtistDetail } from "../action";
+import { useArtistDetailContext } from "./artist-detail-context";
+import { fetchManagerArtistDetail, updateSong } from "../action";
 import type { ManagerArtistDetail } from "../types";
 import { useManagerStore } from "../store";
 import { ArtistAliasDialog } from "./artist-alias-dialog";
@@ -539,11 +540,15 @@ function SongEditDialog({
   song: SongItem | null;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { detail, setDetail } = useArtistDetailContext();
   const [title, setTitle] = useState("");
   const [titleKo, setTitleKo] = useState("");
   const [titleLatin, setTitleLatin] = useState("");
   const [catalog, setCatalog] = useState("");
   const [youtubeVideoId, setYoutubeVideoId] = useState("");
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !song) return;
@@ -552,7 +557,40 @@ function SongEditDialog({
     setTitleLatin(song.titleLatin ?? "");
     setCatalog(song.catalog ?? "");
     setYoutubeVideoId(song.youtubeVideoId ?? "");
+    setError(null);
+    setIsSaving(false);
   }, [open, song]);
+
+  async function handleSave() {
+    if (!song) return;
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      const updatedSong = await updateSong({
+        songId: song.id,
+        title,
+        titleKo,
+        titleLatin,
+        catalog,
+        youtubeVideoId,
+      });
+
+      if (detail && setDetail) {
+        const newSongs = detail.songs.map((s) =>
+          s.id === updatedSong.id ? updatedSong : s,
+        );
+        setDetail({ ...detail, songs: newSongs });
+      }
+
+      onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+      setError("저장에 실패했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   if (!open) return null;
 
@@ -586,11 +624,17 @@ function SongEditDialog({
         </div>
 
         <div className="space-y-3 px-5 py-4 text-sm">
+          {error && (
+            <div className="rounded-md bg-red-50 p-3 text-xs text-red-600">
+              {error}
+            </div>
+          )}
           <Field label="Title">
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+              disabled={isSaving}
             />
           </Field>
 
@@ -600,6 +644,7 @@ function SongEditDialog({
                 value={titleKo}
                 onChange={(e) => setTitleKo(e.target.value)}
                 className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+                disabled={isSaving}
               />
             </Field>
 
@@ -608,6 +653,7 @@ function SongEditDialog({
                 value={titleLatin}
                 onChange={(e) => setTitleLatin(e.target.value)}
                 className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+                disabled={isSaving}
               />
             </Field>
           </div>
@@ -619,6 +665,7 @@ function SongEditDialog({
                 onChange={(e) => setCatalog(e.target.value)}
                 placeholder='예: "KPOP" | "JPOP" ...'
                 className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+                disabled={isSaving}
               />
             </Field>
 
@@ -628,6 +675,7 @@ function SongEditDialog({
                 onChange={(e) => setYoutubeVideoId(e.target.value)}
                 placeholder="예: 6OC92oxs4gA"
                 className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+                disabled={isSaving}
               />
             </Field>
           </div>
@@ -638,18 +686,17 @@ function SongEditDialog({
             type="button"
             onClick={() => onOpenChange(false)}
             className="rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 hover:border-zinc-300"
+            disabled={isSaving}
           >
             취소
           </button>
           <button
             type="button"
-            onClick={() => {
-              // TODO: 저장 로직 연결 (요청 주시면 action/mutation까지 붙여드리겠습니다)
-              onOpenChange(false);
-            }}
-            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
+            onClick={handleSave}
+            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
+            disabled={isSaving}
           >
-            저장
+            {isSaving ? "저장 중..." : "저장"}
           </button>
         </div>
       </div>

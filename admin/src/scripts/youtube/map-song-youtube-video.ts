@@ -135,6 +135,7 @@ async function fetchArtistData(artistId: number) {
       id: song.id,
       title: song.title,
       titleKo: song.titleKo,
+      titleLatin: song.titleLatin,
       spotifyTitles: [...new Set(spotifyTitles)], // 중복 제거
       musicBrainzTitles: [...new Set(musicBrainzTitles)],
     };
@@ -187,7 +188,10 @@ function generateMapping(
       { titles: song.musicBrainzTitles, source: "musicBrainzTitle" },
       { titles: song.spotifyTitles, source: "spotifyTitle" },
       { titles: [song.title], source: "title" },
-      { titles: [song.titleLatin], source: "titleLatin" },
+      {
+        titles: song.titleLatin ? [song.titleLatin] : [],
+        source: "titleLatin",
+      },
       { titles: song.titleKo ? [song.titleKo] : [], source: "titleKo" },
     ];
 
