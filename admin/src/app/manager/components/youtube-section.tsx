@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { fetchManagerArtistYoutubePanel } from "../action";
 import type {
+  ManagerYoutubeGroupSummary,
   ManagerYoutubePanelData,
   ManagerYoutubeVideoSummary,
 } from "../types";
@@ -17,15 +18,19 @@ export function YoutubeSection() {
   );
   const [data, setData] = useState<ManagerYoutubePanelData>({
     channel: null,
-    videos: [],
+    groups: [],
+    orphanVideos: [],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fetchIdRef = useRef(0);
+  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
+    {},
+  );
 
   useEffect(() => {
     if (!selectedArtistId) {
-      setData({ channel: null, videos: [] });
+      setData({ channel: null, groups: [], orphanVideos: [] });
       setIsLoading(false);
       setErrorMessage(null);
       return;
@@ -48,7 +53,7 @@ export function YoutubeSection() {
         console.error(error);
         if (!cancelled) {
           setErrorMessage("유튜브 비디오 정보를 불러오지 못했습니다.");
-          setData({ channel: null, videos: [] });
+          setData({ channel: null, groups: [], orphanVideos: [] });
         }
       } finally {
         if (!cancelled) {
@@ -63,6 +68,42 @@ export function YoutubeSection() {
       cancelled = true;
     };
   }, [selectedArtistId]);
+
+  useEffect(() => {
+    setExpandedGroups((prev) => {
+      const next: Record<number, boolean> = {};
+      data.groups.forEach((group) => {
+        next[group.groupIndex] = prev[group.groupIndex] ?? true;
+      });
+      return next;
+    });
+  }, [data.groups]);
+
+  const hasContent = useMemo(
+    () => data.groups.length > 0 || data.orphanVideos.length > 0,
+    [data.groups.length, data.orphanVideos.length],
+  );
+
+  const totalVideoCount = useMemo(() => {
+    const groupVideos = data.groups.reduce((sum, g) => sum + g.videos.length, 0);
+    return groupVideos + data.orphanVideos.length;
+  }, [data.groups, data.orphanVideos.length]);
+
+  const handleCollapseAll = () => {
+    const next: Record<number, boolean> = {};
+    data.groups.forEach((group) => {
+      next[group.groupIndex] = false;
+    });
+    setExpandedGroups(next);
+  };
+
+  const handleExpandAll = () => {
+    const next: Record<number, boolean> = {};
+    data.groups.forEach((group) => {
+      next[group.groupIndex] = true;
+    });
+    setExpandedGroups(next);
+  };
 
   const renderBody = () => {
     if (!selectedArtistId) {
@@ -93,6 +134,14 @@ export function YoutubeSection() {
       return (
         <div className="flex h-full flex-col items-center justify-center text-sm text-zinc-500">
           연결된 토픽 채널이 없습니다.
+        </div>
+      );
+    }
+
+    if (!hasContent) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center text-sm text-zinc-500">
+          이 채널에 등록된 비디오가 없습니다.
         </div>
       );
     }
@@ -135,27 +184,48 @@ export function YoutubeSection() {
           </div>
         )}
 
-        {data.videos.length > 0 && (
-          <div className="px-4 pb-4">
-            <div className="pb-3 flex items-center justify-between">
+        {data.groups.length > 0 && (
+          <div className="pt-2">
+            <div className="px-4 pb-4 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-zinc-800">
-                비디오 ({data.videos.length})
+                연결된 그룹 ({data.groups.length})
               </h3>
               <span className="text-xs text-zinc-500">
-                발매일 기준 정렬
+                연결된 곡 수 기준 정렬
               </span>
             </div>
-            <div className="space-y-2">
-              {data.videos.map((video) => (
-                <YoutubeVideoCard key={video.videoId} video={video} />
-              ))}
-            </div>
+
+            {data.groups.map((group) => (
+              <YoutubeGroupCard
+                key={group.groupIndex}
+                group={group}
+                isExpanded={expandedGroups[group.groupIndex] ?? true}
+                onToggle={() =>
+                  setExpandedGroups((prev) => ({
+                    ...prev,
+                    [group.groupIndex]: !(prev[group.groupIndex] ?? true),
+                  }))
+                }
+              />
+            ))}
           </div>
         )}
 
-        {data.videos.length === 0 && data.channel && (
-          <div className="flex h-full flex-col items-center justify-center text-sm text-zinc-500">
-            이 채널에 등록된 비디오가 없습니다.
+        {data.orphanVideos.length > 0 && (
+          <div className="px-4 space-y-3 pb-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-zinc-800">
+                미연결 비디오 ({data.orphanVideos.length})
+              </h3>
+              <span className="text-xs text-zinc-500">
+                곡과 연결되지 않은 비디오
+              </span>
+            </div>
+            <div className="space-y-2">
+              {data.orphanVideos.map((video) => (
+                <YoutubeVideoCard key={video.videoId} video={video} />
+              ))}
+            </div>
           </div>
         )}
 
@@ -186,8 +256,26 @@ export function YoutubeSection() {
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white/80 px-3 py-1 text-[11px] font-semibold text-red-700">
             <YoutubeIcon className="h-3.5 w-3.5" />
-            {data.videos.length}개
+            {data.groups.length} / {data.orphanVideos.length}
           </span>
+          <div className="flex overflow-hidden rounded-full border border-red-200 bg-white/80 text-[11px] font-semibold text-red-700">
+            <button
+              type="button"
+              className="px-3 py-1 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:text-red-300"
+              onClick={handleCollapseAll}
+              disabled={data.groups.length === 0}
+            >
+              모두 접기
+            </button>
+            <button
+              type="button"
+              className="border-l border-red-100 px-3 py-1 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:text-red-300"
+              onClick={handleExpandAll}
+              disabled={data.groups.length === 0}
+            >
+              모두 펼치기
+            </button>
+          </div>
         </div>
       </div>
 
@@ -196,11 +284,95 @@ export function YoutubeSection() {
   );
 }
 
-type YoutubeVideoCardProps = {
-  video: ManagerYoutubeVideoSummary;
+type YoutubeGroupCardProps = {
+  group: ManagerYoutubeGroupSummary;
+  isExpanded: boolean;
+  onToggle: () => void;
 };
 
-function YoutubeVideoCard({ video }: YoutubeVideoCardProps) {
+function YoutubeGroupCard({
+  group,
+  isExpanded,
+  onToggle,
+}: YoutubeGroupCardProps) {
+  const hasLinkedSongs = group.linkedSongs.length > 0;
+  const videosToRender = isExpanded ? group.videos : group.videos.slice(0, 1);
+
+  return (
+    <div
+      className={`border p-4 shadow-sm transition ${
+        hasLinkedSongs
+          ? "border-red-200 bg-red-50/30"
+          : "border-gray-300 bg-white"
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold text-zinc-900">
+            그룹 #{group.groupIndex}
+          </p>
+          <p className="text-[11px] text-zinc-500">
+            {group.videos.length} 비디오 · {group.linkedSongs.length}곡 연결
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-[11px]">
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-0.5 ${
+              hasLinkedSongs
+                ? "border border-red-200 text-red-700"
+                : "border border-dashed border-amber-200 text-amber-600"
+            }`}
+          >
+            {hasLinkedSongs ? "연결됨" : "미연결"}
+          </span>
+          {group.videos.length > 1 && (
+            <button
+              type="button"
+              className="rounded-full border border-zinc-200 px-2.5 py-0.5 text-[11px] text-zinc-600 transition hover:border-red-200 hover:text-red-700"
+              onClick={onToggle}
+            >
+              {isExpanded ? "접기" : "펼치기"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {hasLinkedSongs && (
+        <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-zinc-600">
+          {group.linkedSongs.map((song) => (
+            <span
+              key={song.id}
+              className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2 py-0.5"
+            >
+              <span className="text-[10px] text-zinc-400">#{song.id}</span>
+              <span className="font-medium text-zinc-700">
+                {song.title}
+                {song.titleKo ? ` (${song.titleKo})` : ""}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-3 space-y-2">
+        {videosToRender.map((video, index) => (
+          <YoutubeVideoCard
+            key={video.videoId}
+            video={video}
+            isPrimary={index === 0}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type YoutubeVideoCardProps = {
+  video: ManagerYoutubeVideoSummary;
+  isPrimary?: boolean;
+};
+
+function YoutubeVideoCard({ video, isPrimary = false }: YoutubeVideoCardProps) {
   const durationLabel = formatDuration(video.durationSeconds);
   const publishedLabel = video.publishedAt
     ? formatDate(video.publishedAt)
@@ -217,7 +389,7 @@ function YoutubeVideoCard({ video }: YoutubeVideoCardProps) {
       className="block rounded-xl border border-zinc-100 bg-white/80 p-3 shadow-sm transition hover:border-red-200 hover:bg-red-50/30"
     >
       <div className="flex items-start gap-3">
-        <div className="relative h-16 w-28 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+        <div className="relative h-16 w-28 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
           {video.thumbnailMedium || video.thumbnailHigh ? (
             <img
               src={video.thumbnailMedium ?? video.thumbnailHigh ?? ""}
@@ -236,9 +408,16 @@ function YoutubeVideoCard({ video }: YoutubeVideoCardProps) {
           )}
         </div>
         <div className="flex flex-1 flex-col gap-1.5 min-w-0">
-          <p className="text-sm font-semibold text-zinc-900 line-clamp-2">
-            {video.title ?? "제목 없음"}
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-sm font-semibold text-zinc-900 line-clamp-2">
+              {video.title ?? "제목 없음"}
+            </p>
+            {isPrimary && (
+              <span className="inline-flex items-center rounded-full border border-red-200 px-2 py-0.5 text-[10px] text-red-600 shrink-0">
+                Primary
+              </span>
+            )}
+          </div>
           <p className="text-[11px] text-zinc-500">
             Video ID:{" "}
             <span className="font-semibold text-red-600">{video.videoId}</span>

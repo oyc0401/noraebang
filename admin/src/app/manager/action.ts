@@ -91,11 +91,7 @@ export async function resolveArtistBatchOffset(
     return { exists: false, offset: 0 };
   }
 
-  const precedingWhere = buildPrecedingWhereClause(
-    where,
-    sortKey,
-    target,
-  );
+  const precedingWhere = buildPrecedingWhereClause(where, sortKey, target);
   const beforeCount = precedingWhere
     ? await prisma.artist.count({ where: precedingWhere })
     : 0;
@@ -120,7 +116,9 @@ const artistSelect = {
   _count: { select: { artistSongs: true } },
 } satisfies Prisma.ArtistSelect;
 
-function mapArtistRecord(artist: Prisma.ArtistGetPayload<{ select: typeof artistSelect }>): ManagerArtistSummary {
+function mapArtistRecord(
+  artist: Prisma.ArtistGetPayload<{ select: typeof artistSelect }>,
+): ManagerArtistSummary {
   return {
     id: artist.id,
     name: artist.name,
@@ -272,8 +270,7 @@ function mergeWhere(
   base: Prisma.ArtistWhereInput,
   addition: Prisma.ArtistWhereInput,
 ): Prisma.ArtistWhereInput {
-  const normalizedBase =
-    base && Object.keys(base).length > 0 ? [base] : [];
+  const normalizedBase = base && Object.keys(base).length > 0 ? [base] : [];
   const normalizedAddition =
     addition && Object.keys(addition).length > 0 ? [addition] : [];
 
@@ -708,7 +705,11 @@ export async function updateArtistNames({
     nameLatin: nameLatin?.trim() || null,
     slug: slug?.trim() ? slug.trim() : null,
     homeCatalog:
-      catalog && catalog !== "미정" ? catalog : catalog === "미정" ? null : undefined,
+      catalog && catalog !== "미정"
+        ? catalog
+        : catalog === "미정"
+          ? null
+          : undefined,
   };
 
   if (!sanitized.name || !sanitized.nameKo) {
@@ -901,11 +902,46 @@ export async function fetchArtistAliases(
   return aliases;
 }
 
+// Union-Find for grouping videos by connected songs
+class UnionFind {
+  private parent = new Map<string, string>();
+
+  find(x: string): string {
+    if (!this.parent.has(x)) {
+      this.parent.set(x, x);
+    }
+    if (this.parent.get(x) !== x) {
+      this.parent.set(x, this.find(this.parent.get(x)!));
+    }
+    return this.parent.get(x)!;
+  }
+
+  union(x: string, y: string): void {
+    const rootX = this.find(x);
+    const rootY = this.find(y);
+    if (rootX !== rootY) {
+      this.parent.set(rootX, rootY);
+    }
+  }
+
+  getGroups(items: string[]): Map<string, string[]> {
+    const groups = new Map<string, string[]>();
+    for (const item of items) {
+      const root = this.find(item);
+      if (!groups.has(root)) {
+        groups.set(root, []);
+      }
+      groups.get(root)!.push(item);
+    }
+    return groups;
+  }
+}
+
 export async function fetchManagerArtistYoutubePanel(
   artistId: number,
 ): Promise<ManagerYoutubePanelData> {
   if (!artistId || Number.isNaN(artistId)) {
-    return { channel: null, videos: [] };
+    return { channel: null, groups: [], orphanVideos: [] };
   }
 
   const topicChannel = await prisma.youtubeChannel.findFirst({
@@ -921,9 +957,10 @@ export async function fetchManagerArtistYoutubePanel(
   });
 
   if (!topicChannel) {
-    return { channel: null, videos: [] };
+    return { channel: null, groups: [], orphanVideos: [] };
   }
 
+  // 채널의 비디오들 가져오기
   const channelVideos = await prisma.youtubeChannelVideo.findMany({
     where: { youtubeChannelId: topicChannel.id },
     select: {
@@ -943,6 +980,148 @@ export async function fetchManagerArtistYoutubePanel(
     orderBy: { youtubeVideo: { publishedAt: "desc" } },
   });
 
+  const videoIds = channelVideos.map((v) => v.youtubeVideo.videoId);
+  const videoMap = new Map(
+    channelVideos.map((v) => [
+      v.youtubeVideo.videoId,
+      {
+        videoId: v.youtubeVideo.videoId,
+        title: v.youtubeVideo.title,
+        publishedAt: v.youtubeVideo.publishedAt?.toISOString() ?? null,
+        thumbnailMedium: v.youtubeVideo.thumbnailMedium,
+        thumbnailHigh: v.youtubeVideo.thumbnailHigh,
+        viewCount: v.youtubeVideo.viewCount?.toString() ?? null,
+        likeCount: v.youtubeVideo.likeCount,
+        durationSeconds: v.youtubeVideo.durationSeconds,
+      },
+    ]),
+  );
+
+  // 아티스트의 Song들과 연결된 비디오 매핑 가져오기
+  const songVideoMappings = await prisma.songYoutubeVideo.findMany({
+    where: {
+      youtubeVideoId: { in: videoIds },
+      song: {
+        artistSongs: {
+          some: { artistId },
+        },
+      },
+    },
+    select: {
+      songId: true,
+      youtubeVideoId: true,
+      song: {
+        select: {
+          id: true,
+          title: true,
+          titleKo: true,
+        },
+      },
+    },
+  });
+
+  // Song별 비디오들 그룹화
+  const songToVideos = new Map<number, string[]>();
+  const videoToSongs = new Map<string, Set<number>>();
+  const songInfoMap = new Map<
+    number,
+    { id: number; title: string; titleKo: string | null }
+  >();
+
+  for (const mapping of songVideoMappings) {
+    // Song -> Videos
+    if (!songToVideos.has(mapping.songId)) {
+      songToVideos.set(mapping.songId, []);
+    }
+    songToVideos.get(mapping.songId)!.push(mapping.youtubeVideoId);
+
+    // Video -> Songs
+    if (!videoToSongs.has(mapping.youtubeVideoId)) {
+      videoToSongs.set(mapping.youtubeVideoId, new Set());
+    }
+    videoToSongs.get(mapping.youtubeVideoId)!.add(mapping.songId);
+
+    // Song info
+    songInfoMap.set(mapping.songId, {
+      id: mapping.song.id,
+      title: mapping.song.title,
+      titleKo: mapping.song.titleKo,
+    });
+  }
+
+  // Union-Find로 같은 Song에 연결된 비디오들 그룹화
+  const uf = new UnionFind();
+  const linkedVideoIds = new Set<string>();
+
+  for (const [, videos] of songToVideos) {
+    if (videos.length > 0) {
+      const first = videos[0]!;
+      linkedVideoIds.add(first);
+      for (let i = 1; i < videos.length; i++) {
+        linkedVideoIds.add(videos[i]!);
+        uf.union(first, videos[i]!);
+      }
+    }
+  }
+
+  // 그룹 생성
+  const videoGroups = uf.getGroups(Array.from(linkedVideoIds));
+  const groups: Array<{
+    groupIndex: number;
+    videos: typeof channelVideos extends Array<{ youtubeVideo: infer V }>
+      ? V[]
+      : never;
+    linkedSongs: Array<{ id: number; title: string; titleKo?: string | null }>;
+  }> = [];
+
+  let groupIndex = 1;
+  for (const [, groupVideoIds] of videoGroups) {
+    // 그룹에 연결된 모든 Song 수집
+    const linkedSongIds = new Set<number>();
+    for (const videoId of groupVideoIds) {
+      const songIds = videoToSongs.get(videoId);
+      if (songIds) {
+        for (const songId of songIds) {
+          linkedSongIds.add(songId);
+        }
+      }
+    }
+
+    const linkedSongs = Array.from(linkedSongIds)
+      .map((songId) => songInfoMap.get(songId)!)
+      .filter(Boolean)
+      .sort((a, b) => a.id - b.id);
+
+    const videos = groupVideoIds
+      .map((videoId) => videoMap.get(videoId)!)
+      .filter(Boolean)
+      .sort((a, b) => {
+        const dateA = a.publishedAt ?? "";
+        const dateB = b.publishedAt ?? "";
+        return dateB.localeCompare(dateA);
+      });
+
+    groups.push({
+      groupIndex: groupIndex++,
+      videos,
+      linkedSongs,
+    });
+  }
+
+  // 그룹 정렬: linkedSongs 수 내림차순, 그 다음 videos 수 내림차순
+  groups.sort((a, b) => {
+    if (b.linkedSongs.length !== a.linkedSongs.length) {
+      return b.linkedSongs.length - a.linkedSongs.length;
+    }
+    return b.videos.length - a.videos.length;
+  });
+
+  // orphan 비디오들 (매핑이 없는 비디오)
+  const orphanVideos = videoIds
+    .filter((videoId) => !linkedVideoIds.has(videoId))
+    .map((videoId) => videoMap.get(videoId)!)
+    .filter(Boolean);
+
   return {
     channel: {
       id: topicChannel.id,
@@ -952,15 +1131,7 @@ export async function fetchManagerArtistYoutubePanel(
       subscriberCount: topicChannel.subscriberCount,
       videoCount: topicChannel.videoCount,
     },
-    videos: channelVideos.map((v) => ({
-      videoId: v.youtubeVideo.videoId,
-      title: v.youtubeVideo.title,
-      publishedAt: v.youtubeVideo.publishedAt?.toISOString() ?? null,
-      thumbnailMedium: v.youtubeVideo.thumbnailMedium,
-      thumbnailHigh: v.youtubeVideo.thumbnailHigh,
-      viewCount: v.youtubeVideo.viewCount?.toString() ?? null,
-      likeCount: v.youtubeVideo.likeCount,
-      durationSeconds: v.youtubeVideo.durationSeconds,
-    })),
+    groups,
+    orphanVideos,
   };
 }
