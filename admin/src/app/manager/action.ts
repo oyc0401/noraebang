@@ -1015,6 +1015,11 @@ export async function fetchManagerArtistYoutubePanel(
           id: true,
           title: true,
           titleKo: true,
+          spotifyTrackGroup: {
+            select: {
+              primaryTrack: { select: { popularity: true } },
+            },
+          },
         },
       },
     },
@@ -1025,7 +1030,12 @@ export async function fetchManagerArtistYoutubePanel(
   const videoToSongs = new Map<string, Set<number>>();
   const songInfoMap = new Map<
     number,
-    { id: number; title: string; titleKo: string | null }
+    {
+      id: number;
+      title: string;
+      titleKo: string | null;
+      primaryPopularity: number | null;
+    }
   >();
 
   for (const mapping of songVideoMappings) {
@@ -1046,6 +1056,8 @@ export async function fetchManagerArtistYoutubePanel(
       id: mapping.song.id,
       title: mapping.song.title,
       titleKo: mapping.song.titleKo,
+      primaryPopularity:
+        mapping.song.spotifyTrackGroup?.primaryTrack?.popularity ?? null,
     });
   }
 
@@ -1065,26 +1077,33 @@ export async function fetchManagerArtistYoutubePanel(
   }
 
   // 그룹 생성
-  const videoGroups = uf.getGroups(Array.from(linkedVideoIds));
-  const groups: Array<{
-    groupIndex: number;
-    videos: typeof channelVideos extends Array<{ youtubeVideo: infer V }>
-      ? V[]
-      : never;
-    linkedSongs: Array<{ id: number; title: string; titleKo?: string | null }>;
+
+  const groupsRaw: Array<{
+    videos: Array<{
+      videoId: string;
+      title: string | null;
+      publishedAt: string | null;
+      thumbnailMedium: string | null;
+      thumbnailHigh: string | null;
+      viewCount: string | null;
+      likeCount: number | null;
+      durationSeconds: number | null;
+    }>;
+    linkedSongs: Array<{
+      id: number;
+      title: string;
+      titleKo?: string | null;
+      primaryPopularity: number | null;
+    }>;
+    sortPopularity: number; // 정렬용 (노출 안 해도 됨)
   }> = [];
 
-  let groupIndex = 1;
+  const videoGroups = uf.getGroups(Array.from(linkedVideoIds));
   for (const [, groupVideoIds] of videoGroups) {
-    // 그룹에 연결된 모든 Song 수집
     const linkedSongIds = new Set<number>();
     for (const videoId of groupVideoIds) {
       const songIds = videoToSongs.get(videoId);
-      if (songIds) {
-        for (const songId of songIds) {
-          linkedSongIds.add(songId);
-        }
-      }
+      if (songIds) for (const songId of songIds) linkedSongIds.add(songId);
     }
 
     const linkedSongs = Array.from(linkedSongIds)
@@ -1096,24 +1115,38 @@ export async function fetchManagerArtistYoutubePanel(
       .map((videoId) => videoMap.get(videoId)!)
       .filter(Boolean)
       .sort((a, b) => {
+        const viewA = Number.parseInt(a.viewCount ?? "0", 10) || 0;
+        const viewB = Number.parseInt(b.viewCount ?? "0", 10) || 0;
+        if (viewA !== viewB) return viewB - viewA;
+
         const dateA = a.publishedAt ?? "";
         const dateB = b.publishedAt ?? "";
         return dateB.localeCompare(dateA);
       });
 
-    groups.push({
-      groupIndex: groupIndex++,
-      videos,
-      linkedSongs,
-    });
+    const sortPopularity = linkedSongs.reduce((max, s) => {
+      const p =
+        typeof s.primaryPopularity === "number" ? s.primaryPopularity : -1;
+      return Math.max(max, p);
+    }, -1);
+
+    groupsRaw.push({ videos, linkedSongs, sortPopularity });
   }
 
   // 그룹 정렬: linkedSongs 수 내림차순, 그 다음 videos 수 내림차순
-  groups.sort((a, b) => {
-    if (b.linkedSongs.length !== a.linkedSongs.length) {
+  groupsRaw.sort((a, b) => {
+    if (b.sortPopularity !== a.sortPopularity)
+      return b.sortPopularity - a.sortPopularity;
+
+    // tie-breaker (원하시면 바꾸셔도 됩니다)
+    if (b.linkedSongs.length !== a.linkedSongs.length)
       return b.linkedSongs.length - a.linkedSongs.length;
-    }
-    return b.videos.length - a.videos.length;
+    if (b.videos.length !== a.videos.length)
+      return b.videos.length - a.videos.length;
+
+    const dateA = a.videos[0]?.publishedAt ?? "";
+    const dateB = b.videos[0]?.publishedAt ?? "";
+    return dateB.localeCompare(dateA);
   });
 
   // orphan 비디오들 (매핑이 없는 비디오)
@@ -1121,6 +1154,12 @@ export async function fetchManagerArtistYoutubePanel(
     .filter((videoId) => !linkedVideoIds.has(videoId))
     .map((videoId) => videoMap.get(videoId)!)
     .filter(Boolean);
+
+  const groups = groupsRaw.map((g, idx) => ({
+    groupIndex: idx + 1,
+    videos: g.videos,
+    linkedSongs: g.linkedSongs.map(({ primaryPopularity, ...rest }) => rest), // 노출 원치 않으면 제거
+  }));
 
   return {
     channel: {

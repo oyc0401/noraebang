@@ -85,7 +85,10 @@ export function YoutubeSection() {
   );
 
   const totalVideoCount = useMemo(() => {
-    const groupVideos = data.groups.reduce((sum, g) => sum + g.videos.length, 0);
+    const groupVideos = data.groups.reduce(
+      (sum, g) => sum + g.videos.length,
+      0,
+    );
     return groupVideos + data.orphanVideos.length;
   }, [data.groups, data.orphanVideos.length]);
 
@@ -382,25 +385,27 @@ function YoutubeVideoCard({ video, isPrimary = false }: YoutubeVideoCardProps) {
     : null;
 
   return (
-    <a
-      href={`https://www.youtube.com/watch?v=${video.videoId}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block rounded-xl border border-zinc-100 bg-white/80 p-3 shadow-sm transition hover:border-red-200 hover:bg-red-50/30"
-    >
+    <div className="block rounded-xl border border-zinc-100 bg-white/80 p-3 shadow-sm transition hover:border-red-200 hover:bg-red-50/30">
       <div className="flex items-start gap-3">
         <div className="relative h-16 w-28 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
-          {video.thumbnailMedium || video.thumbnailHigh ? (
-            <img
-              src={video.thumbnailMedium ?? video.thumbnailHigh ?? ""}
-              alt={video.title ?? "비디오"}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center text-red-500">
-              <YoutubeIcon className="h-6 w-6" />
-            </span>
-          )}
+          <a
+            href={`https://www.youtube.com/watch?v=${video.videoId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {video.thumbnailMedium || video.thumbnailHigh ? (
+              <img
+                src={video.thumbnailMedium ?? video.thumbnailHigh ?? ""}
+                alt={video.title ?? "비디오"}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-red-500">
+                <YoutubeIcon className="h-6 w-6" />
+              </span>
+            )}
+          </a>
+
           {durationLabel && (
             <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white">
               {durationLabel}
@@ -439,7 +444,7 @@ function YoutubeVideoCard({ video, isPrimary = false }: YoutubeVideoCardProps) {
           </div>
         </div>
       </div>
-    </a>
+    </div>
   );
 }
 

@@ -16,6 +16,8 @@ import { SpotifyIcon } from "./spotify-icon";
 import { SpotifyInfoCard } from "./spotify-info-card";
 import { YoutubeInfoCard } from "./youtube-info-card";
 
+type SongItem = ManagerArtistDetail["songs"][number];
+
 export function CenterSection() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
   const openArtistNameDialog = useManagerStore(
@@ -82,6 +84,10 @@ export function CenterSection() {
       cancelled = true;
     };
   }, [selectedArtistId]);
+
+  // ✅ 곡 편집 다이얼로그 상태
+  const [isSongEditOpen, setIsSongEditOpen] = useState(false);
+  const [editingSong, setEditingSong] = useState<SongItem | null>(null);
 
   useEffect(() => {
     if (!isActionMenuOpen) {
@@ -342,19 +348,34 @@ export function CenterSection() {
                     <div className="flex flex-1 flex-col gap-2">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <p className="font-medium text-zinc-900">
-                            {song.title}
-                            {song.titleKo && (
-                              <span className="ml-2 text-sm text-zinc-500 font-normal">
-                                {`(${song.titleKo})`}
-                              </span>
-                            )}
-                            {song.titleLatin && (
-                              <span className="ml-2 text-sm text-zinc-500 font-normal">
-                                {`(${song.titleLatin})`}
-                              </span>
-                            )}
-                          </p>
+                          <div className="flex">
+                            <p className="font-medium text-zinc-900">
+                              {song.title}
+                              {song.titleKo && (
+                                <span className="ml-2 text-sm text-zinc-500 font-normal">
+                                  {`(${song.titleKo})`}
+                                </span>
+                              )}
+                              {song.titleLatin && (
+                                <span className="ml-2 text-sm text-zinc-500 font-normal">
+                                  {`(${song.titleLatin})`}
+                                </span>
+                              )}
+                            </p>
+                            {/* ✅ 곡 편집 버튼 */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation(); // 카드 선택 클릭 막기
+                                setEditingSong(song);
+                                setIsSongEditOpen(true);
+                              }}
+                              className=" rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-600 shadow-sm transition hover:border-blue-200 hover:text-blue-600"
+                            >
+                              편집
+                            </button>
+                          </div>
+
                           <div className="mt-1 flex flex-wrap gap-2 text-xs text-zinc-500">
                             <span className="rounded-full bg-zinc-100 px-2 py-0.5">
                               #{song.id}
@@ -473,6 +494,15 @@ export function CenterSection() {
             })}
           </div>
         </div>
+        {/* ✅ 곡 편집 다이얼로그 */}
+        <SongEditDialog
+          open={isSongEditOpen}
+          song={editingSong}
+          onOpenChange={(open) => {
+            setIsSongEditOpen(open);
+            if (!open) setEditingSong(null);
+          }}
+        />
       </>
     );
   };
@@ -498,4 +528,146 @@ function formatDuration(durationMs?: number | null) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function SongEditDialog({
+  open,
+  song,
+  onOpenChange,
+}: {
+  open: boolean;
+  song: SongItem | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [titleKo, setTitleKo] = useState("");
+  const [titleLatin, setTitleLatin] = useState("");
+  const [catalog, setCatalog] = useState("");
+  const [youtubeVideoId, setYoutubeVideoId] = useState("");
+
+  useEffect(() => {
+    if (!open || !song) return;
+    setTitle(song.title ?? "");
+    setTitleKo(song.titleKo ?? "");
+    setTitleLatin(song.titleLatin ?? "");
+    setCatalog(song.catalog ?? "");
+    setYoutubeVideoId(song.youtubeVideoId ?? "");
+  }, [open, song]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={() => onOpenChange(false)}
+    >
+      <div className="absolute inset-0 bg-black/40" />
+
+      <div
+        className="relative z-10 w-[560px] max-w-[calc(100vw-32px)] rounded-2xl border border-zinc-200 bg-white shadow-xl"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-5 py-4">
+          <div>
+            <h4 className="text-base font-semibold text-zinc-900">곡 편집</h4>
+            <p className="mt-1 text-xs text-zinc-500">
+              #{song?.id ?? "-"} · 필요한 필드만 수정하세요.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="rounded-lg border border-zinc-200 px-2 py-1 text-xs text-zinc-600 hover:border-zinc-300"
+          >
+            닫기
+          </button>
+        </div>
+
+        <div className="space-y-3 px-5 py-4 text-sm">
+          <Field label="Title">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+            />
+          </Field>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Title (KO)">
+              <input
+                value={titleKo}
+                onChange={(e) => setTitleKo(e.target.value)}
+                className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+              />
+            </Field>
+
+            <Field label="Title (Latin)">
+              <input
+                value={titleLatin}
+                onChange={(e) => setTitleLatin(e.target.value)}
+                className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+              />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Catalog">
+              <input
+                value={catalog}
+                onChange={(e) => setCatalog(e.target.value)}
+                placeholder='예: "KPOP" | "JPOP" ...'
+                className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+              />
+            </Field>
+
+            <Field label="YouTube Video ID">
+              <input
+                value={youtubeVideoId}
+                onChange={(e) => setYoutubeVideoId(e.target.value)}
+                placeholder="예: 6OC92oxs4gA"
+                className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+              />
+            </Field>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-zinc-100 px-5 py-4">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 hover:border-zinc-300"
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              // TODO: 저장 로직 연결 (요청 주시면 action/mutation까지 붙여드리겠습니다)
+              onOpenChange(false);
+            }}
+            className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
+          >
+            저장
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <div className="mb-1 text-xs font-medium text-zinc-600">{label}</div>
+      {children}
+    </label>
+  );
 }
