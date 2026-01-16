@@ -11,6 +11,8 @@ import type {
 } from "@/api/model/models";
 import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
 import { Header } from "@/components/common/Header";
+import { SearchOverlay } from "@/components/common/SearchOverlay";
+import { useSearchStore } from "@/store/searchStore";
 import { ActionButtons } from "./ActionButtons";
 import { ARTIST_SONGS_PAGE_SIZE } from "./constants";
 import { ProfileHeader } from "./ProfileHeader";
@@ -27,6 +29,7 @@ export default function ArtistPageClient({
   artist,
   initialSongsResponse,
 }: ArtistPageClientProps) {
+  const { isSearchActive } = useSearchStore();
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [targetSongId, setTargetSongId] = useState<string | null>(null);
 
@@ -100,6 +103,10 @@ export default function ArtistPageClient({
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage, targetSongId]);
 
   const showRecommendationButton = !isLoading && songs.length === 0;
+
+  if (isSearchActive) {
+    return <SearchOverlay />;
+  }
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-dark text-white">
