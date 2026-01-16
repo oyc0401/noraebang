@@ -13,7 +13,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { KanaBarum } from "kanabarum";
+import { Kanabarum } from "kanabarum";
 
 // pnpm ts-node src/scripts/name/backfill-artist-name-ja-pronu.ts
 // pnpm ts-node src/scripts/name/backfill-artist-name-ja-pronu.ts --dry-run
@@ -53,7 +53,8 @@ async function main() {
     console.warn("⚠️  --dry-run 없이 실행됩니다. 실제 DB가 수정됩니다.");
   }
 
-  const kanaToHangul = await KanaBarum.init();
+  const kanabarum = new Kanabarum();
+  kanabarum.init();
 
   console.log("======================================");
   console.log("Artist nameJaPronu Backfill");
@@ -94,7 +95,10 @@ async function main() {
       continue;
     }
 
-    const converted = kanaToHangul(source).replace(/\s+/g, " ").trim();
+    const converted = kanabarum
+      .kanaToHangul(source)
+      .replace(/\s+/g, " ")
+      .trim();
     if (!converted) {
       skippedNoKana++;
       continue;
