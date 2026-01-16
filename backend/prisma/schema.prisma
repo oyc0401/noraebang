@@ -36,18 +36,19 @@ model Artist {
 }
 
 model Song {
-  id                  Int       @id @default(autoincrement())
-  title               String
-  titleKo             String?   @map("title_ko")
-  titleLatin          String?   @map("title_latin")
-  titleJaKana         String?   @map("title_ja_kana")
-  titleJaKanji        String?   @map("title_ja_kanji")
-  titleJaPronu        String?   @map("title_ja_pronu")
-  catalog             String? // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
-  youtubeVideoId      String?   @map("youtube_video_id")
-  youtubeFetchedAt    DateTime? @map("youtube_fetched_at")
-  spotifyTrackGroupId Int?      @map("spotify_track_group_id")
-  tjSongId            String?   @unique @map("tj_song_id")
+  id                   Int       @id @default(autoincrement())
+  title                String
+  titleKo              String?   @map("title_ko")
+  titleLatin           String?   @map("title_latin")
+  titleJaKana          String?   @map("title_ja_kana")
+  titleJaKanji         String?   @map("title_ja_kanji")
+  titleJaPronu         String?   @map("title_ja_pronu")
+  catalog              String? // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
+  youtubeVideoId       String?   @map("youtube_video_id")
+  youtubeFetchedAt     DateTime? @map("youtube_fetched_at")
+  spotifyTrackGroupId  Int?      @map("spotify_track_group_id")
+  youtubeVideoGroupId  Int?      @map("youtube_video_group_id")
+  tjSongId             String?   @unique @map("tj_song_id")
 
   thumbnailDefault String? @map("thumbnail_default")
   thumbnailMedium  String? @map("thumbnail_medium")
@@ -56,15 +57,17 @@ model Song {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  karaokeSongs      KaraokeSong[]
-  artistSongs       ArtistSong[]
-  spotifyTrackGroup SpotifyTrackGroup? @relation(fields: [spotifyTrackGroupId], references: [id], onDelete: SetNull)
-  tjSong            TjSong?            @relation(fields: [tjSongId], references: [id], onDelete: SetNull)
-  aliases           SongAlias[]
+  karaokeSongs        KaraokeSong[]
+  artistSongs         ArtistSong[]
+  spotifyTrackGroup   SpotifyTrackGroup?   @relation(fields: [spotifyTrackGroupId], references: [id], onDelete: SetNull)
+  youtubeVideoGroup   YoutubeVideoGroup?   @relation(fields: [youtubeVideoGroupId], references: [id], onDelete: SetNull)
+  tjSong              TjSong?              @relation(fields: [tjSongId], references: [id], onDelete: SetNull)
+  aliases             SongAlias[]
 
   @@index([youtubeVideoId])
   @@index([catalog])
   @@index([spotifyTrackGroupId])
+  @@index([youtubeVideoGroupId])
   @@index([tjSongId])
   @@map("song")
 }
@@ -156,6 +159,19 @@ model YoutubeChannel {
   @@map("youtube_channel")
 }
 
+model YoutubeVideoGroup {
+  id                    Int      @id @default(autoincrement())
+  primaryYoutubeVideoId String?  @unique @map("primary_youtube_video_id")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  songs        Song[]
+  primaryVideo YoutubeVideo?  @relation("PrimaryVideo", fields: [primaryYoutubeVideoId], references: [videoId], onDelete: SetNull)
+  videos       YoutubeVideo[] @relation("GroupVideos")
+
+  @@map("youtube_video_group")
+}
+
 model YoutubeVideo {
   videoId                String    @id @map("video_id") // YouTube video ID (11자리)
   ownerChannelId         String?   @map("owner_channel_id") // 실제 비디오 소유 채널 ID
@@ -180,12 +196,16 @@ model YoutubeVideo {
   definition             String?   // "hd" | "sd"
   caption                Boolean?  // 자막 여부
 
+  groupId                Int?      @map("group_id")
   fetchedAt              DateTime? @map("fetched_at")
   createdAt              DateTime  @default(now()) @map("created_at")
   updatedAt              DateTime  @updatedAt @map("updated_at")
 
-  channels               YoutubeChannelVideo[]
+  channels        YoutubeChannelVideo[]
+  group           YoutubeVideoGroup?    @relation("GroupVideos", fields: [groupId], references: [id], onDelete: SetNull)
+  primaryForGroup YoutubeVideoGroup?    @relation("PrimaryVideo")
 
+  @@index([groupId])
   @@map("youtube_video")
 }
 
