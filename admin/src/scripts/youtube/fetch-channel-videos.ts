@@ -25,7 +25,10 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 const DRY_RUN = process.argv.includes("--dry-run");
-const START_INDEX = parseInt(process.argv.find((arg) => /^\d+$/.test(arg)) || "0", 10);
+const START_INDEX = parseInt(
+  process.argv.find((arg) => /^\d+$/.test(arg)) || "0",
+  10,
+);
 
 const keyManager = getYoutubeKeyManager();
 
@@ -256,12 +259,16 @@ async function processChannel(youtubeChannel: {
   artist: { id: number; name: string; nameKo: string };
 }): Promise<{ videos: number; linked: number }> {
   console.log(`\n📌 채널: ${youtubeChannel.title}`);
-  console.log(`   아티스트: ${youtubeChannel.artist.name} (${youtubeChannel.artist.nameKo})`);
+  console.log(
+    `   아티스트: ${youtubeChannel.artist.name} (${youtubeChannel.artist.nameKo})`,
+  );
   console.log(`   채널 ID: ${youtubeChannel.channelId}`);
 
   // 1. YouTube API로 채널 정보 가져오기
   const channelInfo = await getChannelInfo(youtubeChannel.channelId);
-  console.log(`   비디오 수 (API): ${channelInfo.videoCount?.toLocaleString() ?? "알 수 없음"}`);
+  console.log(
+    `   비디오 수 (API): ${channelInfo.videoCount?.toLocaleString() ?? "알 수 없음"}`,
+  );
 
   // 2. 모든 비디오 가져오기
   const videos = await getAllVideosFromPlaylist(channelInfo.uploadsPlaylistId);
@@ -306,7 +313,9 @@ async function processChannel(youtubeChannel: {
         ownerChannelId: video.ownerChannelId,
         title: video.title,
         description: video.description,
-        publishedAt: video.publishedAt ? new Date(video.publishedAt) : undefined,
+        publishedAt: video.publishedAt
+          ? new Date(video.publishedAt)
+          : undefined,
         thumbnailDefault: video.thumbnailDefault,
         thumbnailMedium: video.thumbnailMedium,
         thumbnailHigh: video.thumbnailHigh,
@@ -324,7 +333,9 @@ async function processChannel(youtubeChannel: {
         ownerChannelId: video.ownerChannelId,
         title: video.title,
         description: video.description,
-        publishedAt: video.publishedAt ? new Date(video.publishedAt) : undefined,
+        publishedAt: video.publishedAt
+          ? new Date(video.publishedAt)
+          : undefined,
         thumbnailDefault: video.thumbnailDefault,
         thumbnailMedium: video.thumbnailMedium,
         thumbnailHigh: video.thumbnailHigh,
@@ -378,6 +389,11 @@ async function main() {
       artistId: { lte: 300 },
       type: "TOPIC",
       title: { endsWith: "- Topic" },
+
+      // ✅ DB에서 이 채널에 연결된 비디오가 "하나도 없는" 경우만
+      videos: {
+        none: {}, // YoutubeChannelVideo 레코드 0개
+      },
     },
     include: {
       artist: {

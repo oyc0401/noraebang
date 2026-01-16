@@ -6,6 +6,7 @@ import { TypesenseService } from "../typesense/typesense.service";
 import { SearchResultDto } from "./dto/search-response.dto";
 import { SearchSuggestionCardDto } from "./dto/search-suggestions-response.dto";
 import { sanitizeSearchText } from "./utils/sanitize-query.util";
+import { fetchYoutubeOembed } from "../thirdparty/youtube/oembed";
 
 type SongWithRelations = {
   id: number;
@@ -449,7 +450,8 @@ export class SearchService {
           slug: artist.slug ?? undefined,
           title: artist.name,
           titleKo: artist.nameKo ?? undefined,
-          thumbnail: artist.thumbnailMedium ?? artist.thumbnailDefault ?? undefined,
+          thumbnail:
+            artist.thumbnailMedium ?? artist.thumbnailDefault ?? undefined,
         },
       });
     }
@@ -485,5 +487,70 @@ export class SearchService {
     }
 
     return cards;
+  }
+
+  async findSongByYoutubeUrl(url: string): Promise<{
+    song: SongDto | null;
+    youtube?: { title: string; authorName: string };
+  }> {
+    const videoId = this.extractYoutubeVideoId(url);
+
+    // 1) videoId로 DB 먼저 스캔 (SongYoutubeVideo 매핑)
+    if (videoId) {
+      const mapping = await this.prisma.songYoutubeVideo.findFirst({
+        where: { youtubeVideoId: videoId },
+        select: {
+          song: {
+            select: SONG_SEARCH_SELECT,
+          },
+        },
+      });
+
+      if (mapping?.song) {
+        const tjSongMap = await this.buildTjSongMap([mapping.song]);
+        console.log(`DB발견: ${videoId}`);
+        return { song: this.mapSongToDto(mapping.song, tjSongMap) };
+      }
+    }
+
+    // 2) 없으면 oEmbed → title/authorName으로 Typesense 검색
+    const youtube = await fetchYoutubeOembed(url); // 기존에 쓰던 유틸 그대로 사용
+    const matchedSongs = await this.searchSongsByTitleAndArtistName({
+      title: youtube.title,
+      authorName: youtube.author_name,
+    });
+
+    if (matchedSongs.length > 0) {
+      return { song: matchedSongs[0] };
+    }
+
+    return {
+      song: null,
+      youtube: { title: youtube.title, authorName: youtube.author_name },
+    };
+  }
+
+  private extractYoutubeVideoId(input: string): string | null {
+    try {
+      const u = new URL(input);
+
+      // youtu.be/<id>
+      if (u.hostname === "youtu.be") {
+        const id = u.pathname.replace("/", "").trim();
+        return id ? id : null;
+      }
+
+      // youtube.com/watch?v=<id>
+      const v = u.searchParams.get("v");
+      if (v) return v;
+
+      // youtube.com/shorts/<id> or /embed/<id>
+      const m = u.pathname.match(/\/(shorts|embed)\/([a-zA-Z0-9_-]{6,})/);
+      if (m?.[2]) return m[2];
+
+      return null;
+    } catch {
+      return null;
+    }
   }
 }

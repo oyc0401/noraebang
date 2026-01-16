@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Query,
-} from "@nestjs/common";
+import { BadRequestException, Controller, Get, Query } from "@nestjs/common";
 import {
   ApiOperation,
   ApiQuery,
@@ -89,8 +84,7 @@ export class SearchController {
   @Get("suggestions")
   @ApiOperation({
     summary: "검색 자동완성",
-    description:
-      "검색어를 기반으로 자동완성 결과(아티스트, 곡)를 반환합니다.",
+    description: "검색어를 기반으로 자동완성 결과(아티스트, 곡)를 반환합니다.",
   })
   @ApiQuery({
     name: "query",
@@ -145,40 +139,23 @@ export class SearchController {
   async searchSongByYoutubeUrl(
     @Query("url") url: string,
   ): Promise<YoutubeSongSearchResponseDto> {
-    // URL 파라미터 유효성 검사
     if (!url) {
       throw new BadRequestException("URL parameter is required");
     }
 
-    // 유튜브 정보 얻어오기
-    const youtube = await fetchYoutubeOembed(url);
-    // this.logger.log(
-    //   `YouTube oEmbed fetched: title="${youtube.title}", author="${youtube.author_name}"`,
-    // );
+    const result = await this.searchService.findSongByYoutubeUrl(url);
 
-    // 제목과 아티스트명으로 곡 검색
-    const matchedSongs =
-      await this.searchService.searchSongsByTitleAndArtistName({
-        title: youtube.title,
-        authorName: youtube.author_name,
-      });
-    // this.logger.log(`YouTube search result count=${matchedSongs.length}`);
-
-    // 매칭된 곡이 있으면 곡 정보 반환
-    if (matchedSongs.length > 0) {
-      const matchedSong = matchedSongs[0];
+    if (result.song) {
       return {
-        song: matchedSong,
+        song: result.song,
         message: "DB에서 곡을 찾았습니다",
       };
     }
 
-    // 매칭된 곡이 없으면 유튜브 정보만 반환
     return {
-      youtube: {
-        title: youtube.title,
-        authorName: youtube.author_name,
-      },
+      youtube: result.youtube
+        ? { title: result.youtube.title, authorName: result.youtube.authorName }
+        : undefined,
       message: "DB에서 곡을 찾지 못했습니다",
     };
   }
