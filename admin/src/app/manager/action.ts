@@ -1856,12 +1856,10 @@ export async function fetchManagerArtistTjPanel(
   if (artist.tjName) singerNames.push(artist.tjName);
   if (artist.tjNameJa) singerNames.push(artist.tjNameJa);
 
-  // 해당 가수명으로 된 SongPropose 조회 (대소문자 무시)
+  // 해당 가수명으로 된 SongPropose 조회 (query 필드로 검색)
   const proposes = await prisma.songPropose.findMany({
     where: {
-      OR: singerNames.map((name) => ({
-        songSinger: { equals: name, mode: "insensitive" },
-      })),
+      query: { in: singerNames },
     },
     select: {
       id: true,
@@ -2300,12 +2298,10 @@ export async function fetchUnlinkedSongProposes(
   if (artist.tjName) singerNames.push(artist.tjName);
   if (artist.tjNameJa) singerNames.push(artist.tjNameJa);
 
-  // 해당 가수의 미연결 신청곡 조회 (대소문자 무시)
+  // 해당 가수의 미연결 신청곡 조회 (query 필드로 검색)
   const proposes = await prisma.songPropose.findMany({
     where: {
-      OR: singerNames.map((name) => ({
-        songSinger: { equals: name, mode: "insensitive" },
-      })),
+      query: { in: singerNames },
       songId: null, // 미연결만
     },
     select: {

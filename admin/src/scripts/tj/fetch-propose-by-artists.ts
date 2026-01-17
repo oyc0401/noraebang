@@ -10,14 +10,16 @@ import { searchTJPropose } from "../../thirdparty/tj/searchPropose";
 // pnpm ts-node src/scripts/tj/fetch-propose-by-artists.ts
 // pnpm ts-node src/scripts/tj/fetch-propose-by-artists.ts --dry-run
 // pnpm ts-node src/scripts/tj/fetch-propose-by-artists.ts 147          # id >= 147부터 시작
-// pnpm ts-node src/scripts/tj/fetch-propose-by-artists.ts 147 --dry-run
+// pnpm ts-node src/scripts/tj/fetch-propose-totalSkipped++;by-artists.ts 147 --dry-run
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function fetchProposeByArtists(dryRun: boolean, startId: number) {
-  console.log(`🚀 TJ 신청곡 수집 시작 (${startId} <= id <= 300 아티스트 대상)\n`);
+  console.log(
+    `🚀 TJ 신청곡 수집 시작 (${startId} <= id <= 300 아티스트 대상)\n`,
+  );
 
   if (dryRun) {
     console.log("🔍 Dry run mode - 데이터 저장 없이 조회만 수행\n");
@@ -95,6 +97,7 @@ async function fetchProposeByArtists(dryRun: boolean, startId: number) {
 
         await prisma.songPropose.create({
           data: {
+            query: tjName, // 검색할 때 사용한 tjName 저장
             songSinger: item.po_song_singer,
             songTitle: item.po_song_title,
             content: item.po_content,
