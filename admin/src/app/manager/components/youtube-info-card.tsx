@@ -35,14 +35,16 @@ export function YoutubeInfoCard({ detail }: { detail: ManagerArtistDetail }) {
               null;
             const channelUrl = `https://www.youtube.com/channel/${channel.channelId}`;
             return (
-              <a
+              <div
                 key={channel.id}
-                href={channelUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-3 px-4 py-3 transition hover:bg-red-50/70"
+                className="flex items-center gap-3 px-4 py-3"
               >
-                <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-red-100">
+                <a
+                  href={channelUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="h-10 w-10 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-red-100 transition hover:ring-2 hover:ring-red-300"
+                >
                   {thumb ? (
                     <img
                       src={thumb}
@@ -54,7 +56,7 @@ export function YoutubeInfoCard({ detail }: { detail: ManagerArtistDetail }) {
                       YT
                     </span>
                   )}
-                </div>
+                </a>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-red-900">
                     {channel.title ?? "채널 이름 없음"}
@@ -72,7 +74,7 @@ export function YoutubeInfoCard({ detail }: { detail: ManagerArtistDetail }) {
                     구독자 정보 없음
                   </span>
                 )}
-              </a>
+              </div>
             );
           })}
         </div>

@@ -18,6 +18,7 @@ export function ArtistNameDialog() {
   const [nameJaKanji, setNameJaKanji] = useState("");
   const [nameLatin, setNameLatin] = useState("");
   const [tjName, setTjName] = useState("");
+  const [tjNameJa, setTjNameJa] = useState("");
   const [slug, setSlug] = useState("");
   const [catalog, setCatalog] = useState<"미정" | "KPOP" | "JPOP" | "POP">(
     "미정",
@@ -33,6 +34,7 @@ export function ArtistNameDialog() {
       setNameJaKanji(detail.nameJaKanji ?? "");
       setNameLatin(detail.nameLatin ?? "");
       setTjName(detail.tjName ?? "");
+      setTjNameJa(detail.tjNameJa ?? "");
       setSlug(detail.slug ?? "");
       const resolvedCatalog = detail.catalog ?? "미정";
       setCatalog(
@@ -69,6 +71,7 @@ export function ArtistNameDialog() {
           nameJaKanji,
           nameLatin,
           tjName,
+          tjNameJa,
           slug,
           catalog,
         });
@@ -84,6 +87,7 @@ export function ArtistNameDialog() {
                 nameJaKanji: updated.nameJaKanji,
                 nameLatin: updated.nameLatin,
                 tjName: updated.tjName,
+                tjNameJa: updated.tjNameJa,
                 slug: updated.slug,
                 catalog: updated.homeCatalog ?? null,
               }
@@ -144,59 +148,70 @@ export function ArtistNameDialog() {
             />
           </div>
           <div className="space-y-1 text-sm">
-            <label className="text-xs font-semibold text-zinc-600">
+            <label className="text-xs font-semibold text-blue-600">
               nameKo (한국어)
             </label>
             <input
               type="text"
-              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className="w-full rounded-lg border border-blue-200 bg-blue-50/50 px-3 py-2 text-sm outline-none focus:border-blue-500"
               value={nameKo}
               onChange={(event) => setNameKo(event.target.value)}
               required
             />
           </div>
           <div className="space-y-1 text-sm">
-            <label className="text-xs font-semibold text-zinc-600">
+            <label className="text-xs font-semibold text-amber-600">
               nameJaKana
             </label>
             <input
               type="text"
-              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className="w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2 text-sm outline-none focus:border-amber-500"
               value={nameJaKana}
               onChange={(event) => setNameJaKana(event.target.value)}
             />
           </div>
           <div className="space-y-1 text-sm">
-            <label className="text-xs font-semibold text-zinc-600">
+            <label className="text-xs font-semibold text-amber-600">
               nameJaKanji
             </label>
             <input
               type="text"
-              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className="w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2 text-sm outline-none focus:border-amber-500"
               value={nameJaKanji}
               onChange={(event) => setNameJaKanji(event.target.value)}
             />
           </div>
           <div className="space-y-1 text-sm">
-            <label className="text-xs font-semibold text-zinc-600">
+            <label className="text-xs font-semibold text-emerald-600">
               nameLatin
             </label>
             <input
               type="text"
-              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className="w-full rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               value={nameLatin}
               onChange={(event) => setNameLatin(event.target.value)}
             />
           </div>
           <div className="space-y-1 text-sm">
-            <label className="text-xs font-semibold text-zinc-600">
+            <label className="text-xs font-semibold text-rose-600">
               tjName (TJ 아티스트명)
             </label>
             <input
               type="text"
-              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className="w-full rounded-lg border border-rose-200 bg-rose-50/50 px-3 py-2 text-sm outline-none focus:border-rose-500"
               value={tjName}
               onChange={(event) => setTjName(event.target.value)}
+            />
+          </div>
+          <div className="space-y-1 text-sm">
+            <label className="text-xs font-semibold text-rose-600">
+              tjNameJa (TJ 일본어 아티스트명)
+            </label>
+            <input
+              type="text"
+              className="w-full rounded-lg border border-rose-200 bg-rose-50/50 px-3 py-2 text-sm outline-none focus:border-rose-500"
+              value={tjNameJa}
+              onChange={(event) => setTjNameJa(event.target.value)}
             />
           </div>
           <div className="space-y-1 text-sm">

@@ -222,15 +222,15 @@ export function CenterSection() {
                     </span>
                   )}
                   {detail.nameJaKanji && (
-                    <span className="flex flex-col rounded-md border border-rose-200 bg-rose-50 px-2 py-1">
-                      <span className="text-[10px] text-rose-400">nameJaKanji</span>
-                      <span className="text-rose-700">{detail.nameJaKanji}</span>
+                    <span className="flex flex-col rounded-md border border-amber-200 bg-amber-50 px-2 py-1">
+                      <span className="text-[10px] text-amber-400">nameJaKanji</span>
+                      <span className="text-amber-700">{detail.nameJaKanji}</span>
                     </span>
                   )}
                   {detail.nameJaKana && (
-                    <span className="flex flex-col rounded-md border border-rose-200 bg-rose-50 px-2 py-1">
-                      <span className="text-[10px] text-rose-400">nameJaKana</span>
-                      <span className="text-rose-700">{detail.nameJaKana}</span>
+                    <span className="flex flex-col rounded-md border border-amber-200 bg-amber-50 px-2 py-1">
+                      <span className="text-[10px] text-amber-400">nameJaKana</span>
+                      <span className="text-amber-700">{detail.nameJaKana}</span>
                     </span>
                   )}
                   {detail.nameLatin && (
@@ -240,9 +240,15 @@ export function CenterSection() {
                     </span>
                   )}
                   {detail.tjName && (
-                    <span className="flex flex-col rounded-md border border-amber-200 bg-amber-50 px-2 py-1">
-                      <span className="text-[10px] text-amber-400">tjName</span>
-                      <span className="text-amber-700">{detail.tjName}</span>
+                    <span className="flex flex-col rounded-md border border-rose-200 bg-rose-50 px-2 py-1">
+                      <span className="text-[10px] text-rose-400">tjName</span>
+                      <span className="text-rose-700">{detail.tjName}</span>
+                    </span>
+                  )}
+                  {detail.tjNameJa && (
+                    <span className="flex flex-col rounded-md border border-rose-200 bg-rose-50 px-2 py-1">
+                      <span className="text-[10px] text-rose-400">tjNameJa</span>
+                      <span className="text-rose-700">{detail.tjNameJa}</span>
                     </span>
                   )}
                   <span className="rounded-full border border-zinc-200 px-2 py-0.5 text-[11px] text-zinc-600">
