@@ -45,8 +45,9 @@ model Song {
   title               String
   titleKo             String?   @map("title_ko")
   titleLatin          String?   @map("title_latin")
-  titleJaKana         String?   @map("title_ja_kana")
-  titleJaKanji        String?   @map("title_ja_kanji")
+  titleJa             String?   @map("title_ja")
+  titleJaKana         String?   @map("title_ja_kana") // 검색엔진용
+  titleJaKanji        String?   @map("title_ja_kanji") // 검색엔진용
   titleJaPronu        String?   @map("title_ja_pronu")
   catalog             String? // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
   youtubeVideoId      String?   @map("youtube_video_id")
