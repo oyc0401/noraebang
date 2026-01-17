@@ -294,9 +294,7 @@ async function buildArtistExport(
         },
       },
       artistSongs: {
-        orderBy: { order: "asc" },
         select: {
-          order: true,
           role: true,
           song: {
             select: {

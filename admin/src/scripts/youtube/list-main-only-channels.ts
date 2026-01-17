@@ -33,7 +33,7 @@ async function listMainOnlyChannels(limit?: number) {
         youtubeChannels: true,
         artistSongs: {
           take: 1,
-          orderBy: { order: "asc" },
+
           include: {
             song: true,
           },

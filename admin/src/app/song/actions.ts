@@ -105,7 +105,6 @@ export async function getSongs(filters: SongListFilters = {}) {
     include: {
       artistSongs: {
         include: { artist: true },
-        orderBy: { order: "asc" },
       },
       karaokeSongs: true,
     },
@@ -152,7 +151,6 @@ export async function getSongDetail(songId: number) {
     include: {
       artistSongs: {
         include: { artist: true },
-        orderBy: { order: "asc" },
       },
       karaokeSongs: true,
     },

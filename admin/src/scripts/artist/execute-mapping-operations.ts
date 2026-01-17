@@ -88,7 +88,7 @@ async function copySongsAndDelete(op: CopySongsAndDeleteOperation) {
   // fromArtist의 곡들 가져오기
   const songs = await prisma.artistSong.findMany({
     where: { artistId: op.fromArtistId },
-    select: { songId: true, order: true, role: true },
+    select: { songId: true, role: true },
   });
 
   console.log(`\n   📦 복사할 곡: ${songs.length}개`);
@@ -186,7 +186,7 @@ async function mergeArtists(op: MergeArtistsOperation) {
   // fromArtist의 곡들 가져오기
   const songs = await prisma.artistSong.findMany({
     where: { artistId: op.fromArtistId },
-    select: { songId: true, order: true, role: true },
+    select: { songId: true, role: true },
   });
 
   console.log(`\n   📦 병합할 곡: ${songs.length}개`);

@@ -139,7 +139,7 @@ async function mergeArtistIds(
       where: { artistId: fromArtist.id },
       select: {
         songId: true,
-        order: true,
+
         role: true,
       },
     });

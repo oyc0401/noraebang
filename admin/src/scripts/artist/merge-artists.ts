@@ -117,7 +117,7 @@ async function run() {
         where: { artistId: fromArtistId },
         select: {
           songId: true,
-          order: true,
+
           role: true,
         },
       });

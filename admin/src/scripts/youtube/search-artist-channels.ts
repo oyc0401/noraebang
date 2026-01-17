@@ -201,7 +201,7 @@ async function searchArtistChannels(options?: SearchOptions) {
       include: {
         artistSongs: {
           take: 1,
-          orderBy: { order: "asc" },
+
           include: {
             song: true,
           },

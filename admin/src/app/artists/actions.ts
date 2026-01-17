@@ -151,7 +151,6 @@ export async function getSongsByArtist(artistId: number) {
         },
       },
     },
-    orderBy: { order: "asc" },
   });
 
   return songs.map((as) => ({
@@ -486,7 +485,7 @@ export async function mergeArtist(
 
   const sourceSongs = await prisma.artistSong.findMany({
     where: { artistId: sourceArtistId },
-    select: { songId: true, order: true, role: true },
+    select: { songId: true, role: true },
   });
 
   await prisma.$transaction([
