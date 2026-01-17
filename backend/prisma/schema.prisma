@@ -11,6 +11,7 @@ model Artist {
   slug             String? @unique // 아티스트의 경로이지만, null이라면 userId로 접근가능.
   name             String
   nameKo           String  @map("name_ko")
+  nameJa           String? @map("name_ja")
   nameLatin        String? @map("name_latin")
   nameJaKana       String? @map("name_ja_kana")
   nameJaKanji      String? @map("name_ja_kanji")

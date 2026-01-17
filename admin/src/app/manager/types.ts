@@ -6,7 +6,7 @@ export type ManagerArtistSummary = {
   nameKo: string;
   nameJa?: string | null;
   nameJaKana?: string | null;
-  nameJaKanji?: string | null;
+
   nameLatin?: string | null;
   catalog?: string | null;
   slug?: string | null;
@@ -92,7 +92,7 @@ export type ManagerArtistDetail = {
   nameKo: string;
   nameJa?: string | null;
   nameJaKana?: string | null;
-  nameJaKanji?: string | null;
+
   nameLatin?: string | null;
   tjName?: string | null;
   tjNameJa?: string | null;
