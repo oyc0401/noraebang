@@ -35,8 +35,8 @@ const INITIAL_STATE: FetchTjProposeResult = {
 export default function TjProposePage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sortKey, setSortKey] = useState<TjProposeSortKey>("recent");
-  const [linkFilter, setLinkFilter] = useState<TjProposeLinkFilter>("all");
+  const [sortKey, setSortKey] = useState<TjProposeSortKey>("hitDesc");
+  const [linkFilter, setLinkFilter] = useState<TjProposeLinkFilter>("unlinked");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PROPOSE_DEFAULT_PAGE_SIZE);
   const [data, setData] = useState<FetchTjProposeResult>(INITIAL_STATE);
