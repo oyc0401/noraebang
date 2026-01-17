@@ -86,6 +86,37 @@ export default function AdminDashboard() {
           </Link>
 
           <Link
+            href="/propose"
+            className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          >
+            <div className="flex items-center gap-4">
+              <div className="rounded-lg bg-orange-100 p-3 dark:bg-orange-900/30">
+                <svg
+                  className="h-6 w-6 text-orange-600 dark:text-orange-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
+                  TJ 신청곡
+                </h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  SongPropose 데이터 검색·정렬
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
             href="/youtube"
             className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
           >
