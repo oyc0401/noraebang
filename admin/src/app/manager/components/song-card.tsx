@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
-
-import type { ManagerArtistDetail, SongLinkedArtist } from "../types";
+import type { ManagerArtistDetail } from "../types";
 import { SpotifyIcon } from "./spotify-icon";
-import { SongArtistDialog } from "./song-artist-dialog";
 
 type SongItem = ManagerArtistDetail["songs"][number];
 
@@ -12,8 +9,10 @@ type SongCardProps = {
   song: SongItem;
   isGroupSelected: boolean;
   onSelectGroup: (groupId: number | null) => void;
-  onEditClick: (song: SongItem) => void;
-  onArtistsChange?: (songId: number, artists: SongLinkedArtist[]) => void;
+  onEditClick: (
+    song: SongItem,
+    options?: { focusTab?: "info" | "artists" | "spotify" | "youtube" | "propose" | "admin" },
+  ) => void;
 };
 
 export function SongCard({
@@ -21,10 +20,7 @@ export function SongCard({
   isGroupSelected,
   onSelectGroup,
   onEditClick,
-  onArtistsChange,
 }: SongCardProps) {
-  const [isArtistDialogOpen, setIsArtistDialogOpen] = useState(false);
-
   const thumbnailSrc =
     song.thumbnails.default ??
     song.thumbnails.medium ??
@@ -36,8 +32,7 @@ export function SongCard({
   const primaryDuration = formatDuration(primaryTrack?.durationMs);
 
   return (
-    <>
-      <div
+    <div
         id={`song-card-${song.id}`}
         onClick={() => onSelectGroup(song.spotifyGroup?.id ?? null)}
         className={`rounded-xl border px-4 py-3 transition cursor-pointer ${
@@ -149,7 +144,7 @@ export function SongCard({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsArtistDialogOpen(true);
+                      onEditClick(song, { focusTab: "artists" });
                     }}
                     className="rounded-full border border-dashed border-purple-300 bg-white px-2 py-0.5 text-xs text-purple-600 transition hover:bg-purple-50 cursor-pointer"
                   >
@@ -259,17 +254,6 @@ export function SongCard({
           </div>
         </div>
       </div>
-
-      {/* 아티스트 관리 다이얼로그 */}
-      <SongArtistDialog
-        open={isArtistDialogOpen}
-        song={song}
-        onOpenChange={setIsArtistDialogOpen}
-        onArtistsChange={(artists) => {
-          onArtistsChange?.(song.id, artists);
-        }}
-      />
-    </>
   );
 }
 
