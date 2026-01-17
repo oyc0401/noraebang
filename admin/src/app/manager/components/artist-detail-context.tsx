@@ -8,11 +8,11 @@ import {
   type SetStateAction,
 } from "react";
 
-import type { ManagerArtistDetail } from "../types";
+import type { ManagerArtistInfo } from "../types";
 
 type ArtistDetailContextValue = {
-  detail: ManagerArtistDetail | null;
-  setDetail: Dispatch<SetStateAction<ManagerArtistDetail | null>>;
+  detail: ManagerArtistInfo | null;
+  setDetail: Dispatch<SetStateAction<ManagerArtistInfo | null>>;
 };
 
 const ArtistDetailContext = createContext<ArtistDetailContextValue | null>(
@@ -24,8 +24,8 @@ export function ArtistDetailProvider({
   setDetail,
   children,
 }: {
-  detail: ManagerArtistDetail | null;
-  setDetail: Dispatch<SetStateAction<ManagerArtistDetail | null>>;
+  detail: ManagerArtistInfo | null;
+  setDetail: Dispatch<SetStateAction<ManagerArtistInfo | null>>;
   children: ReactNode;
 }) {
   return (

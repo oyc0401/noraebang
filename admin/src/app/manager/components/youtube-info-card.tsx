@@ -1,9 +1,9 @@
 "use client";
 
 import { useManagerStore } from "../store";
-import type { ManagerArtistDetail } from "../types";
+import type { ManagerArtistInfo } from "../types";
 
-export function YoutubeInfoCard({ detail }: { detail: ManagerArtistDetail }) {
+export function YoutubeInfoCard({ detail }: { detail: ManagerArtistInfo }) {
   const youtubeChannels = detail.youtubeChannels ?? [];
   const openYoutubeDialog = useManagerStore((state) => state.openYoutubeDialog);
 

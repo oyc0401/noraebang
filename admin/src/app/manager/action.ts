@@ -8,6 +8,9 @@ import type { ArtistFilterId } from "./filter-options";
 import {
   MANAGER_PAGE_SIZE,
   type ManagerArtistDetail,
+  type ManagerArtistInfo,
+  type ManagerArtistSongDetail,
+  type ManagerArtistSongsResult,
   type ManagerArtistSummary,
   type ManagerSpotifyPanelData,
   type ManagerSpotifyTrackSummary,
@@ -588,6 +591,241 @@ export async function fetchManagerArtistDetail(
         high: channel.thumbnailHigh,
       },
     })),
+    songs,
+  };
+}
+
+// 아티스트 정보만 가져오기 (곡 목록 제외)
+export async function fetchManagerArtistInfo(
+  artistId: number,
+): Promise<ManagerArtistInfo | null> {
+  if (!artistId || Number.isNaN(artistId)) {
+    return null;
+  }
+
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    select: {
+      id: true,
+      name: true,
+      nameKo: true,
+      nameLatin: true,
+      nameJaKana: true,
+      nameJaKanji: true,
+      tjName: true,
+      tjNameJa: true,
+      slug: true,
+      homeCatalog: true,
+      spotifyId: true,
+      thumbnailDefault: true,
+      thumbnailMedium: true,
+      thumbnailHigh: true,
+      spotifyArtist: {
+        select: {
+          name: true,
+          popularity: true,
+          followers: true,
+          genres: true,
+          spotifyUrl: true,
+          thumbnails: true,
+        },
+      },
+      youtubeChannels: {
+        orderBy: { type: "asc" },
+        select: {
+          id: true,
+          type: true,
+          channelId: true,
+          title: true,
+          subscriberCount: true,
+          thumbnailDefault: true,
+          thumbnailMedium: true,
+          thumbnailHigh: true,
+        },
+      },
+      _count: { select: { artistSongs: true } },
+    },
+  });
+
+  if (!artist) {
+    return null;
+  }
+
+  return {
+    id: artist.id,
+    name: artist.name,
+    nameKo: artist.nameKo,
+    nameLatin: artist.nameLatin,
+    nameJa: artist.nameJaKanji ?? artist.nameJaKana,
+    nameJaKana: artist.nameJaKana,
+    nameJaKanji: artist.nameJaKanji,
+    tjName: artist.tjName,
+    tjNameJa: artist.tjNameJa,
+    catalog: artist.homeCatalog,
+    slug: artist.slug,
+    spotifyId: artist.spotifyId,
+    songCount: artist._count.artistSongs,
+    thumbnails: {
+      default: artist.thumbnailDefault,
+      medium: artist.thumbnailMedium,
+      high: artist.thumbnailHigh,
+    },
+    spotify: artist.spotifyArtist
+      ? {
+          name: artist.spotifyArtist.name,
+          thumbnails: artist.spotifyArtist.thumbnails,
+          popularity: artist.spotifyArtist.popularity,
+          followers: artist.spotifyArtist.followers,
+          genres: artist.spotifyArtist.genres ?? [],
+          url: artist.spotifyArtist.spotifyUrl,
+        }
+      : null,
+    youtubeChannels: artist.youtubeChannels.map((channel) => ({
+      id: channel.id,
+      type: channel.type,
+      channelId: channel.channelId,
+      title: channel.title,
+      subscriberCount: channel.subscriberCount,
+      thumbnails: {
+        default: channel.thumbnailDefault,
+        medium: channel.thumbnailMedium,
+        high: channel.thumbnailHigh,
+      },
+    })),
+  };
+}
+
+// 아티스트 곡 목록만 가져오기
+export async function fetchManagerArtistSongs(
+  artistId: number,
+): Promise<ManagerArtistSongsResult | null> {
+  if (!artistId || Number.isNaN(artistId)) {
+    return null;
+  }
+
+  const artistSongs = await prisma.artistSong.findMany({
+    where: { artistId },
+    orderBy: { order: "asc" },
+    select: {
+      song: {
+        select: {
+          id: true,
+          title: true,
+          titleKo: true,
+          titleLatin: true,
+          catalog: true,
+          youtubeVideoId: true,
+          thumbnailDefault: true,
+          thumbnailMedium: true,
+          thumbnailHigh: true,
+          tjSong: {
+            select: {
+              id: true,
+              title: true,
+              artist: true,
+            },
+          },
+          spotifyTrackGroup: {
+            select: {
+              id: true,
+              primaryTrack: { select: spotifyTrackBaseSelect },
+            },
+          },
+          karaokeSongs: {
+            select: {
+              provider: true,
+              karaokeNo: true,
+            },
+          },
+          artistSongs: {
+            orderBy: { order: "asc" },
+            select: {
+              order: true,
+              role: true,
+              artist: {
+                select: {
+                  id: true,
+                  name: true,
+                  nameKo: true,
+                },
+              },
+            },
+          },
+          youtubeVideos: {
+            select: {
+              youtubeVideo: {
+                select: {
+                  videoId: true,
+                  title: true,
+                  viewCount: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const songs: ManagerArtistSongDetail[] = artistSongs.map(({ song }) => {
+    const sortedVideos = [...(song.youtubeVideos ?? [])].sort((a, b) => {
+      const viewA = Number(a.youtubeVideo.viewCount ?? 0);
+      const viewB = Number(b.youtubeVideo.viewCount ?? 0);
+      return viewB - viewA;
+    });
+    const topVideo = sortedVideos[0]?.youtubeVideo ?? null;
+
+    return {
+      id: song.id,
+      title: song.title,
+      titleKo: song.titleKo,
+      titleLatin: song.titleLatin,
+      catalog: song.catalog,
+      hasYoutube: sortedVideos.length > 0,
+      youtubeVideoId: topVideo?.videoId ?? song.youtubeVideoId,
+      topYoutubeVideo: topVideo
+        ? {
+            videoId: topVideo.videoId,
+            title: topVideo.title,
+            viewCount: topVideo.viewCount?.toString() ?? null,
+          }
+        : null,
+      thumbnails: {
+        default: song.thumbnailDefault,
+        medium: song.thumbnailMedium,
+        high: song.thumbnailHigh,
+      },
+      spotifyGroup: song.spotifyTrackGroup
+        ? {
+            id: song.spotifyTrackGroup.id,
+            primaryTrack: song.spotifyTrackGroup.primaryTrack
+              ? mapSpotifyTrackSummary(song.spotifyTrackGroup.primaryTrack)
+              : null,
+          }
+        : null,
+      tjSong: song.tjSong
+        ? {
+            id: song.tjSong.id,
+            title: song.tjSong.title,
+            artist: song.tjSong.artist,
+          }
+        : null,
+      karaoke: song.karaokeSongs.map((item) => ({
+        provider: String(item.provider),
+        karaokeNo: item.karaokeNo,
+      })),
+      artists: song.artistSongs.map((as) => ({
+        id: as.artist.id,
+        name: as.artist.name,
+        nameKo: as.artist.nameKo,
+        role: as.role ?? null,
+        order: as.order,
+      })),
+    };
+  });
+
+  return {
+    artistId,
     songs,
   };
 }
