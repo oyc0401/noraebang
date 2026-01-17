@@ -2637,3 +2637,25 @@ export async function runMapProposeSong(artistId: number) {
   }
   return mapProposeSong(artistId, { verbose: true });
 }
+
+// ========== 스포티파이 그룹으로 곡 생성 ==========
+
+import { createSongsFromSpotifyGroups } from "@/lib/admin/create-songs-from-spotify-groups";
+import { groupSpotifyTracksForArtist } from "@/lib/admin/group-spotify-tracks-for-artist";
+
+export async function runCreateSongsFromSpotifyGroups(
+  artistId: number,
+  groupIds?: number[],
+) {
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+  return createSongsFromSpotifyGroups(artistId, { verbose: true, groupIds });
+}
+
+export async function runGroupSpotifyTracksForArtist(artistId: number) {
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+  return groupSpotifyTracksForArtist(artistId, { verbose: true });
+}

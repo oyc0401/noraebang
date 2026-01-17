@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchManagerArtistSpotifyPanel,
   leaveSpotifyTrackGroup,
+  runCreateSongsFromSpotifyGroups,
+  runGroupSpotifyTracksForArtist,
 } from "../action";
 import type {
   ManagerSpotifyGroupSummary,
@@ -33,6 +35,86 @@ export function SpotifySection() {
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
     {},
   );
+  const [isCreatingSongs, setIsCreatingSongs] = useState(false);
+  const [isGroupingTracks, setIsGroupingTracks] = useState(false);
+  const [isCreateSongDialogOpen, setIsCreateSongDialogOpen] = useState(false);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<number>>(new Set());
+
+  // 미연결 그룹 목록
+  const unlinkedGroups = useMemo(
+    () => data.groups.filter((g) => g.linkedSongs.length === 0),
+    [data.groups],
+  );
+
+  const openCreateSongDialog = () => {
+    // 다이얼로그 열 때 전체 선택 상태로
+    setSelectedGroupIds(new Set(unlinkedGroups.map((g) => g.groupId)));
+    setIsCreateSongDialogOpen(true);
+  };
+
+  const handleSelectAll = () => {
+    setSelectedGroupIds(new Set(unlinkedGroups.map((g) => g.groupId)));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedGroupIds(new Set());
+  };
+
+  const toggleGroupSelection = (groupId: number) => {
+    setSelectedGroupIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
+
+  const handleCreateSongsFromGroups = async () => {
+    if (!selectedArtistId || selectedGroupIds.size === 0) return;
+
+    setIsCreatingSongs(true);
+    try {
+      const result = await runCreateSongsFromSpotifyGroups(
+        selectedArtistId,
+        Array.from(selectedGroupIds),
+      );
+      alert(
+        `곡 생성 완료!\n생성: ${result.stats.created}개\n스킵(이미 연결됨): ${result.stats.skipped}개\n실패: ${result.stats.failed}개`,
+      );
+      setIsCreateSongDialogOpen(false);
+      refetch();
+    } catch (error) {
+      alert(`오류: ${error}`);
+    } finally {
+      setIsCreatingSongs(false);
+    }
+  };
+
+  const handleGroupTracks = async () => {
+    if (!selectedArtistId) return;
+    if (
+      !confirm(
+        `미연결 스포티파이 트랙(${data.orphanTracks.length}개)을 그룹화하시겠습니까?\n\n같은 이름의 트랙끼리 SpotifyTrackGroup으로 묶습니다.`,
+      )
+    )
+      return;
+
+    setIsGroupingTracks(true);
+    try {
+      const result = await runGroupSpotifyTracksForArtist(selectedArtistId);
+      alert(
+        `그룹화 완료!\n생성된 그룹: ${result.stats.groupsCreated}개\n업데이트된 트랙: ${result.stats.tracksUpdated}개`,
+      );
+      refetch();
+    } catch (error) {
+      alert(`오류: ${error}`);
+    } finally {
+      setIsGroupingTracks(false);
+    }
+  };
 
   useEffect(() => {
     if (!selectedArtistId) {
@@ -260,6 +342,127 @@ export function SpotifySection() {
           </div>
         </div>
       </div>
+
+      {/* 액션 버튼 영역 */}
+      {selectedArtistId && (unlinkedGroups.length > 0 || data.orphanTracks.length > 0) && (
+        <div className="flex items-center gap-2 border-b border-emerald-100/80 bg-emerald-50/30 px-4 py-2">
+          {data.orphanTracks.length > 0 && (
+            <button
+              type="button"
+              className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              onClick={handleGroupTracks}
+              disabled={isGroupingTracks || isCreatingSongs}
+            >
+              {isGroupingTracks
+                ? "그룹화 중..."
+                : `트랙 그룹화 (${data.orphanTracks.length})`}
+            </button>
+          )}
+          {unlinkedGroups.length > 0 && (
+            <button
+              type="button"
+              className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              onClick={openCreateSongDialog}
+              disabled={isCreatingSongs || isGroupingTracks}
+            >
+              {`그룹으로 곡 생성 (${unlinkedGroups.length})`}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* 곡 생성 다이얼로그 */}
+      {isCreateSongDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="max-h-[80vh] w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
+              <h3 className="text-lg font-semibold text-zinc-900">
+                곡 생성할 그룹 선택
+              </h3>
+              <button
+                type="button"
+                className="text-zinc-400 hover:text-zinc-600 cursor-pointer"
+                onClick={() => setIsCreateSongDialogOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-2">
+              <span className="text-sm text-zinc-600">
+                {selectedGroupIds.size}개 선택됨
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="rounded px-2 py-1 text-xs text-emerald-600 hover:bg-emerald-50 cursor-pointer"
+                  onClick={handleSelectAll}
+                >
+                  전체 선택
+                </button>
+                <button
+                  type="button"
+                  className="rounded px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100 cursor-pointer"
+                  onClick={handleDeselectAll}
+                >
+                  전체 해제
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-[50vh] overflow-y-auto px-6 py-4">
+              <div className="space-y-2">
+                {unlinkedGroups.map((group) => (
+                  <label
+                    key={group.groupId}
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 p-3 transition hover:border-emerald-300 hover:bg-emerald-50/50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedGroupIds.has(group.groupId)}
+                      onChange={() => toggleGroupSelection(group.groupId)}
+                      className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-zinc-900 truncate">
+                        {group.primaryTrack?.name ?? `그룹 #${group.groupId}`}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        {group.tracks.length}트랙 · 그룹 #{group.groupId}
+                      </p>
+                    </div>
+                    {group.primaryTrack?.thumbnails?.[0] && (
+                      <img
+                        src={group.primaryTrack.thumbnails[0]}
+                        alt=""
+                        className="h-10 w-10 rounded object-cover"
+                      />
+                    )}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-zinc-200 px-6 py-4">
+              <button
+                type="button"
+                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 cursor-pointer"
+                onClick={() => setIsCreateSongDialogOpen(false)}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                onClick={handleCreateSongsFromGroups}
+                disabled={isCreatingSongs || selectedGroupIds.size === 0}
+              >
+                {isCreatingSongs ? "생성 중..." : `${selectedGroupIds.size}개 곡 생성`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 min-h-0 overflow-hidden">{renderBody()}</div>
     </section>
