@@ -14,8 +14,8 @@ export function ArtistNameDialog() {
   const closeDialog = useManagerStore((state) => state.closeArtistNameDialog);
   const [name, setName] = useState("");
   const [nameKo, setNameKo] = useState("");
+  const [nameJa, setNameJa] = useState("");
   const [nameJaKana, setNameJaKana] = useState("");
-  const [nameJaKanji, setNameJaKanji] = useState("");
   const [nameLatin, setNameLatin] = useState("");
   const [tjName, setTjName] = useState("");
   const [tjNameJa, setTjNameJa] = useState("");
@@ -30,8 +30,8 @@ export function ArtistNameDialog() {
     if (isOpen && detail) {
       setName(detail.name);
       setNameKo(detail.nameKo);
+      setNameJa(detail.nameJa ?? "");
       setNameJaKana(detail.nameJaKana ?? "");
-      setNameJaKanji(detail.nameJaKanji ?? "");
       setNameLatin(detail.nameLatin ?? "");
       setTjName(detail.tjName ?? "");
       setTjNameJa(detail.tjNameJa ?? "");
@@ -67,8 +67,8 @@ export function ArtistNameDialog() {
           artistId: detail.id,
           name,
           nameKo,
+          nameJa,
           nameJaKana,
-          nameJaKanji,
           nameLatin,
           tjName,
           tjNameJa,
@@ -82,9 +82,8 @@ export function ArtistNameDialog() {
                 ...prev,
                 name: updated.name,
                 nameKo: updated.nameKo,
-                nameJa: updated.nameJaKanji ?? updated.nameJaKana,
+                nameJa: updated.nameJa,
                 nameJaKana: updated.nameJaKana,
-                nameJaKanji: updated.nameJaKanji,
                 nameLatin: updated.nameLatin,
                 tjName: updated.tjName,
                 tjNameJa: updated.tjNameJa,
@@ -97,7 +96,7 @@ export function ArtistNameDialog() {
           name: updated.name,
           nameKo: updated.nameKo,
           nameLatin: updated.nameLatin ?? null,
-          nameJa: updated.nameJaKanji ?? updated.nameJaKana ?? null,
+          nameJa: updated.nameJa ?? null,
           slug: updated.slug ?? null,
           catalog: updated.homeCatalog ?? null,
         });
@@ -161,6 +160,18 @@ export function ArtistNameDialog() {
           </div>
           <div className="space-y-1 text-sm">
             <label className="text-xs font-semibold text-amber-600">
+              nameJa
+            </label>
+            <input
+              type="text"
+              className="w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2 text-sm outline-none focus:border-amber-500"
+              value={nameJa}
+              onChange={(event) => setNameJa(event.target.value)}
+              placeholder="대표 일본어 이름"
+            />
+          </div>
+          <div className="space-y-1 text-sm">
+            <label className="text-xs font-semibold text-amber-600">
               nameJaKana
             </label>
             <input
@@ -170,17 +181,7 @@ export function ArtistNameDialog() {
               onChange={(event) => setNameJaKana(event.target.value)}
             />
           </div>
-          <div className="space-y-1 text-sm">
-            <label className="text-xs font-semibold text-amber-600">
-              nameJaKanji
-            </label>
-            <input
-              type="text"
-              className="w-full rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2 text-sm outline-none focus:border-amber-500"
-              value={nameJaKanji}
-              onChange={(event) => setNameJaKanji(event.target.value)}
-            />
-          </div>
+
           <div className="space-y-1 text-sm">
             <label className="text-xs font-semibold text-emerald-600">
               nameLatin
@@ -215,9 +216,7 @@ export function ArtistNameDialog() {
             />
           </div>
           <div className="space-y-1 text-sm">
-            <label className="text-xs font-semibold text-zinc-600">
-              slug
-            </label>
+            <label className="text-xs font-semibold text-zinc-600">slug</label>
             <input
               type="text"
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
@@ -227,14 +226,14 @@ export function ArtistNameDialog() {
             />
           </div>
           <div className="space-y-1 text-sm">
-            <label className="text-xs font-semibold text-zinc-600">
-              분류
-            </label>
+            <label className="text-xs font-semibold text-zinc-600">분류</label>
             <select
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
               value={catalog}
               onChange={(event) =>
-                setCatalog(event.target.value as "미정" | "KPOP" | "JPOP" | "POP")
+                setCatalog(
+                  event.target.value as "미정" | "KPOP" | "JPOP" | "POP",
+                )
               }
             >
               <option value="미정">미분류</option>

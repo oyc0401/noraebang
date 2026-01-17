@@ -111,8 +111,8 @@ const artistSelect = {
   name: true,
   nameKo: true,
   nameLatin: true,
+  nameJa: true,
   nameJaKana: true,
-  nameJaKanji: true,
   slug: true,
   homeCatalog: true,
   thumbnailDefault: true,
@@ -130,9 +130,9 @@ function mapArtistRecord(
     name: artist.name,
     nameKo: artist.nameKo,
     nameLatin: artist.nameLatin,
-    nameJa: artist.nameJaKanji ?? artist.nameJaKana,
+    nameJa: artist.nameJa,
     nameJaKana: artist.nameJaKana,
-    nameJaKanji: artist.nameJaKanji,
+
     catalog: artist.homeCatalog,
     slug: artist.slug,
     songCount: artist._count.artistSongs,
@@ -177,8 +177,8 @@ function buildWhereClause(params: ManagerQueryParams): Prisma.ArtistWhereInput {
           { name: { contains: trimmed, mode: "insensitive" } },
           { nameKo: { contains: trimmed, mode: "insensitive" } },
           { nameLatin: { contains: trimmed, mode: "insensitive" } },
+          { nameJa: { contains: trimmed, mode: "insensitive" } },
           { nameJaKana: { contains: trimmed, mode: "insensitive" } },
-          { nameJaKanji: { contains: trimmed, mode: "insensitive" } },
         ],
       });
     }
@@ -391,8 +391,8 @@ export async function fetchManagerArtistDetail(
       name: true,
       nameKo: true,
       nameLatin: true,
+      nameJa: true,
       nameJaKana: true,
-      nameJaKanji: true,
       tjName: true,
       tjNameJa: true,
       slug: true,
@@ -557,9 +557,8 @@ export async function fetchManagerArtistDetail(
     name: artist.name,
     nameKo: artist.nameKo,
     nameLatin: artist.nameLatin,
-    nameJa: artist.nameJaKanji ?? artist.nameJaKana,
+    nameJa: artist.nameJa,
     nameJaKana: artist.nameJaKana,
-    nameJaKanji: artist.nameJaKanji,
     tjName: artist.tjName,
     tjNameJa: artist.tjNameJa,
     catalog: artist.homeCatalog,
@@ -612,8 +611,9 @@ export async function fetchManagerArtistInfo(
       name: true,
       nameKo: true,
       nameLatin: true,
+      nameJa: true,
       nameJaKana: true,
-      nameJaKanji: true,
+
       tjName: true,
       tjNameJa: true,
       slug: true,
@@ -658,9 +658,9 @@ export async function fetchManagerArtistInfo(
     name: artist.name,
     nameKo: artist.nameKo,
     nameLatin: artist.nameLatin,
-    nameJa: artist.nameJaKanji ?? artist.nameJaKana,
+    nameJa: artist.nameJa,
     nameJaKana: artist.nameJaKana,
-    nameJaKanji: artist.nameJaKanji,
+
     tjName: artist.tjName,
     tjNameJa: artist.tjNameJa,
     catalog: artist.homeCatalog,
@@ -1000,8 +1000,9 @@ export type UpdateArtistNamesInput = {
   artistId: number;
   name: string;
   nameKo: string;
+  nameJa?: string | null;
   nameJaKana?: string | null;
-  nameJaKanji?: string | null;
+
   nameLatin?: string | null;
   tjName?: string | null;
   tjNameJa?: string | null;
@@ -1013,8 +1014,9 @@ export async function updateArtistNames({
   artistId,
   name,
   nameKo,
+  nameJa,
   nameJaKana,
-  nameJaKanji,
+
   nameLatin,
   tjName,
   tjNameJa,
@@ -1028,8 +1030,9 @@ export async function updateArtistNames({
   const sanitized = {
     name: name.trim(),
     nameKo: nameKo.trim(),
+    nameJa: nameJa?.trim() || null,
     nameJaKana: nameJaKana?.trim() || null,
-    nameJaKanji: nameJaKanji?.trim() || null,
+
     nameLatin: nameLatin?.trim() || null,
     tjName: tjName?.trim() || null,
     tjNameJa: tjNameJa?.trim() || null,
@@ -1049,8 +1052,9 @@ export async function updateArtistNames({
   const data: Prisma.ArtistUpdateInput = {
     name: sanitized.name,
     nameKo: sanitized.nameKo,
+    nameJa: sanitized.nameJa,
     nameJaKana: sanitized.nameJaKana,
-    nameJaKanji: sanitized.nameJaKanji,
+
     nameLatin: sanitized.nameLatin,
     tjName: sanitized.tjName,
     tjNameJa: sanitized.tjNameJa,
@@ -1067,8 +1071,9 @@ export async function updateArtistNames({
       id: true,
       name: true,
       nameKo: true,
+      nameJa: true,
       nameJaKana: true,
-      nameJaKanji: true,
+
       nameLatin: true,
       tjName: true,
       tjNameJa: true,
@@ -1728,7 +1733,6 @@ export async function searchArtistsForLink(
             { nameKo: { contains: trimmed, mode: "insensitive" } },
             { nameLatin: { contains: trimmed, mode: "insensitive" } },
             { nameJaKana: { contains: trimmed, mode: "insensitive" } },
-            { nameJaKanji: { contains: trimmed, mode: "insensitive" } },
           ],
         },
     take: limit,

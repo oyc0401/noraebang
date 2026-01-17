@@ -167,22 +167,31 @@ export function CenterSection() {
                       <span className="text-blue-700">{detail.nameKo}</span>
                     </span>
                   )}
-                  {detail.nameJaKanji && (
+                  {detail.nameJa && (
                     <span className="flex flex-col rounded-md border border-amber-200 bg-amber-50 px-2 py-1">
-                      <span className="text-[10px] text-amber-400">nameJaKanji</span>
-                      <span className="text-amber-700">{detail.nameJaKanji}</span>
+                      <span className="text-[10px] text-amber-400">nameJa</span>
+                      <span className="text-amber-700">{detail.nameJa}</span>
                     </span>
                   )}
+
                   {detail.nameJaKana && (
                     <span className="flex flex-col rounded-md border border-amber-200 bg-amber-50 px-2 py-1">
-                      <span className="text-[10px] text-amber-400">nameJaKana</span>
-                      <span className="text-amber-700">{detail.nameJaKana}</span>
+                      <span className="text-[10px] text-amber-400">
+                        nameJaKana
+                      </span>
+                      <span className="text-amber-700">
+                        {detail.nameJaKana}
+                      </span>
                     </span>
                   )}
                   {detail.nameLatin && (
                     <span className="flex flex-col rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1">
-                      <span className="text-[10px] text-emerald-400">nameLatin</span>
-                      <span className="text-emerald-700">{detail.nameLatin}</span>
+                      <span className="text-[10px] text-emerald-400">
+                        nameLatin
+                      </span>
+                      <span className="text-emerald-700">
+                        {detail.nameLatin}
+                      </span>
                     </span>
                   )}
                   {detail.tjName && (
@@ -193,7 +202,9 @@ export function CenterSection() {
                   )}
                   {detail.tjNameJa && (
                     <span className="flex flex-col rounded-md border border-rose-200 bg-rose-50 px-2 py-1">
-                      <span className="text-[10px] text-rose-400">tjNameJa</span>
+                      <span className="text-[10px] text-rose-400">
+                        tjNameJa
+                      </span>
                       <span className="text-rose-700">{detail.tjNameJa}</span>
                     </span>
                   )}
