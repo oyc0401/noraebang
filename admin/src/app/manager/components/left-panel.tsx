@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { searchSongsForManager } from "../action";
 import { useManagerArtists } from "../artist-list-context";
 import { artistFilterOptions } from "../filter-options";
 import {
-  MANAGER_PAGE_SIZE,
   managerSortOptions,
+  type ManagerSongSearchResult,
   type ManagerSortKey,
 } from "../types";
 import { useManagerStore } from "../store";
@@ -18,6 +19,7 @@ export function LeftPanel() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const selectionAnchorIndexRef = useRef<number | null>(null);
+  const songSearchRequestIdRef = useRef(0);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
 
   const {
@@ -41,6 +43,9 @@ export function LeftPanel() {
   const openCreateArtistDialog = useManagerStore(
     (state) => state.openCreateArtistDialog,
   );
+  const [songResults, setSongResults] = useState<ManagerSongSearchResult[]>([]);
+  const [isSongSearching, setIsSongSearching] = useState(false);
+  const [songSearchError, setSongSearchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!scrollContainerRef.current || !sentinelRef.current || !hasMore) {
@@ -124,6 +129,52 @@ export function LeftPanel() {
       }
     }
   }, [artists, setSelectedArtistId]);
+
+  const hasSearchTerm = searchTerm.trim().length > 0;
+
+  useEffect(() => {
+    const requestId = ++songSearchRequestIdRef.current;
+    const trimmed = searchTerm.trim();
+
+    if (!trimmed) {
+      setSongResults([]);
+      setSongSearchError(null);
+      setIsSongSearching(false);
+      return;
+    }
+
+    setIsSongSearching(true);
+    setSongSearchError(null);
+
+    let cancelled = false;
+    const handle = window.setTimeout(async () => {
+      try {
+        const results = await searchSongsForManager(trimmed, 15);
+        if (cancelled || songSearchRequestIdRef.current !== requestId) {
+          return;
+        }
+        setSongResults(results);
+        setSongSearchError(null);
+      } catch (error) {
+        console.error(error);
+        if (cancelled || songSearchRequestIdRef.current !== requestId) {
+          return;
+        }
+        setSongResults([]);
+        setSongSearchError("곡 검색에 실패했습니다.");
+      } finally {
+        if (cancelled || songSearchRequestIdRef.current !== requestId) {
+          return;
+        }
+        setIsSongSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [searchTerm]);
 
   useEffect(() => {
     if (selectedArtistId === null) {
@@ -237,6 +288,89 @@ export function LeftPanel() {
             {!artists.length && !isLoading && !errorMessage && (
               <div className="rounded-xl border border-dashed border-zinc-200 px-3 py-10 text-center text-sm text-zinc-500">
                 조건을 만족하는 아티스트가 없습니다.
+              </div>
+            )}
+            {hasSearchTerm && (
+              <div className="mt-4 space-y-3 border-t border-dashed border-zinc-200 px-3 py-4">
+                <div className="flex items-center justify-between text-xs text-zinc-500">
+                  <span className="font-semibold text-zinc-600">
+                    곡 검색 결과
+                  </span>
+                  <span>
+                    {songResults.length > 0 &&
+                      `${songResults.length.toLocaleString()}건`}
+                  </span>
+                </div>
+                {isSongSearching && (
+                  <div className="text-xs text-zinc-500">곡을 검색하는 중...</div>
+                )}
+                {songSearchError && (
+                  <div className="text-xs text-red-600">{songSearchError}</div>
+                )}
+                {!isSongSearching &&
+                  !songSearchError &&
+                  songResults.length === 0 && (
+                    <div className="text-xs text-zinc-400">
+                      곡 검색 결과가 없습니다.
+                    </div>
+                  )}
+                {songResults.length > 0 && (
+                  <div className="space-y-2">
+                    {songResults.map((song) => (
+                      <div
+                        key={song.id}
+                        className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-semibold text-zinc-900">
+                              {song.title}
+                              {song.titleKo && (
+                                <span className="ml-1 text-zinc-500">
+                                  ({song.titleKo})
+                                </span>
+                              )}
+                            </p>
+                            {song.catalog && (
+                              <p className="text-xs text-zinc-500">
+                                {song.catalog.toUpperCase()}
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-xs text-zinc-400">
+                            Song #{song.id}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-xs text-zinc-500">
+                          연결된 아티스트
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {song.artists.length > 0 ? (
+                            song.artists.map((artist) => (
+                              <button
+                                key={artist.id}
+                                type="button"
+                                onClick={() => setSelectedArtistId(artist.id)}
+                                className="cursor-pointer rounded-full border border-blue-100 bg-white/80 px-2 py-0.5 text-[11px] text-blue-700 transition hover:border-blue-300 hover:bg-blue-50"
+                              >
+                                #{artist.id} {artist.name}
+                                {artist.nameKo && (
+                                  <span className="text-zinc-500">
+                                    ({artist.nameKo})
+                                  </span>
+                                )}
+                              </button>
+                            ))
+                          ) : (
+                            <span className="text-[11px] text-zinc-400">
+                              연결된 아티스트 없음
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             <div ref={sentinelRef} className="h-6" />

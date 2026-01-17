@@ -195,7 +195,7 @@ async function main() {
     // 협업 아티스트의 모든 곡 가져오기
     const collaborationSongs = await prisma.artistSong.findMany({
       where: { artistId: collabArtist.id },
-      select: { songId: true, order: true, role: true },
+      select: { songId: true, role: true },
     });
 
     console.log(`   총 ${collaborationSongs.length}개 곡 재매핑 예정`);

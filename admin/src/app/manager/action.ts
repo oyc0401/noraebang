@@ -18,6 +18,7 @@ import {
   type ManagerYoutubePanelData,
   type ManagerTjPanelData,
   type ManagerTjProposeSummary,
+  type ManagerSongSearchResult,
   type SongLinkedArtist,
 } from "./types";
 
@@ -412,7 +413,6 @@ export async function fetchManagerArtistDetail(
         },
       },
       artistSongs: {
-        orderBy: { order: "asc" },
         select: {
           song: {
             select: {
@@ -445,9 +445,7 @@ export async function fetchManagerArtistDetail(
                 },
               },
               artistSongs: {
-                orderBy: { order: "asc" },
                 select: {
-                  order: true,
                   role: true,
                   artist: {
                     select: {
@@ -707,7 +705,7 @@ export async function fetchManagerArtistSongs(
 
   const artistSongs = await prisma.artistSong.findMany({
     where: { artistId },
-    orderBy: { order: "asc" },
+
     select: {
       song: {
         select: {
@@ -743,9 +741,7 @@ export async function fetchManagerArtistSongs(
             },
           },
           artistSongs: {
-            orderBy: { order: "asc" },
             select: {
-              order: true,
               role: true,
               artist: {
                 select: {
@@ -1189,7 +1185,7 @@ export async function mergeArtist({
 
     const artistSongs = await tx.artistSong.findMany({
       where: { artistId: sourceArtistId },
-      select: { songId: true, order: true, role: true },
+      select: { songId: true, role: true },
     });
 
     if (artistSongs.length > 0) {
@@ -1586,9 +1582,7 @@ export async function updateSong(input: UpdateSongInput) {
     where: { id: songId },
     select: {
       artistSongs: {
-        orderBy: { order: "asc" },
         select: {
-          order: true,
           role: true,
           artist: {
             select: {
@@ -1689,9 +1683,8 @@ export async function fetchSongArtists(
 
   const artistSongs = await prisma.artistSong.findMany({
     where: { songId },
-    orderBy: { order: "asc" },
+
     select: {
-      order: true,
       role: true,
       artist: {
         select: {
@@ -1745,6 +1738,73 @@ export async function searchArtistsForLink(
   });
 
   return artists;
+}
+
+export async function searchSongsForManager(
+  searchTerm: string,
+  limit = 15,
+): Promise<ManagerSongSearchResult[]> {
+  const trimmed = searchTerm.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  const normalizedLimit = Math.min(Math.max(limit, 1), 50);
+  const isNumericSearch = /^\d+$/.test(trimmed);
+  const where: Prisma.SongWhereInput = isNumericSearch
+    ? { id: Number(trimmed) }
+    : {
+        OR: [
+          { title: { contains: trimmed, mode: "insensitive" } },
+          { titleKo: { contains: trimmed, mode: "insensitive" } },
+          { titleJa: { contains: trimmed, mode: "insensitive" } },
+          { titleJaKana: { contains: trimmed, mode: "insensitive" } },
+          { titleLatin: { contains: trimmed, mode: "insensitive" } },
+          {
+            aliases: {
+              some: {
+                alias: { contains: trimmed, mode: "insensitive" },
+              },
+            },
+          },
+        ],
+      };
+
+  const songs = await prisma.song.findMany({
+    where,
+    take: normalizedLimit,
+    orderBy: [{ id: "asc" }],
+    select: {
+      id: true,
+      title: true,
+      titleKo: true,
+      catalog: true,
+      artistSongs: {
+        take: 5,
+        select: {
+          artist: {
+            select: {
+              id: true,
+              name: true,
+              nameKo: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return songs.map((song) => ({
+    id: song.id,
+    title: song.title,
+    titleKo: song.titleKo,
+    catalog: song.catalog,
+    artists: song.artistSongs.map((artistSong) => ({
+      id: artistSong.artist.id,
+      name: artistSong.artist.name,
+      nameKo: artistSong.artist.nameKo,
+    })),
+  }));
 }
 
 // 곡에 아티스트 연결
@@ -2035,9 +2095,7 @@ export async function createSong({
         },
       },
       artistSongs: {
-        orderBy: { order: "asc" },
         select: {
-          order: true,
           role: true,
           artist: {
             select: {

@@ -130,7 +130,6 @@ export async function getYoutubeSongsByArtist(artistId: number) {
         },
       },
     },
-    orderBy: { order: "asc" },
   });
 
   return songs.map((artistSong) => ({

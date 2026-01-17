@@ -38,6 +38,8 @@ model Artist {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([spotifyId])
+   @@index([homeCatalog])
   @@map("artist")
 }
 
@@ -82,7 +84,6 @@ model ArtistSong {
   id        Int         @id @default(autoincrement())
   artistId  Int         @map("artist_id")
   songId    Int         @map("song_id")
-  order     Int         @default(0)
   role      ArtistRole? // main, featuring, collaboration
   createdAt DateTime    @default(now()) @map("created_at")
 
@@ -244,6 +245,7 @@ model SpotifyArtist {
   artists Artist[]
   tracks  SpotifyArtistTrack[]
 
+  @@index([popularity])
   @@map("spotify_artist")
 }
 
@@ -397,5 +399,6 @@ model SongPropose {
   song Song? @relation(fields: [songId], references: [id], onDelete: SetNull)
 
   @@index([songId])
+  @@index([query])
   @@map("song_propose")
 }

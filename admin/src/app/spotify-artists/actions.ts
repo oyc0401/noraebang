@@ -237,7 +237,6 @@ export async function getSongsByArtistId(artistId: number) {
         },
       },
     },
-    orderBy: { order: "asc" },
   });
 
   return songs.map((as) => ({

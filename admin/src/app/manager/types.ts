@@ -34,6 +34,18 @@ export type SongLinkedArtist = {
   order: number;
 };
 
+export type ManagerSongSearchResult = {
+  id: number;
+  title: string;
+  titleKo?: string | null;
+  catalog?: string | null;
+  artists: Array<{
+    id: number;
+    name: string;
+    nameKo: string;
+  }>;
+};
+
 export type SongTopYoutubeVideo = {
   videoId: string;
   title?: string | null;
