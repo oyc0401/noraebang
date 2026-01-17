@@ -19,7 +19,7 @@ export interface ArtistDetailsDto {
   thumbnailMedium?: string;
   thumbnailHigh?: string;
   songCount: number;
-  /** TJ 노래방 곡 추가 요청 URL */
-  tjSongRequestUrl?: string;
+  /** TJ에서 사용하는 아티스트 이름 */
+  tjName?: string;
   youtube?: YoutubeInfoDto;
 }

@@ -65,7 +65,7 @@ export default function TjArtistPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createNameKo, setCreateNameKo] = useState("");
-  const [createRequestUrl, setCreateRequestUrl] = useState("");
+  const [createTjName, setCreateTjName] = useState("");
   const [createYoutubeMain, setCreateYoutubeMain] = useState("");
   const [createYoutubeTopic, setCreateYoutubeTopic] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
@@ -248,7 +248,7 @@ export default function TjArtistPage() {
     const baseName = selectedArtistSummary?.name ?? "";
     setCreateName(baseName);
     setCreateNameKo("");
-    setCreateRequestUrl("");
+    setCreateTjName(baseName);
     setCreateYoutubeMain("");
     setCreateYoutubeTopic("");
     setConflicts({ name: false, nameKo: false });
@@ -283,7 +283,7 @@ export default function TjArtistPage() {
       const artist = await createArtist({
         name: trimmedName,
         nameKo: trimmedNameKo || undefined,
-        tjSongRequestUrl: createRequestUrl,
+        tjName: createTjName,
         youtubeMainUrl: createYoutubeMain,
         youtubeTopicUrl: createYoutubeTopic,
       });
@@ -926,13 +926,13 @@ export default function TjArtistPage() {
 
               <div className="sm:col-span-1">
                 <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  TJ 곡 요청 URL (선택)
+                  TJ 표기명 (선택)
                 </label>
                 <input
-                  value={createRequestUrl}
-                  onChange={(event) => setCreateRequestUrl(event.target.value)}
+                  value={createTjName}
+                  onChange={(event) => setCreateTjName(event.target.value)}
                   className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-sky-500 focus:ring-sky-500/30 dark:border-zinc-700 dark:bg-zinc-900"
-                  placeholder="https://..."
+                  placeholder="예) 아이유"
                 />
               </div>
 

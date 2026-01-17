@@ -44,11 +44,11 @@ export class ArtistDto {
   thumbnailHigh?: string;
 
   @ApiProperty({
-    example: "https://www.tjmedia.com/tjsong/song_add.asp",
+    example: "아이유",
     required: false,
-    description: "TJ 노래방 곡 추가 요청 URL",
+    description: "TJ에서 사용하는 아티스트 이름",
   })
-  tjSongRequestUrl?: string;
+  tjName?: string;
 }
 
 export class ArtistDetailsDto {
@@ -97,11 +97,11 @@ export class ArtistDetailsDto {
   songCount: number;
 
   @ApiProperty({
-    example: "https://www.tjmedia.com/tjsong/song_add.asp",
+    example: "아이유",
     required: false,
-    description: "TJ 노래방 곡 추가 요청 URL",
+    description: "TJ에서 사용하는 아티스트 이름",
   })
-  tjSongRequestUrl?: string;
+  tjName?: string;
 
   @ApiProperty({ type: YoutubeInfoDto, required: false })
   youtube?: YoutubeInfoDto;

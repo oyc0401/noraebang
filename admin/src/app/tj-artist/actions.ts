@@ -191,7 +191,7 @@ export async function checkArtistConflicts(input: {
 export async function createArtist(input: {
   name: string;
   nameKo?: string;
-  tjSongRequestUrl?: string;
+  tjName?: string;
   youtubeMainUrl?: string;
   youtubeTopicUrl?: string;
 }) {
@@ -228,12 +228,13 @@ export async function createArtist(input: {
 
   const result = await prisma.$transaction(async (tx) => {
     const targetNameKo = nameKoInput || name;
+    const tjName = input.tjName?.trim() || undefined;
 
     const created = await tx.artist.create({
       data: {
         name,
         nameKo: targetNameKo,
-        tjSongRequestUrl: input.tjSongRequestUrl?.trim() || undefined,
+        tjName,
       },
     });
 
@@ -337,7 +338,7 @@ async function mapTjSongsToArtist(artistId: number, tjSongIds: string[]) {
 export async function createArtistAndMapSongs(input: {
   name: string;
   nameKo?: string;
-  tjSongRequestUrl?: string;
+  tjName?: string;
   youtubeMainUrl?: string;
   youtubeTopicUrl?: string;
   tjSongIds: string[];
@@ -345,7 +346,7 @@ export async function createArtistAndMapSongs(input: {
   const artist = await createArtist({
     name: input.name,
     nameKo: input.nameKo,
-    tjSongRequestUrl: input.tjSongRequestUrl,
+    tjName: input.tjName,
     youtubeMainUrl: input.youtubeMainUrl,
     youtubeTopicUrl: input.youtubeTopicUrl,
   });
