@@ -1833,6 +1833,7 @@ export async function fetchManagerArtistTjPanel(
       groups: [],
       orphanProposes: [],
       totalCount: 0,
+      lastUpdatedAt: null,
     };
   }
 
@@ -1849,6 +1850,7 @@ export async function fetchManagerArtistTjPanel(
       groups: [],
       orphanProposes: [],
       totalCount: 0,
+      lastUpdatedAt: null,
     };
   }
 
@@ -1868,6 +1870,7 @@ export async function fetchManagerArtistTjPanel(
       hit: true,
       regdateView: true,
       songId: true,
+      updateDate: true,
       song: {
         select: {
           id: true,
@@ -1878,6 +1881,12 @@ export async function fetchManagerArtistTjPanel(
     },
     orderBy: { hit: "desc" },
   });
+
+  // 가장 최근 업데이트된 신청곡의 updateDate
+  const lastUpdatedAt =
+    proposes.length > 0
+      ? Math.max(...proposes.map((p) => Number(p.updateDate)))
+      : null;
 
   // songId로 그룹화 (songId가 있는 것들)
   const groupedBySongId = new Map<
@@ -1944,6 +1953,7 @@ export async function fetchManagerArtistTjPanel(
     groups: groupsArray,
     orphanProposes: orphanProposes.sort((a, b) => b.hit - a.hit),
     totalCount: proposes.length,
+    lastUpdatedAt,
   };
 }
 
@@ -2607,4 +2617,23 @@ export async function refreshSongThumbnail(
     thumbnailMedium,
     thumbnailHigh,
   };
+}
+
+// ========== TJ 신청곡 수집/매핑 ==========
+
+import { fetchProposeForArtist } from "@/lib/admin/fetch-propose-for-artist";
+import { mapProposeSong } from "@/lib/admin/map-propose-song";
+
+export async function runFetchProposeForArtist(artistId: number) {
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+  return fetchProposeForArtist(artistId, { verbose: true });
+}
+
+export async function runMapProposeSong(artistId: number) {
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+  return mapProposeSong(artistId, { verbose: true });
 }
