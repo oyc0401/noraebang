@@ -22,6 +22,7 @@ export type FetchTjProposeParams = {
 
 export type TjProposeListItem = {
   id: number;
+  query: string | null;
   songTitle: string;
   songSinger: string;
   hit: number;
@@ -73,6 +74,7 @@ export async function fetchTjProposes(
       take: pageSize,
       select: {
         id: true,
+        query: true,
         songTitle: true,
         songSinger: true,
         hit: true,
@@ -98,6 +100,7 @@ export async function fetchTjProposes(
 
   const items: TjProposeListItem[] = entries.map((entry) => ({
     id: entry.id,
+    query: entry.query,
     songTitle: entry.songTitle,
     songSinger: entry.songSinger,
     hit: entry.hit,
