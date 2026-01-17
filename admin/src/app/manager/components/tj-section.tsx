@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { fetchManagerArtistTjPanel } from "../action";
+import {
+  fetchManagerArtistTjPanel,
+  runFetchProposeForArtist,
+  runMapProposeSong,
+} from "../action";
 import type {
   ManagerTjPanelData,
   ManagerTjProposeGroupSummary,
@@ -21,6 +25,7 @@ export function TjSection() {
     groups: [],
     orphanProposes: [],
     totalCount: 0,
+    lastUpdatedAt: null,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -28,10 +33,52 @@ export function TjSection() {
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
     {},
   );
+  const [isFetching, setIsFetching] = useState(false);
+  const [isMapping, setIsMapping] = useState(false);
+
+  const handleFetchPropose = async () => {
+    if (!selectedArtistId) return;
+    if (!confirm("TJ에서 신청곡을 수집하시겠습니까?")) return;
+
+    setIsFetching(true);
+    try {
+      const result = await runFetchProposeForArtist(selectedArtistId);
+      alert(
+        `수집 완료!\n조회: ${result.stats.fetched}개\n신규: ${result.stats.created}개\n업데이트: ${result.stats.updated}개`,
+      );
+      // 데이터 새로고침
+      const response = await fetchManagerArtistTjPanel(selectedArtistId);
+      setData(response);
+    } catch (error) {
+      alert(`오류: ${error}`);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  const handleMapPropose = async () => {
+    if (!selectedArtistId) return;
+    if (!confirm("미연결 신청곡을 Song과 매핑하시겠습니까?")) return;
+
+    setIsMapping(true);
+    try {
+      const result = await runMapProposeSong(selectedArtistId);
+      alert(
+        `매핑 완료!\n매칭됨: ${result.stats.matched}개\n후보만: ${result.stats.withCandidates}개\n매칭없음: ${result.stats.noMatch}개\n업데이트: ${result.stats.updated}개`,
+      );
+      // 데이터 새로고침
+      const response = await fetchManagerArtistTjPanel(selectedArtistId);
+      setData(response);
+    } catch (error) {
+      alert(`오류: ${error}`);
+    } finally {
+      setIsMapping(false);
+    }
+  };
 
   useEffect(() => {
     if (!selectedArtistId) {
-      setData({ tjName: null, tjNameJa: null, groups: [], orphanProposes: [], totalCount: 0 });
+      setData({ tjName: null, tjNameJa: null, groups: [], orphanProposes: [], totalCount: 0, lastUpdatedAt: null });
       setIsLoading(false);
       setErrorMessage(null);
       return;
@@ -54,7 +101,7 @@ export function TjSection() {
         console.error(error);
         if (!cancelled) {
           setErrorMessage("TJ 신청곡 정보를 불러오지 못했습니다.");
-          setData({ tjName: null, tjNameJa: null, groups: [], orphanProposes: [], totalCount: 0 });
+          setData({ tjName: null, tjNameJa: null, groups: [], orphanProposes: [], totalCount: 0, lastUpdatedAt: null });
         }
       } finally {
         if (!cancelled) {
@@ -260,6 +307,33 @@ export function TjSection() {
         </div>
       </div>
 
+      {/* 액션 버튼 영역 */}
+      {selectedArtistId && (data.tjName || data.tjNameJa) && (
+        <div className="flex items-center gap-2 border-b border-orange-100/80 bg-orange-50/30 px-4 py-2">
+          <button
+            type="button"
+            className="rounded-lg border border-orange-300 bg-white px-3 py-1.5 text-xs font-medium text-orange-700 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            onClick={handleFetchPropose}
+            disabled={isFetching || isMapping}
+          >
+            {isFetching ? "수집 중..." : "🔄 신청곡 수집"}
+          </button>
+          <button
+            type="button"
+            className="rounded-lg border border-orange-300 bg-white px-3 py-1.5 text-xs font-medium text-orange-700 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            onClick={handleMapPropose}
+            disabled={isFetching || isMapping || data.orphanProposes.length === 0}
+          >
+            {isMapping ? "매핑 중..." : "🔗 자동 매핑"}
+          </button>
+          {data.lastUpdatedAt && (
+            <span className="ml-auto text-[11px] text-zinc-400">
+              {formatRelativeTime(data.lastUpdatedAt)} 수집
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="flex-1 min-h-0 overflow-hidden">{renderBody()}</div>
     </section>
   );
@@ -384,4 +458,23 @@ function TjIcon({ className }: { className?: string }) {
       <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z" />
     </svg>
   );
+}
+
+function formatRelativeTime(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+
+  if (months > 0) return `${months}개월 전`;
+  if (weeks > 0) return `${weeks}주 전`;
+  if (days > 0) return `${days}일 전`;
+  if (hours > 0) return `${hours}시간 전`;
+  if (minutes > 0) return `${minutes}분 전`;
+  return "방금 전";
 }

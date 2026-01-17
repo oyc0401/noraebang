@@ -230,4 +230,5 @@ export type ManagerTjPanelData = {
   groups: ManagerTjProposeGroupSummary[];
   orphanProposes: ManagerTjProposeSummary[];
   totalCount: number;
+  lastUpdatedAt: number | null; // 가장 최근 업데이트된 신청곡의 updateDate (timestamp ms)
 };

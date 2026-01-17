@@ -10,11 +10,23 @@ import { searchTJPropose } from "../../thirdparty/tj/searchPropose";
 // pnpm ts-node src/scripts/tj/fetch-propose-by-artists.ts
 // pnpm ts-node src/scripts/tj/fetch-propose-by-artists.ts --dry-run
 // pnpm ts-node src/scripts/tj/fetch-propose-by-artists.ts 147          # id >= 147부터 시작
-// pnpm ts-node src/scripts/tj/fetch-propose-totalSkipped++;by-artists.ts 147 --dry-run
+//
+// 동작:
+// - 신규: create
+// - 기존(중복): query가 null/다르면 update로 채움
+// - 중복 판단 키: saveDate + songSinger + songTitle + email1 + email2
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
+
+type Counters = {
+  totalFetched: number;
+  totalCreated: number;
+  totalUpdated: number;
+  totalSkipped: number; // existing + query도 이미 동일해서 진짜 아무것도 안 함
+  totalErrors: number;
+};
 
 async function fetchProposeByArtists(dryRun: boolean, startId: number) {
   console.log(
@@ -25,7 +37,7 @@ async function fetchProposeByArtists(dryRun: boolean, startId: number) {
     console.log("🔍 Dry run mode - 데이터 저장 없이 조회만 수행\n");
   }
 
-  // 1. startId <= id <= 300이고 tjName이 있는 아티스트 조회
+  // 1) startId <= id <= 300 && tjName 있는 아티스트 조회
   const artists = await prisma.artist.findMany({
     where: {
       id: { gte: startId, lte: 300 },
@@ -41,10 +53,13 @@ async function fetchProposeByArtists(dryRun: boolean, startId: number) {
 
   console.log(`📋 대상 아티스트: ${artists.length}명\n`);
 
-  let totalFetched = 0;
-  let totalCreated = 0;
-  let totalSkipped = 0;
-  let totalErrors = 0;
+  const counters: Counters = {
+    totalFetched: 0,
+    totalCreated: 0,
+    totalUpdated: 0,
+    totalSkipped: 0,
+    totalErrors: 0,
+  };
 
   for (let i = 0; i < artists.length; i++) {
     const artist = artists[i];
@@ -55,7 +70,7 @@ async function fetchProposeByArtists(dryRun: boolean, startId: number) {
     );
 
     try {
-      // 2. TJ 신청곡 검색
+      // 2) TJ 신청곡 검색
       const proposeItems = await searchTJPropose(tjName);
 
       if (proposeItems.length === 0) {
@@ -63,7 +78,7 @@ async function fetchProposeByArtists(dryRun: boolean, startId: number) {
         continue;
       }
 
-      totalFetched += proposeItems.length;
+      counters.totalFetched += proposeItems.length;
       console.log(`   → ${proposeItems.length}개 신청곡 발견`);
 
       if (dryRun) {
@@ -79,19 +94,35 @@ async function fetchProposeByArtists(dryRun: boolean, startId: number) {
         continue;
       }
 
-      // 3. DB에 저장 (중복 체크)
+      // 3) DB 반영 (중복 체크 + 기존 데이터 query 업데이트)
+      let createdThisArtist = 0;
+      let updatedThisArtist = 0;
+      let skippedThisArtist = 0;
+
       for (const item of proposeItems) {
-        // 중복 체크: saveDate + songSinger + songTitle 조합으로
-        const existing = await prisma.songPropose.findFirst({
-          where: {
-            saveDate: BigInt(item.save_date),
-            songSinger: item.po_song_singer,
-            songTitle: item.po_song_title,
-          },
-        });
+        const where = {
+          saveDate: BigInt(item.save_date),
+          songSinger: item.po_song_singer,
+          songTitle: item.po_song_title,
+          email1: item.po_email1,
+          email2: item.po_email2,
+        } as const;
+
+        const existing = await prisma.songPropose.findFirst({ where });
 
         if (existing) {
-          totalSkipped++;
+          // query가 비었거나 다르면 채움
+          if (existing.query !== tjName) {
+            await prisma.songPropose.update({
+              where: { id: existing.id },
+              data: { query: tjName },
+            });
+            counters.totalUpdated++;
+            updatedThisArtist++;
+          } else {
+            counters.totalSkipped++;
+            skippedThisArtist++;
+          }
           continue;
         }
 
@@ -111,14 +142,16 @@ async function fetchProposeByArtists(dryRun: boolean, startId: number) {
             updateDate: BigInt(item.update_date),
           },
         });
-        totalCreated++;
+
+        counters.totalCreated++;
+        createdThisArtist++;
       }
 
       console.log(
-        `   → 저장 완료 (신규: ${proposeItems.length - totalSkipped}, 스킵: ${totalSkipped})`,
+        `   → 반영 완료 (신규: ${createdThisArtist}, 업데이트: ${updatedThisArtist}, 스킵: ${skippedThisArtist})`,
       );
     } catch (error) {
-      totalErrors++;
+      counters.totalErrors++;
       console.error(`   ❌ 오류: ${error}`);
     }
 
@@ -127,12 +160,13 @@ async function fetchProposeByArtists(dryRun: boolean, startId: number) {
   }
 
   console.log("\n✅ 완료!");
-  console.log(`   총 조회: ${totalFetched}개`);
+  console.log(`   총 조회: ${counters.totalFetched}개`);
   if (!dryRun) {
-    console.log(`   신규 저장: ${totalCreated}개`);
-    console.log(`   중복 스킵: ${totalSkipped}개`);
+    console.log(`   신규 저장: ${counters.totalCreated}개`);
+    console.log(`   기존 업데이트(query 채움): ${counters.totalUpdated}개`);
+    console.log(`   스킵(이미 동일): ${counters.totalSkipped}개`);
   }
-  console.log(`   오류: ${totalErrors}건`);
+  console.log(`   오류: ${counters.totalErrors}건`);
 }
 
 // 커맨드 라인 인자 처리
