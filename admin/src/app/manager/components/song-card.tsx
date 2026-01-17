@@ -159,7 +159,7 @@ export function SongCard({
 
                 {/* 노래방/TJ 정보 */}
                 <div className="flex flex-wrap gap-2 text-[11px] text-zinc-600 pt-2">
-                  {song.karaoke.length === 0 ? (
+                  {/* {song.karaoke.length === 0 ? (
                     <span className="rounded-full bg-zinc-100 px-2 py-0.5">
                       노래방 등록 없음
                     </span>
@@ -172,7 +172,7 @@ export function SongCard({
                         {item.provider}: {item.karaokeNo}
                       </span>
                     ))
-                  )}
+                  )} */}
                   {song.tjSong ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-800">
                       <span className="text-[10px] text-emerald-600">
@@ -182,6 +182,13 @@ export function SongCard({
                         {song.tjSong.title ?? "제목 없음"} ·{" "}
                         {song.tjSong.artist ?? "아티스트 미상"}
                       </span>
+                    </span>
+                  ) : song.maxProposeHit != null && song.maxProposeHit > 0 ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-orange-700 border border-orange-200">
+                      <span className="text-[10px] text-orange-500">
+                        신청곡
+                      </span>
+                      <span>추천 {song.maxProposeHit}</span>
                     </span>
                   ) : (
                     <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-500">
