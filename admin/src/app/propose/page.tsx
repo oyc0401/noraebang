@@ -242,7 +242,7 @@ export default function TjProposePage() {
                 <tbody className="divide-y divide-zinc-50">
                   {data.items.map((item) => (
                     <tr key={item.id} className="align-top hover:bg-orange-50/40">
-                      <td className="w-40 px-6 py-5 text-xs text-zinc-500">
+                      <td className="w-44 px-6 py-5 text-xs text-zinc-500">
                         <div className="text-sm font-semibold text-zinc-900">
                           #{item.id.toString()}
                         </div>
@@ -255,6 +255,12 @@ export default function TjProposePage() {
                         </div>
                         <div className="text-[11px] text-zinc-400">
                           저장 {formatDateTime(item.saveDateMs)}
+                        </div>
+                        <div className="mt-2 text-[11px] text-zinc-500">
+                          검색어{" "}
+                          <span className="font-medium text-zinc-800">
+                            {item.query || "없음"}
+                          </span>
                         </div>
                       </td>
                       <td className="min-w-[260px] px-6 py-5">
