@@ -58,7 +58,7 @@ export class ArtistsService {
         thumbnailDefault: true,
         thumbnailMedium: true,
         thumbnailHigh: true,
-        tjSongRequestUrl: true,
+        tjName: true,
         youtubeChannels: {
           where: {
             type: "MAIN",
@@ -87,7 +87,7 @@ export class ArtistsService {
       thumbnailDefault: artist.thumbnailDefault ?? undefined,
       thumbnailMedium: artist.thumbnailMedium ?? undefined,
       thumbnailHigh: artist.thumbnailHigh ?? undefined,
-      tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
+      tjName: artist.tjName ?? undefined,
       _subscriberCount: artist.youtubeChannels[0]?.subscriberCount,
     }));
 
@@ -287,7 +287,7 @@ export class ArtistsService {
         thumbnailDefault: true,
         thumbnailMedium: true,
         thumbnailHigh: true,
-        tjSongRequestUrl: true,
+        tjName: true,
       },
     });
 
@@ -302,7 +302,7 @@ export class ArtistsService {
       thumbnailDefault: artist.thumbnailDefault ?? undefined,
       thumbnailMedium: artist.thumbnailMedium ?? undefined,
       thumbnailHigh: artist.thumbnailHigh ?? undefined,
-      tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
+      tjName: artist.tjName ?? undefined,
     };
   }
 
@@ -321,7 +321,7 @@ export class ArtistsService {
         thumbnailDefault: true,
         thumbnailMedium: true,
         thumbnailHigh: true,
-        tjSongRequestUrl: true,
+        tjName: true,
         youtubeChannels: {
           select: {
             type: true,
@@ -358,7 +358,7 @@ export class ArtistsService {
       thumbnailMedium: artist.thumbnailMedium ?? undefined,
       thumbnailHigh: artist.thumbnailHigh ?? undefined,
       songCount: artist._count.artistSongs,
-      tjSongRequestUrl: artist.tjSongRequestUrl ?? undefined,
+      tjName: artist.tjName ?? undefined,
       youtube: mainChannel
         ? {
             channelId: mainChannel.channelId,
