@@ -67,14 +67,14 @@ async function fetchPage(
   const res = await fetch(
     `https://www.tjmedia.com/song/searchPropose?${params}`,
   );
-  console.log(res);
+  // console.log(res);
   if (!res.ok) {
     throw new Error(`TJ API request failed: ${res.status} ${res.statusText}`);
   }
 
   const json: TJSearchResponse = await res.json();
 
-  console.log(json.data.viewData.list);
+  // console.log(json.data.viewData.list);
   return json.data.viewData.list;
 }
 
