@@ -379,10 +379,11 @@ model ArtistTjSong {
 
 // 곡 신청 테이블
 model SongPropose {
-  id          Int    @id @default(autoincrement())
-  songId      Int?   @map("song_id") // 매핑된 곡 ID (nullable)
-  songSinger  String @map("po_song_singer") // 가수 이름
-  songTitle   String @map("po_song_title") // 곡 제목
+  id          Int     @id @default(autoincrement())
+  songId      Int?    @map("song_id") // 매핑된 곡 ID (nullable)
+  query       String? // 검색할 때 사용한 tjName (어떤 검색어로 이 결과가 나왔는지)
+  songSinger  String  @map("po_song_singer") // 가수 이름
+  songTitle   String  @map("po_song_title") // 곡 제목
   content     String @map("po_content") // 신청 내용
   name        String @map("po_name") // 신청자 이름
   email1      String @map("po_email1") // 이메일 아이디
