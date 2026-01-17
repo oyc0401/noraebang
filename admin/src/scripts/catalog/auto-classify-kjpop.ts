@@ -18,9 +18,8 @@ import pg from "pg";
 // - `--dry-run` 으로 제안 목록만 조회하고, `--apply` 로 실제 update를 실행합니다.
 // - `--limit=N` 으로 dry-run 결과 출력 개수를 제한할 수 있습니다.
 // pnpm ts-node src/scripts/catalog/auto-classify-kjpop.ts --dry-run
-// pnpm ts-node src/scripts/catalog/auto-classify-kjpop.ts --dry-run --limit=50
-// pnpm ts-node src/scripts/catalog/auto-classify-kjpop.ts --apply
-
+// pnpm ts-node src/scripts/catalog/auto-classify-kjpop.ts --dry-run
+// pnpm ts-node src/scripts/catalog/auto-classify-kjpop.ts
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
 });
