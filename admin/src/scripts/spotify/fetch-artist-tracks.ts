@@ -6,11 +6,12 @@
  * - 앨범을 20개씩 묶어서 한 번에 조회 (API 호출 최적화)
  * - SpotifyTrack 테이블에 저장 (songId는 null로 저장, 나중에 수동 매핑)
  * - SpotifyArtistTrack 매핑 생성 (트랙의 모든 아티스트)
+ * - 아티스트 처리 완료 후 spotifyTracksFetchedAt 업데이트
  *
  * 사용법:
  * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts --dry-run
- * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts
- * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts 9
+ * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts              # spotifyTracksFetchedAt이 null인 아티스트 우선 처리
+ * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts 9            # 아티스트 ID 9부터 시작
  * pnpm ts-node src/scripts/spotify/fetch-artist-tracks.ts 9 --dry-run
  *
  * 주의:
@@ -327,23 +328,66 @@ async function main() {
 
   // 2. Artist들 가져오기 (spotifyId가 있는 것만)
   console.log("Step 2: Fetching artists");
-  const artists = await prisma.artist.findMany({
-    where: {
-      id: {
-        ...(startArtistId ? { gte: startArtistId } : {}),
+
+  let artists: { id: number; name: string; nameKo: string; spotifyId: string | null }[];
+
+  if (startArtistId) {
+    // 시작 ID가 지정된 경우: 해당 ID부터 순서대로
+    artists = await prisma.artist.findMany({
+      where: {
+        id: { gte: startArtistId },
+        spotifyId: { not: null },
       },
+      select: {
+        id: true,
+        name: true,
+        nameKo: true,
+        spotifyId: true,
+      },
+      orderBy: { id: "asc" },
+    });
+    console.log(`✓ Found ${artists.length} artists with Spotify ID (starting from ID ${startArtistId})\n`);
+  } else {
+    // 시작 ID가 없는 경우: spotifyTracksFetchedAt이 null인 아티스트
+    // 우선순위: JPOP → KPOP → POP → 나머지
+    const baseWhere = {
       spotifyId: { not: null },
-    },
-    select: {
+      spotifyTracksFetchedAt: null,
+    };
+    const selectFields = {
       id: true,
       name: true,
       nameKo: true,
       spotifyId: true,
-    },
-    orderBy: { id: "asc" },
-  });
+      homeCatalog: true,
+    };
 
-  console.log(`✓ Found ${artists.length} artists with Spotify ID\n`);
+    const [jpopArtists, kpopArtists, popArtists, otherArtists] = await Promise.all([
+      prisma.artist.findMany({
+        where: { ...baseWhere, homeCatalog: "JPOP" },
+        select: selectFields,
+        orderBy: { id: "asc" },
+      }),
+      prisma.artist.findMany({
+        where: { ...baseWhere, homeCatalog: "KPOP" },
+        select: selectFields,
+        orderBy: { id: "asc" },
+      }),
+      prisma.artist.findMany({
+        where: { ...baseWhere, homeCatalog: "POP" },
+        select: selectFields,
+        orderBy: { id: "asc" },
+      }),
+      prisma.artist.findMany({
+        where: { ...baseWhere, homeCatalog: { notIn: ["JPOP", "KPOP", "POP"] } },
+        select: selectFields,
+        orderBy: { id: "asc" },
+      }),
+    ]);
+
+    artists = [...jpopArtists, ...kpopArtists, ...popArtists, ...otherArtists];
+    console.log(`✓ Found ${artists.length} artists (JPOP: ${jpopArtists.length}, KPOP: ${kpopArtists.length}, POP: ${popArtists.length}, 기타: ${otherArtists.length})\n`);
+  }
 
   // 3. 각 아티스트의 트랙 가져오기
   console.log("Step 3: Fetching tracks for each artist...\n");
@@ -439,6 +483,15 @@ async function main() {
       console.log(
         `  ✓ Processed ${artistTrackCount} tracks for ${artist.name}`,
       );
+
+      // 모든 트랙 처리 완료 후 spotifyTracksFetchedAt 업데이트
+      if (!isDryRun) {
+        await prisma.artist.update({
+          where: { id: artist.id },
+          data: { spotifyTracksFetchedAt: new Date() },
+        });
+        console.log(`  ✓ spotifyTracksFetchedAt 업데이트 완료`);
+      }
 
       // 아티스트 간 딜레이
       // await delay(20);

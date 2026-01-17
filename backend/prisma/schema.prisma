@@ -20,6 +20,10 @@ model Artist {
   tjName           String? @map("tj_name") // TJ에서 사용하는 아티스트 이름
   tjNameJa         String? @map("tj_name_ja") // TJ에서 사용하는 일본어 아티스트 이름
 
+  spotifyTracksFetchedAt DateTime? @map("spotify_tracks_fetched_at") // Spotify 트랙 마지막 가져온 시간
+  youtubeTracksFetchedAt DateTime? @map("youtube_tracks_fetched_at") // YouTube 트랙 마지막 가져온 시간
+  tjProposeFetchedAt     DateTime? @map("tj_propose_fetched_at") // TJ 신청곡 마지막 가져온 시간
+
   thumbnailDefault String? @map("thumbnail_default")
   thumbnailMedium  String? @map("thumbnail_medium")
   thumbnailHigh    String? @map("thumbnail_high")
