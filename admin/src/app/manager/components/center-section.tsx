@@ -13,7 +13,7 @@ import { ArtistMergeDialog } from "./artist-merge-dialog";
 import { ArtistNameDialog } from "./artist-name-dialog";
 import { ArtistSpotifyIdDialog } from "./artist-spotify-id-dialog";
 import { ArtistYoutubeDialog } from "./artist-youtube-dialog";
-import { SpotifyIcon } from "./spotify-icon";
+import { SongCard } from "./song-card";
 import { SpotifyInfoCard } from "./spotify-info-card";
 import { YoutubeInfoCard } from "./youtube-info-card";
 
@@ -304,195 +304,29 @@ export function CenterSection() {
                 아직 등록된 곡이 없습니다.
               </div>
             )}
-            {sortedSongs.map((song) => {
-              const thumbnailSrc =
-                song.thumbnails.default ??
-                song.thumbnails.medium ??
-                song.thumbnails.high ??
-                null;
-              const youtubeLink = song.youtubeVideoId
-                ? `https://www.youtube.com/watch?v=${song.youtubeVideoId}`
-                : null;
-              const isGroupSelected =
-                song.spotifyGroup?.id &&
-                song.spotifyGroup.id === selectedGroupId;
-              const primaryTrack = song.spotifyGroup?.primaryTrack;
-              const primaryRelease = primaryTrack?.releaseDate ?? "-";
-              const primaryDuration = formatDuration(primaryTrack?.durationMs);
-              return (
-                <div
-                  key={song.id}
-                  id={`song-card-${song.id}`}
-                  onClick={() =>
-                    setSelectedGroupId(song.spotifyGroup?.id ?? null)
+            {sortedSongs.map((song) => (
+              <SongCard
+                key={song.id}
+                song={song}
+                isGroupSelected={
+                  Boolean(song.spotifyGroup?.id) &&
+                  song.spotifyGroup?.id === selectedGroupId
+                }
+                onSelectGroup={setSelectedGroupId}
+                onEditClick={(s) => {
+                  setEditingSong(s);
+                  setIsSongEditOpen(true);
+                }}
+                onArtistsChange={(songId, artists) => {
+                  if (detail && setDetail) {
+                    const newSongs = detail.songs.map((s) =>
+                      s.id === songId ? { ...s, artists } : s,
+                    );
+                    setDetail({ ...detail, songs: newSongs });
                   }
-                  className={`rounded-xl border px-4 py-3 transition ${
-                    isGroupSelected
-                      ? "border-blue-400 bg-blue-50"
-                      : "border-zinc-100 bg-white/80"
-                  }`}
-                >
-                  <div className="flex gap-3">
-                    <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100">
-                      {thumbnailSrc ? (
-                        <img
-                          src={thumbnailSrc}
-                          alt={song.title}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <span className="flex h-full w-full items-center justify-center text-xs font-semibold text-zinc-400">
-                          ♪
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-1 flex-col gap-2">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <div className="flex">
-                            <p className="font-medium text-zinc-900">
-                              {song.title}
-                              {song.titleKo && (
-                                <span className="ml-2 text-sm text-zinc-500 font-normal">
-                                  {`(${song.titleKo})`}
-                                </span>
-                              )}
-                              {song.titleLatin && (
-                                <span className="ml-2 text-sm text-zinc-500 font-normal">
-                                  {`(${song.titleLatin})`}
-                                </span>
-                              )}
-                            </p>
-                            {/* ✅ 곡 편집 버튼 */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation(); // 카드 선택 클릭 막기
-                                setEditingSong(song);
-                                setIsSongEditOpen(true);
-                              }}
-                              className=" rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-600 shadow-sm transition hover:border-blue-200 hover:text-blue-600"
-                            >
-                              편집
-                            </button>
-                          </div>
-
-                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-zinc-500">
-                            <span className="rounded-full bg-zinc-100 px-2 py-0.5">
-                              #{song.id}
-                            </span>
-                            <span>
-                              분류: {song.catalog ? song.catalog : "미분류"}
-                            </span>
-                            {youtubeLink ? (
-                              <a
-                                href={youtubeLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 rounded-full border border-red-200 px-2 py-0.5 text-[11px] text-red-700"
-                              >
-                                YouTube
-                                <span className="text-[10px] text-red-500">
-                                  {song.youtubeVideoId}
-                                </span>
-                              </a>
-                            ) : (
-                              <span className="rounded-full bg-zinc-100 px-2 py-0.5">
-                                유튜브 없음
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap gap-2 text-[11px] text-zinc-600 pt-2">
-                            {song.karaoke.length === 0 ? (
-                              <span className="rounded-full bg-zinc-100 px-2 py-0.5">
-                                노래방 등록 없음
-                              </span>
-                            ) : (
-                              song.karaoke.map((item) => (
-                                <span
-                                  key={`${song.id}-${item.provider}-${item.karaokeNo}`}
-                                  className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700"
-                                >
-                                  {item.provider}: {item.karaokeNo}
-                                </span>
-                              ))
-                            )}
-                            {song.tjSong ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-800">
-                                <span className="text-[10px] text-emerald-600">
-                                  TJ #{song.tjSong.id}
-                                </span>
-                                <span>
-                                  {song.tjSong.title ?? "제목 없음"} ·{" "}
-                                  {song.tjSong.artist ?? "아티스트 미상"}
-                                </span>
-                              </span>
-                            ) : (
-                              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-500">
-                                TJ 정보 없음
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {song.spotifyGroup ? (
-                          <div className="rounded-lg border border-emerald-100/70 bg-white/70 p-3 text-[11px] text-zinc-500 shadow-sm">
-                            <div className="flex items-start gap-3">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
-                                <SpotifyIcon className="h-4 w-4" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-[10px] uppercase tracking-[0.4em] text-emerald-500">
-                                  Group #{song.spotifyGroup.id}
-                                </p>
-                                {primaryTrack?.name ? (
-                                  primaryTrack.spotifyUrl ? (
-                                    <a
-                                      href={primaryTrack.spotifyUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="group block"
-                                    >
-                                      <span className="text-sm font-semibold text-zinc-900 group-hover:text-emerald-600">
-                                        {primaryTrack?.name}
-                                      </span>
-                                      {primaryTrack.musicBrainzTitle && (
-                                        <span className="block text-[11px] text-zinc-400 truncate">{`(${primaryTrack.musicBrainzTitle})`}</span>
-                                      )}
-                                    </a>
-                                  ) : (
-                                    <div>
-                                      <p className="text-sm font-semibold text-zinc-900">
-                                        {primaryTrack?.name}
-                                      </p>
-                                      <span className="block text-[11px] text-zinc-400 truncate">{`(${primaryTrack.musicBrainzTitle})`}</span>
-                                    </div>
-                                  )
-                                ) : (
-                                  <p className="font-semibold text-emerald-600">
-                                    Primary track 없음
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-zinc-500">
-                              <span className="inline-flex items-center rounded-full border border-emerald-100 px-2.5 py-0.5">
-                                길이 {primaryDuration}
-                              </span>
-                              <span className="inline-flex items-center rounded-full border border-emerald-100 px-2.5 py-0.5">
-                                인기도 {primaryTrack?.popularity ?? "-"}
-                              </span>
-                              <span className="inline-flex items-center rounded-full border border-emerald-100 px-2.5 py-0.5">
-                                발매일 {primaryRelease}
-                              </span>
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                }}
+              />
+            ))}
           </div>
         </div>
         {/* ✅ 곡 편집 다이얼로그 */}
@@ -521,14 +355,6 @@ export function CenterSection() {
       <ArtistAliasDialog />
     </ArtistDetailProvider>
   );
-}
-
-function formatDuration(durationMs?: number | null) {
-  if (!durationMs || durationMs <= 0) return "-";
-  const totalSeconds = Math.floor(durationMs / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 function SongEditDialog({

@@ -13,6 +13,7 @@ import {
   type ManagerSpotifyTrackSummary,
   type ManagerSortKey,
   type ManagerYoutubePanelData,
+  type SongLinkedArtist,
 } from "./types";
 
 export type ManagerQueryParams = {
@@ -436,6 +437,20 @@ export async function fetchManagerArtistDetail(
                   karaokeNo: true,
                 },
               },
+              artistSongs: {
+                orderBy: { order: "asc" },
+                select: {
+                  order: true,
+                  role: true,
+                  artist: {
+                    select: {
+                      id: true,
+                      name: true,
+                      nameKo: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -492,6 +507,13 @@ export async function fetchManagerArtistDetail(
     karaoke: song.karaokeSongs.map((item) => ({
       provider: String(item.provider),
       karaokeNo: item.karaokeNo,
+    })),
+    artists: song.artistSongs.map((as) => ({
+      id: as.artist.id,
+      name: as.artist.name,
+      nameKo: as.artist.nameKo,
+      role: as.role ?? null,
+      order: as.order,
     })),
   }));
 
@@ -1234,6 +1256,27 @@ export async function updateSong(input: UpdateSongInput) {
     },
   });
 
+  // 아티스트 정보도 다시 가져와서 반환
+  const songWithArtists = await prisma.song.findUnique({
+    where: { id: songId },
+    select: {
+      artistSongs: {
+        orderBy: { order: "asc" },
+        select: {
+          order: true,
+          role: true,
+          artist: {
+            select: {
+              id: true,
+              name: true,
+              nameKo: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
   return {
     id: updatedSong.id,
     title: updatedSong.title,
@@ -1266,5 +1309,158 @@ export async function updateSong(input: UpdateSongInput) {
       provider: String(item.provider),
       karaokeNo: item.karaokeNo,
     })),
+    artists:
+      songWithArtists?.artistSongs.map((as) => ({
+        id: as.artist.id,
+        name: as.artist.name,
+        nameKo: as.artist.nameKo,
+        role: as.role ?? null,
+        order: as.order,
+      })) ?? [],
   };
+}
+
+// 곡에 연결된 아티스트 목록 조회
+export async function fetchSongArtists(
+  songId: number,
+): Promise<SongLinkedArtist[]> {
+  if (!songId || Number.isNaN(songId)) {
+    return [];
+  }
+
+  const artistSongs = await prisma.artistSong.findMany({
+    where: { songId },
+    orderBy: { order: "asc" },
+    select: {
+      order: true,
+      role: true,
+      artist: {
+        select: {
+          id: true,
+          name: true,
+          nameKo: true,
+        },
+      },
+    },
+  });
+
+  return artistSongs.map((as) => ({
+    id: as.artist.id,
+    name: as.artist.name,
+    nameKo: as.artist.nameKo,
+    role: as.role ?? null,
+    order: as.order,
+  }));
+}
+
+// 아티스트 검색 (곡에 연결할 아티스트 찾기용)
+export async function searchArtistsForLink(
+  searchTerm: string,
+  limit = 20,
+): Promise<Array<{ id: number; name: string; nameKo: string }>> {
+  const trimmed = searchTerm.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  const isNumericSearch = /^\d+$/.test(trimmed);
+
+  const artists = await prisma.artist.findMany({
+    where: isNumericSearch
+      ? { id: Number(trimmed) }
+      : {
+          OR: [
+            { name: { contains: trimmed, mode: "insensitive" } },
+            { nameKo: { contains: trimmed, mode: "insensitive" } },
+            { nameLatin: { contains: trimmed, mode: "insensitive" } },
+            { nameJaKana: { contains: trimmed, mode: "insensitive" } },
+            { nameJaKanji: { contains: trimmed, mode: "insensitive" } },
+          ],
+        },
+    take: limit,
+    orderBy: { id: "asc" },
+    select: {
+      id: true,
+      name: true,
+      nameKo: true,
+    },
+  });
+
+  return artists;
+}
+
+// 곡에 아티스트 연결
+export type LinkSongArtistInput = {
+  songId: number;
+  artistId: number;
+  role?: "MAIN" | "FEATURING" | "PRODUCER" | null;
+};
+
+export async function linkSongArtist({
+  songId,
+  artistId,
+  role,
+}: LinkSongArtistInput): Promise<SongLinkedArtist[]> {
+  if (!songId || Number.isNaN(songId)) {
+    throw new Error("유효한 곡 ID가 필요합니다.");
+  }
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+
+  // 이미 연결된지 확인
+  const existing = await prisma.artistSong.findUnique({
+    where: {
+      artistId_songId: { artistId, songId },
+    },
+  });
+
+  if (existing) {
+    throw new Error("이미 연결된 아티스트입니다.");
+  }
+
+  // 현재 가장 높은 order 값 찾기
+  const maxOrder = await prisma.artistSong.aggregate({
+    where: { songId },
+    _max: { order: true },
+  });
+
+  const newOrder = (maxOrder._max.order ?? -1) + 1;
+
+  await prisma.artistSong.create({
+    data: {
+      songId,
+      artistId,
+      order: newOrder,
+      role: role ?? null,
+    },
+  });
+
+  return fetchSongArtists(songId);
+}
+
+// 곡에서 아티스트 연결 해제
+export type UnlinkSongArtistInput = {
+  songId: number;
+  artistId: number;
+};
+
+export async function unlinkSongArtist({
+  songId,
+  artistId,
+}: UnlinkSongArtistInput): Promise<SongLinkedArtist[]> {
+  if (!songId || Number.isNaN(songId)) {
+    throw new Error("유효한 곡 ID가 필요합니다.");
+  }
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+
+  await prisma.artistSong.delete({
+    where: {
+      artistId_songId: { artistId, songId },
+    },
+  });
+
+  return fetchSongArtists(songId);
 }

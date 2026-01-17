@@ -26,6 +26,14 @@ export const managerSortOptions: Array<{ key: ManagerSortKey; label: string }> =
     { key: "popularityDesc", label: "스포티파이 인기순" },
   ];
 
+export type SongLinkedArtist = {
+  id: number;
+  name: string;
+  nameKo: string;
+  role?: string | null;
+  order: number;
+};
+
 export type ManagerArtistSongDetail = {
   id: number;
   title: string;
@@ -52,6 +60,7 @@ export type ManagerArtistSongDetail = {
     title?: string | null;
     artist?: string | null;
   } | null;
+  artists: SongLinkedArtist[];
 };
 
 export type ManagerArtistYoutubeChannel = {
