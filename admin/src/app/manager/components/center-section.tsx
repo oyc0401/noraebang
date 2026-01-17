@@ -186,11 +186,7 @@ export function CenterSection() {
       <>
         <div className="space-y-3 border-b border-zinc-100 px-4 pb-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <button
-              type="button"
-              onClick={openArtistNameDialog}
-              className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-1 py-1 text-left transition hover:border-blue-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400"
-            >
+            <div className="flex items-center gap-3 px-1 py-1">
               <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-100 bg-zinc-50">
                 {(() => {
                   const artistThumb =
@@ -218,16 +214,36 @@ export function CenterSection() {
                 <h2 className="text-lg font-semibold text-zinc-900">
                   {detail.name}
                 </h2>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                  {detail.nameKo && <span>{detail.nameKo}</span>}
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  {detail.nameKo && (
+                    <span className="flex flex-col rounded-md border border-blue-200 bg-blue-50 px-2 py-1">
+                      <span className="text-[10px] text-blue-400">nameKo</span>
+                      <span className="text-blue-700">{detail.nameKo}</span>
+                    </span>
+                  )}
                   {detail.nameJaKanji && (
-                    <span className="text-zinc-400">{detail.nameJaKanji}</span>
+                    <span className="flex flex-col rounded-md border border-rose-200 bg-rose-50 px-2 py-1">
+                      <span className="text-[10px] text-rose-400">nameJaKanji</span>
+                      <span className="text-rose-700">{detail.nameJaKanji}</span>
+                    </span>
                   )}
                   {detail.nameJaKana && (
-                    <span className="text-zinc-400">{detail.nameJaKana}</span>
+                    <span className="flex flex-col rounded-md border border-rose-200 bg-rose-50 px-2 py-1">
+                      <span className="text-[10px] text-rose-400">nameJaKana</span>
+                      <span className="text-rose-700">{detail.nameJaKana}</span>
+                    </span>
                   )}
                   {detail.nameLatin && (
-                    <span className="text-zinc-400">{detail.nameLatin}</span>
+                    <span className="flex flex-col rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1">
+                      <span className="text-[10px] text-emerald-400">nameLatin</span>
+                      <span className="text-emerald-700">{detail.nameLatin}</span>
+                    </span>
+                  )}
+                  {detail.tjName && (
+                    <span className="flex flex-col rounded-md border border-amber-200 bg-amber-50 px-2 py-1">
+                      <span className="text-[10px] text-amber-400">tjName</span>
+                      <span className="text-amber-700">{detail.tjName}</span>
+                    </span>
                   )}
                   <span className="rounded-full border border-zinc-200 px-2 py-0.5 text-[11px] text-zinc-600">
                     {detail.catalog ?? "미분류"}
@@ -237,7 +253,7 @@ export function CenterSection() {
                   <div className="text-xs text-blue-500">@{detail.slug}</div>
                 )}
               </div>
-            </button>
+            </div>
             <div className="flex flex-1 flex-col items-end gap-2 text-xs">
               <div className="text-right">
                 <p className="text-lg font-semibold text-zinc-900">
@@ -245,6 +261,13 @@ export function CenterSection() {
                 </p>
               </div>
               <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={openArtistNameDialog}
+                  className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-1 text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
+                >
+                  편집
+                </button>
                 <button
                   type="button"
                   onClick={openAliasDialog}
@@ -258,7 +281,7 @@ export function CenterSection() {
                     onClick={() => setIsActionMenuOpen((previous) => !previous)}
                     className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-1 text-zinc-600 transition hover:border-blue-200 hover:text-blue-600"
                   >
-                    편집
+                    삭제
                   </button>
                   {isActionMenuOpen && (
                     <div className="absolute right-0 z-20 mt-2 w-40 rounded-lg border border-zinc-200 bg-white py-1 text-sm shadow-lg">

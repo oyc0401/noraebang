@@ -17,6 +17,7 @@ export function ArtistNameDialog() {
   const [nameJaKana, setNameJaKana] = useState("");
   const [nameJaKanji, setNameJaKanji] = useState("");
   const [nameLatin, setNameLatin] = useState("");
+  const [tjName, setTjName] = useState("");
   const [slug, setSlug] = useState("");
   const [catalog, setCatalog] = useState<"미정" | "KPOP" | "JPOP" | "POP">(
     "미정",
@@ -31,6 +32,7 @@ export function ArtistNameDialog() {
       setNameJaKana(detail.nameJaKana ?? "");
       setNameJaKanji(detail.nameJaKanji ?? "");
       setNameLatin(detail.nameLatin ?? "");
+      setTjName(detail.tjName ?? "");
       setSlug(detail.slug ?? "");
       const resolvedCatalog = detail.catalog ?? "미정";
       setCatalog(
@@ -66,6 +68,7 @@ export function ArtistNameDialog() {
           nameJaKana,
           nameJaKanji,
           nameLatin,
+          tjName,
           slug,
           catalog,
         });
@@ -80,6 +83,7 @@ export function ArtistNameDialog() {
                 nameJaKana: updated.nameJaKana,
                 nameJaKanji: updated.nameJaKanji,
                 nameLatin: updated.nameLatin,
+                tjName: updated.tjName,
                 slug: updated.slug,
                 catalog: updated.homeCatalog ?? null,
               }
@@ -182,6 +186,17 @@ export function ArtistNameDialog() {
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
               value={nameLatin}
               onChange={(event) => setNameLatin(event.target.value)}
+            />
+          </div>
+          <div className="space-y-1 text-sm">
+            <label className="text-xs font-semibold text-zinc-600">
+              tjName (TJ 아티스트명)
+            </label>
+            <input
+              type="text"
+              className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              value={tjName}
+              onChange={(event) => setTjName(event.target.value)}
             />
           </div>
           <div className="space-y-1 text-sm">
