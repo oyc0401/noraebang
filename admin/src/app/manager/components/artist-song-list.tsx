@@ -29,14 +29,17 @@ import {
   type LinkedYoutubeVideo,
   type LinkedSongPropose,
 } from "../action";
-import type {
-  ManagerArtistSongDetail,
-  SongLinkedArtist,
-} from "../types";
+import type { ManagerArtistSongDetail, SongLinkedArtist } from "../types";
 import { useManagerStore } from "../store";
 import { SongCard } from "./song-card";
 
-type SongEditTab = "info" | "artists" | "spotify" | "youtube" | "propose" | "admin";
+type SongEditTab =
+  | "info"
+  | "artists"
+  | "spotify"
+  | "youtube"
+  | "propose"
+  | "admin";
 type ArtistSearchResult = { id: number; name: string; nameKo: string };
 
 export function ArtistSongList() {
@@ -47,18 +50,25 @@ export function ArtistSongList() {
   );
 
   const [songs, setSongs] = useState<ManagerArtistSongDetail[]>([]);
-  const [artistInfo, setArtistInfo] = useState<{ name: string; nameKo: string; catalog?: string | null } | null>(null);
+  const [artistInfo, setArtistInfo] = useState<{
+    name: string;
+    nameKo: string;
+    catalog?: string | null;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fetchIdRef = useRef(0);
 
   // 곡 편집 다이얼로그 상태
   const [isSongEditOpen, setIsSongEditOpen] = useState(false);
-  const [editingSong, setEditingSong] = useState<ManagerArtistSongDetail | null>(null);
+  const [editingSong, setEditingSong] =
+    useState<ManagerArtistSongDetail | null>(null);
   const [editInitialTab, setEditInitialTab] = useState<SongEditTab>("info");
 
   // 곡 추가 다이얼로그 상태 (store에서 가져옴)
-  const isSongCreateOpen = useManagerStore((state) => state.songCreateDialogOpen);
+  const isSongCreateOpen = useManagerStore(
+    (state) => state.songCreateDialogOpen,
+  );
   const songCreateInitialTitle = useManagerStore(
     (state) => state.songCreateInitialTitle,
   );
@@ -306,27 +316,38 @@ function SongEditDialog({
   const [titleKo, setTitleKo] = useState("");
   const [titleLatin, setTitleLatin] = useState("");
   const [titleJaKana, setTitleJaKana] = useState("");
-  const [titleJaKanji, setTitleJaKanji] = useState("");
+  const [titleJa, setTitleJa] = useState("");
   const [catalog, setCatalog] = useState("");
 
   // 아티스트 상태
   const [currentArtists, setCurrentArtists] = useState<SongLinkedArtist[]>([]);
-  const [selectedArtistRole, setSelectedArtistRole] =
-    useState<"MAIN" | "FEATURING" | "PRODUCER" | null>(null);
+  const [selectedArtistRole, setSelectedArtistRole] = useState<
+    "MAIN" | "FEATURING" | "PRODUCER" | null
+  >(null);
   const [artistSearchTerm, setArtistSearchTerm] = useState("");
-  const [artistSearchResults, setArtistSearchResults] = useState<ArtistSearchResult[]>([]);
+  const [artistSearchResults, setArtistSearchResults] = useState<
+    ArtistSearchResult[]
+  >([]);
   const [isSearchingArtist, setIsSearchingArtist] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // 연결 데이터 상태
-  const [unlinkedSpotify, setUnlinkedSpotify] = useState<UnlinkedSpotifyGroup[]>([]);
-  const [unlinkedYoutube, setUnlinkedYoutube] = useState<UnlinkedYoutubeVideo[]>([]);
-  const [unlinkedProposes, setUnlinkedProposes] = useState<UnlinkedSongPropose[]>([]);
+  const [unlinkedSpotify, setUnlinkedSpotify] = useState<
+    UnlinkedSpotifyGroup[]
+  >([]);
+  const [unlinkedYoutube, setUnlinkedYoutube] = useState<
+    UnlinkedYoutubeVideo[]
+  >([]);
+  const [unlinkedProposes, setUnlinkedProposes] = useState<
+    UnlinkedSongPropose[]
+  >([]);
   const [linkedYoutube, setLinkedYoutube] = useState<LinkedYoutubeVideo[]>([]);
   const [linkedProposes, setLinkedProposes] = useState<LinkedSongPropose[]>([]);
-  const [currentSpotifyGroupId, setCurrentSpotifyGroupId] = useState<number | null>(null);
+  const [currentSpotifyGroupId, setCurrentSpotifyGroupId] = useState<
+    number | null
+  >(null);
 
   const [isLinking, setIsLinking] = useState(false);
 
@@ -344,10 +365,12 @@ function SongEditDialog({
     setTitleKo(song.titleKo ?? "");
     setTitleLatin(song.titleLatin ?? "");
     setTitleJaKana(song.titleJaKana ?? "");
-    setTitleJaKanji(song.titleJaKanji ?? "");
+    setTitleJa(song.titleJa ?? "");
     setCatalog(song.catalog ?? "");
     setCurrentSpotifyGroupId(song.spotifyGroup?.id ?? null);
-    setCurrentThumbnail(song.thumbnails?.medium ?? song.thumbnails?.default ?? null);
+    setCurrentThumbnail(
+      song.thumbnails?.medium ?? song.thumbnails?.default ?? null,
+    );
     setError(null);
     setIsSaving(false);
     setArtistSearchTerm("");
@@ -373,13 +396,14 @@ function SongEditDialog({
 
     async function loadLinkData() {
       try {
-        const [spotify, youtube, proposes, linkedYt, linkedPr] = await Promise.all([
-          fetchUnlinkedSpotifyGroups(artistId),
-          fetchUnlinkedYoutubeVideos(artistId),
-          fetchUnlinkedSongProposes(artistId),
-          fetchLinkedYoutubeVideos(song.id),
-          fetchLinkedSongProposes(song.id),
-        ]);
+        const [spotify, youtube, proposes, linkedYt, linkedPr] =
+          await Promise.all([
+            fetchUnlinkedSpotifyGroups(artistId),
+            fetchUnlinkedYoutubeVideos(artistId),
+            fetchUnlinkedSongProposes(artistId),
+            fetchLinkedYoutubeVideos(song.id),
+            fetchLinkedSongProposes(song.id),
+          ]);
         setUnlinkedSpotify(spotify);
         setUnlinkedYoutube(youtube);
         setUnlinkedProposes(proposes);
@@ -406,7 +430,9 @@ function SongEditDialog({
       try {
         const results = await searchArtistsForLink(artistSearchTerm);
         const linkedIds = new Set(currentArtists.map((artist) => artist.id));
-        setArtistSearchResults(results.filter((artist) => !linkedIds.has(artist.id)));
+        setArtistSearchResults(
+          results.filter((artist) => !linkedIds.has(artist.id)),
+        );
       } catch (err) {
         console.error(err);
       } finally {
@@ -429,7 +455,7 @@ function SongEditDialog({
         titleKo,
         titleLatin,
         titleJaKana,
-        titleJaKanji,
+        titleJa,
         catalog,
       });
 
@@ -453,7 +479,10 @@ function SongEditDialog({
         role: selectedArtistRole,
       });
       setCurrentArtists(updatedArtists);
-      const updatedSong: ManagerArtistSongDetail = { ...song, artists: updatedArtists };
+      const updatedSong: ManagerArtistSongDetail = {
+        ...song,
+        artists: updatedArtists,
+      };
       onSongUpdated(updatedSong);
       setArtistSearchTerm("");
       setArtistSearchResults([]);
@@ -478,7 +507,10 @@ function SongEditDialog({
         artistId,
       });
       setCurrentArtists(updatedArtists);
-      const updatedSong: ManagerArtistSongDetail = { ...song, artists: updatedArtists };
+      const updatedSong: ManagerArtistSongDetail = {
+        ...song,
+        artists: updatedArtists,
+      };
       onSongUpdated(updatedSong);
     } catch (err: any) {
       console.error(err);
@@ -548,11 +580,13 @@ function SongEditDialog({
       await unlinkYoutubeVideo(song.id, videoId);
       const video = linkedYoutube.find((v) => v.videoId === videoId);
       if (video) {
-        setUnlinkedYoutube((prev) => [...prev, video].sort((a, b) => {
-          const viewA = Number(a.viewCount ?? 0);
-          const viewB = Number(b.viewCount ?? 0);
-          return viewB - viewA;
-        }));
+        setUnlinkedYoutube((prev) =>
+          [...prev, video].sort((a, b) => {
+            const viewA = Number(a.viewCount ?? 0);
+            const viewB = Number(b.viewCount ?? 0);
+            return viewB - viewA;
+          }),
+        );
         setLinkedYoutube((prev) => prev.filter((v) => v.videoId !== videoId));
       }
     } catch (err) {
@@ -571,7 +605,9 @@ function SongEditDialog({
       await linkSongPropose(song.id, proposeId);
       const propose = unlinkedProposes.find((p) => p.id === proposeId);
       if (propose) {
-        setLinkedProposes((prev) => [...prev, propose].sort((a, b) => b.hit - a.hit));
+        setLinkedProposes((prev) =>
+          [...prev, propose].sort((a, b) => b.hit - a.hit),
+        );
         setUnlinkedProposes((prev) => prev.filter((p) => p.id !== proposeId));
       }
     } catch (err) {
@@ -589,7 +625,9 @@ function SongEditDialog({
       await unlinkSongPropose(proposeId);
       const propose = linkedProposes.find((p) => p.id === proposeId);
       if (propose) {
-        setUnlinkedProposes((prev) => [...prev, propose].sort((a, b) => b.hit - a.hit));
+        setUnlinkedProposes((prev) =>
+          [...prev, propose].sort((a, b) => b.hit - a.hit),
+        );
         setLinkedProposes((prev) => prev.filter((p) => p.id !== proposeId));
       }
     } catch (err) {
@@ -607,7 +645,9 @@ function SongEditDialog({
     setError(null);
     try {
       const result = await refreshSongThumbnail(song.id, source);
-      setCurrentThumbnail(result.thumbnailMedium ?? result.thumbnailDefault ?? null);
+      setCurrentThumbnail(
+        result.thumbnailMedium ?? result.thumbnailDefault ?? null,
+      );
     } catch (err: any) {
       console.error(err);
       setError(err?.message ?? "썸네일 새로고침 실패");
@@ -619,7 +659,11 @@ function SongEditDialog({
   // 곡 삭제
   async function handleDelete() {
     if (!song) return;
-    if (!confirm(`"${song.title}" 곡을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+    if (
+      !confirm(
+        `"${song.title}" 곡을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`,
+      )
+    ) {
       return;
     }
 
@@ -642,7 +686,10 @@ function SongEditDialog({
   const tabs = [
     { id: "info" as const, label: "기본 정보" },
     { id: "artists" as const, label: `아티스트 (${currentArtists.length})` },
-    { id: "spotify" as const, label: `Spotify ${currentSpotifyGroupId ? "(1)" : ""}` },
+    {
+      id: "spotify" as const,
+      label: `Spotify ${currentSpotifyGroupId ? "(1)" : ""}`,
+    },
     { id: "youtube" as const, label: `YouTube (${linkedYoutube.length})` },
     { id: "propose" as const, label: `신청곡 (${linkedProposes.length})` },
     { id: "admin" as const, label: "어드민" },
@@ -734,18 +781,18 @@ function SongEditDialog({
                 </Field>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field label="Title (JA Kana)">
+                <Field label="Title (JA)">
                   <input
-                    value={titleJaKana}
-                    onChange={(e) => setTitleJaKana(e.target.value)}
+                    value={titleJa}
+                    onChange={(e) => setTitleJa(e.target.value)}
                     className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
                     disabled={isSaving}
                   />
                 </Field>
-                <Field label="Title (JA Kanji)">
+                <Field label="Title (JA Kana)">
                   <input
-                    value={titleJaKanji}
-                    onChange={(e) => setTitleJaKanji(e.target.value)}
+                    value={titleJaKana}
+                    onChange={(e) => setTitleJaKana(e.target.value)}
                     className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
                     disabled={isSaving}
                   />
@@ -768,7 +815,9 @@ function SongEditDialog({
 
               {/* 썸네일 섹션 */}
               <div className="pt-3 border-t border-zinc-100">
-                <div className="text-xs font-medium text-zinc-600 mb-2">썸네일</div>
+                <div className="text-xs font-medium text-zinc-600 mb-2">
+                  썸네일
+                </div>
                 <div className="flex items-start gap-4">
                   <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-zinc-100 border border-zinc-200">
                     {currentThumbnail ? (
@@ -791,18 +840,26 @@ function SongEditDialog({
                       <button
                         type="button"
                         onClick={() => handleRefreshThumbnail("spotify")}
-                        disabled={isRefreshingThumbnail || !currentSpotifyGroupId}
+                        disabled={
+                          isRefreshingThumbnail || !currentSpotifyGroupId
+                        }
                         className="px-3 py-1.5 text-xs rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
-                        {isRefreshingThumbnail ? "..." : "Spotify (가장 오래된 발매일)"}
+                        {isRefreshingThumbnail
+                          ? "..."
+                          : "Spotify (가장 오래된 발매일)"}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleRefreshThumbnail("youtube")}
-                        disabled={isRefreshingThumbnail || linkedYoutube.length === 0}
+                        disabled={
+                          isRefreshingThumbnail || linkedYoutube.length === 0
+                        }
                         className="px-3 py-1.5 text-xs rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
-                        {isRefreshingThumbnail ? "..." : "YouTube (가장 높은 조회수)"}
+                        {isRefreshingThumbnail
+                          ? "..."
+                          : "YouTube (가장 높은 조회수)"}
                       </button>
                     </div>
                     {!currentSpotifyGroupId && linkedYoutube.length === 0 && (
@@ -850,7 +907,10 @@ function SongEditDialog({
                         <button
                           type="button"
                           onClick={() =>
-                            handleUnlinkArtist(artist.id, artist.nameKo || artist.name)
+                            handleUnlinkArtist(
+                              artist.id,
+                              artist.nameKo || artist.name,
+                            )
                           }
                           className="rounded-lg border border-red-200 px-2 py-1 text-[11px] text-red-600 transition hover:bg-red-50 cursor-pointer"
                         >
@@ -945,7 +1005,9 @@ function SongEditDialog({
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-zinc-600 transition hover:bg-zinc-50 cursor-pointer"
                       >
                         <span className="text-zinc-400">#{artist.id}</span>
-                        <span className="font-medium text-zinc-900">{artist.name}</span>
+                        <span className="font-medium text-zinc-900">
+                          {artist.name}
+                        </span>
                         <span className="text-zinc-500">({artist.nameKo})</span>
                       </button>
                     ))}
@@ -955,7 +1017,9 @@ function SongEditDialog({
                 {artistSearchTerm.trim() &&
                   !isSearchingArtist &&
                   artistSearchResults.length === 0 && (
-                    <p className="text-xs text-zinc-500">검색 결과가 없습니다.</p>
+                    <p className="text-xs text-zinc-500">
+                      검색 결과가 없습니다.
+                    </p>
                   )}
               </div>
             </div>
@@ -965,7 +1029,9 @@ function SongEditDialog({
             <div className="space-y-4">
               {/* 현재 연결된 스포티파이 */}
               <div>
-                <h5 className="text-xs font-semibold text-zinc-700 mb-2">연결된 Spotify 그룹</h5>
+                <h5 className="text-xs font-semibold text-zinc-700 mb-2">
+                  연결된 Spotify 그룹
+                </h5>
                 {currentSpotifyGroupId ? (
                   <div className="flex items-center gap-3 p-3 rounded-lg border border-emerald-200 bg-emerald-50">
                     {song?.spotifyGroup?.primaryTrack?.thumbnails?.[0] && (
@@ -977,10 +1043,12 @@ function SongEditDialog({
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-emerald-800">
-                        {song?.spotifyGroup?.primaryTrack?.name ?? `그룹 #${currentSpotifyGroupId}`}
+                        {song?.spotifyGroup?.primaryTrack?.name ??
+                          `그룹 #${currentSpotifyGroupId}`}
                       </p>
                       <p className="text-xs text-emerald-600">
-                        그룹 #{currentSpotifyGroupId} · 인기도 {song?.spotifyGroup?.primaryTrack?.popularity ?? "-"}
+                        그룹 #{currentSpotifyGroupId} · 인기도{" "}
+                        {song?.spotifyGroup?.primaryTrack?.popularity ?? "-"}
                       </p>
                     </div>
                     <button
@@ -993,7 +1061,9 @@ function SongEditDialog({
                     </button>
                   </div>
                 ) : (
-                  <p className="text-xs text-zinc-400">연결된 그룹이 없습니다.</p>
+                  <p className="text-xs text-zinc-400">
+                    연결된 그룹이 없습니다.
+                  </p>
                 )}
               </div>
 
@@ -1003,7 +1073,9 @@ function SongEditDialog({
                   미연결 Spotify 그룹 ({unlinkedSpotify.length})
                 </h5>
                 {unlinkedSpotify.length === 0 ? (
-                  <p className="text-xs text-zinc-400">미연결 그룹이 없습니다.</p>
+                  <p className="text-xs text-zinc-400">
+                    미연결 그룹이 없습니다.
+                  </p>
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {unlinkedSpotify.map((group) => (
@@ -1020,7 +1092,8 @@ function SongEditDialog({
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-zinc-900 truncate">
-                            {group.primaryTrack?.name ?? `그룹 #${group.groupId}`}
+                            {group.primaryTrack?.name ??
+                              `그룹 #${group.groupId}`}
                           </p>
                           <p className="text-xs text-zinc-500">
                             인기도 {group.primaryTrack?.popularity ?? "-"}
@@ -1050,7 +1123,9 @@ function SongEditDialog({
                   연결된 YouTube ({linkedYoutube.length})
                 </h5>
                 {linkedYoutube.length === 0 ? (
-                  <p className="text-xs text-zinc-400">연결된 비디오가 없습니다.</p>
+                  <p className="text-xs text-zinc-400">
+                    연결된 비디오가 없습니다.
+                  </p>
                 ) : (
                   <div className="space-y-2">
                     {linkedYoutube.map((video) => (
@@ -1093,7 +1168,9 @@ function SongEditDialog({
                   미연결 YouTube ({unlinkedYoutube.length})
                 </h5>
                 {unlinkedYoutube.length === 0 ? (
-                  <p className="text-xs text-zinc-400">미연결 비디오가 없습니다.</p>
+                  <p className="text-xs text-zinc-400">
+                    미연결 비디오가 없습니다.
+                  </p>
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {unlinkedYoutube.map((video) => (
@@ -1140,7 +1217,9 @@ function SongEditDialog({
                   연결된 신청곡 ({linkedProposes.length})
                 </h5>
                 {linkedProposes.length === 0 ? (
-                  <p className="text-xs text-zinc-400">연결된 신청곡이 없습니다.</p>
+                  <p className="text-xs text-zinc-400">
+                    연결된 신청곡이 없습니다.
+                  </p>
                 ) : (
                   <div className="space-y-2">
                     {linkedProposes.map((propose) => (
@@ -1176,7 +1255,9 @@ function SongEditDialog({
                   미연결 신청곡 ({unlinkedProposes.length})
                 </h5>
                 {unlinkedProposes.length === 0 ? (
-                  <p className="text-xs text-zinc-400">미연결 신청곡이 없습니다.</p>
+                  <p className="text-xs text-zinc-400">
+                    미연결 신청곡이 없습니다.
+                  </p>
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {unlinkedProposes.map((propose) => (
@@ -1211,9 +1292,12 @@ function SongEditDialog({
           {activeTab === "admin" && (
             <div className="space-y-4">
               <div className="rounded-lg border border-red-100 bg-red-50/40 p-4">
-                <h5 className="text-sm font-semibold text-red-700">위험 작업</h5>
+                <h5 className="text-sm font-semibold text-red-700">
+                  위험 작업
+                </h5>
                 <p className="mt-1 text-xs text-red-600">
-                  곡을 삭제하면 연결된 모든 데이터가 사라지며 되돌릴 수 없습니다.
+                  곡을 삭제하면 연결된 모든 데이터가 사라지며 되돌릴 수
+                  없습니다.
                 </p>
                 <div className="mt-4 flex flex-col gap-1 text-xs text-red-600">
                   <span>· 곡 ID: #{song?.id ?? "-"}</span>
@@ -1331,29 +1415,50 @@ function SongCreateDialog({
   const [titleKo, setTitleKo] = useState("");
   const [titleLatin, setTitleLatin] = useState("");
   const [titleJaKana, setTitleJaKana] = useState("");
-  const [titleJaKanji, setTitleJaKanji] = useState("");
+  const [titleJa, setTitleJa] = useState("");
   const [catalog, setCatalog] = useState("");
 
   // 연결할 데이터 선택
-  const [selectedSpotifyGroupId, setSelectedSpotifyGroupId] = useState<number | null>(null);
-  const [selectedYoutubeVideoIds, setSelectedYoutubeVideoIds] = useState<string[]>([]);
+  const [selectedSpotifyGroupId, setSelectedSpotifyGroupId] = useState<
+    number | null
+  >(null);
+  const [selectedYoutubeVideoIds, setSelectedYoutubeVideoIds] = useState<
+    string[]
+  >([]);
   const [selectedProposeIds, setSelectedProposeIds] = useState<number[]>([]);
 
   // 아티스트 선택
-  type SelectedArtist = { id: number; name: string; nameKo: string; role: "MAIN" | "FEATURING" | "PRODUCER" | null };
+  type SelectedArtist = {
+    id: number;
+    name: string;
+    nameKo: string;
+    role: "MAIN" | "FEATURING" | "PRODUCER" | null;
+  };
   const [selectedArtists, setSelectedArtists] = useState<SelectedArtist[]>([]);
   const [artistSearchTerm, setArtistSearchTerm] = useState("");
-  const [artistSearchResults, setArtistSearchResults] = useState<ArtistSearchResult[]>([]);
+  const [artistSearchResults, setArtistSearchResults] = useState<
+    ArtistSearchResult[]
+  >([]);
   const [isSearchingArtist, setIsSearchingArtist] = useState(false);
-  const [selectedArtistRole, setSelectedArtistRole] = useState<"MAIN" | "FEATURING" | "PRODUCER" | null>(null);
+  const [selectedArtistRole, setSelectedArtistRole] = useState<
+    "MAIN" | "FEATURING" | "PRODUCER" | null
+  >(null);
 
   // 미연결 데이터
-  const [unlinkedSpotify, setUnlinkedSpotify] = useState<UnlinkedSpotifyGroup[]>([]);
-  const [unlinkedYoutube, setUnlinkedYoutube] = useState<UnlinkedYoutubeVideo[]>([]);
-  const [unlinkedProposes, setUnlinkedProposes] = useState<UnlinkedSongPropose[]>([]);
+  const [unlinkedSpotify, setUnlinkedSpotify] = useState<
+    UnlinkedSpotifyGroup[]
+  >([]);
+  const [unlinkedYoutube, setUnlinkedYoutube] = useState<
+    UnlinkedYoutubeVideo[]
+  >([]);
+  const [unlinkedProposes, setUnlinkedProposes] = useState<
+    UnlinkedSongPropose[]
+  >([]);
 
   // 썸네일 소스 선택
-  const [thumbnailSource, setThumbnailSource] = useState<"spotify" | "youtube" | null>(null);
+  const [thumbnailSource, setThumbnailSource] = useState<
+    "spotify" | "youtube" | null
+  >(null);
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1370,15 +1475,15 @@ function SongCreateDialog({
     if (hasKorean && !titleKo) {
       setTitleKo(text);
     }
-    // 일본어 포함 -> titleJaKana (히라가나/가타카나) 또는 titleJaKanji (한자)
+    // 일본어 포함 -> titleJaKana (히라가나/가타카나) 또는 titleJa (한자/일반)
     else if (hasJapanese) {
       const hasKana = /[\u3040-\u309F\u30A0-\u30FF]/.test(text);
       const hasKanji = /[\u4E00-\u9FAF]/.test(text);
       if (hasKana && !titleJaKana) {
         setTitleJaKana(text);
       }
-      if (hasKanji && !titleJaKanji) {
-        setTitleJaKanji(text);
+      if (hasKanji && !titleJa) {
+        setTitleJa(text);
       }
     }
     // 라틴 문자만 -> titleLatin
@@ -1413,7 +1518,7 @@ function SongCreateDialog({
     setTitleKo("");
     setTitleLatin("");
     setTitleJaKana("");
-    setTitleJaKanji("");
+    setTitleJa("");
     setCatalog(artistCatalog ?? "");
     setSelectedSpotifyGroupId(initialSpotifyGroupId ?? null);
     setSelectedYoutubeVideoIds([]);
@@ -1422,7 +1527,12 @@ function SongCreateDialog({
     // 현재 아티스트를 기본 선택
     if (artistId && artistName) {
       setSelectedArtists([
-        { id: artistId, name: artistName, nameKo: artistNameKo ?? artistName, role: null },
+        {
+          id: artistId,
+          name: artistName,
+          nameKo: artistNameKo ?? artistName,
+          role: null,
+        },
       ]);
     } else {
       setSelectedArtists([]);
@@ -1432,7 +1542,15 @@ function SongCreateDialog({
     setSelectedArtistRole(null);
     setError(null);
     setIsSaving(false);
-  }, [open, initialTitle, initialSpotifyGroupId, artistId, artistName, artistNameKo, artistCatalog]);
+  }, [
+    open,
+    initialTitle,
+    initialSpotifyGroupId,
+    artistId,
+    artistName,
+    artistNameKo,
+    artistCatalog,
+  ]);
 
   // 미연결 데이터 로드
   useEffect(() => {
@@ -1500,8 +1618,8 @@ function SongCreateDialog({
         title,
         titleKo,
         titleLatin,
+        titleJa,
         titleJaKana,
-        titleJaKanji,
         catalog,
         artistId: firstArtist.id,
       });
@@ -1510,8 +1628,15 @@ function SongCreateDialog({
       // 첫 번째 아티스트의 역할이 있으면 업데이트
       if (firstArtist.role) {
         try {
-          await unlinkSongArtist({ songId: newSong.id, artistId: firstArtist.id });
-          await linkSongArtist({ songId: newSong.id, artistId: firstArtist.id, role: firstArtist.role });
+          await unlinkSongArtist({
+            songId: newSong.id,
+            artistId: firstArtist.id,
+          });
+          await linkSongArtist({
+            songId: newSong.id,
+            artistId: firstArtist.id,
+            role: firstArtist.role,
+          });
         } catch (err) {
           console.error("첫 번째 아티스트 역할 업데이트 실패:", err);
         }
@@ -1520,7 +1645,11 @@ function SongCreateDialog({
       for (let i = 1; i < selectedArtists.length; i++) {
         const artist = selectedArtists[i];
         try {
-          await linkSongArtist({ songId: newSong.id, artistId: artist.id, role: artist.role });
+          await linkSongArtist({
+            songId: newSong.id,
+            artistId: artist.id,
+            role: artist.role,
+          });
         } catch (err) {
           console.error(`아티스트 ${artist.id} 연결 실패:`, err);
         }
@@ -1577,9 +1706,18 @@ function SongCreateDialog({
   const tabs = [
     { id: "info" as const, label: "기본 정보" },
     { id: "artists" as const, label: `아티스트 (${selectedArtists.length})` },
-    { id: "spotify" as const, label: `Spotify ${selectedSpotifyGroupId ? "(1)" : ""}` },
-    { id: "youtube" as const, label: `YouTube ${selectedYoutubeVideoIds.length ? `(${selectedYoutubeVideoIds.length})` : ""}` },
-    { id: "propose" as const, label: `신청곡 ${selectedProposeIds.length ? `(${selectedProposeIds.length})` : ""}` },
+    {
+      id: "spotify" as const,
+      label: `Spotify ${selectedSpotifyGroupId ? "(1)" : ""}`,
+    },
+    {
+      id: "youtube" as const,
+      label: `YouTube ${selectedYoutubeVideoIds.length ? `(${selectedYoutubeVideoIds.length})` : ""}`,
+    },
+    {
+      id: "propose" as const,
+      label: `신청곡 ${selectedProposeIds.length ? `(${selectedProposeIds.length})` : ""}`,
+    },
   ];
 
   return (
@@ -1675,21 +1813,20 @@ function SongCreateDialog({
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field label="Title (JA)">
+                  <input
+                    value={titleJa}
+                    onChange={(e) => setTitleJa(e.target.value)}
+                    placeholder="일본어 제목"
+                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+                    disabled={isSaving}
+                  />
+                </Field>
                 <Field label="Title (JA Kana)">
                   <input
                     value={titleJaKana}
                     onChange={(e) => setTitleJaKana(e.target.value)}
                     placeholder="일본어 가나 제목"
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
-                    disabled={isSaving}
-                  />
-                </Field>
-
-                <Field label="Title (JA Kanji)">
-                  <input
-                    value={titleJaKanji}
-                    onChange={(e) => setTitleJaKanji(e.target.value)}
-                    placeholder="일본어 한자 제목"
                     className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
                     disabled={isSaving}
                   />
@@ -1713,32 +1850,53 @@ function SongCreateDialog({
 
               {/* 썸네일 소스 선택 */}
               <div className="pt-3 border-t border-zinc-100">
-                <div className="text-xs font-medium text-zinc-600 mb-2">썸네일</div>
+                <div className="text-xs font-medium text-zinc-600 mb-2">
+                  썸네일
+                </div>
                 <div className="flex items-start gap-4">
                   {/* 미리보기 */}
                   <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-zinc-100 border border-zinc-200">
                     {thumbnailSource === "spotify" && selectedSpotifyGroupId ? (
                       (() => {
-                        const group = unlinkedSpotify.find((g) => g.groupId === selectedSpotifyGroupId);
+                        const group = unlinkedSpotify.find(
+                          (g) => g.groupId === selectedSpotifyGroupId,
+                        );
                         const thumb = group?.primaryTrack?.thumbnails?.[0];
                         return thumb ? (
-                          <img src={thumb} alt="Spotify 썸네일" className="w-full h-full object-cover" />
+                          <img
+                            src={thumb}
+                            alt="Spotify 썸네일"
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
-                          <span className="flex items-center justify-center w-full h-full text-xs text-zinc-400">없음</span>
+                          <span className="flex items-center justify-center w-full h-full text-xs text-zinc-400">
+                            없음
+                          </span>
                         );
                       })()
-                    ) : thumbnailSource === "youtube" && selectedYoutubeVideoIds.length > 0 ? (
+                    ) : thumbnailSource === "youtube" &&
+                      selectedYoutubeVideoIds.length > 0 ? (
                       (() => {
-                        const video = unlinkedYoutube.find((v) => v.videoId === selectedYoutubeVideoIds[0]);
+                        const video = unlinkedYoutube.find(
+                          (v) => v.videoId === selectedYoutubeVideoIds[0],
+                        );
                         const thumb = video?.thumbnailMedium;
                         return thumb ? (
-                          <img src={thumb} alt="YouTube 썸네일" className="w-full h-full object-cover" />
+                          <img
+                            src={thumb}
+                            alt="YouTube 썸네일"
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
-                          <span className="flex items-center justify-center w-full h-full text-xs text-zinc-400">없음</span>
+                          <span className="flex items-center justify-center w-full h-full text-xs text-zinc-400">
+                            없음
+                          </span>
                         );
                       })()
                     ) : (
-                      <span className="flex items-center justify-center w-full h-full text-xs text-zinc-400">미선택</span>
+                      <span className="flex items-center justify-center w-full h-full text-xs text-zinc-400">
+                        미선택
+                      </span>
                     )}
                   </div>
                   <div className="flex-1 space-y-2">
@@ -1748,7 +1906,11 @@ function SongCreateDialog({
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() => setThumbnailSource(thumbnailSource === "spotify" ? null : "spotify")}
+                        onClick={() =>
+                          setThumbnailSource(
+                            thumbnailSource === "spotify" ? null : "spotify",
+                          )
+                        }
                         disabled={!selectedSpotifyGroupId}
                         className={`px-3 py-1.5 text-xs rounded-lg border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                           thumbnailSource === "spotify"
@@ -1760,7 +1922,11 @@ function SongCreateDialog({
                       </button>
                       <button
                         type="button"
-                        onClick={() => setThumbnailSource(thumbnailSource === "youtube" ? null : "youtube")}
+                        onClick={() =>
+                          setThumbnailSource(
+                            thumbnailSource === "youtube" ? null : "youtube",
+                          )
+                        }
                         disabled={selectedYoutubeVideoIds.length === 0}
                         className={`px-3 py-1.5 text-xs rounded-lg border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                           thumbnailSource === "youtube"
@@ -1771,11 +1937,12 @@ function SongCreateDialog({
                         YouTube (가장 높은 조회수)
                       </button>
                     </div>
-                    {!selectedSpotifyGroupId && selectedYoutubeVideoIds.length === 0 && (
-                      <p className="text-xs text-amber-600">
-                        Spotify 그룹이나 YouTube 비디오를 먼저 선택하세요.
-                      </p>
-                    )}
+                    {!selectedSpotifyGroupId &&
+                      selectedYoutubeVideoIds.length === 0 && (
+                        <p className="text-xs text-amber-600">
+                          Spotify 그룹이나 YouTube 비디오를 먼저 선택하세요.
+                        </p>
+                      )}
                   </div>
                 </div>
               </div>
@@ -1914,7 +2081,12 @@ function SongCreateDialog({
                         onClick={() => {
                           setSelectedArtists((prev) => [
                             ...prev,
-                            { id: artist.id, name: artist.name, nameKo: artist.nameKo, role: selectedArtistRole },
+                            {
+                              id: artist.id,
+                              name: artist.name,
+                              nameKo: artist.nameKo,
+                              role: selectedArtistRole,
+                            },
                           ]);
                           setArtistSearchTerm("");
                           setArtistSearchResults([]);
@@ -1922,7 +2094,9 @@ function SongCreateDialog({
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-zinc-600 transition hover:bg-zinc-50 cursor-pointer"
                       >
                         <span className="text-zinc-400">#{artist.id}</span>
-                        <span className="font-medium text-zinc-900">{artist.name}</span>
+                        <span className="font-medium text-zinc-900">
+                          {artist.name}
+                        </span>
                         <span className="text-zinc-500">({artist.nameKo})</span>
                       </button>
                     ))}
@@ -1932,7 +2106,9 @@ function SongCreateDialog({
                 {artistSearchTerm.trim() &&
                   !isSearchingArtist &&
                   artistSearchResults.length === 0 && (
-                    <p className="text-xs text-zinc-500">검색 결과가 없습니다.</p>
+                    <p className="text-xs text-zinc-500">
+                      검색 결과가 없습니다.
+                    </p>
                   )}
               </div>
             </div>
@@ -1943,7 +2119,9 @@ function SongCreateDialog({
               {/* 선택된 스포티파이 */}
               {selectedSpotifyGroupId && (
                 <div>
-                  <h5 className="text-xs font-semibold text-zinc-700 mb-2">선택된 Spotify 그룹</h5>
+                  <h5 className="text-xs font-semibold text-zinc-700 mb-2">
+                    선택된 Spotify 그룹
+                  </h5>
                   {(() => {
                     const selectedGroup = unlinkedSpotify.find(
                       (g) => g.groupId === selectedSpotifyGroupId,
@@ -1960,7 +2138,8 @@ function SongCreateDialog({
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-emerald-800">
-                            {selectedGroup.primaryTrack?.name ?? `그룹 #${selectedGroup.groupId}`}
+                            {selectedGroup.primaryTrack?.name ??
+                              `그룹 #${selectedGroup.groupId}`}
                           </p>
                           <p className="text-xs text-emerald-600">
                             그룹 #{selectedGroup.groupId} · 인기도{" "}
@@ -1986,7 +2165,9 @@ function SongCreateDialog({
                   미연결 Spotify 그룹 ({unlinkedSpotify.length})
                 </h5>
                 {unlinkedSpotify.length === 0 ? (
-                  <p className="text-xs text-zinc-400">미연결 그룹이 없습니다.</p>
+                  <p className="text-xs text-zinc-400">
+                    미연결 그룹이 없습니다.
+                  </p>
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {unlinkedSpotify
@@ -2005,7 +2186,8 @@ function SongCreateDialog({
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-zinc-900 truncate">
-                              {group.primaryTrack?.name ?? `그룹 #${group.groupId}`}
+                              {group.primaryTrack?.name ??
+                                `그룹 #${group.groupId}`}
                             </p>
                             <p className="text-xs text-zinc-500">
                               인기도 {group.primaryTrack?.popularity ?? "-"}
@@ -2037,7 +2219,9 @@ function SongCreateDialog({
                   </h5>
                   <div className="space-y-2">
                     {selectedYoutubeVideoIds.map((videoId) => {
-                      const video = unlinkedYoutube.find((v) => v.videoId === videoId);
+                      const video = unlinkedYoutube.find(
+                        (v) => v.videoId === videoId,
+                      );
                       if (!video) return null;
                       return (
                         <div
@@ -2083,11 +2267,15 @@ function SongCreateDialog({
                   미연결 YouTube ({unlinkedYoutube.length})
                 </h5>
                 {unlinkedYoutube.length === 0 ? (
-                  <p className="text-xs text-zinc-400">미연결 비디오가 없습니다.</p>
+                  <p className="text-xs text-zinc-400">
+                    미연결 비디오가 없습니다.
+                  </p>
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {unlinkedYoutube
-                      .filter((v) => !selectedYoutubeVideoIds.includes(v.videoId))
+                      .filter(
+                        (v) => !selectedYoutubeVideoIds.includes(v.videoId),
+                      )
                       .map((video) => (
                         <div
                           key={video.videoId}
@@ -2133,7 +2321,9 @@ function SongCreateDialog({
                   </h5>
                   <div className="space-y-2">
                     {selectedProposeIds.map((proposeId) => {
-                      const propose = unlinkedProposes.find((p) => p.id === proposeId);
+                      const propose = unlinkedProposes.find(
+                        (p) => p.id === proposeId,
+                      );
                       if (!propose) return null;
                       return (
                         <div
@@ -2172,7 +2362,9 @@ function SongCreateDialog({
                   미연결 신청곡 ({unlinkedProposes.length})
                 </h5>
                 {unlinkedProposes.length === 0 ? (
-                  <p className="text-xs text-zinc-400">미연결 신청곡이 없습니다.</p>
+                  <p className="text-xs text-zinc-400">
+                    미연결 신청곡이 없습니다.
+                  </p>
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {unlinkedProposes
@@ -2193,7 +2385,10 @@ function SongCreateDialog({
                           <button
                             type="button"
                             onClick={() =>
-                              setSelectedProposeIds((prev) => [...prev, propose.id])
+                              setSelectedProposeIds((prev) => [
+                                ...prev,
+                                propose.id,
+                              ])
                             }
                             className="text-xs text-orange-600 hover:text-orange-700 cursor-pointer"
                           >
@@ -2211,9 +2406,13 @@ function SongCreateDialog({
         {/* 푸터 */}
         <div className="flex items-center justify-between border-t border-zinc-100 px-5 py-4">
           <div className="text-xs text-zinc-500">
-            {selectedSpotifyGroupId && <span className="mr-2">Spotify 1개</span>}
+            {selectedSpotifyGroupId && (
+              <span className="mr-2">Spotify 1개</span>
+            )}
             {selectedYoutubeVideoIds.length > 0 && (
-              <span className="mr-2">YouTube {selectedYoutubeVideoIds.length}개</span>
+              <span className="mr-2">
+                YouTube {selectedYoutubeVideoIds.length}개
+              </span>
             )}
             {selectedProposeIds.length > 0 && (
               <span>신청곡 {selectedProposeIds.length}개</span>

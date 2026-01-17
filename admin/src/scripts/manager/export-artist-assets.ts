@@ -151,16 +151,14 @@ type ArtistExportPayload = {
       medium?: string | null;
       high?: string | null;
     };
-    spotifyProfile:
-      | {
-          name?: string | null;
-          spotifyId?: string | null;
-          popularity?: number | null;
-          followers?: number | null;
-          genres: string[];
-          thumbnails?: string[];
-        }
-      | null;
+    spotifyProfile: {
+      name?: string | null;
+      spotifyId?: string | null;
+      popularity?: number | null;
+      followers?: number | null;
+      genres: string[];
+      thumbnails?: string[];
+    } | null;
     youtubeChannels: Array<{
       id: number;
       type: string;
@@ -238,7 +236,9 @@ function mapSongProposeSummary(propose: any): SongProposeSummary {
 function mapSpotifyGroupRecord(group: any): SpotifyGroupSummary {
   return {
     id: group.id,
-    primaryTrack: group.primaryTrack ? mapSpotifyTrackSummary(group.primaryTrack) : null,
+    primaryTrack: group.primaryTrack
+      ? mapSpotifyTrackSummary(group.primaryTrack)
+      : null,
     tracks: group.tracks?.map((track: any) => track.name).filter(Boolean) ?? [],
   };
 }
@@ -250,7 +250,9 @@ function toBigIntString(value?: bigint | number | null): string | null {
   return typeof value === "bigint" ? value.toString() : String(value);
 }
 
-async function buildArtistExport(artistId: number): Promise<ArtistExportPayload> {
+async function buildArtistExport(
+  artistId: number,
+): Promise<ArtistExportPayload> {
   const artist = await prisma.artist.findUnique({
     where: { id: artistId },
     select: {
@@ -356,51 +358,53 @@ async function buildArtistExport(artistId: number): Promise<ArtistExportPayload>
   }
 
   const linkedGroupIds = new Set<number>();
-  const songs: SongExport[] = artist.artistSongs.map(({ order, role, song }) => {
-    if (song.spotifyTrackGroup?.id) {
-      linkedGroupIds.add(song.spotifyTrackGroup.id);
-    }
-    const songExport: SongExport = {
-      id: song.id,
-      title: song.title,
-      titleKo: song.titleKo,
-      titleLatin: song.titleLatin,
-      titleJaKana: song.titleJaKana,
-      titleJaKanji: song.titleJaKanji,
-      catalog: song.catalog,
-      youtubeVideoId: song.youtubeVideoId,
-      artistOrder: order,
-      artistRole: role ?? null,
-      spotifyTrackGroup: song.spotifyTrackGroup
-        ? mapSpotifyGroupRecord(song.spotifyTrackGroup)
-        : null,
-      youtubeVideos:
-        song.youtubeVideos
-          ?.map((link) => link.youtubeVideo.title)
-          .filter((title): title is string => Boolean(title?.trim())) ?? [],
-      songProposes:
-        song.songProposes
-          ?.map((propose) => propose.songTitle)
-          .filter((title): title is string => Boolean(title?.trim())) ?? [],
-      tjSong: song.tjSong
-        ? {
-            id: song.tjSong.id,
-            title: song.tjSong.title,
-            artist: song.tjSong.artist,
-          }
-        : null,
-    };
+  const songs: SongExport[] = artist.artistSongs.map(
+    ({ order, role, song }) => {
+      if (song.spotifyTrackGroup?.id) {
+        linkedGroupIds.add(song.spotifyTrackGroup.id);
+      }
+      const songExport: SongExport = {
+        id: song.id,
+        title: song.title,
+        titleKo: song.titleKo,
+        titleLatin: song.titleLatin,
+        titleJaKana: song.titleJaKana,
 
-    if (includeThumbnails) {
-      songExport.thumbnails = {
-        default: song.thumbnailDefault,
-        medium: song.thumbnailMedium,
-        high: song.thumbnailHigh,
+        catalog: song.catalog,
+        youtubeVideoId: song.youtubeVideoId,
+        artistOrder: order,
+        artistRole: role ?? null,
+        spotifyTrackGroup: song.spotifyTrackGroup
+          ? mapSpotifyGroupRecord(song.spotifyTrackGroup)
+          : null,
+        youtubeVideos:
+          song.youtubeVideos
+            ?.map((link) => link.youtubeVideo.title)
+            .filter((title): title is string => Boolean(title?.trim())) ?? [],
+        songProposes:
+          song.songProposes
+            ?.map((propose) => propose.songTitle)
+            .filter((title): title is string => Boolean(title?.trim())) ?? [],
+        tjSong: song.tjSong
+          ? {
+              id: song.tjSong.id,
+              title: song.tjSong.title,
+              artist: song.tjSong.artist,
+            }
+          : null,
       };
-    }
 
-    return songExport;
-  });
+      if (includeThumbnails) {
+        songExport.thumbnails = {
+          default: song.thumbnailDefault,
+          medium: song.thumbnailMedium,
+          high: song.thumbnailHigh,
+        };
+      }
+
+      return songExport;
+    },
+  );
 
   const { unlinkedSpotifyGroups, ungroupedSpotifyTracks } =
     await fetchUnlinkedSpotifyAssets({
@@ -461,17 +465,20 @@ async function buildArtistExport(artistId: number): Promise<ArtistExportPayload>
     };
 
     if (artistPayload.spotifyProfile) {
-      artistPayload.spotifyProfile.thumbnails = artist.spotifyArtist?.thumbnails ?? [];
+      artistPayload.spotifyProfile.thumbnails =
+        artist.spotifyArtist?.thumbnails ?? [];
     }
 
-    artistPayload.youtubeChannels = artistPayload.youtubeChannels.map((channel, idx) => ({
-      ...channel,
-      thumbnails: {
-        default: artist.youtubeChannels[idx]?.thumbnailDefault ?? null,
-        medium: artist.youtubeChannels[idx]?.thumbnailMedium ?? null,
-        high: artist.youtubeChannels[idx]?.thumbnailHigh ?? null,
-      },
-    }));
+    artistPayload.youtubeChannels = artistPayload.youtubeChannels.map(
+      (channel, idx) => ({
+        ...channel,
+        thumbnails: {
+          default: artist.youtubeChannels[idx]?.thumbnailDefault ?? null,
+          medium: artist.youtubeChannels[idx]?.thumbnailMedium ?? null,
+          high: artist.youtubeChannels[idx]?.thumbnailHigh ?? null,
+        },
+      }),
+    );
   }
 
   const payload: ArtistExportPayload = { artist: artistPayload };
@@ -653,8 +660,12 @@ async function fetchUnlinkedSongProposes({
 }
 
 function printUsage() {
-  console.log("Usage: pnpm ts-node src/scripts/manager/export-artist-assets.ts <artistId> [--thumb]");
-  console.log("Example: pnpm ts-node src/scripts/manager/export-artist-assets.ts 40 --thumb");
+  console.log(
+    "Usage: pnpm ts-node src/scripts/manager/export-artist-assets.ts <artistId> [--thumb]",
+  );
+  console.log(
+    "Example: pnpm ts-node src/scripts/manager/export-artist-assets.ts 40 --thumb",
+  );
 }
 
 async function main() {

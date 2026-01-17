@@ -715,8 +715,9 @@ export async function fetchManagerArtistSongs(
           title: true,
           titleKo: true,
           titleLatin: true,
+          titleJa: true,
           titleJaKana: true,
-          titleJaKanji: true,
+
           catalog: true,
           youtubeVideoId: true,
           thumbnailDefault: true,
@@ -807,8 +808,9 @@ export async function fetchManagerArtistSongs(
       title: song.title,
       titleKo: song.titleKo,
       titleLatin: song.titleLatin,
+      titleJa: song.titleJa,
       titleJaKana: song.titleJaKana,
-      titleJaKanji: song.titleJaKanji,
+
       catalog: song.catalog,
       hasYoutube: sortedVideos.length > 0,
       youtubeVideoId: topVideo?.videoId ?? song.youtubeVideoId,
@@ -1512,8 +1514,8 @@ export type UpdateSongInput = {
   title?: string;
   titleKo?: string;
   titleLatin?: string;
+  titleJa?: string | null;
   titleJaKana?: string | null;
-  titleJaKanji?: string | null;
   catalog?: string;
   youtubeVideoId?: string;
 };
@@ -1529,8 +1531,9 @@ export async function updateSong(input: UpdateSongInput) {
     title: data.title?.trim(),
     titleKo: data.titleKo?.trim(),
     titleLatin: data.titleLatin?.trim() || null,
+    titleJa: data.titleJa?.trim() || null,
     titleJaKana: data.titleJaKana?.trim() || null,
-    titleJaKanji: data.titleJaKanji?.trim() || null,
+
     catalog: data.catalog?.trim() || null,
     youtubeVideoId: data.youtubeVideoId?.trim() || null,
   };
@@ -1543,8 +1546,9 @@ export async function updateSong(input: UpdateSongInput) {
       title: true,
       titleKo: true,
       titleLatin: true,
+      titleJa: true,
       titleJaKana: true,
-      titleJaKanji: true,
+
       catalog: true,
       youtubeVideoId: true,
       thumbnailDefault: true,
@@ -1598,8 +1602,9 @@ export async function updateSong(input: UpdateSongInput) {
     title: updatedSong.title,
     titleKo: updatedSong.titleKo,
     titleLatin: updatedSong.titleLatin,
+    titleJa: updatedSong.titleJa,
     titleJaKana: updatedSong.titleJaKana,
-    titleJaKanji: updatedSong.titleJaKanji,
+
     catalog: updatedSong.catalog,
     hasYoutube: Boolean(updatedSong.youtubeVideoId),
     youtubeVideoId: updatedSong.youtubeVideoId,
@@ -1818,7 +1823,13 @@ export async function fetchManagerArtistTjPanel(
   artistId: number,
 ): Promise<ManagerTjPanelData> {
   if (!artistId || Number.isNaN(artistId)) {
-    return { tjName: null, tjNameJa: null, groups: [], orphanProposes: [], totalCount: 0 };
+    return {
+      tjName: null,
+      tjNameJa: null,
+      groups: [],
+      orphanProposes: [],
+      totalCount: 0,
+    };
   }
 
   // 아티스트의 tjName, tjNameJa 가져오기
@@ -1828,7 +1839,13 @@ export async function fetchManagerArtistTjPanel(
   });
 
   if (!artist?.tjName && !artist?.tjNameJa) {
-    return { tjName: null, tjNameJa: null, groups: [], orphanProposes: [], totalCount: 0 };
+    return {
+      tjName: null,
+      tjNameJa: null,
+      groups: [],
+      orphanProposes: [],
+      totalCount: 0,
+    };
   }
 
   const singerNames: string[] = [];
@@ -1931,8 +1948,9 @@ export type CreateSongInput = {
   title: string;
   titleKo?: string;
   titleLatin?: string;
+  titleJa?: string;
   titleJaKana?: string;
-  titleJaKanji?: string;
+
   catalog?: string;
   artistId: number; // 연결할 아티스트 ID
 };
@@ -1941,8 +1959,9 @@ export async function createSong({
   title,
   titleKo,
   titleLatin,
+  titleJa,
   titleJaKana,
-  titleJaKanji,
+
   catalog,
   artistId,
 }: CreateSongInput): Promise<ManagerArtistSongDetail> {
@@ -1958,8 +1977,9 @@ export async function createSong({
       title: title.trim(),
       titleKo: titleKo?.trim() || null,
       titleLatin: titleLatin?.trim() || null,
+      titleJa: titleJa?.trim() || null,
       titleJaKana: titleJaKana?.trim() || null,
-      titleJaKanji: titleJaKanji?.trim() || null,
+
       catalog: catalog?.trim() || null,
       artistSongs: {
         create: {
@@ -1973,8 +1993,9 @@ export async function createSong({
       title: true,
       titleKo: true,
       titleLatin: true,
+      titleJa: true,
       titleJaKana: true,
-      titleJaKanji: true,
+
       catalog: true,
       youtubeVideoId: true,
       thumbnailDefault: true,
@@ -2039,8 +2060,9 @@ export async function createSong({
     title: song.title,
     titleKo: song.titleKo,
     titleLatin: song.titleLatin,
+    titleJa: song.titleJa,
     titleJaKana: song.titleJaKana,
-    titleJaKanji: song.titleJaKanji,
+
     catalog: song.catalog,
     hasYoutube: sortedVideos.length > 0,
     youtubeVideoId: topVideo?.videoId ?? song.youtubeVideoId,
@@ -2560,7 +2582,9 @@ export async function refreshSongThumbnail(
   }
 
   if (!actualSource) {
-    throw new Error(`${source === "spotify" ? "스포티파이" : "유튜브"} 썸네일을 찾을 수 없습니다.`);
+    throw new Error(
+      `${source === "spotify" ? "스포티파이" : "유튜브"} 썸네일을 찾을 수 없습니다.`,
+    );
   }
 
   // 썸네일 업데이트
