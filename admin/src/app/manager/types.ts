@@ -114,6 +114,15 @@ export type ManagerArtistDetail = {
   songs: ManagerArtistSongDetail[];
 };
 
+// 아티스트 정보만 (곡 목록 제외)
+export type ManagerArtistInfo = Omit<ManagerArtistDetail, "songs">;
+
+// 아티스트 곡 목록 결과
+export type ManagerArtistSongsResult = {
+  artistId: number;
+  songs: ManagerArtistSongDetail[];
+};
+
 export type ManagerSpotifyTrackSummary = {
   id: number;
   spotifyId: string;

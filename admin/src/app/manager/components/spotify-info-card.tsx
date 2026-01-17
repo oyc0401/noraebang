@@ -1,11 +1,11 @@
 "use client";
 
 import { useManagerStore } from "../store";
-import type { ManagerArtistDetail } from "../types";
+import type { ManagerArtistInfo } from "../types";
 import { SpotifyIcon } from "./spotify-icon";
 
 type SpotifyInfoCardProps = {
-  detail: ManagerArtistDetail;
+  detail: ManagerArtistInfo;
 };
 
 export function SpotifyInfoCard({ detail }: SpotifyInfoCardProps) {
