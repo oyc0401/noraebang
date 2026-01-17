@@ -5,6 +5,7 @@ import pg from "pg";
 
 // id가 300 이하인 아티스트를 대상으로, 해당 아티스트의 TJ 곡들을 순회하면서
 // 가장 많이 등록된 TJ 아티스트 이름을 tjName 필드에 저장하는 스크립트
+// TJ 곡이 없는 경우, tjName이 null이면 artist.name을 tjName으로 설정 (덮어쓰기 X)
 //
 // pnpm ts-node src/scripts/tj/backfill-artist-tj-name.ts
 // pnpm ts-node src/scripts/tj/backfill-artist-tj-name.ts --dry-run
@@ -56,6 +57,7 @@ async function main() {
   let updatedCount = 0;
   let skippedCount = 0;
   let noTjSongsCount = 0;
+  let fallbackCount = 0;
 
   for (const artist of artists) {
     // 모든 TJ 곡에서 아티스트 이름 수집
@@ -76,8 +78,27 @@ async function main() {
       }
     }
 
+    // TJ 곡이 없는 경우: tjName이 null이면 name을 사용
     if (nameCount.size === 0) {
       noTjSongsCount++;
+
+      // tjName이 이미 설정되어 있으면 스킵 (덮어쓰기 방지)
+      if (artist.tjName !== null) {
+        continue;
+      }
+
+      console.log(
+        `  [${artist.id}] ${artist.name}: (TJ곡 없음) name으로 폴백 → "${artist.name}"`,
+      );
+
+      if (!isDryRun) {
+        await prisma.artist.update({
+          where: { id: artist.id },
+          data: { tjName: artist.name },
+        });
+      }
+
+      fallbackCount++;
       continue;
     }
 
@@ -92,8 +113,8 @@ async function main() {
       }
     }
 
-    // 이미 같은 값이 설정되어 있으면 스킵
-    if (artist.tjName === mostFrequentName) {
+    // tjName이 이미 설정되어 있으면 스킵 (null일 때만 업데이트)
+    if (artist.tjName !== null) {
       skippedCount++;
       continue;
     }
@@ -116,7 +137,9 @@ async function main() {
   console.log("📊 결과:");
   console.log(`  - 업데이트${isDryRun ? " 예정" : "됨"}: ${updatedCount}명`);
   console.log(`  - 스킵 (동일 값): ${skippedCount}명`);
-  console.log(`  - TJ 곡 없음: ${noTjSongsCount}명`);
+  console.log(
+    `  - TJ 곡 없음: ${noTjSongsCount}명 (그 중 name 폴백: ${fallbackCount}명)`,
+  );
   console.log("");
   console.log("✨ 완료");
 }

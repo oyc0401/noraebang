@@ -389,6 +389,7 @@ export async function fetchManagerArtistDetail(
       nameJaKana: true,
       nameJaKanji: true,
       tjName: true,
+      tjNameJa: true,
       slug: true,
       homeCatalog: true,
       spotifyId: true,
@@ -555,6 +556,7 @@ export async function fetchManagerArtistDetail(
     nameJaKana: artist.nameJaKana,
     nameJaKanji: artist.nameJaKanji,
     tjName: artist.tjName,
+    tjNameJa: artist.tjNameJa,
     catalog: artist.homeCatalog,
     slug: artist.slug,
     spotifyId: artist.spotifyId,
@@ -732,6 +734,7 @@ export type UpdateArtistNamesInput = {
   nameJaKanji?: string | null;
   nameLatin?: string | null;
   tjName?: string | null;
+  tjNameJa?: string | null;
   slug?: string | null;
   catalog?: "미정" | "KPOP" | "JPOP" | "POP";
 };
@@ -744,6 +747,7 @@ export async function updateArtistNames({
   nameJaKanji,
   nameLatin,
   tjName,
+  tjNameJa,
   slug,
   catalog,
 }: UpdateArtistNamesInput) {
@@ -758,6 +762,7 @@ export async function updateArtistNames({
     nameJaKanji: nameJaKanji?.trim() || null,
     nameLatin: nameLatin?.trim() || null,
     tjName: tjName?.trim() || null,
+    tjNameJa: tjNameJa?.trim() || null,
     slug: slug?.trim() ? slug.trim() : null,
     homeCatalog:
       catalog && catalog !== "미정"
@@ -778,6 +783,7 @@ export async function updateArtistNames({
     nameJaKanji: sanitized.nameJaKanji,
     nameLatin: sanitized.nameLatin,
     tjName: sanitized.tjName,
+    tjNameJa: sanitized.tjNameJa,
     slug: sanitized.slug,
   };
   if (sanitized.homeCatalog !== undefined) {
@@ -795,6 +801,7 @@ export async function updateArtistNames({
       nameJaKanji: true,
       nameLatin: true,
       tjName: true,
+      tjNameJa: true,
       slug: true,
       homeCatalog: true,
     },

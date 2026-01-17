@@ -92,6 +92,7 @@ export type ManagerArtistDetail = {
   nameJaKanji?: string | null;
   nameLatin?: string | null;
   tjName?: string | null;
+  tjNameJa?: string | null;
   catalog?: string | null;
   slug?: string | null;
   songCount: number;
