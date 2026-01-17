@@ -18,6 +18,9 @@ import {
   unlinkYoutubeVideo,
   linkSongPropose,
   unlinkSongPropose,
+  linkSongArtist,
+  unlinkSongArtist,
+  searchArtistsForLink,
   refreshSongThumbnail,
   type UnlinkedSpotifyGroup,
   type UnlinkedYoutubeVideo,
@@ -25,9 +28,15 @@ import {
   type LinkedYoutubeVideo,
   type LinkedSongPropose,
 } from "../action";
-import type { ManagerArtistSongDetail } from "../types";
+import type {
+  ManagerArtistSongDetail,
+  SongLinkedArtist,
+} from "../types";
 import { useManagerStore } from "../store";
 import { SongCard } from "./song-card";
+
+type SongEditTab = "info" | "artists" | "spotify" | "youtube" | "propose" | "admin";
+type ArtistSearchResult = { id: number; name: string; nameKo: string };
 
 export function ArtistSongList() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
@@ -44,6 +53,7 @@ export function ArtistSongList() {
   // 곡 편집 다이얼로그 상태
   const [isSongEditOpen, setIsSongEditOpen] = useState(false);
   const [editingSong, setEditingSong] = useState<ManagerArtistSongDetail | null>(null);
+  const [editInitialTab, setEditInitialTab] = useState<SongEditTab>("info");
 
   // 곡 추가 다이얼로그 상태
   const [isSongCreateOpen, setIsSongCreateOpen] = useState(false);
@@ -187,6 +197,7 @@ export function ArtistSongList() {
               아직 등록된 곡이 없습니다.
             </div>
           )}
+
           {sortedSongs.map((song) => (
             <SongCard
               key={song.id}
@@ -196,14 +207,10 @@ export function ArtistSongList() {
                 song.spotifyGroup?.id === selectedGroupId
               }
               onSelectGroup={setSelectedGroupId}
-              onEditClick={(s) => {
+              onEditClick={(s, options) => {
                 setEditingSong(s);
+                setEditInitialTab(options?.focusTab ?? "info");
                 setIsSongEditOpen(true);
-              }}
-              onArtistsChange={(songId, artists) => {
-                setSongs((prev) =>
-                  prev.map((s) => (s.id === songId ? { ...s, artists } : s)),
-                );
               }}
             />
           ))}
@@ -215,6 +222,7 @@ export function ArtistSongList() {
         open={isSongEditOpen}
         song={editingSong}
         artistId={selectedArtistId}
+        initialTab={editInitialTab}
         onOpenChange={(open) => {
           setIsSongEditOpen(open);
           if (!open) setEditingSong(null);
@@ -246,6 +254,7 @@ function SongEditDialog({
   open,
   song,
   artistId,
+  initialTab,
   onOpenChange,
   onSongUpdated,
   onSongDeleted,
@@ -253,17 +262,28 @@ function SongEditDialog({
   open: boolean;
   song: ManagerArtistSongDetail | null;
   artistId: number | null;
+  initialTab: SongEditTab;
   onOpenChange: (open: boolean) => void;
   onSongUpdated: (song: ManagerArtistSongDetail) => void;
   onSongDeleted: (songId: number) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<"info" | "spotify" | "youtube" | "propose">("info");
+  const [activeTab, setActiveTab] = useState<SongEditTab>("info");
 
   // 기본 정보 상태
   const [title, setTitle] = useState("");
   const [titleKo, setTitleKo] = useState("");
   const [titleLatin, setTitleLatin] = useState("");
+  const [titleJaKana, setTitleJaKana] = useState("");
+  const [titleJaKanji, setTitleJaKanji] = useState("");
   const [catalog, setCatalog] = useState("");
+
+  // 아티스트 상태
+  const [currentArtists, setCurrentArtists] = useState<SongLinkedArtist[]>([]);
+  const [selectedArtistRole, setSelectedArtistRole] =
+    useState<"MAIN" | "FEATURING" | "PRODUCER" | null>(null);
+  const [artistSearchTerm, setArtistSearchTerm] = useState("");
+  const [artistSearchResults, setArtistSearchResults] = useState<ArtistSearchResult[]>([]);
+  const [isSearchingArtist, setIsSearchingArtist] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -285,19 +305,35 @@ function SongEditDialog({
   // 삭제 상태
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // 다이얼로그 열릴 때 초기화
+  // 다이얼로그 열릴 때 기본 정보 초기화
   useEffect(() => {
     if (!open || !song) return;
     setTitle(song.title ?? "");
     setTitleKo(song.titleKo ?? "");
     setTitleLatin(song.titleLatin ?? "");
+    setTitleJaKana(song.titleJaKana ?? "");
+    setTitleJaKanji(song.titleJaKanji ?? "");
     setCatalog(song.catalog ?? "");
     setCurrentSpotifyGroupId(song.spotifyGroup?.id ?? null);
     setCurrentThumbnail(song.thumbnails?.medium ?? song.thumbnails?.default ?? null);
     setError(null);
     setIsSaving(false);
-    setActiveTab("info");
-  }, [open, song]);
+    setArtistSearchTerm("");
+    setArtistSearchResults([]);
+    setSelectedArtistRole(null);
+  }, [open, song?.id]);
+
+  // 탭 초기화
+  useEffect(() => {
+    if (!open) return;
+    setActiveTab(initialTab);
+  }, [open, initialTab]);
+
+  // 연결된 아티스트 초기화
+  useEffect(() => {
+    if (!open || !song) return;
+    setCurrentArtists(song.artists ?? []);
+  }, [open, song?.artists, song?.id]);
 
   // 연결 데이터 로드
   useEffect(() => {
@@ -325,6 +361,30 @@ function SongEditDialog({
     loadLinkData();
   }, [open, song, artistId]);
 
+  // 아티스트 검색
+  useEffect(() => {
+    if (!open) return;
+    if (!artistSearchTerm.trim()) {
+      setArtistSearchResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingArtist(true);
+      try {
+        const results = await searchArtistsForLink(artistSearchTerm);
+        const linkedIds = new Set(currentArtists.map((artist) => artist.id));
+        setArtistSearchResults(results.filter((artist) => !linkedIds.has(artist.id)));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSearchingArtist(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [artistSearchTerm, currentArtists, open]);
+
   async function handleSave() {
     if (!song) return;
 
@@ -336,6 +396,8 @@ function SongEditDialog({
         title,
         titleKo,
         titleLatin,
+        titleJaKana,
+        titleJaKanji,
         catalog,
       });
 
@@ -346,6 +408,49 @@ function SongEditDialog({
       setError("저장에 실패했습니다.");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleLinkArtist(artistId: number) {
+    if (!song) return;
+    setError(null);
+    try {
+      const updatedArtists = await linkSongArtist({
+        songId: song.id,
+        artistId,
+        role: selectedArtistRole,
+      });
+      setCurrentArtists(updatedArtists);
+      const updatedSong: ManagerArtistSongDetail = { ...song, artists: updatedArtists };
+      onSongUpdated(updatedSong);
+      setArtistSearchTerm("");
+      setArtistSearchResults([]);
+      setSelectedArtistRole(null);
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message ?? "아티스트 연결에 실패했습니다.");
+    }
+  }
+
+  async function handleUnlinkArtist(artistId: number, artistName: string) {
+    if (!song) return;
+    const confirmed = window.confirm(
+      `"${artistName}" 아티스트 연결을 삭제하시겠습니까?`,
+    );
+    if (!confirmed) return;
+
+    setError(null);
+    try {
+      const updatedArtists = await unlinkSongArtist({
+        songId: song.id,
+        artistId,
+      });
+      setCurrentArtists(updatedArtists);
+      const updatedSong: ManagerArtistSongDetail = { ...song, artists: updatedArtists };
+      onSongUpdated(updatedSong);
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message ?? "아티스트 연결 삭제에 실패했습니다.");
     }
   }
 
@@ -504,9 +609,11 @@ function SongEditDialog({
 
   const tabs = [
     { id: "info" as const, label: "기본 정보" },
+    { id: "artists" as const, label: `아티스트 (${currentArtists.length})` },
     { id: "spotify" as const, label: `Spotify ${currentSpotifyGroupId ? "(1)" : ""}` },
     { id: "youtube" as const, label: `YouTube (${linkedYoutube.length})` },
     { id: "propose" as const, label: `신청곡 (${linkedProposes.length})` },
+    { id: "admin" as const, label: "어드민" },
   ];
 
   return (
@@ -594,6 +701,24 @@ function SongEditDialog({
                   />
                 </Field>
               </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field label="Title (JA Kana)">
+                  <input
+                    value={titleJaKana}
+                    onChange={(e) => setTitleJaKana(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+                    disabled={isSaving}
+                  />
+                </Field>
+                <Field label="Title (JA Kanji)">
+                  <input
+                    value={titleJaKanji}
+                    onChange={(e) => setTitleJaKanji(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+                    disabled={isSaving}
+                  />
+                </Field>
+              </div>
               <Field label="Catalog">
                 <select
                   value={catalog}
@@ -655,6 +780,151 @@ function SongEditDialog({
                     )}
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "artists" && (
+            <div className="space-y-4">
+              <div>
+                <div className="text-xs font-semibold text-zinc-700 mb-2">
+                  연결된 아티스트 ({currentArtists.length})
+                </div>
+                {currentArtists.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-zinc-200 p-4 text-center text-xs text-zinc-500">
+                    연결된 아티스트가 없습니다.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {currentArtists.map((artist) => (
+                      <div
+                        key={artist.id}
+                        className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2"
+                      >
+                        <div className="flex items-center gap-2 text-xs text-zinc-600">
+                          <span className="text-zinc-400">#{artist.id}</span>
+                          <span className="font-medium text-zinc-900">
+                            {artist.name}
+                          </span>
+                          <span className="text-zinc-500">
+                            ({artist.nameKo || artist.name})
+                          </span>
+                          {artist.role && (
+                            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] text-purple-700">
+                              {getRoleLabel(artist.role)}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleUnlinkArtist(artist.id, artist.nameKo || artist.name)
+                          }
+                          className="rounded-lg border border-red-200 px-2 py-1 text-[11px] text-red-600 transition hover:bg-red-50 cursor-pointer"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-zinc-100 pt-4 space-y-3">
+                <div>
+                  <div className="text-xs font-semibold text-zinc-700 mb-2">
+                    역할
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedArtistRole(null)}
+                      className={`rounded-full px-3 py-1 transition cursor-pointer ${
+                        selectedArtistRole === null
+                          ? "bg-zinc-900 text-white"
+                          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      }`}
+                    >
+                      없음
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedArtistRole("MAIN")}
+                      className={`rounded-full px-3 py-1 transition cursor-pointer ${
+                        selectedArtistRole === "MAIN"
+                          ? "bg-blue-600 text-white"
+                          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      }`}
+                    >
+                      메인
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedArtistRole("FEATURING")}
+                      className={`rounded-full px-3 py-1 transition cursor-pointer ${
+                        selectedArtistRole === "FEATURING"
+                          ? "bg-amber-600 text-white"
+                          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      }`}
+                    >
+                      피처링
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedArtistRole("PRODUCER")}
+                      className={`rounded-full px-3 py-1 transition cursor-pointer ${
+                        selectedArtistRole === "PRODUCER"
+                          ? "bg-emerald-600 text-white"
+                          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      }`}
+                    >
+                      프로듀서
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold text-zinc-700 mb-2">
+                    아티스트 검색
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={artistSearchTerm}
+                      onChange={(e) => setArtistSearchTerm(e.target.value)}
+                      placeholder="아티스트 이름 또는 ID로 검색..."
+                      className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-300"
+                    />
+                    {isSearchingArtist && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-zinc-400">
+                        검색중...
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {artistSearchResults.length > 0 && (
+                  <div className="max-h-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white">
+                    {artistSearchResults.map((artist) => (
+                      <button
+                        key={artist.id}
+                        type="button"
+                        onClick={() => handleLinkArtist(artist.id)}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-zinc-600 transition hover:bg-zinc-50 cursor-pointer"
+                      >
+                        <span className="text-zinc-400">#{artist.id}</span>
+                        <span className="font-medium text-zinc-900">{artist.name}</span>
+                        <span className="text-zinc-500">({artist.nameKo})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {artistSearchTerm.trim() &&
+                  !isSearchingArtist &&
+                  artistSearchResults.length === 0 && (
+                    <p className="text-xs text-zinc-500">검색 결과가 없습니다.</p>
+                  )}
               </div>
             </div>
           )}
@@ -905,18 +1175,33 @@ function SongEditDialog({
               </div>
             </div>
           )}
+
+          {activeTab === "admin" && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-red-100 bg-red-50/40 p-4">
+                <h5 className="text-sm font-semibold text-red-700">위험 작업</h5>
+                <p className="mt-1 text-xs text-red-600">
+                  곡을 삭제하면 연결된 모든 데이터가 사라지며 되돌릴 수 없습니다.
+                </p>
+                <div className="mt-4 flex flex-col gap-1 text-xs text-red-600">
+                  <span>· 곡 ID: #{song?.id ?? "-"}</span>
+                  <span>· 제목: {song?.title ?? "-"}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  disabled={isSaving || isDeleting}
+                >
+                  {isDeleting ? "삭제 중..." : "곡 삭제"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 푸터 */}
-        <div className="flex items-center justify-between border-t border-zinc-100 px-5 py-4">
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-            disabled={isSaving || isDeleting}
-          >
-            {isDeleting ? "삭제 중..." : "곡 삭제"}
-          </button>
+        <div className="flex items-center justify-end border-t border-zinc-100 px-5 py-4">
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -954,6 +1239,19 @@ function formatViewCount(viewCount?: string | null): string {
     return `${(count / 10_000).toFixed(1)}만`;
   }
   return count.toLocaleString();
+}
+
+function getRoleLabel(role: string): string {
+  switch (role) {
+    case "MAIN":
+      return "메인";
+    case "FEATURING":
+      return "피처링";
+    case "PRODUCER":
+      return "프로듀서";
+    default:
+      return role;
+  }
 }
 
 function Field({
