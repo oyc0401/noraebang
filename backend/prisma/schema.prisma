@@ -17,7 +17,7 @@ model Artist {
   nameJaPronu     String? @map("name_ja_pronu")
   spotifyId        String? @map("spotify_id")
   homeCatalog      String? @map("home_catalog") // "KPOP" | "JPOP" | "POP" | "CPOP" | etc.
-  tjSongRequestUrl String? @map("tj_song_request_url") // 이거보단 가장 많이등록된 tj아티스트명이 낫지 않을까?
+  tjName           String? @map("tj_name") // TJ에서 사용하는 아티스트 이름
 
   thumbnailDefault String? @map("thumbnail_default")
   thumbnailMedium  String? @map("thumbnail_medium")
