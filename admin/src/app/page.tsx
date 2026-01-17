@@ -175,6 +175,37 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Link>
+
+          <Link
+            href="/spotify-song"
+            className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          >
+            <div className="flex items-center gap-4">
+              <div className="rounded-lg bg-emerald-100 p-3 dark:bg-emerald-900/30">
+                <svg
+                  className="h-6 w-6 text-emerald-600 dark:text-emerald-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c1.104 0 2-.672 2-1.5S13.104 5 12 5s-2 .672-2 1.5S10.896 8 12 8zm0 0v9m0 0l-3-3m3 3 3-3"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
+                  Spotify 누락 곡
+                </h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  TJ 연동 완료 곡 중 Spotify/YouTube 미연결 확인
+                </p>
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
     </div>
