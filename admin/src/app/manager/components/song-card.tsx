@@ -111,9 +111,15 @@ export function SongCard({
                       </span>
                     </a>
                   ) : (
-                    <span className="rounded-full bg-zinc-100 px-2 py-0.5">
+                    <a
+                      href={`https://music.youtube.com/search?q=${encodeURIComponent(song.title)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600 underline-offset-2 hover:underline"
+                    >
                       유튜브 없음
-                    </span>
+                    </a>
                   )}
                 </div>
 

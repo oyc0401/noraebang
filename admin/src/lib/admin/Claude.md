@@ -84,3 +84,8 @@ const result = await mapProposeSong(artistId);
 // dry run + 콘솔 출력
 const result = await mapProposeSong(artistId, { dryRun: true, verbose: true });
 ```
+
+
+## 각각의 파일 맨 위, 임포트 아래에 제발 뭐하는 함수인지 꼭 적으세요
+## 각각의 파일 맨 위, 임포트 아래에 제발 뭐하는 함수인지 꼭 적으세요
+## 각각의 파일 맨 위, 임포트 아래에 제발 뭐하는 함수인지 꼭 적으세요
