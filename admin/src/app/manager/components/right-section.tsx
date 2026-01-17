@@ -2,6 +2,7 @@
 
 import { useManagerStore } from "../store";
 import { SpotifySection } from "./spotify-section";
+import { TjSection } from "./tj-section";
 import { YoutubeSection } from "./youtube-section";
 
 export function RightSection() {
@@ -9,6 +10,10 @@ export function RightSection() {
 
   if (rightSectionType === "youtube") {
     return <YoutubeSection />;
+  }
+
+  if (rightSectionType === "tj") {
+    return <TjSection />;
   }
 
   return <SpotifySection />;

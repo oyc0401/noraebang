@@ -246,8 +246,8 @@ export function YoutubeSection() {
       <div className="flex items-center justify-between border-b border-red-100/80 bg-gradient-to-r from-red-50/60 to-transparent px-4 pb-3 pt-4">
         <button
           type="button"
-          className="text-left transition hover:opacity-70"
-          onClick={() => setRightSectionType("spotify")}
+          className="text-left transition hover:opacity-70 cursor-pointer"
+          onClick={() => setRightSectionType("tj")}
         >
           <p className="text-[11px] uppercase tracking-[0.4em] text-red-500">
             YouTube

@@ -194,3 +194,37 @@ export type ManagerYoutubePanelData = {
   groups: ManagerYoutubeGroupSummary[];
   orphanVideos: ManagerYoutubeVideoSummary[];
 };
+
+// TJ 신청곡 관련 타입
+export type ManagerTjProposeSummary = {
+  id: number;
+  songTitle: string;
+  songSinger: string;
+  hit: number;
+  regdateView: string;
+  songId?: number | null;
+  linkedSong?: {
+    id: number;
+    title: string;
+    titleKo?: string | null;
+  } | null;
+};
+
+export type ManagerTjProposeGroupSummary = {
+  groupIndex: number;
+  proposes: ManagerTjProposeSummary[];
+  maxHit: number; // 정렬용: 그룹 내 최대 추천수
+  linkedSong?: {
+    id: number;
+    title: string;
+    titleKo?: string | null;
+  } | null;
+};
+
+export type ManagerTjPanelData = {
+  tjName: string | null;
+  tjNameJa: string | null;
+  groups: ManagerTjProposeGroupSummary[];
+  orphanProposes: ManagerTjProposeSummary[];
+  totalCount: number;
+};
