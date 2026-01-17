@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { fetchManagerArtistSpotifyPanel } from "../action";
+import {
+  fetchManagerArtistSpotifyPanel,
+  leaveSpotifyTrackGroup,
+} from "../action";
 import type {
   ManagerSpotifyGroupSummary,
   ManagerSpotifyPanelData,
@@ -111,6 +114,16 @@ export function SpotifySection() {
     setExpandedGroups(next);
   };
 
+  const refetch = useCallback(async () => {
+    if (!selectedArtistId) return;
+    try {
+      const response = await fetchManagerArtistSpotifyPanel(selectedArtistId);
+      setData(response);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [selectedArtistId]);
+
   const renderBody = () => {
     if (!selectedArtistId) {
       return (
@@ -174,6 +187,7 @@ export function SpotifySection() {
                     ? () => setSelectedGroupId(group.groupId)
                     : undefined
                 }
+                onRefetch={refetch}
               />
             ))}
           </div>
@@ -258,6 +272,7 @@ type SpotifyGroupCardProps = {
   onToggle: () => void;
   isSelected: boolean;
   onSelect?: () => void;
+  onRefetch: () => void;
 };
 
 function SpotifyGroupCard({
@@ -266,6 +281,7 @@ function SpotifyGroupCard({
   onToggle,
   isSelected,
   onSelect,
+  onRefetch,
 }: SpotifyGroupCardProps) {
   const hasLinkedSongs = group.linkedSongs.length > 0;
   const tracksToRender =
@@ -279,7 +295,9 @@ function SpotifyGroupCard({
       } ${
         isSelected
           ? "border-emerald-400 bg-emerald-50/70"
-          : "border-gray-300 bg-white hover:border-emerald-300"
+          : hasLinkedSongs
+            ? "border-gray-300 bg-white hover:border-emerald-300"
+            : "border-amber-300 bg-amber-50 hover:border-amber-400"
       }`}
       onClick={() => {
         if (!hasLinkedSongs || !onSelect) return;
@@ -328,6 +346,7 @@ function SpotifyGroupCard({
             isSelected={isSelected}
             variant="group"
             isPrimary={track.id === group.primaryTrack.id && index === 0}
+            onLeaveGroup={onRefetch}
           />
         ))}
       </div>
@@ -343,6 +362,7 @@ type SpotifyTrackCardProps = {
   isSelected?: boolean;
   variant?: "group" | "standalone";
   isPrimary?: boolean;
+  onLeaveGroup?: () => void;
 };
 
 function SpotifyTrackCard({
@@ -353,7 +373,33 @@ function SpotifyTrackCard({
   isSelected = false,
   variant = "standalone",
   isPrimary = false,
+  onLeaveGroup,
 }: SpotifyTrackCardProps) {
+  const openSongCreateDialog = useManagerStore(
+    (state) => state.openSongCreateDialog,
+  );
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  const handleCreateSong = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openSongCreateDialog(track.name, groupId ?? undefined);
+  };
+
+  const handleLeaveGroup = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("이 트랙을 그룹에서 제거하시겠습니까?")) return;
+
+    setIsLeaving(true);
+    try {
+      await leaveSpotifyTrackGroup(track.id);
+      onLeaveGroup?.();
+    } catch (error) {
+      console.error(error);
+      alert("그룹 나가기에 실패했습니다.");
+    } finally {
+      setIsLeaving(false);
+    }
+  };
   const durationLabel = formatDuration(track.durationMs);
   const releaseLabel = track.releaseDate ?? "-";
   const hasLinkedSongs = Boolean(groupId && linkedSongs.length > 0);
@@ -433,12 +479,31 @@ function SpotifyTrackCard({
               </p>
             </div>
             {isGroupVariant ? (
-              <div className="text-[10px] text-emerald-600">
+              <div className="flex items-center gap-1 text-[10px] text-emerald-600">
                 {isPrimary ? (
                   <span className="inline-flex items-center rounded-full border border-emerald-200 px-2 py-0.5">
                     Primary
                   </span>
                 ) : null}
+                {linkedSongs.length === 0 && (
+                  <button
+                    type="button"
+                    className="inline-flex items-center rounded-full border border-blue-200 bg-white px-2 py-0.5 text-blue-600 transition hover:bg-blue-50 cursor-pointer"
+                    onClick={handleCreateSong}
+                  >
+                    곡 만들기
+                  </button>
+                )}
+                {groupId && linkedSongs.length === 0 && (
+                  <button
+                    type="button"
+                    className="inline-flex items-center rounded-full border border-red-200 bg-white px-2 py-0.5 text-red-600 transition hover:bg-red-50 disabled:opacity-50 cursor-pointer"
+                    onClick={handleLeaveGroup}
+                    disabled={isLeaving}
+                  >
+                    {isLeaving ? "처리중..." : "그룹 나가기"}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-end gap-1 text-[10px]">

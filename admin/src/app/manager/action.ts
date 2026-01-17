@@ -2464,6 +2464,21 @@ export async function unlinkSongPropose(proposeId: number) {
   return { success: true };
 }
 
+// ========== 스포티파이 트랙 그룹 나가기 ==========
+
+export async function leaveSpotifyTrackGroup(trackId: number) {
+  if (!trackId || Number.isNaN(trackId)) {
+    throw new Error("유효한 트랙 ID가 필요합니다.");
+  }
+
+  await prisma.spotifyTrack.update({
+    where: { id: trackId },
+    data: { groupId: null },
+  });
+
+  return { success: true };
+}
+
 // ========== 썸네일 새로고침 ==========
 
 export type RefreshThumbnailResult = {

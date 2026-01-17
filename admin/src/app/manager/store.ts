@@ -37,6 +37,12 @@ type ManagerStoreState = {
     tracks: ManagerSpotifyTrackSummary[],
   ) => void;
   closeGroupDetail: () => void;
+  // 곡 생성 다이얼로그
+  songCreateDialogOpen: boolean;
+  songCreateInitialTitle: string;
+  songCreateInitialSpotifyGroupId: number | null;
+  openSongCreateDialog: (initialTitle?: string, spotifyGroupId?: number) => void;
+  closeSongCreateDialog: () => void;
 };
 
 export const useManagerStore = create<ManagerStoreState>((set) => ({
@@ -70,4 +76,20 @@ export const useManagerStore = create<ManagerStoreState>((set) => ({
   groupDetail: null,
   openGroupDetail: (groupId, tracks) => set({ groupDetail: { groupId, tracks } }),
   closeGroupDetail: () => set({ groupDetail: null }),
+  // 곡 생성 다이얼로그
+  songCreateDialogOpen: false,
+  songCreateInitialTitle: "",
+  songCreateInitialSpotifyGroupId: null,
+  openSongCreateDialog: (initialTitle, spotifyGroupId) =>
+    set({
+      songCreateDialogOpen: true,
+      songCreateInitialTitle: initialTitle ?? "",
+      songCreateInitialSpotifyGroupId: spotifyGroupId ?? null,
+    }),
+  closeSongCreateDialog: () =>
+    set({
+      songCreateDialogOpen: false,
+      songCreateInitialTitle: "",
+      songCreateInitialSpotifyGroupId: null,
+    }),
 }));
