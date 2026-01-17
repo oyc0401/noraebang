@@ -451,6 +451,17 @@ export async function fetchManagerArtistDetail(
                   },
                 },
               },
+              youtubeVideos: {
+                select: {
+                  youtubeVideo: {
+                    select: {
+                      videoId: true,
+                      title: true,
+                      viewCount: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -476,46 +487,63 @@ export async function fetchManagerArtistDetail(
     return null;
   }
 
-  const songs = artist.artistSongs.map(({ song }) => ({
-    id: song.id,
-    title: song.title,
-    titleKo: song.titleKo,
-    titleLatin: song.titleLatin,
-    catalog: song.catalog,
-    hasYoutube: Boolean(song.youtubeVideoId),
-    youtubeVideoId: song.youtubeVideoId,
-    thumbnails: {
-      default: song.thumbnailDefault,
-      medium: song.thumbnailMedium,
-      high: song.thumbnailHigh,
-    },
-    spotifyGroup: song.spotifyTrackGroup
-      ? {
-          id: song.spotifyTrackGroup.id,
-          primaryTrack: song.spotifyTrackGroup.primaryTrack
-            ? mapSpotifyTrackSummary(song.spotifyTrackGroup.primaryTrack)
-            : null,
-        }
-      : null,
-    tjSong: song.tjSong
-      ? {
-          id: song.tjSong.id,
-          title: song.tjSong.title,
-          artist: song.tjSong.artist,
-        }
-      : null,
-    karaoke: song.karaokeSongs.map((item) => ({
-      provider: String(item.provider),
-      karaokeNo: item.karaokeNo,
-    })),
-    artists: song.artistSongs.map((as) => ({
-      id: as.artist.id,
-      name: as.artist.name,
-      nameKo: as.artist.nameKo,
-      role: as.role ?? null,
-      order: as.order,
-    })),
-  }));
+  const songs = artist.artistSongs.map(({ song }) => {
+    // 연결된 유튜브 비디오 중 조회수가 가장 높은 것 선택
+    const sortedVideos = [...(song.youtubeVideos ?? [])].sort((a, b) => {
+      const viewA = Number(a.youtubeVideo.viewCount ?? 0);
+      const viewB = Number(b.youtubeVideo.viewCount ?? 0);
+      return viewB - viewA;
+    });
+    const topVideo = sortedVideos[0]?.youtubeVideo ?? null;
+
+    return {
+      id: song.id,
+      title: song.title,
+      titleKo: song.titleKo,
+      titleLatin: song.titleLatin,
+      catalog: song.catalog,
+      hasYoutube: sortedVideos.length > 0,
+      youtubeVideoId: topVideo?.videoId ?? song.youtubeVideoId,
+      topYoutubeVideo: topVideo
+        ? {
+            videoId: topVideo.videoId,
+            title: topVideo.title,
+            viewCount: topVideo.viewCount?.toString() ?? null,
+          }
+        : null,
+      thumbnails: {
+        default: song.thumbnailDefault,
+        medium: song.thumbnailMedium,
+        high: song.thumbnailHigh,
+      },
+      spotifyGroup: song.spotifyTrackGroup
+        ? {
+            id: song.spotifyTrackGroup.id,
+            primaryTrack: song.spotifyTrackGroup.primaryTrack
+              ? mapSpotifyTrackSummary(song.spotifyTrackGroup.primaryTrack)
+              : null,
+          }
+        : null,
+      tjSong: song.tjSong
+        ? {
+            id: song.tjSong.id,
+            title: song.tjSong.title,
+            artist: song.tjSong.artist,
+          }
+        : null,
+      karaoke: song.karaokeSongs.map((item) => ({
+        provider: String(item.provider),
+        karaokeNo: item.karaokeNo,
+      })),
+      artists: song.artistSongs.map((as) => ({
+        id: as.artist.id,
+        name: as.artist.name,
+        nameKo: as.artist.nameKo,
+        role: as.role ?? null,
+        order: as.order,
+      })),
+    };
+  });
 
   return {
     id: artist.id,

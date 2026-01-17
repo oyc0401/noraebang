@@ -90,8 +90,13 @@ export function SongArtistDialog({
     }
   }
 
-  async function handleUnlinkArtist(artistId: number) {
+  async function handleUnlinkArtist(artistId: number, artistName: string) {
     if (!song) return;
+
+    const confirmed = window.confirm(
+      `"${artistName}" 아티스트 연결을 삭제하시겠습니까?`,
+    );
+    if (!confirmed) return;
 
     setError(null);
     try {
@@ -182,7 +187,9 @@ export function SongArtistDialog({
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleUnlinkArtist(artist.id)}
+                      onClick={() =>
+                        handleUnlinkArtist(artist.id, artist.nameKo || artist.name)
+                      }
                       className="rounded-lg border border-red-200 px-2 py-1 text-xs text-red-600 transition hover:bg-red-50 cursor-pointer"
                     >
                       삭제
