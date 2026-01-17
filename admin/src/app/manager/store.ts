@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { ManagerSpotifyTrackSummary } from "./types";
 
-export type RightSectionType = "spotify" | "youtube";
+export type RightSectionType = "spotify" | "youtube" | "tj";
 
 type ManagerStoreState = {
   selectedArtistId: number | null;

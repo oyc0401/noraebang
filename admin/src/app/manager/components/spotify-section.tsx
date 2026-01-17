@@ -211,7 +211,7 @@ export function SpotifySection() {
       <div className="flex items-center justify-between border-b border-emerald-100/80 bg-gradient-to-r from-emerald-50/60 to-transparent px-4 pb-3 pt-4">
         <button
           type="button"
-          className="text-left transition hover:opacity-70"
+          className="text-left transition hover:opacity-70 cursor-pointer"
           onClick={() => setRightSectionType("youtube")}
         >
           <p className="text-[11px] uppercase tracking-[0.4em] text-emerald-500">

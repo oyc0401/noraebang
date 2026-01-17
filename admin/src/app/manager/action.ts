@@ -16,6 +16,8 @@ import {
   type ManagerSpotifyTrackSummary,
   type ManagerSortKey,
   type ManagerYoutubePanelData,
+  type ManagerTjPanelData,
+  type ManagerTjProposeSummary,
   type SongLinkedArtist,
 } from "./types";
 
@@ -1743,4 +1745,116 @@ export async function unlinkSongArtist({
   });
 
   return fetchSongArtists(songId);
+}
+
+export async function fetchManagerArtistTjPanel(
+  artistId: number,
+): Promise<ManagerTjPanelData> {
+  if (!artistId || Number.isNaN(artistId)) {
+    return { tjName: null, tjNameJa: null, groups: [], orphanProposes: [], totalCount: 0 };
+  }
+
+  // 아티스트의 tjName, tjNameJa 가져오기
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    select: { tjName: true, tjNameJa: true },
+  });
+
+  if (!artist?.tjName && !artist?.tjNameJa) {
+    return { tjName: null, tjNameJa: null, groups: [], orphanProposes: [], totalCount: 0 };
+  }
+
+  const singerNames: string[] = [];
+  if (artist.tjName) singerNames.push(artist.tjName);
+  if (artist.tjNameJa) singerNames.push(artist.tjNameJa);
+
+  // 해당 가수명으로 된 SongPropose 조회
+  const proposes = await prisma.songPropose.findMany({
+    where: {
+      songSinger: { in: singerNames },
+    },
+    select: {
+      id: true,
+      songTitle: true,
+      songSinger: true,
+      hit: true,
+      regdateView: true,
+      songId: true,
+      song: {
+        select: {
+          id: true,
+          title: true,
+          titleKo: true,
+        },
+      },
+    },
+    orderBy: { hit: "desc" },
+  });
+
+  // songId로 그룹화 (songId가 있는 것들)
+  const groupedBySongId = new Map<
+    number,
+    {
+      proposes: ManagerTjProposeSummary[];
+      linkedSong: { id: number; title: string; titleKo?: string | null };
+      maxHit: number;
+    }
+  >();
+  const orphanProposes: ManagerTjProposeSummary[] = [];
+
+  for (const propose of proposes) {
+    const summary: ManagerTjProposeSummary = {
+      id: propose.id,
+      songTitle: propose.songTitle,
+      songSinger: propose.songSinger,
+      hit: propose.hit,
+      regdateView: propose.regdateView,
+      songId: propose.songId,
+      linkedSong: propose.song
+        ? {
+            id: propose.song.id,
+            title: propose.song.title,
+            titleKo: propose.song.titleKo ?? undefined,
+          }
+        : null,
+    };
+
+    if (propose.songId && propose.song) {
+      const existing = groupedBySongId.get(propose.songId);
+      if (existing) {
+        existing.proposes.push(summary);
+        existing.maxHit = Math.max(existing.maxHit, propose.hit);
+      } else {
+        groupedBySongId.set(propose.songId, {
+          proposes: [summary],
+          linkedSong: {
+            id: propose.song.id,
+            title: propose.song.title,
+            titleKo: propose.song.titleKo ?? undefined,
+          },
+          maxHit: propose.hit,
+        });
+      }
+    } else {
+      orphanProposes.push(summary);
+    }
+  }
+
+  // 그룹 배열로 변환하고 maxHit 기준 내림차순 정렬
+  const groupsArray = Array.from(groupedBySongId.values())
+    .sort((a, b) => b.maxHit - a.maxHit)
+    .map((group, idx) => ({
+      groupIndex: idx + 1,
+      proposes: group.proposes.sort((a, b) => b.hit - a.hit),
+      maxHit: group.maxHit,
+      linkedSong: group.linkedSong,
+    }));
+
+  return {
+    tjName: artist.tjName,
+    tjNameJa: artist.tjNameJa,
+    groups: groupsArray,
+    orphanProposes: orphanProposes.sort((a, b) => b.hit - a.hit),
+    totalCount: proposes.length,
+  };
 }
