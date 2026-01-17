@@ -34,6 +34,12 @@ export type SongLinkedArtist = {
   order: number;
 };
 
+export type SongTopYoutubeVideo = {
+  videoId: string;
+  title?: string | null;
+  viewCount?: string | null;
+};
+
 export type ManagerArtistSongDetail = {
   id: number;
   title: string;
@@ -42,6 +48,7 @@ export type ManagerArtistSongDetail = {
   catalog?: string | null;
   hasYoutube: boolean;
   youtubeVideoId?: string | null;
+  topYoutubeVideo?: SongTopYoutubeVideo | null;
   thumbnails: {
     default?: string | null;
     medium?: string | null;

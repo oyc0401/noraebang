@@ -31,10 +31,6 @@ export function SongCard({
     song.thumbnails.high ??
     null;
 
-  const youtubeLink = song.youtubeVideoId
-    ? `https://www.youtube.com/watch?v=${song.youtubeVideoId}`
-    : null;
-
   const primaryTrack = song.spotifyGroup?.primaryTrack;
   const primaryRelease = primaryTrack?.releaseDate ?? "-";
   const primaryDuration = formatDuration(primaryTrack?.durationMs);
@@ -103,9 +99,9 @@ export function SongCard({
                     #{song.id}
                   </span>
                   <span>분류: {song.catalog ? song.catalog : "미분류"}</span>
-                  {youtubeLink ? (
+                  {song.topYoutubeVideo ? (
                     <a
-                      href={youtubeLink}
+                      href={`https://www.youtube.com/watch?v=${song.topYoutubeVideo.videoId}`}
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
@@ -113,7 +109,10 @@ export function SongCard({
                     >
                       YouTube
                       <span className="text-[10px] text-red-500">
-                        {song.youtubeVideoId}
+                        {song.topYoutubeVideo.videoId}
+                      </span>
+                      <span className="text-[10px] text-red-400">
+                        ({formatViewCount(song.topYoutubeVideo.viewCount)})
                       </span>
                     </a>
                   ) : (
@@ -273,6 +272,19 @@ function formatDuration(durationMs?: number | null) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function formatViewCount(viewCount?: string | null): string {
+  if (!viewCount) return "0";
+  const count = Number(viewCount);
+  if (Number.isNaN(count)) return viewCount;
+  if (count >= 100_000_000) {
+    return `${(count / 100_000_000).toFixed(1)}억`;
+  }
+  if (count >= 10_000) {
+    return `${(count / 10_000).toFixed(1)}만`;
+  }
+  return count.toLocaleString();
 }
 
 function getRoleLabel(role: string): string {
