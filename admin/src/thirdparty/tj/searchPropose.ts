@@ -56,24 +56,25 @@ interface TJSearchResponse {
 /**
  * 단일 페이지 조회 (내부용)
  */
-async function fetchPage(singer: string, pageNo: number): Promise<TJSongItemRaw[]> {
-  const res = await fetch("https://www.tjmedia.com/song/searchPropose", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      po_song_singer: singer,
-      po_song_title: "",
-      pageNo: pageNo.toString(),
-    }),
+async function fetchPage(
+  singer: string,
+  pageNo: number,
+): Promise<TJSongItemRaw[]> {
+  const params = new URLSearchParams({
+    po_song_singer: singer,
+    pageNo: pageNo.toString(),
   });
-
+  const res = await fetch(
+    `https://www.tjmedia.com/song/searchPropose?${params}`,
+  );
+  console.log(res);
   if (!res.ok) {
     throw new Error(`TJ API request failed: ${res.status} ${res.statusText}`);
   }
 
   const json: TJSearchResponse = await res.json();
+
+  console.log(json.data.viewData.list);
   return json.data.viewData.list;
 }
 
@@ -102,7 +103,9 @@ export async function searchTJPropose(
       break;
     }
 
-    allSongs.push(...songs.map((song) => ({ ...song, fetchedPageNo: currentPage })));
+    allSongs.push(
+      ...songs.map((song) => ({ ...song, fetchedPageNo: currentPage })),
+    );
     currentPage++;
   }
 
