@@ -263,10 +263,10 @@ model SpotifyArtistTrack {
 model SpotifyTrackGroup {
   id                    Int      @id @default(autoincrement())
   primarySpotifyTrackId Int?     @unique @map("primary_spotify_track_id")
-  titleKo               String?  @map("title_ko")
-  titleLatin            String?  @map("title_latin")
-  titleJaKana           String?  @map("title_ja_kana")
-  titleJaKanji          String?  @map("title_ja_kanji")
+  // titleKo               String?  @map("title_ko")
+  // titleLatin            String?  @map("title_latin")
+  // titleJaKana           String?  @map("title_ja_kana")
+  // titleJaKanji          String?  @map("title_ja_kanji")
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
