@@ -67,6 +67,7 @@ export type ManagerArtistSongDetail = {
     title?: string | null;
     artist?: string | null;
   } | null;
+  maxProposeHit?: number | null; // TJSong이 없을 때 신청곡 중 최대 추천수
   artists: SongLinkedArtist[];
 };
 

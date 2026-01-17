@@ -379,43 +379,51 @@ function SpotifyTrackCard({
       }}
     >
       <div className="flex items-start gap-3">
-        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100">
-          {track.thumbnails?.length ? (
-            <img
-              src={track.thumbnails[0]}
-              alt={track.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center text-emerald-500">
-              <SpotifyIcon className="h-4 w-4" />
-            </span>
-          )}
-        </div>
+        {track.spotifyUrl ? (
+          <a
+            href={track.spotifyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100 transition hover:opacity-80"
+          >
+            {track.thumbnails?.length ? (
+              <img
+                src={track.thumbnails[0]}
+                alt={track.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-emerald-500">
+                <SpotifyIcon className="h-4 w-4" />
+              </span>
+            )}
+          </a>
+        ) : (
+          <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+            {track.thumbnails?.length ? (
+              <img
+                src={track.thumbnails[0]}
+                alt={track.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-emerald-500">
+                <SpotifyIcon className="h-4 w-4" />
+              </span>
+            )}
+          </div>
+        )}
         <div className="flex flex-1 flex-col gap-2">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
-              {track.spotifyUrl ? (
-                <a
-                  href={track.spotifyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex flex-col"
-                >
-                  <span className="text-sm font-semibold text-zinc-900 group-hover:text-emerald-600">
-                    {track.name}
-                  </span>
-                  {track.musicBrainzTitle && (
-                    <span className="text-[11px] font-normal text-zinc-400">
-                      {`(${track.musicBrainzTitle})`}
-                    </span>
-                  )}
-                </a>
-              ) : (
-                <p className="text-sm font-semibold text-zinc-900">
-                  {track.name}
-                  <span className="ml-1 text-xs font-normal text-zinc-400">{`(${track.musicBrainzTitle})`}</span>
-                </p>
+              <p className="text-sm font-semibold text-zinc-900">
+                {track.name}
+              </p>
+              {track.musicBrainzTitle && (
+                <span className="text-[11px] font-normal text-zinc-400">
+                  {`(${track.musicBrainzTitle})`}
+                </span>
               )}
               <p className="text-[11px] text-zinc-500">
                 Track ID:{" "}
