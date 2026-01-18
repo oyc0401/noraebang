@@ -81,7 +81,7 @@ export async function extractArtistJson(
       },
     });
 
-    // 곡에 매핑되지 않은 유튜브 비디오 조회 (해당 아티스트 채널의 비디오 중 songs가 없는 것)
+    // 곡에 매핑되지 않은 유튜브 비디오 조회 (해당 아티스트 채널의 비디오 중 songs가 없는 것, 조회수 100만 이상)
     const youtubeVideos = await prisma.youtubeVideo.findMany({
       where: {
         channels: {
@@ -93,6 +93,9 @@ export async function extractArtistJson(
         },
         songs: {
           none: {},
+        },
+        viewCount: {
+          gte: 1000000,
         },
       },
       select: {
