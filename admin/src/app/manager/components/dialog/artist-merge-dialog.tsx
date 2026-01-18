@@ -2,24 +2,29 @@
 
 import { useEffect, useState, useTransition } from "react";
 
-import { updateArtistSpotifyId } from "../action";
-import { useManagerStore } from "../store";
-import { useArtistDetailContext } from "./artist-detail-context";
+import { mergeArtist } from "../../action";
+import { useManagerArtists } from "../../artist-list-context";
+import { useManagerStore } from "../../store";
+import { useArtistDetailContext } from "../artist-detail-context";
 
-export function ArtistSpotifyIdDialog() {
+export function ArtistMergeDialog() {
   const { detail, setDetail } = useArtistDetailContext();
-  const isOpen = useManagerStore((state) => state.isSpotifyIdDialogOpen);
-  const closeDialog = useManagerStore((state) => state.closeSpotifyIdDialog);
-  const [spotifyId, setSpotifyId] = useState("");
+  const { removeArtistSummary } = useManagerArtists();
+  const isOpen = useManagerStore((state) => state.isMergeArtistDialogOpen);
+  const closeDialog = useManagerStore((state) => state.closeMergeArtistDialog);
+  const setSelectedArtistId = useManagerStore(
+    (state) => state.setSelectedArtistId,
+  );
+  const [targetArtistId, setTargetArtistId] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    if (isOpen && detail) {
-      setSpotifyId(detail.spotifyId ?? "");
+    if (isOpen) {
+      setTargetArtistId("");
       setErrorMessage(null);
     }
-  }, [detail, isOpen]);
+  }, [isOpen]);
 
   if (!isOpen || !detail) {
     return null;
@@ -32,60 +37,62 @@ export function ArtistSpotifyIdDialog() {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!detail) return;
+    const parsedTargetId = Number(targetArtistId);
+    if (!Number.isFinite(parsedTargetId) || parsedTargetId <= 0) {
+      setErrorMessage("유효한 대상 아티스트 ID를 입력하세요.");
+      return;
+    }
+    if (parsedTargetId === detail.id) {
+      setErrorMessage("현재 아티스트와 다른 ID를 입력하세요.");
+      return;
+    }
+
     startTransition(async () => {
       try {
         setErrorMessage(null);
-        const updated = await updateArtistSpotifyId({
-          artistId: detail.id,
-          spotifyId,
+        await mergeArtist({
+          sourceArtistId: detail.id,
+          targetArtistId: parsedTargetId,
         });
-        setDetail((prev) =>
-          prev ? { ...prev, spotifyId: updated.spotifyId ?? null } : prev,
-        );
+        removeArtistSummary(detail.id);
+        setDetail(null);
+        setSelectedArtistId(parsedTargetId);
         closeDialog();
       } catch (error) {
         console.error(error);
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "스포티파이 ID를 수정하지 못했습니다.",
+            : "아티스트 병합에 실패했습니다.",
         );
       }
     });
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4">
           <h3 className="text-base font-semibold text-zinc-900">
-            스포티파이 ID 편집
+            아티스트 병합
           </h3>
-          <button
-            type="button"
-            className="text-sm text-zinc-400 hover:text-zinc-600"
-            onClick={handleClose}
-            disabled={isPending}
-          >
-            닫기
-          </button>
+          <p className="mt-1 text-xs text-zinc-500">
+            현재 아티스트의 모든 곡을 대상 아티스트로 이전한 뒤 현재
+            아티스트는 삭제됩니다.
+          </p>
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-1 text-sm">
             <label className="text-xs font-semibold text-zinc-600">
-              Spotify ID
+              대상 아티스트 ID
             </label>
             <input
-              type="text"
+              type="number"
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
-              value={spotifyId}
-              onChange={(event) => setSpotifyId(event.target.value)}
-              placeholder="스포티파이 아티스트 ID"
+              value={targetArtistId}
+              onChange={(event) => setTargetArtistId(event.target.value)}
+              placeholder="예: 1234"
             />
-            <p className="text-[11px] text-zinc-400">
-              값을 비우면 연결이 제거됩니다.
-            </p>
           </div>
           {errorMessage && (
             <p className="text-xs text-red-600">{errorMessage}</p>
@@ -104,7 +111,7 @@ export function ArtistSpotifyIdDialog() {
               className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white disabled:opacity-60"
               disabled={isPending}
             >
-              {isPending ? "저장 중..." : "저장"}
+              {isPending ? "병합 중..." : "병합"}
             </button>
           </div>
         </form>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useManagerStore } from "../store";
+import { useManagerStore } from "../../store";
 
 export function GroupDetailDialog() {
   const groupDetail = useManagerStore((state) => state.groupDetail);

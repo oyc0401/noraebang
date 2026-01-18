@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchArtistAliases, type ArtistAlias } from "../action";
-import { useManagerStore } from "../store";
-import { useArtistDetailContext } from "./artist-detail-context";
+import { fetchArtistAliases, type ArtistAlias } from "../../action";
+import { useManagerStore } from "../../store";
+import { useArtistDetailContext } from "../artist-detail-context";
 
 export function ArtistAliasDialog() {
   const isOpen = useManagerStore((state) => state.isAliasDialogOpen);

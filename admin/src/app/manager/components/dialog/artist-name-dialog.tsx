@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useTransition } from "react";
 
-import { updateArtistNames } from "../action";
-import { useManagerArtists } from "../artist-list-context";
-import { useManagerStore } from "../store";
-import { useArtistDetailContext } from "./artist-detail-context";
+import { updateArtistNames } from "../../action";
+import { useManagerArtists } from "../../artist-list-context";
+import { useManagerStore } from "../../store";
+import { useArtistDetailContext } from "../artist-detail-context";
 
 export function ArtistNameDialog() {
   const { detail, setDetail } = useArtistDetailContext();
