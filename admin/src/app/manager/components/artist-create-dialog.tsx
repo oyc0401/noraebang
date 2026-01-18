@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 
-import { createArtist } from "../action";
+import { createArtist } from "../action-left";
 import { useManagerArtists } from "../artist-list-context";
 import { useManagerStore } from "../store";
 
@@ -38,7 +38,9 @@ export function ArtistCreateDialog() {
       } catch (error) {
         console.error(error);
         setErrorMessage(
-          error instanceof Error ? error.message : "아티스트를 생성하지 못했습니다.",
+          error instanceof Error
+            ? error.message
+            : "아티스트를 생성하지 못했습니다.",
         );
       }
     });
@@ -48,7 +50,9 @@ export function ArtistCreateDialog() {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-zinc-900">아티스트 생성</h3>
+          <h3 className="text-base font-semibold text-zinc-900">
+            아티스트 생성
+          </h3>
           <button
             type="button"
             className="text-sm text-zinc-400 hover:text-zinc-600"
@@ -60,7 +64,9 @@ export function ArtistCreateDialog() {
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-1 text-sm">
-            <label className="text-xs font-semibold text-zinc-600">name (기본)</label>
+            <label className="text-xs font-semibold text-zinc-600">
+              name (기본)
+            </label>
             <input
               type="text"
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
@@ -70,7 +76,9 @@ export function ArtistCreateDialog() {
             />
           </div>
           <div className="space-y-1 text-sm">
-            <label className="text-xs font-semibold text-zinc-600">nameKo (한국어)</label>
+            <label className="text-xs font-semibold text-zinc-600">
+              nameKo (한국어)
+            </label>
             <input
               type="text"
               className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
@@ -79,7 +87,9 @@ export function ArtistCreateDialog() {
               required
             />
           </div>
-          {errorMessage && <p className="text-xs text-red-600">{errorMessage}</p>}
+          {errorMessage && (
+            <p className="text-xs text-red-600">{errorMessage}</p>
+          )}
           <div className="flex justify-end gap-2 text-sm">
             <button
               type="button"
