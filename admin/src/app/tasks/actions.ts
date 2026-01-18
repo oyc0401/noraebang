@@ -169,8 +169,7 @@ export async function runAutoFillSongTitlesJob(
     { minArtistId, maxArtistId },
     {
       dryRun,
-      verbose: false,
-      logger: console.log,
+      verbose: true,
     },
   );
 }
@@ -188,8 +187,7 @@ export async function runAutoFillArtistNamesJob(
     { minArtistId, maxArtistId },
     {
       dryRun,
-      verbose: false,
-      logger: console.log,
+      verbose: true,
     },
   );
 }
@@ -202,7 +200,6 @@ export async function runMapProposeSongForArtist(
   return mapProposeSong(artistId, {
     dryRun,
     verbose: false,
-    logger: console.log,
   });
 }
 
@@ -213,8 +210,7 @@ export async function runMapSongYoutubeVideoForArtist(
   const dryRun = Boolean(options.dryRun);
   return mapSongYoutubeVideo(artistId, {
     dryRun,
-    verbose: false,
-    logger: console.log,
+    verbose: true,
   });
 }
 
@@ -296,15 +292,14 @@ export async function runUpdateSongThumbnailsJob(
 
   return updateSongThumbnails(
     { minArtistId: startId, maxArtistId: endId },
-    { dryRun, verbose: false, logger: console.log },
+    { dryRun, verbose: true },
   );
 }
 
 export async function runMapSongSpotifyGroupsJob(
-  input: RunMapProposeSongInput & { force?: boolean | null },
+  input: RunMapProposeSongInput,
 ): Promise<MapSongSpotifyGroupsResult> {
   const dryRun = Boolean(input.dryRun);
-  const force = Boolean(input.force);
   const startId = parsePositiveInt(input.startId, DEFAULT_START_ID)!;
   const endId = parsePositiveInt(input.endId, MAX_ARTIST)!;
 
@@ -316,7 +311,5 @@ export async function runMapSongSpotifyGroupsJob(
     minArtistId: startId,
     maxArtistId: endId,
     dryRun,
-    force,
-    logger: console.log,
   });
 }

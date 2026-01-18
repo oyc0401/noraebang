@@ -27,7 +27,6 @@ export interface AutoFillSongTitlesRange {
 export interface AutoFillSongTitlesOptions {
   dryRun?: boolean;
   verbose?: boolean;
-  logger?: (line: string) => void;
 }
 
 export type SongTitleChange = {
@@ -96,19 +95,14 @@ const selectTitle = (song: SongRecord): SelectedTitle => {
   return { value: null, source: null };
 };
 
-const logPlaceholder = () => {};
-
 export async function autoFillSongTitles(
   range: AutoFillSongTitlesRange,
   options: AutoFillSongTitlesOptions = {},
 ): Promise<AutoFillSongTitlesResult> {
-  const { dryRun = false, verbose = false, logger } = options;
+  const { dryRun = false, verbose = false } = options;
   const minArtistId = range.minArtistId ?? 1;
   const maxArtistId = range.maxArtistId;
-  const emit = (line: string) => {
-    if (logger) logger(line);
-    if (verbose) console.log(line);
-  };
+  const emit = verbose ? console.log : () => {};
 
   emit(
     `\n🎼 autoFillSongTitles → artistId ${minArtistId}~${maxArtistId} ${dryRun ? "(dry-run)" : ""}`,

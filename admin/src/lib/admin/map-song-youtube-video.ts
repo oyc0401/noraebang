@@ -35,7 +35,6 @@ export type SongYoutubeVideoMatch = {
 export interface MapSongYoutubeVideoOptions {
   dryRun?: boolean;
   verbose?: boolean;
-  logger?: (line: string) => void;
 }
 
 export interface MapSongYoutubeVideoResult {
@@ -56,17 +55,12 @@ export interface MapSongYoutubeVideoResult {
   };
 }
 
-const noop = () => {};
-
 export async function mapSongYoutubeVideo(
   artistId: number,
   options: MapSongYoutubeVideoOptions = {},
 ): Promise<MapSongYoutubeVideoResult> {
-  const { dryRun = false, verbose = false, logger } = options;
-  const emit = (line: string) => {
-    if (logger) logger(line);
-    if (verbose) console.log(line);
-  };
+  const { dryRun = false, verbose = false } = options;
+  const emit = verbose ? console.log : () => {};
 
   emit(
     `\n🎬 mapSongYoutubeVideo → artistId=${artistId} ${dryRun ? "(dry-run)" : ""}`,
