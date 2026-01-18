@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { searchSongsForManager } from "../action-left";
 import { useManagerArtists } from "../artist-list-context";
-import { artistFilterOptions } from "../filter-options";
 import {
   managerSortOptions,
   type ManagerSongSearchResult,
@@ -12,7 +11,7 @@ import {
 } from "../types";
 import { useManagerStore } from "../store";
 import { ArtistCard } from "./artist-card";
-import { FilterDialog } from "./filter-dialog";
+import { FilterDialog } from "./dialog/filter-dialog";
 import Link from "next/link";
 
 export function LeftPanel() {
@@ -20,7 +19,6 @@ export function LeftPanel() {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const selectionAnchorIndexRef = useRef<number | null>(null);
   const songSearchRequestIdRef = useRef(0);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
 
   const {
     artists,
@@ -42,6 +40,9 @@ export function LeftPanel() {
   );
   const openCreateArtistDialog = useManagerStore(
     (state) => state.openCreateArtistDialog,
+  );
+  const openFilterDialog = useManagerStore(
+    (state) => state.openFilterDialog,
   );
   const [songResults, setSongResults] = useState<ManagerSongSearchResult[]>([]);
   const [isSongSearching, setIsSongSearching] = useState(false);
@@ -186,8 +187,6 @@ export function LeftPanel() {
     cardElement?.scrollIntoView({ block: "nearest" });
   }, [selectedArtistId, artists.length]);
 
-  const availableFilters = artistFilterOptions;
-
   return (
     <>
       <section className="flex h-full min-h-0 flex-col border border-zinc-200 bg-white">
@@ -249,7 +248,7 @@ export function LeftPanel() {
             <button
               type="button"
               className="flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-blue-400 hover:text-blue-600 cursor-pointer"
-              onClick={() => setIsFilterDialogOpen(true)}
+              onClick={openFilterDialog}
             >
               필터
               {selectedFilters.length > 0 && (
@@ -390,14 +389,7 @@ export function LeftPanel() {
         </div>
       </section>
 
-      {isFilterDialogOpen && (
-        <FilterDialog
-          filters={availableFilters}
-          selectedFilters={selectedFilters}
-          onChange={setSelectedFilters}
-          onClose={() => setIsFilterDialogOpen(false)}
-        />
-      )}
+      <FilterDialog />
     </>
   );
 }

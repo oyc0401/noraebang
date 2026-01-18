@@ -16,6 +16,9 @@ type ManagerStoreState = {
   isSpotifyIdDialogOpen: boolean;
   openSpotifyIdDialog: () => void;
   closeSpotifyIdDialog: () => void;
+  isFilterDialogOpen: boolean;
+  openFilterDialog: () => void;
+  closeFilterDialog: () => void;
   isDeleteArtistDialogOpen: boolean;
   openDeleteArtistDialog: () => void;
   closeDeleteArtistDialog: () => void;
@@ -58,6 +61,9 @@ export const useManagerStore = create<ManagerStoreState>((set) => ({
   isSpotifyIdDialogOpen: false,
   openSpotifyIdDialog: () => set({ isSpotifyIdDialogOpen: true }),
   closeSpotifyIdDialog: () => set({ isSpotifyIdDialogOpen: false }),
+  isFilterDialogOpen: false,
+  openFilterDialog: () => set({ isFilterDialogOpen: true }),
+  closeFilterDialog: () => set({ isFilterDialogOpen: false }),
   isDeleteArtistDialogOpen: false,
   openDeleteArtistDialog: () => set({ isDeleteArtistDialogOpen: true }),
   closeDeleteArtistDialog: () => set({ isDeleteArtistDialogOpen: false }),
