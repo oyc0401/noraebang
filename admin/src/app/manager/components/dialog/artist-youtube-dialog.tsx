@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 
-import { useManagerStore } from "../store";
-import { useArtistDetailContext } from "./artist-detail-context";
+import { useManagerStore } from "../../store";
+import { useArtistDetailContext } from "../artist-detail-context";
 
 export function ArtistYoutubeDialog() {
   const { detail } = useArtistDetailContext();
