@@ -1,6 +1,6 @@
 import { prisma } from "../prisma";
 
-// autoFillSongTitles는 단일 아티스트의 곡에 대해 Spotify/곡 제목 정보를 기반으로 미채워진 언어별 제목 필드를 자동 보완합니다.
+// autoFillSongTitles는 단일 아티스트의 곡에 대해 Spotify 트랙/유튜브 비디오/곡 제목 정보를 기반으로 미채워진 언어별 제목 필드를 자동 보완합니다.
 
 type TitleField = "titleLatin" | "titleJaKanji" | "titleJaKana" | "titleKo";
 
@@ -12,23 +12,34 @@ type SongRecord = {
   titleJaKana: string | null;
   titleKo: string | null;
   spotifyTrackGroup: {
-    primaryTrack: {
-      name: string | null;
+    tracks: Array<{
+      name: string;
       musicBrainzTitle: string | null;
-    } | null;
+    }>;
   } | null;
+  youtubeVideos: Array<{
+    youtubeVideo: {
+      title: string | null;
+    };
+  }>;
 };
 
 export interface AutoFillSongTitlesOptions {
   dryRun?: boolean;
 }
 
+type TitleSource =
+  | "spotifyTrackName"
+  | "spotifyMusicBrainzTitle"
+  | "youtubeVideoTitle"
+  | "songTitle";
+
 type SongTitleChange = {
   songId: number;
   songTitle: string;
   field: TitleField;
   value: string;
-  source: "spotifyTrackName" | "spotifyMusicBrainzTitle" | "songTitle";
+  source: TitleSource;
 };
 
 const removeSpecialChars = (text: string) =>
@@ -55,22 +66,38 @@ const detectLanguageField = (title: string): TitleField => {
 };
 
 type SelectedTitle = {
-  value: string | null;
-  source: SongTitleChange["source"] | null;
-};
+  value: string;
+  source: TitleSource;
+} | null;
 
 const selectTitle = (song: SongRecord): SelectedTitle => {
-  const primary = song.spotifyTrackGroup?.primaryTrack;
-  if (primary?.name) {
-    return { value: primary.name, source: "spotifyTrackName" };
+  // 1순위: musicBrainzTitle (가장 정확한 제목)
+  for (const track of song.spotifyTrackGroup?.tracks ?? []) {
+    if (track.musicBrainzTitle?.trim()) {
+      return { value: track.musicBrainzTitle, source: "spotifyMusicBrainzTitle" };
+    }
   }
-  if (primary?.musicBrainzTitle) {
-    return { value: primary.musicBrainzTitle, source: "spotifyMusicBrainzTitle" };
+
+  // 2순위: spotify track name
+  for (const track of song.spotifyTrackGroup?.tracks ?? []) {
+    if (track.name?.trim()) {
+      return { value: track.name, source: "spotifyTrackName" };
+    }
   }
-  if (song.title) {
+
+  // 3순위: youtube video title
+  for (const sv of song.youtubeVideos) {
+    if (sv.youtubeVideo.title?.trim()) {
+      return { value: sv.youtubeVideo.title, source: "youtubeVideoTitle" };
+    }
+  }
+
+  // 4순위: song title
+  if (song.title?.trim()) {
     return { value: song.title, source: "songTitle" };
   }
-  return { value: null, source: null };
+
+  return null;
 };
 
 export async function autoFillSongTitles(
@@ -108,10 +135,19 @@ export async function autoFillSongTitles(
       titleKo: true,
       spotifyTrackGroup: {
         select: {
-          primaryTrack: {
+          tracks: {
             select: {
               name: true,
               musicBrainzTitle: true,
+            },
+          },
+        },
+      },
+      youtubeVideos: {
+        select: {
+          youtubeVideo: {
+            select: {
+              title: true,
             },
           },
         },
@@ -131,10 +167,10 @@ export async function autoFillSongTitles(
   const updatedSongIds = new Set<number>();
 
   for (const song of songs) {
-    const { value, source } = selectTitle(song as SongRecord);
-    if (!value || !source) continue;
+    const selected = selectTitle(song as SongRecord);
+    if (!selected) continue;
 
-    const field = detectLanguageField(value);
+    const field = detectLanguageField(selected.value);
     const currentValue = (song as Record<TitleField, string | null>)[field];
     if (currentValue) continue;
 
@@ -142,8 +178,8 @@ export async function autoFillSongTitles(
       songId: song.id,
       songTitle: song.title,
       field,
-      value,
-      source,
+      value: selected.value,
+      source: selected.source,
     });
     updatedSongIds.add(song.id);
   }

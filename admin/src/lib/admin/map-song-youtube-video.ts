@@ -1,35 +1,32 @@
 import { prisma } from "../prisma";
 import { findBestMatch } from "../song-spotify-matcher";
-import { normalizeTitle } from "../track-title-normalizer";
 
-// mapSongYoutubeVideo는 아티스트의 곡과 토픽 채널 영상을 매칭해 SongYoutubeVideo를 보완합니다.
+// mapSongYoutubeVideo는 아티스트의 토픽 채널 영상 중 SongYoutubeVideo에 연결되지 않은 영상을 Song과 매칭합니다.
+// - 영상 제목과 Song의 title/titleKo/titleLatin/titleJa/spotifyTitle/musicBrainzTitle 비교
+// - 정규화 후 완전 일치 O(1) 먼저 시도, 실패시만 findBestMatch 호출
 
-type SongWithTitles = {
+// 정규화: NFKC + 공백 정규화 + 소문자 + 공백 제거
+const normalize = (s: string) =>
+  s.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase().replace(/\s+/g, "");
+
+type SongData = {
   id: number;
   title: string;
   titleKo: string | null;
   titleLatin: string | null;
-  spotifyTitles: string[];
-  musicBrainzTitles: string[];
+  titleJa: string | null;
 };
 
-type YoutubeVideoInfo = {
+type VideoData = {
   videoId: string;
   title: string;
 };
 
-type SongYoutubeVideoMatch = {
+type Mapping = {
+  videoId: string;
+  videoTitle: string;
   songId: number;
   songTitle: string;
-  matchedVideos: Array<{
-    videoId: string;
-    title: string;
-    matchedBy: string;
-  }>;
-  candidateVideos: Array<{
-    videoId: string;
-    title: string;
-  }>;
 };
 
 export interface MapSongYoutubeVideoOptions {
@@ -48,28 +45,22 @@ export async function mapSongYoutubeVideo(
 
   const artist = await prisma.artist.findUnique({
     where: { id: artistId },
-    select: {
-      id: true,
-      name: true,
-      nameKo: true,
-    },
+    select: { id: true, name: true, nameKo: true },
   });
 
   if (!artist) {
     throw new Error(`Artist not found: ${artistId}`);
   }
 
+  // 아티스트의 곡 조회
   const songs = await prisma.song.findMany({
-    where: {
-      artistSongs: {
-        some: { artistId },
-      },
-    },
+    where: { artistSongs: { some: { artistId } } },
     select: {
       id: true,
       title: true,
       titleKo: true,
       titleLatin: true,
+      titleJa: true,
       spotifyTrackGroup: {
         select: {
           tracks: {
@@ -83,6 +74,7 @@ export async function mapSongYoutubeVideo(
     },
   });
 
+  // 토픽 채널의 영상 조회
   const topicChannels = await prisma.youtubeChannel.findMany({
     where: { artistId, type: "TOPIC" },
     select: {
@@ -92,6 +84,7 @@ export async function mapSongYoutubeVideo(
             select: {
               videoId: true,
               title: true,
+              songs: { select: { songId: true } },
             },
           },
         },
@@ -99,177 +92,127 @@ export async function mapSongYoutubeVideo(
     },
   });
 
-  const songsWithTitles = songs.map<SongWithTitles>((song) => {
-    const spotifyTitles = new Set<string>();
-    const musicBrainzTitles = new Set<string>();
-
-    song.spotifyTrackGroup?.tracks.forEach((track) => {
-      if (track.name) spotifyTitles.add(track.name);
-      if (track.musicBrainzTitle) musicBrainzTitles.add(track.musicBrainzTitle);
-    });
-
-    return {
-      id: song.id,
-      title: song.title,
-      titleKo: song.titleKo,
-      titleLatin: song.titleLatin,
-      spotifyTitles: Array.from(spotifyTitles),
-      musicBrainzTitles: Array.from(musicBrainzTitles),
-    };
-  });
-
-  const videos: YoutubeVideoInfo[] = [];
+  // 이미 연결된 영상 제외하고 미연결 영상만 추출
+  const unmappedVideos: VideoData[] = [];
   const seenVideoId = new Set<string>();
 
-  topicChannels.forEach((channel) => {
-    channel.videos.forEach((cv) => {
+  for (const channel of topicChannels) {
+    for (const cv of channel.videos) {
       const video = cv.youtubeVideo;
-      if (!video.title) return;
-      if (seenVideoId.has(video.videoId)) return;
+      if (!video.title) continue;
+      if (seenVideoId.has(video.videoId)) continue;
+      if (video.songs.length > 0) continue; // 이미 연결됨
       seenVideoId.add(video.videoId);
-      videos.push({ videoId: video.videoId, title: video.title });
+      unmappedVideos.push({ videoId: video.videoId, title: video.title });
+    }
+  }
+
+  console.log(`  • Artist: ${artist.name} (${artist.nameKo})`);
+  console.log(`  • Songs: ${songs.length}, Unmapped Videos: ${unmappedVideos.length}`);
+
+  if (songs.length === 0 || unmappedVideos.length === 0) {
+    console.log(`  ⏭️ No data to process`);
+    return;
+  }
+
+  // 원본 title → Song 맵 (findBestMatch 결과 조회용)
+  const titleToSong = new Map<string, SongData>();
+  // 정규화된 title → Song 맵 (O(1) 완전 일치용)
+  const normalizedToSong = new Map<string, SongData>();
+
+  for (const song of songs) {
+    const titles = [song.title, song.titleKo, song.titleLatin, song.titleJa];
+
+    // spotify/musicBrainz title도 추가
+    song.spotifyTrackGroup?.tracks.forEach((track) => {
+      if (track.name?.trim()) titles.push(track.name);
+      if (track.musicBrainzTitle?.trim()) titles.push(track.musicBrainzTitle);
     });
-  });
 
-  console.log(`  • Songs: ${songsWithTitles.length}`);
-  console.log(`  • Topic videos: ${videos.length}`);
+    for (const title of titles) {
+      if (title?.trim()) {
+        titleToSong.set(title, song);
+        normalizedToSong.set(normalize(title), song);
+      }
+    }
+  }
+  const songTitleCandidates = [...titleToSong.keys()];
 
-  const mappings = generateMapping(songsWithTitles, videos);
-  const withMatches = mappings.filter((m) => m.matchedVideos.length > 0);
-  const withCandidatesOnly = mappings.filter(
-    (m) =>
-      m.matchedVideos.length === 0 && m.candidateVideos.length > 0,
-  );
-  const withoutMatches = mappings.filter(
-    (m) =>
-      m.matchedVideos.length === 0 && m.candidateVideos.length === 0,
-  );
-  const totalMatchedLinks = withMatches.reduce(
-    (sum, item) => sum + item.matchedVideos.length,
-    0,
-  );
+  // 각 비디오에 대해 매칭할 Song 찾기
+  const mappings: Mapping[] = [];
 
-  console.log("  • Mapping stats");
-  console.log(`    - songs with matches: ${withMatches.length}`);
-  console.log(`    - songs with candidates only: ${withCandidatesOnly.length}`);
-  console.log(`    - songs without matches: ${withoutMatches.length}`);
-  console.log(`    - matched links: ${totalMatchedLinks}`);
+  for (const video of unmappedVideos) {
+    // O(1) 완전 일치 먼저 시도
+    let matchedSong = normalizedToSong.get(normalize(video.title));
 
-  const { inserted, skipped } = await applyMappings(mappings, dryRun);
-  console.log(
-    `  • 결과: matches=${withMatches.length}, candidatesOnly=${withCandidatesOnly.length}, noMatch=${withoutMatches.length}, inserted=${inserted}, skipped=${skipped}`,
-  );
-}
-
-function generateMapping(
-  songs: SongWithTitles[],
-  videos: YoutubeVideoInfo[],
-): SongYoutubeVideoMatch[] {
-  const normalizedToVideos = new Map<string, YoutubeVideoInfo[]>();
-
-  videos.forEach((video) => {
-    const norm = normalizeTitle(video.title);
-    if (!norm) return;
-    const arr = normalizedToVideos.get(norm) ?? [];
-    arr.push(video);
-    normalizedToVideos.set(norm, arr);
-  });
-
-  const normalizedVideoTitles = Array.from(normalizedToVideos.keys());
-
-  return songs.map((song) => {
-    const matchedVideos: SongYoutubeVideoMatch["matchedVideos"] = [];
-    const candidateSet = new Set<string>();
-
-    const titleSources: Array<{ titles: string[]; source: string }> = [
-      { titles: song.musicBrainzTitles, source: "musicBrainzTitle" },
-      { titles: song.spotifyTitles, source: "spotifyTitle" },
-      { titles: [song.title], source: "title" },
-      { titles: song.titleLatin ? [song.titleLatin] : [], source: "titleLatin" },
-      { titles: song.titleKo ? [song.titleKo] : [], source: "titleKo" },
-    ];
-
-    for (const { titles, source } of titleSources) {
-      for (const rawTitle of titles) {
-        if (!rawTitle) continue;
-        const normalizedQuery = normalizeTitle(rawTitle);
-        if (!normalizedQuery) continue;
-
-        const result = findBestMatch(normalizedQuery, normalizedVideoTitles);
-
-        if (result.answer) {
-          const matches = normalizedToVideos.get(result.answer) ?? [];
-          matches.forEach((video) => {
-            if (!matchedVideos.find((item) => item.videoId === video.videoId)) {
-              matchedVideos.push({
-                videoId: video.videoId,
-                title: video.title,
-                matchedBy: `${source}: "${rawTitle}"`,
-              });
-            }
-          });
-        }
-
-        result.candidate.forEach((candidateNorm) => {
-          const vids = normalizedToVideos.get(candidateNorm) ?? [];
-          vids.forEach((video) => candidateSet.add(video.videoId));
-        });
+    // 실패시 findBestMatch (유사도 비교)
+    if (!matchedSong) {
+      const result = findBestMatch(video.title, songTitleCandidates);
+      if (result.answer) {
+        matchedSong = titleToSong.get(result.answer);
       }
     }
 
-    const matchedIds = new Set(matchedVideos.map((item) => item.videoId));
-    const candidateVideos = Array.from(candidateSet)
-      .filter((videoId) => !matchedIds.has(videoId))
-      .map((videoId) => {
-        const video = videos.find((v) => v.videoId === videoId)!;
-        return { videoId: video.videoId, title: video.title };
+    if (matchedSong) {
+      mappings.push({
+        videoId: video.videoId,
+        videoTitle: video.title,
+        songId: matchedSong.id,
+        songTitle:
+          matchedSong.titleJa ||
+          matchedSong.titleLatin ||
+          matchedSong.titleKo ||
+          matchedSong.title,
       });
-
-    return {
-      songId: song.id,
-      songTitle: song.title,
-      matchedVideos,
-      candidateVideos,
-    };
-  });
-}
-
-async function applyMappings(
-  mappings: SongYoutubeVideoMatch[],
-  dryRun: boolean,
-) {
-  const toInsert: Array<{ songId: number; youtubeVideoId: string }> = [];
-
-  mappings.forEach((mapping) => {
-    mapping.matchedVideos.forEach((video) => {
-      toInsert.push({ songId: mapping.songId, youtubeVideoId: video.videoId });
-    });
-  });
-
-  if (dryRun) {
-    return { inserted: 0, skipped: 0 };
-  }
-
-  let inserted = 0;
-  let skipped = 0;
-
-  for (const item of toInsert) {
-    try {
-      await prisma.songYoutubeVideo.upsert({
-        where: {
-          songId_youtubeVideoId: {
-            songId: item.songId,
-            youtubeVideoId: item.youtubeVideoId,
-          },
-        },
-        update: {},
-        create: item,
-      });
-      inserted += 1;
-    } catch {
-      skipped += 1;
     }
   }
 
-  return { inserted, skipped };
+  console.log(`  • Mappings: ${mappings.length}`);
+
+  if (mappings.length === 0) {
+    console.log(`  ⏭️ No mappings generated`);
+    return;
+  }
+
+  // 매핑 적용
+  let applied = 0;
+  let errors = 0;
+
+  for (const mapping of mappings) {
+    try {
+      if (dryRun) {
+        console.log(
+          `[DRY-RUN] Video "${mapping.videoTitle}" → Song ${mapping.songId} (${mapping.songTitle})`,
+        );
+        applied += 1;
+      } else {
+        await prisma.songYoutubeVideo.upsert({
+          where: {
+            songId_youtubeVideoId: {
+              songId: mapping.songId,
+              youtubeVideoId: mapping.videoId,
+            },
+          },
+          update: {},
+          create: {
+            songId: mapping.songId,
+            youtubeVideoId: mapping.videoId,
+          },
+        });
+        console.log(
+          `✅ Video "${mapping.videoTitle}" → Song ${mapping.songId}`,
+        );
+        applied += 1;
+      }
+    } catch (error) {
+      console.error(
+        `❌ Video ${mapping.videoId} 매핑 실패: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      errors += 1;
+    }
+  }
+
+  console.log(`  • 결과: applied=${applied}, errors=${errors}`);
 }
