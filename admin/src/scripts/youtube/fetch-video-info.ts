@@ -13,7 +13,7 @@ if (!YOUTUBE_API_KEY) {
   throw new Error("YOUTUBE_API_KEY is not set");
 }
 
-const VIDEO_ID = "6OC92oxs4gA";
+const VIDEO_ID = "yCUfOTeNKX4";
 const TARGET_LOCALE = "ko";
 
 interface YoutubeVideoApiResponse {
