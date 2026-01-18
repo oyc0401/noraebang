@@ -70,7 +70,7 @@ videoId를 통해 검색을 하는건 아니고 videoId는 그냥 리턴json에 
 async function callGPT(artists: ArtistInput[]): Promise<MappingPayload[]> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5.2",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "developer", content: DEVELOPER_PROMPT },
