@@ -271,7 +271,6 @@ export async function fetchManagerArtistDetail(
         name: as.artist.name,
         nameKo: as.artist.nameKo,
         role: as.role ?? null,
-        order: as.order,
       })),
     };
   });
@@ -817,9 +816,7 @@ async function getSpotifyAccessToken(): Promise<string> {
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    throw new Error(
-      "SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET must be set",
-    );
+    throw new Error("SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET must be set");
   }
 
   const response = await fetch("https://accounts.spotify.com/api/token", {
@@ -984,7 +981,9 @@ export async function addYoutubeChannel({
 async function fetchYoutubeChannelInfo(channelId: string) {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
-    console.warn("YOUTUBE_API_KEY가 설정되지 않아 채널 정보를 가져올 수 없습니다.");
+    console.warn(
+      "YOUTUBE_API_KEY가 설정되지 않아 채널 정보를 가져올 수 없습니다.",
+    );
     return null;
   }
 
@@ -1021,9 +1020,7 @@ async function fetchYoutubeChannelInfo(channelId: string) {
     videoCount: statistics?.videoCount
       ? Number.parseInt(statistics.videoCount, 10)
       : null,
-    viewCount: statistics?.viewCount
-      ? BigInt(statistics.viewCount)
-      : null,
+    viewCount: statistics?.viewCount ? BigInt(statistics.viewCount) : null,
     hiddenSubscriberCount: statistics?.hiddenSubscriberCount ?? null,
     uploadsPlaylistId: contentDetails?.relatedPlaylists?.uploads ?? null,
   };
@@ -1100,7 +1097,7 @@ export async function mergeArtist({
         data: artistSongs.map((song) => ({
           artistId: targetArtistId,
           songId: song.songId,
-          order: song.order,
+
           role: song.role,
         })),
         skipDuplicates: true,
@@ -1549,7 +1546,6 @@ export async function updateSong(input: UpdateSongInput) {
         name: as.artist.name,
         nameKo: as.artist.nameKo,
         role: as.role ?? null,
-        order: as.order,
       })) ?? [],
   };
 }
@@ -1613,7 +1609,6 @@ export async function fetchSongArtists(
     name: as.artist.name,
     nameKo: as.artist.nameKo,
     role: as.role ?? null,
-    order: as.order,
   }));
 }
 
@@ -1896,7 +1891,6 @@ export async function createSong({
       artistSongs: {
         create: {
           artistId,
-          order: 0,
         },
       },
     },
@@ -2013,7 +2007,6 @@ export async function createSong({
       name: as.artist.name,
       nameKo: as.artist.nameKo,
       role: as.role ?? null,
-      order: as.order,
     })),
   };
 }
