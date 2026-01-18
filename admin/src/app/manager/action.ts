@@ -161,7 +161,11 @@ export async function fetchManagerArtistDetail(
               spotifyTrackGroup: {
                 select: {
                   id: true,
-                  primaryTrack: { select: spotifyTrackBaseSelect },
+                  tracks: {
+                    orderBy: { popularity: "desc" },
+                    take: 1,
+                    select: spotifyTrackBaseSelect,
+                  },
                 },
               },
               karaokeSongs: {
@@ -250,8 +254,8 @@ export async function fetchManagerArtistDetail(
       spotifyGroup: song.spotifyTrackGroup
         ? {
             id: song.spotifyTrackGroup.id,
-            primaryTrack: song.spotifyTrackGroup.primaryTrack
-              ? mapSpotifyTrackSummary(song.spotifyTrackGroup.primaryTrack)
+            primaryTrack: song.spotifyTrackGroup.tracks[0]
+              ? mapSpotifyTrackSummary(song.spotifyTrackGroup.tracks[0])
               : null,
           }
         : null,
@@ -456,7 +460,11 @@ export async function fetchManagerArtistSongs(
           spotifyTrackGroup: {
             select: {
               id: true,
-              primaryTrack: { select: spotifyTrackBaseSelect },
+              tracks: {
+                orderBy: { popularity: "desc" },
+                take: 1,
+                select: spotifyTrackBaseSelect,
+              },
             },
           },
           karaokeSongs: {
@@ -550,8 +558,8 @@ export async function fetchManagerArtistSongs(
       spotifyGroup: song.spotifyTrackGroup
         ? {
             id: song.spotifyTrackGroup.id,
-            primaryTrack: song.spotifyTrackGroup.primaryTrack
-              ? mapSpotifyTrackSummary(song.spotifyTrackGroup.primaryTrack)
+            primaryTrack: song.spotifyTrackGroup.tracks[0]
+              ? mapSpotifyTrackSummary(song.spotifyTrackGroup.tracks[0])
               : null,
           }
         : null,
@@ -1474,7 +1482,11 @@ export async function updateSong(input: UpdateSongInput) {
       spotifyTrackGroup: {
         select: {
           id: true,
-          primaryTrack: { select: spotifyTrackBaseSelect },
+          tracks: {
+            orderBy: { popularity: "desc" },
+            take: 1,
+            select: spotifyTrackBaseSelect,
+          },
         },
       },
       karaokeSongs: {
@@ -1524,8 +1536,8 @@ export async function updateSong(input: UpdateSongInput) {
     spotifyGroup: updatedSong.spotifyTrackGroup
       ? {
           id: updatedSong.spotifyTrackGroup.id,
-          primaryTrack: updatedSong.spotifyTrackGroup.primaryTrack
-            ? mapSpotifyTrackSummary(updatedSong.spotifyTrackGroup.primaryTrack)
+          primaryTrack: updatedSong.spotifyTrackGroup.tracks[0]
+            ? mapSpotifyTrackSummary(updatedSong.spotifyTrackGroup.tracks[0])
             : null,
         }
       : null,
@@ -1917,7 +1929,11 @@ export async function createSong({
       spotifyTrackGroup: {
         select: {
           id: true,
-          primaryTrack: { select: spotifyTrackBaseSelect },
+          tracks: {
+            orderBy: { popularity: "desc" },
+            take: 1,
+            select: spotifyTrackBaseSelect,
+          },
         },
       },
       karaokeSongs: {
@@ -1985,8 +2001,8 @@ export async function createSong({
     spotifyGroup: song.spotifyTrackGroup
       ? {
           id: song.spotifyTrackGroup.id,
-          primaryTrack: song.spotifyTrackGroup.primaryTrack
-            ? mapSpotifyTrackSummary(song.spotifyTrackGroup.primaryTrack)
+          primaryTrack: song.spotifyTrackGroup.tracks[0]
+            ? mapSpotifyTrackSummary(song.spotifyTrackGroup.tracks[0])
             : null,
         }
       : null,
