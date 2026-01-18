@@ -20,36 +20,15 @@ export async function functionName(
 ```ts
 export interface FunctionNameOptions {
   dryRun?: boolean;   // true면 DB 변경 없이 결과만 반환
-  verbose?: boolean;  // true면 콘솔 출력
 }
 ```
 
-### 3. Result 타입 필수 정의
-- 결과는 반드시 타입을 정의해서 반환
-- stats 객체로 통계 정보 포함
-- 어드민 UI에서 바로 사용할 수 있도록 구조화
+### 3. Result 타입 대신 콘솔 출력
+- 모든 함수는 `Promise<void>`를 반환하고, 필요한 정보는 `console.log`로 출력합니다.
+- 통계는 return 값 대신 로그로 남깁니다.
 
-```ts
-export interface FunctionNameResult {
-  // 주요 데이터
-  data: SomeType[];
-
-  // 통계
-  stats: {
-    total: number;
-    success: number;
-    failed: number;
-  };
-}
-```
-
-### 4. verbose 로깅 패턴
-```ts
-const log = verbose ? console.log : () => {};
-
-log(`작업 시작: ${someValue}`);
-log(`  처리 중: ${count}개`);
-```
+### 4. 콘솔 로깅
+- 함수 내부에서는 별도 토글 없이 항상 `console.log`로 진행 상황을 출력하세요.
 
 ### 5. Prisma 사용
 ```ts
@@ -79,10 +58,10 @@ if (!entity) {
 import { mapProposeSong } from "@/lib/admin/map-propose-song";
 
 // 실제 실행
-const result = await mapProposeSong(artistId);
+await mapProposeSong(artistId);
 
-// dry run + 콘솔 출력
-const result = await mapProposeSong(artistId, { dryRun: true, verbose: true });
+// dry run
+await mapProposeSong(artistId, { dryRun: true });
 ```
 
 

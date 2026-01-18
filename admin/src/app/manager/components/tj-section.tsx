@@ -42,10 +42,8 @@ export function TjSection() {
 
     setIsFetching(true);
     try {
-      const result = await runFetchProposeForArtist(selectedArtistId);
-      alert(
-        `수집 완료!\n조회: ${result.stats.fetched}개\n신규: ${result.stats.created}개\n업데이트: ${result.stats.updated}개`,
-      );
+      await runFetchProposeForArtist(selectedArtistId);
+      alert("수집 완료! (로그를 확인하세요)");
       // 데이터 새로고침
       const response = await fetchManagerArtistTjPanel(selectedArtistId);
       setData(response);
@@ -62,10 +60,8 @@ export function TjSection() {
 
     setIsMapping(true);
     try {
-      const result = await runMapProposeSong(selectedArtistId);
-      alert(
-        `매핑 완료!\n매칭됨: ${result.stats.matched}개\n후보만: ${result.stats.withCandidates}개\n매칭없음: ${result.stats.noMatch}개\n업데이트: ${result.stats.updated}개`,
-      );
+      await runMapProposeSong(selectedArtistId);
+      alert("매핑 완료! (로그를 확인하세요)");
       // 데이터 새로고침
       const response = await fetchManagerArtistTjPanel(selectedArtistId);
       setData(response);

@@ -17,20 +17,10 @@ async function main() {
     process.exit(1);
   }
 
-  const result = await updateSongThumbnails(
-    { minArtistId, maxArtistId },
-    { dryRun, verbose: true },
-  );
-
-  console.log("\n📊 Summary");
+  await updateSongThumbnails({ minArtistId, maxArtistId }, { dryRun });
   console.log(
-    `  artistId ${result.minArtistId}~${result.maxArtistId} (${result.totalSongs}곡)`,
+    `\n📊 Summary: artistId ${minArtistId}~${maxArtistId} ${dryRun ? "(dry-run)" : ""} 처리 완료`,
   );
-  console.log(`  updated: ${result.stats.updated}`);
-  console.log(`  spotify oldest: ${result.stats.updatedBySpotifyOldest}`);
-  console.log(`  youtube: ${result.stats.updatedByYoutube}`);
-  console.log(`  unchanged: ${result.stats.unchanged}`);
-  console.log(`  skipped(no source): ${result.stats.skippedNoSource}`);
 }
 
 main()

@@ -26,25 +26,15 @@ export interface AutoFillSongTitlesRange {
 
 export interface AutoFillSongTitlesOptions {
   dryRun?: boolean;
-  verbose?: boolean;
 }
 
-export type SongTitleChange = {
+type SongTitleChange = {
   songId: number;
   songTitle: string;
   field: TitleField;
   value: string;
   source: "spotifyTrackName" | "spotifyMusicBrainzTitle" | "songTitle";
 };
-
-export interface AutoFillSongTitlesResult {
-  maxArtistId: number;
-  totalSongs: number;
-  updatedSongs: number;
-  fieldUpdates: Record<TitleField, number>;
-  dryRun: boolean;
-  changes: SongTitleChange[];
-}
 
 const LANGUAGE_FIELDS: TitleField[] = [
   "titleLatin",
@@ -98,13 +88,12 @@ const selectTitle = (song: SongRecord): SelectedTitle => {
 export async function autoFillSongTitles(
   range: AutoFillSongTitlesRange,
   options: AutoFillSongTitlesOptions = {},
-): Promise<AutoFillSongTitlesResult> {
-  const { dryRun = false, verbose = false } = options;
+): Promise<void> {
+  const { dryRun = false } = options;
   const minArtistId = range.minArtistId ?? 1;
   const maxArtistId = range.maxArtistId;
-  const emit = verbose ? console.log : () => {};
 
-  emit(
+  console.log(
     `\n🎼 autoFillSongTitles → artistId ${minArtistId}~${maxArtistId} ${dryRun ? "(dry-run)" : ""}`,
   );
 
@@ -137,7 +126,7 @@ export async function autoFillSongTitles(
     },
   });
 
-  emit(`  • Loaded ${songs.length} songs`);
+  console.log(`  • Loaded ${songs.length} songs`);
 
   const changes: SongTitleChange[] = [];
   const updatedSongIds = new Set<number>();
@@ -160,7 +149,7 @@ export async function autoFillSongTitles(
     updatedSongIds.add(song.id);
   }
 
-  emit(`  • Pending updates: ${changes.length}`);
+  console.log(`  • Pending updates: ${changes.length}`);
 
   if (!dryRun && changes.length > 0) {
     for (const change of changes) {
@@ -169,31 +158,18 @@ export async function autoFillSongTitles(
         data: { [change.field]: change.value },
       });
     }
-    emit(`  • Updated ${updatedSongIds.size} songs`);
+    console.log(`  • Updated ${updatedSongIds.size} songs`);
   } else if (dryRun) {
-    emit("  • DRY-RUN: no database writes");
+    console.log("  • DRY-RUN: no database writes");
   }
-
-  const fieldUpdates: Record<TitleField, number> = {
-    titleLatin: 0,
-    titleJaKanji: 0,
-    titleJaKana: 0,
-    titleKo: 0,
-  };
 
   for (const change of changes) {
-    emit(
+    console.log(
       `  [Song #${change.songId}] ${change.field}="${change.value}" (${change.source})`,
     );
-    fieldUpdates[change.field] += 1;
   }
 
-  return {
-    maxArtistId,
-    totalSongs: songs.length,
-    updatedSongs: updatedSongIds.size,
-    fieldUpdates,
-    dryRun,
-    changes,
-  };
+  console.log(
+    `  • 완료: ${songs.length}곡 중 ${updatedSongIds.size}곡 업데이트 예정`,
+  );
 }

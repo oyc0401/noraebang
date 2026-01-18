@@ -3,37 +3,6 @@ import { normalizeTitle } from "../track-title-normalizer";
 
 export interface GroupSpotifyTracksForArtistOptions {
   dryRun?: boolean;
-  verbose?: boolean;
-}
-
-export interface GroupedTrackInfo {
-  groupId: number;
-  trackCount: number;
-  primaryTrackId: number;
-  primaryTrackName: string;
-  isNewGroup: boolean;
-}
-
-export interface GroupSpotifyTracksForArtistResult {
-  artistId: number;
-  artistName: string;
-  stats: {
-    totalTracks: number;
-    alreadyGrouped: number;
-    targetTracks: number;
-    groupsCreated: number;
-    groupsMerged: number;
-    tracksUpdated: number;
-    primaryUpdated: number;
-  };
-  groups: GroupedTrackInfo[];
-  /** dry run일 때 미리보기용 */
-  preview: Array<{
-    titles: string[];
-    trackCount: number;
-    primaryName: string;
-    primaryPopularity: number | null;
-  }>;
 }
 
 type TrackInfo = {
@@ -77,9 +46,8 @@ function pickPrimaryByPopularity(tracks: TrackInfo[]): TrackInfo {
 export async function groupSpotifyTracksForArtist(
   artistId: number,
   options: GroupSpotifyTracksForArtistOptions = {},
-): Promise<GroupSpotifyTracksForArtistResult> {
-  const { dryRun = false, verbose = false } = options;
-  const log = verbose ? console.log : () => {};
+): Promise<void> {
+  const { dryRun = false } = options;
 
   // 1. 아티스트 정보 조회
   const artist = await prisma.artist.findUnique({
@@ -99,8 +67,8 @@ export async function groupSpotifyTracksForArtist(
     throw new Error(`Artist #${artistId} has no spotifyId`);
   }
 
-  log(`\n[Artist #${artist.id}] ${artist.name}`);
-  if (dryRun) log(`  🔍 DRY-RUN MODE`);
+  console.log(`\n[Artist #${artist.id}] ${artist.name}`);
+  if (dryRun) console.log(`  🔍 DRY-RUN MODE`);
 
   // 2. SpotifyArtist 조회
   const spotifyArtist = await prisma.spotifyArtist.findUnique({
@@ -163,16 +131,11 @@ export async function groupSpotifyTracksForArtist(
 
   stats.targetTracks = tracks.length;
 
-  log(`  → 전체 트랙: ${stats.totalTracks}개, 이미 그룹화: ${stats.alreadyGrouped}개, 대상: ${stats.targetTracks}개`);
+  console.log(`  → 전체 트랙: ${stats.totalTracks}개, 이미 그룹화: ${stats.alreadyGrouped}개, 대상: ${stats.targetTracks}개`);
 
   if (tracks.length === 0) {
-    return {
-      artistId: artist.id,
-      artistName: artist.name,
-      stats,
-      groups: [],
-      preview: [],
-    };
+    console.log("  → 그룹화할 트랙이 없습니다.");
+    return;
   }
 
   // 5. Union-Find로 같은 제목 트랙 그룹화
@@ -244,10 +207,7 @@ export async function groupSpotifyTracksForArtist(
     groupsToCreate.push({ tracks: group, primary });
   }
 
-  log(`  → 생성할 그룹: ${groupsToCreate.length}개`);
-
-  const preview: GroupSpotifyTracksForArtistResult["preview"] = [];
-  const createdGroups: GroupedTrackInfo[] = [];
+  console.log(`  → 생성할 그룹: ${groupsToCreate.length}개`);
 
   if (dryRun) {
     for (const g of groupsToCreate) {
@@ -257,23 +217,11 @@ export async function groupSpotifyTracksForArtist(
         if (t.musicBrainzTitle) titles.add(t.musicBrainzTitle);
       }
 
-      preview.push({
-        titles: Array.from(titles),
-        trackCount: g.tracks.length,
-        primaryName: g.primary.name,
-        primaryPopularity: g.primary.popularity,
-      });
-
-      log(`     [그룹] "${Array.from(titles).join(" / ")}" (${g.tracks.length}트랙, primary: ${g.primary.name})`);
+      console.log(`     [그룹] "${Array.from(titles).join(" / ")}" (${g.tracks.length}트랙, primary: ${g.primary.name})`);
     }
 
-    return {
-      artistId: artist.id,
-      artistName: artist.name,
-      stats,
-      groups: [],
-      preview,
-    };
+    console.log("  • DRY-RUN: 새로운 그룹 예상 목록을 출력했습니다.");
+    return;
   }
 
   // 6. DB 업데이트
@@ -299,24 +247,8 @@ export async function groupSpotifyTracksForArtist(
     });
     stats.primaryUpdated++;
 
-    createdGroups.push({
-      groupId: newGroup.id,
-      trackCount: group.tracks.length,
-      primaryTrackId: group.primary.id,
-      primaryTrackName: group.primary.name,
-      isNewGroup: true,
-    });
-
-    log(`     ✅ [Group #${newGroup.id}] "${group.primary.name}" (${group.tracks.length}트랙)`);
+    console.log(`     ✅ [Group #${newGroup.id}] "${group.primary.name}" (${group.tracks.length}트랙)`);
   }
 
-  log(`\n  → 결과: 그룹 생성 ${stats.groupsCreated}개, 트랙 업데이트 ${stats.tracksUpdated}개`);
-
-  return {
-    artistId: artist.id,
-    artistName: artist.name,
-    stats,
-    groups: createdGroups,
-    preview,
-  };
+  console.log(`\n  → 결과: 그룹 생성 ${stats.groupsCreated}개, 트랙 업데이트 ${stats.tracksUpdated}개`);
 }

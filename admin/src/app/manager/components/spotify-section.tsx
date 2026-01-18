@@ -77,13 +77,11 @@ export function SpotifySection() {
 
     setIsCreatingSongs(true);
     try {
-      const result = await runCreateSongsFromSpotifyGroups(
+      await runCreateSongsFromSpotifyGroups(
         selectedArtistId,
         Array.from(selectedGroupIds),
       );
-      alert(
-        `곡 생성 완료!\n생성: ${result.stats.created}개\n스킵(이미 연결됨): ${result.stats.skipped}개\n실패: ${result.stats.failed}개`,
-      );
+      alert("곡 생성 작업이 완료되었습니다. (로그를 확인하세요)");
       setIsCreateSongDialogOpen(false);
       refetch();
     } catch (error) {
@@ -104,10 +102,8 @@ export function SpotifySection() {
 
     setIsGroupingTracks(true);
     try {
-      const result = await runGroupSpotifyTracksForArtist(selectedArtistId);
-      alert(
-        `그룹화 완료!\n생성된 그룹: ${result.stats.groupsCreated}개\n업데이트된 트랙: ${result.stats.tracksUpdated}개`,
-      );
+      await runGroupSpotifyTracksForArtist(selectedArtistId);
+      alert("그룹화 완료! (로그를 확인하세요)");
       refetch();
     } catch (error) {
       alert(`오류: ${error}`);

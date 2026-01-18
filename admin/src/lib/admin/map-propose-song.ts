@@ -15,7 +15,7 @@ interface ProposeInfo {
   songSinger: string;
 }
 
-export interface MappingResultItem {
+interface MappingResultItem {
   propose: ProposeInfo;
   matchedSong: {
     id: number;
@@ -28,25 +28,8 @@ export interface MappingResultItem {
   }>;
 }
 
-export interface MapProposeSongResult {
-  artistId: number;
-  artistName: string;
-  tjNames: string[];
-  songCount: number;
-  proposeCount: number;
-  mappings: MappingResultItem[];
-  stats: {
-    matched: number;
-    withCandidates: number;
-    noMatch: number;
-    updated: number;
-    failed: number;
-  };
-}
-
 export interface MapProposeSongOptions {
   dryRun?: boolean;
-  verbose?: boolean; // true이면 콘솔 출력
 }
 
 async function fetchSongsForArtist(artistId: number): Promise<SongWithTitles[]> {
@@ -243,9 +226,8 @@ async function applyMapping(
 export async function mapProposeSong(
   artistId: number,
   options: MapProposeSongOptions = {},
-): Promise<MapProposeSongResult> {
-  const { dryRun = false, verbose = false } = options;
-  const log = verbose ? console.log : () => {};
+): Promise<void> {
+  const { dryRun = false } = options;
 
   // 1. 아티스트 정보 조회
   const artist = await prisma.artist.findUnique({
@@ -266,17 +248,17 @@ export async function mapProposeSong(
   if (artist.tjName) tjNames.push(artist.tjName);
   if (artist.tjNameJa) tjNames.push(artist.tjNameJa);
 
-  log(`\n[Artist #${artist.id}] ${artist.name}`);
-  log(`  TJ Names: ${tjNames.join(", ") || "(없음)"}`);
-  if (dryRun) log(`  🔍 DRY-RUN MODE`);
+  console.log(`\n[Artist #${artist.id}] ${artist.name}`);
+  console.log(`  TJ Names: ${tjNames.join(", ") || "(없음)"}`);
+  if (dryRun) console.log(`  🔍 DRY-RUN MODE`);
 
   // 2. 해당 아티스트의 Song들 조회
   const songs = await fetchSongsForArtist(artistId);
-  log(`  Songs: ${songs.length}개`);
+  console.log(`  Songs: ${songs.length}개`);
 
   // 3. 해당 아티스트의 미연결 신청곡 조회 (query 필드로 검색)
   const proposes = await fetchProposesForArtist(tjNames);
-  log(`  미연결 신청곡: ${proposes.length}개`);
+  console.log(`  미연결 신청곡: ${proposes.length}개`);
 
   // 4. 매칭 생성
   const mappings = generateMapping(songs, proposes);
@@ -291,41 +273,28 @@ export async function mapProposeSong(
 
   // 매칭 결과 출력
   if (withMatches.length > 0) {
-    log(`  ✅ Matched: ${withMatches.length}개`);
+    console.log(`  ✅ Matched: ${withMatches.length}개`);
     for (const m of withMatches) {
-      log(`     [Propose #${m.propose.id}] "${m.propose.songTitle}" -> [Song #${m.matchedSong!.id}] "${m.matchedSong!.title}"`);
+      console.log(`     [Propose #${m.propose.id}] "${m.propose.songTitle}" -> [Song #${m.matchedSong!.id}] "${m.matchedSong!.title}"`);
     }
   }
   if (withCandidates.length > 0) {
-    log(`  🤔 Candidates only: ${withCandidates.length}개`);
+    console.log(`  🤔 Candidates only: ${withCandidates.length}개`);
   }
   if (noMatches.length > 0) {
-    log(`  ❌ No match: ${noMatches.length}개`);
+    console.log(`  ❌ No match: ${noMatches.length}개`);
   }
 
   // 5. 매핑 적용
   const { updated, failed } = await applyMapping(mappings, dryRun);
 
   if (!dryRun && updated > 0) {
-    log(`  📝 Updated: ${updated}개`);
+    console.log(`  📝 Updated: ${updated}개`);
   }
   if (failed > 0) {
-    log(`  ⚠️ Failed: ${failed}개`);
+    console.log(`  ⚠️ Failed: ${failed}개`);
   }
-
-  return {
-    artistId: artist.id,
-    artistName: artist.name,
-    tjNames,
-    songCount: songs.length,
-    proposeCount: proposes.length,
-    mappings,
-    stats: {
-      matched: withMatches.length,
-      withCandidates: withCandidates.length,
-      noMatch: noMatches.length,
-      updated,
-      failed,
-    },
-  };
+  console.log(
+    `  • 완료: matched=${withMatches.length}, candidates=${withCandidates.length}, noMatch=${noMatches.length}`,
+  );
 }

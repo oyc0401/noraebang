@@ -2686,14 +2686,14 @@ export async function runFetchProposeForArtist(artistId: number) {
   if (!artistId || Number.isNaN(artistId)) {
     throw new Error("유효한 아티스트 ID가 필요합니다.");
   }
-  return fetchProposeForArtist(artistId, { verbose: true });
+  return fetchProposeForArtist(artistId);
 }
 
 export async function runMapProposeSong(artistId: number) {
   if (!artistId || Number.isNaN(artistId)) {
     throw new Error("유효한 아티스트 ID가 필요합니다.");
   }
-  return mapProposeSong(artistId, { verbose: true });
+  return mapProposeSong(artistId);
 }
 
 // ========== 스포티파이 그룹으로 곡 생성 ==========
@@ -2708,12 +2708,12 @@ export async function runCreateSongsFromSpotifyGroups(
   if (!artistId || Number.isNaN(artistId)) {
     throw new Error("유효한 아티스트 ID가 필요합니다.");
   }
-  return createSongsFromSpotifyGroups(artistId, { verbose: true, groupIds });
+  return createSongsFromSpotifyGroups(artistId, { groupIds });
 }
 
 export async function runGroupSpotifyTracksForArtist(artistId: number) {
   if (!artistId || Number.isNaN(artistId)) {
     throw new Error("유효한 아티스트 ID가 필요합니다.");
   }
-  return groupSpotifyTracksForArtist(artistId, { verbose: true });
+  return groupSpotifyTracksForArtist(artistId);
 }

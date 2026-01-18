@@ -34,19 +34,6 @@ export interface MapSongSpotifyGroupsOptions {
   dryRun?: boolean;
 }
 
-export interface MapSongSpotifyGroupsResult {
-  minArtistId: number;
-  maxArtistId: number;
-  dryRun: boolean;
-  processedArtists: number;
-  stats: {
-    mappedSongs: number;
-    artistSkippedNoData: number;
-    songSkippedAlreadyLinked: number;
-    errors: number;
-  };
-}
-
 async function fetchArtistData(
   artistId: number,
 ): Promise<ArtistSongsData | null> {
@@ -230,7 +217,7 @@ async function applyMappings(
 
 export async function mapSongSpotifyGroups(
   options: MapSongSpotifyGroupsOptions,
-): Promise<MapSongSpotifyGroupsResult> {
+): Promise<void> {
   const { minArtistId, maxArtistId, dryRun = false } = options;
 
   let processedArtists = 0;
@@ -266,16 +253,7 @@ export async function mapSongSpotifyGroups(
     processedArtists += 1;
   }
 
-  return {
-    minArtistId,
-    maxArtistId,
-    dryRun,
-    processedArtists,
-    stats: {
-      mappedSongs,
-      artistSkippedNoData,
-      songSkippedAlreadyLinked,
-      errors,
-    },
-  };
+  console.log(
+    `\n  • Summary(${minArtistId}~${maxArtistId}) mapped=${mappedSongs}, artistSkipped=${artistSkippedNoData}, alreadyLinked=${songSkippedAlreadyLinked}, errors=${errors}`,
+  );
 }
