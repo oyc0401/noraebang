@@ -42,6 +42,8 @@ type SongEditTab =
   | "admin";
 type ArtistSearchResult = { id: number; name: string; nameKo: string };
 
+type SongSortType = "popularity-desc" | "popularity-asc" | "tj-first";
+
 export function ArtistSongList() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
   const selectedGroupId = useManagerStore((state) => state.selectedGroupId);
@@ -58,6 +60,9 @@ export function ArtistSongList() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fetchIdRef = useRef(0);
+
+  // 정렬 상태
+  const [sortType, setSortType] = useState<SongSortType>("popularity-desc");
 
   // 곡 편집 다이얼로그 상태
   const [isSongEditOpen, setIsSongEditOpen] = useState(false);
@@ -149,21 +154,36 @@ export function ArtistSongList() {
 
   const sortedSongs = useMemo(() => {
     return [...songs].sort((a, b) => {
-      const tjA = a.karaoke.length > 0 ? 1 : 0;
-      const tjB = b.karaoke.length > 0 ? 1 : 0;
-      if (tjA !== tjB) {
-        return tjB - tjA;
-      }
+      // 스포티파이 연결 없으면 -1 (0보다 낮음)
       const popA = a.spotifyGroup?.primaryTrack?.popularity ?? -1;
       const popB = b.spotifyGroup?.primaryTrack?.popularity ?? -1;
-      if (popA !== popB) {
-        return popB - popA;
+
+      if (sortType === "popularity-desc") {
+        // 스포티파이 인기순 (높은순)
+        if (popA !== popB) return popB - popA;
+        const releaseA = a.spotifyGroup?.primaryTrack?.releaseDate ?? "";
+        const releaseB = b.spotifyGroup?.primaryTrack?.releaseDate ?? "";
+        return releaseA.localeCompare(releaseB);
       }
+
+      if (sortType === "popularity-asc") {
+        // 스포티파이 인기순 (낮은순)
+        if (popA !== popB) return popA - popB;
+        const releaseA = a.spotifyGroup?.primaryTrack?.releaseDate ?? "";
+        const releaseB = b.spotifyGroup?.primaryTrack?.releaseDate ?? "";
+        return releaseA.localeCompare(releaseB);
+      }
+
+      // tj-first: TJ곡 유무 우선
+      const tjA = a.karaoke.length > 0 ? 1 : 0;
+      const tjB = b.karaoke.length > 0 ? 1 : 0;
+      if (tjA !== tjB) return tjB - tjA;
+      if (popA !== popB) return popB - popA;
       const releaseA = a.spotifyGroup?.primaryTrack?.releaseDate ?? "";
       const releaseB = b.spotifyGroup?.primaryTrack?.releaseDate ?? "";
       return releaseA.localeCompare(releaseB);
     });
-  }, [songs]);
+  }, [songs, sortType]);
 
   // 선택된 그룹으로 스크롤
   useEffect(() => {
@@ -218,13 +238,24 @@ export function ArtistSongList() {
           <h3 className="text-lg font-semibold text-zinc-900">
             전체 곡 목록 ({songs.length.toLocaleString()})
           </h3>
-          <button
-            type="button"
-            onClick={() => openSongCreateDialog()}
-            className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm text-blue-700 transition hover:bg-blue-100 cursor-pointer"
-          >
-            + 곡 추가
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={sortType}
+              onChange={(e) => setSortType(e.target.value as SongSortType)}
+              className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-zinc-700 cursor-pointer"
+            >
+              <option value="popularity-desc">스포티파이 인기순</option>
+              <option value="popularity-asc">인기 낮은순</option>
+              <option value="tj-first">TJ곡 우선</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => openSongCreateDialog()}
+              className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm text-blue-700 transition hover:bg-blue-100 cursor-pointer"
+            >
+              + 곡 추가
+            </button>
+          </div>
         </div>
         <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-y-auto pr-2">
           {sortedSongs.length === 0 && (

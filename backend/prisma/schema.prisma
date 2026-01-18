@@ -266,7 +266,7 @@ model SpotifyArtistTrack {
 
 model SpotifyTrackGroup {
   id                    Int      @id @default(autoincrement())
-  primarySpotifyTrackId Int?     @unique @map("primary_spotify_track_id")
+  primarySpotifyTrackId Int?     @map("primary_spotify_track_id")
   // titleKo               String?  @map("title_ko")
   // titleLatin            String?  @map("title_latin")
   // titleJaKana           String?  @map("title_ja_kana")
@@ -303,7 +303,7 @@ model SpotifyTrack {
   updatedAt                 DateTime @updatedAt @map("updated_at")
 
   group           SpotifyTrackGroup?   @relation("GroupTracks", fields: [groupId], references: [id], onDelete: SetNull)
-  primaryForGroup SpotifyTrackGroup?   @relation("PrimaryTrack")
+  primaryForGroups SpotifyTrackGroup[]  @relation("PrimaryTrack")
   artists         SpotifyArtistTrack[]
 
   @@index([groupId])
