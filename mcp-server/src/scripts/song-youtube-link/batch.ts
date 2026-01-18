@@ -3,8 +3,8 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
-import { disconnect } from "../prisma.js";
-import { getUnmappedData, type MappingPayload, type UnmappedData } from "../tools/song-mapper.js";
+import { disconnect } from "../../prisma.js";
+import { getUnmappedData, type MappingPayload, type UnmappedData } from "../../tools/song-mapper.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -12,20 +12,20 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const OUTPUT_FILE = path.join(__dirname, "../../output/pending-mappings.json");
+const OUTPUT_FILE = path.join(__dirname, "../../../output/song-youtube-link/pending-mappings.json");
 const BATCH_THRESHOLD = 50;
 
 const SYSTEM_PROMPT = `Return ONLY valid JSON array. No markdown. No extra text.`;
 
-const DEVELOPER_PROMPT = `Output schema: Array<{artistId: number, song: Array<{songId:number, songTitle:string, videoId:string, videoName:string}>}>. Do not add unknown fields.
+const DEVELOPER_PROMPT = `Output schema: Array<{artistId: number, artistName: string, song: Array<{songId:number, songTitle:string, videoId:string, videoName:string}>}>. Do not add unknown fields.
 
 Map only when you can match confidently. Otherwise omit the item.`;
 
 interface ArtistInput {
   artistId: number;
   artistName: string;
-  songs: Array<{ songId: number; songTitle: string; titleKo?: string; titleJa?: string }>;
-  youtubeVideos: Array<{ videoId: string; videoTitle: string; viewCount?: number }>;
+  songs: Array<{ songId: number; songTitle: string }>;
+  youtubeVideos: Array<{ videoId: string; videoTitle: string }>;
 }
 
 function buildUserPrompt(artists: ArtistInput[]): string {
@@ -38,6 +38,7 @@ function buildUserPrompt(artists: ArtistInput[]): string {
 [
   {
     "artistId": 74,
+    "artistName": "BUMP OF CHICKEN",
     "song": [
       {
         "songId": 10016,
@@ -53,7 +54,17 @@ function buildUserPrompt(artists: ArtistInput[]): string {
 검색했을때 나오지 않으면 아예 매핑하지 말고 제외해라.
 너무 깊게 생각하지 않고 당연한것은 당연하게 검색 안해도됌. 직관적으로 봤을때 모르겠는것만 검색 ㄱㄱ
 videoId를 통해 검색을 하는건 아니고 videoId는 그냥 리턴json에 넣기위함임.
-매핑된 곡이 없는 아티스트는 결과 배열에서 제외해도 됨.`;
+매핑된 곡이 없는 아티스트는 결과 배열에서 제외해도 됨.
+
+⚠️⚠️⚠️ 절대 지켜야 할 규칙 (위반시 결과 무효) ⚠️⚠️⚠️
+
+1. songId 중복 금지: 같은 songId를 결과에 2번 이상 쓰면 안 된다.
+2. videoId 중복 금지: 같은 videoId를 결과에 2번 이상 쓰면 안 된다.
+3. 1:1 매핑만 허용: 한 곡에 한 영상, 한 영상에 한 곡만 연결한다.
+4. 확실한 것만: 곡 제목과 영상 제목이 명확히 일치할 때만 매핑한다. 애매하면 매핑하지 마라.
+5. 메들리/라이브/컴필레이션 영상은 절대 매핑하지 마라.
+
+틀리면 차라리 빈 배열 []을 반환해라. 잘못된 매핑보다 없는 게 낫다.`;
 }
 
 async function callGPT(artists: ArtistInput[]): Promise<MappingPayload[]> {
@@ -73,6 +84,8 @@ async function callGPT(artists: ArtistInput[]): Promise<MappingPayload[]> {
       console.error("GPT 응답 없음");
       return [];
     }
+
+    console.log(`  → GPT 응답: ${content.slice(0, 200)}${content.length > 200 ? "..." : ""}`);
 
     const parsed = JSON.parse(content);
     return Array.isArray(parsed) ? parsed : [parsed];
@@ -110,25 +123,75 @@ async function savePendingMappings(data: PendingMappings): Promise<void> {
 }
 
 function toArtistInput(data: UnmappedData): ArtistInput {
+  // 유튜브 비디오 이름 중복 제거 (조회수 높은 것만 유지)
+  const videoMap = new Map<string, { videoId: string; videoTitle: string; viewCount: number }>();
+  for (const v of data.youtubeVideos) {
+    const existing = videoMap.get(v.videoTitle);
+    const viewCount = v.viewCount ?? 0;
+    if (!existing || viewCount > existing.viewCount) {
+      videoMap.set(v.videoTitle, { videoId: v.videoId, videoTitle: v.videoTitle, viewCount });
+    }
+  }
+
   return {
     artistId: data.artistId,
     artistName: data.name,
     songs: data.songs.map((s) => ({
       songId: s.id,
       songTitle: s.title,
-      titleKo: s.titleKo,
-      titleJa: s.titleJa,
     })),
-    youtubeVideos: data.youtubeVideos.map((v) => ({
+    youtubeVideos: Array.from(videoMap.values()).map((v) => ({
       videoId: v.videoId,
       videoTitle: v.videoTitle,
-      viewCount: v.viewCount,
     })),
   };
 }
 
 function getItemCount(artist: ArtistInput): number {
   return artist.songs.length + artist.youtubeVideos.length;
+}
+
+/**
+ * 결과 검증 및 정제
+ * - songId 중복 제거 (첫 번째만 유지)
+ * - videoId가 3개 이상 중복되면 해당 아티스트 결과 제외
+ */
+function validateAndCleanResult(result: MappingPayload): MappingPayload | null {
+  // videoId 중복 횟수 체크
+  const videoIdCount = new Map<string, number>();
+  for (const item of result.song) {
+    videoIdCount.set(item.videoId, (videoIdCount.get(item.videoId) ?? 0) + 1);
+  }
+
+  // 같은 videoId가 3개 이상이면 해당 아티스트 결과 제외
+  for (const [videoId, count] of videoIdCount) {
+    if (count >= 3) {
+      console.log(`  ⚠️ Artist ${result.artistId}: videoId "${videoId}"가 ${count}개 곡에 중복 → 결과 제외`);
+      return null;
+    }
+  }
+
+  // songId 중복 제거 (첫 번째만 유지)
+  const seenSongIds = new Set<number>();
+  const seenVideoIds = new Set<string>();
+  const cleanedSongs = result.song.filter((item) => {
+    if (seenSongIds.has(item.songId)) {
+      console.log(`  ⚠️ Artist ${result.artistId}: songId ${item.songId} 중복 제거`);
+      return false;
+    }
+    if (seenVideoIds.has(item.videoId)) {
+      console.log(`  ⚠️ Artist ${result.artistId}: videoId "${item.videoId}" 중복 제거`);
+      return false;
+    }
+    seenSongIds.add(item.songId);
+    seenVideoIds.add(item.videoId);
+    return true;
+  });
+
+  return {
+    ...result,
+    song: cleanedSongs,
+  };
 }
 
 async function processBatch(
@@ -150,8 +213,12 @@ async function processBatch(
   }
 
   let totalMapped = 0;
-  for (const result of results) {
-    if (result.song.length === 0) continue;
+  for (const rawResult of results) {
+    if (rawResult.song.length === 0) continue;
+
+    // 결과 검증 및 정제
+    const result = validateAndCleanResult(rawResult);
+    if (!result || result.song.length === 0) continue;
 
     totalMapped += result.song.length;
 

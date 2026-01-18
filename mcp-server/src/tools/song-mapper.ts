@@ -30,6 +30,7 @@ export interface MappingItem {
 
 export interface MappingPayload {
   artistId: number;
+  artistName: string;
   song: MappingItem[];
 }
 
