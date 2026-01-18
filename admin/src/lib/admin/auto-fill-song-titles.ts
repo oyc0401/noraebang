@@ -1,25 +1,28 @@
 import { prisma } from "../prisma";
+import { findBestMatch } from "../song-spotify-matcher";
 
 // autoFillSongTitles는 단일 아티스트의 곡에 대해 Spotify 트랙/유튜브 비디오/곡 제목 정보를 기반으로 미채워진 언어별 제목 필드를 자동 보완합니다.
+// - 새 값이 기존 title들과 유사하면 (findBestMatch로 일치) 넣지 않음
 
-type TitleField = "titleLatin" | "titleJaKanji" | "titleJaKana" | "titleKo";
+type TitleField = "titleLatin" | "titleJa" | "titleKo";
 
 type SongRecord = {
   id: number;
   title: string;
   titleLatin: string | null;
-  titleJaKanji: string | null;
-  titleJaKana: string | null;
+  titleJa: string | null;
   titleKo: string | null;
   spotifyTrackGroup: {
     tracks: Array<{
       name: string;
       musicBrainzTitle: string | null;
+      popularity: number | null;
     }>;
   } | null;
   youtubeVideos: Array<{
     youtubeVideo: {
       title: string | null;
+      viewCount: bigint | null;
     };
   }>;
 };
@@ -42,27 +45,16 @@ type SongTitleChange = {
   source: TitleSource;
 };
 
-const removeSpecialChars = (text: string) =>
-  text.replace(
-    /[『』「」【】［］()（）[\]<>《》{}\s!@#$%^&*_+=|\\:;"',.<>?/~`-]/g,
-    "",
-  );
-
-const isOnlyLatin = (text: string) => /^[a-zA-Z0-9]+$/.test(text);
-
-const hasKanji = (text: string) => /[\u4e00-\u9faf]/.test(text);
-
 const hasJapanese = (text: string) =>
-  /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/.test(text);
+  /[\u3040-\u309f\u30a0-\u30ff]/.test(text); // 히라가나, 가타카나만 (한자 제외)
 
-const detectLanguageField = (title: string): TitleField => {
-  const cleaned = removeSpecialChars(title);
+const hasKorean = (text: string) =>
+  /[\uAC00-\uD7AF\u1100-\u11FF]/.test(text); // 한글 음절, 자모
 
-  if (isOnlyLatin(cleaned)) return "titleLatin";
-  if (hasJapanese(cleaned)) {
-    return hasKanji(cleaned) ? "titleJaKanji" : "titleJaKana";
-  }
-  return "titleKo";
+const detectLanguageField = (title: string): TitleField | null => {
+  if (hasKorean(title)) return "titleKo";
+  if (hasJapanese(title)) return "titleJa";
+  return "titleLatin"; // 그 외는 모두 Latin
 };
 
 type SelectedTitle = {
@@ -71,30 +63,30 @@ type SelectedTitle = {
 } | null;
 
 const selectTitle = (song: SongRecord): SelectedTitle => {
-  // 1순위: musicBrainzTitle (가장 정확한 제목)
+  // 1순위: song title (영어면 titleLatin, 일본어면 titleJa 등에 먼저 채움)
+  if (song.title?.trim()) {
+    return { value: song.title, source: "songTitle" };
+  }
+
+  // 2순위: musicBrainzTitle (가장 정확한 제목)
   for (const track of song.spotifyTrackGroup?.tracks ?? []) {
     if (track.musicBrainzTitle?.trim()) {
       return { value: track.musicBrainzTitle, source: "spotifyMusicBrainzTitle" };
     }
   }
 
-  // 2순위: spotify track name
+  // 3순위: spotify track name
   for (const track of song.spotifyTrackGroup?.tracks ?? []) {
     if (track.name?.trim()) {
       return { value: track.name, source: "spotifyTrackName" };
     }
   }
 
-  // 3순위: youtube video title
+  // 4순위: youtube video title
   for (const sv of song.youtubeVideos) {
     if (sv.youtubeVideo.title?.trim()) {
       return { value: sv.youtubeVideo.title, source: "youtubeVideoTitle" };
     }
-  }
-
-  // 4순위: song title
-  if (song.title?.trim()) {
-    return { value: song.title, source: "songTitle" };
   }
 
   return null;
@@ -130,8 +122,7 @@ export async function autoFillSongTitles(
       id: true,
       title: true,
       titleLatin: true,
-      titleJaKanji: true,
-      titleJaKana: true,
+      titleJa: true,
       titleKo: true,
       spotifyTrackGroup: {
         select: {
@@ -139,7 +130,9 @@ export async function autoFillSongTitles(
             select: {
               name: true,
               musicBrainzTitle: true,
+              popularity: true,
             },
+            orderBy: { popularity: "desc" },
           },
         },
       },
@@ -148,9 +141,11 @@ export async function autoFillSongTitles(
           youtubeVideo: {
             select: {
               title: true,
+              viewCount: true,
             },
           },
         },
+        orderBy: { youtubeVideo: { viewCount: "desc" } },
       },
     },
   });
@@ -173,6 +168,18 @@ export async function autoFillSongTitles(
     const field = detectLanguageField(selected.value);
     const currentValue = (song as Record<TitleField, string | null>)[field];
     if (currentValue) continue;
+
+    // 기존 title들과 비교해서 유사하면 넣지 않음
+    const existingTitles = [song.title, song.titleKo, song.titleLatin, song.titleJa]
+      .filter((t): t is string => Boolean(t?.trim()));
+
+    if (existingTitles.length > 0) {
+      const match = findBestMatch(selected.value, existingTitles);
+      if (match.answer) {
+        // 이미 유사한 제목이 있음 → skip
+        continue;
+      }
+    }
 
     changes.push({
       songId: song.id,
