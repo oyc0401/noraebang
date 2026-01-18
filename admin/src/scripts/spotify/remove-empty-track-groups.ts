@@ -40,10 +40,6 @@ async function main() {
     },
     select: {
       id: true,
-      titleKo: true,
-      titleLatin: true,
-      titleJaKana: true,
-      titleJaKanji: true,
       createdAt: true,
       songs: {
         select: {
@@ -69,10 +65,8 @@ async function main() {
   for (let i = 0; i < emptyGroups.length; i++) {
     const group = emptyGroups[i];
     const progress = `[${i + 1}/${emptyGroups.length}]`;
-    const title =
-      group.titleKo ?? group.titleLatin ?? group.titleJaKana ?? group.titleJaKanji ?? "(제목 없음)";
 
-    console.log(`${progress} 그룹 ID: ${group.id} / 제목: ${title}`);
+    console.log(`${progress} 그룹 ID: ${group.id}`);
     console.log(`     생성일: ${group.createdAt.toISOString()}`);
     console.log(`     연결된 Song 수: ${group.songs.length}`);
     if (group.songs.length > 0) {

@@ -1838,18 +1838,11 @@ export async function linkSongArtist({
   }
 
   // 현재 가장 높은 order 값 찾기
-  const maxOrder = await prisma.artistSong.aggregate({
-    where: { songId },
-    _max: { order: true },
-  });
-
-  const newOrder = (maxOrder._max.order ?? -1) + 1;
-
   await prisma.artistSong.create({
     data: {
       songId,
       artistId,
-      order: newOrder,
+
       role: role ?? null,
     },
   });
@@ -2565,9 +2558,25 @@ export async function leaveSpotifyTrackGroup(trackId: number) {
     throw new Error("유효한 트랙 ID가 필요합니다.");
   }
 
-  await prisma.spotifyTrack.update({
+  // 트랙의 현재 그룹 확인
+  const track = await prisma.spotifyTrack.findUnique({
     where: { id: trackId },
-    data: { groupId: null },
+    select: { groupId: true },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    // 해당 트랙이 그룹의 primary였다면 null로 설정
+    if (track?.groupId) {
+      await tx.spotifyTrackGroup.updateMany({
+        where: { id: track.groupId, primarySpotifyTrackId: trackId },
+        data: { primarySpotifyTrackId: null },
+      });
+    }
+
+    await tx.spotifyTrack.update({
+      where: { id: trackId },
+      data: { groupId: null },
+    });
   });
 
   return { success: true };
@@ -2716,4 +2725,140 @@ export async function runGroupSpotifyTracksForArtist(artistId: number) {
     throw new Error("유효한 아티스트 ID가 필요합니다.");
   }
   return groupSpotifyTracksForArtist(artistId);
+}
+
+// ========== 스포티파이 그룹 편집 ==========
+
+// 새 그룹 생성
+export async function createSpotifyTrackGroup(
+  primaryTrackId: number,
+  trackIds: number[] = [],
+) {
+  if (!primaryTrackId || Number.isNaN(primaryTrackId)) {
+    throw new Error("유효한 primary 트랙 ID가 필요합니다.");
+  }
+
+  // 새 그룹 생성
+  const group = await prisma.spotifyTrackGroup.create({
+    data: {
+      primarySpotifyTrackId: primaryTrackId,
+    },
+  });
+
+  // primary 트랙 + 추가 트랙들을 그룹에 연결
+  const allTrackIds = [
+    primaryTrackId,
+    ...trackIds.filter((id) => id !== primaryTrackId),
+  ];
+
+  await prisma.spotifyTrack.updateMany({
+    where: { id: { in: allTrackIds } },
+    data: { groupId: group.id },
+  });
+
+  return { groupId: group.id };
+}
+
+// 트랙을 그룹에 추가
+export async function addTrackToSpotifyGroup(groupId: number, trackId: number) {
+  if (!groupId || Number.isNaN(groupId)) {
+    throw new Error("유효한 그룹 ID가 필요합니다.");
+  }
+  if (!trackId || Number.isNaN(trackId)) {
+    throw new Error("유효한 트랙 ID가 필요합니다.");
+  }
+
+  await prisma.spotifyTrack.update({
+    where: { id: trackId },
+    data: { groupId },
+  });
+
+  return { success: true };
+}
+
+// 그룹 상세 정보 (편집용)
+export type SpotifyGroupEditData = {
+  groupId: number;
+  primaryTrackId: number;
+  tracks: ManagerSpotifyTrackSummary[];
+  linkedSongs: Array<{ id: number; title: string; titleKo?: string | null }>;
+};
+
+export async function getSpotifyGroupDetail(
+  groupId: number,
+): Promise<SpotifyGroupEditData> {
+  if (!groupId || Number.isNaN(groupId)) {
+    throw new Error("유효한 그룹 ID가 필요합니다.");
+  }
+
+  const group = await prisma.spotifyTrackGroup.findUnique({
+    where: { id: groupId },
+    select: {
+      id: true,
+      primarySpotifyTrackId: true,
+      tracks: {
+        select: spotifyTrackBaseSelect,
+        orderBy: { popularity: "desc" },
+      },
+      songs: {
+        select: {
+          id: true,
+          title: true,
+          titleKo: true,
+        },
+      },
+    },
+  });
+
+  if (!group) {
+    throw new Error("그룹을 찾을 수 없습니다.");
+  }
+
+  return {
+    groupId: group.id,
+    primaryTrackId: group.primarySpotifyTrackId ?? 0,
+    tracks: group.tracks.map(mapSpotifyTrackSummary),
+    linkedSongs: group.songs.map((s) => ({
+      id: s.id,
+      title: s.title,
+      titleKo: s.titleKo ?? undefined,
+    })),
+  };
+}
+
+// primary 트랙 변경
+export async function setSpotifyGroupPrimaryTrack(
+  groupId: number,
+  trackId: number,
+) {
+  if (!groupId || Number.isNaN(groupId)) {
+    throw new Error("유효한 그룹 ID가 필요합니다.");
+  }
+  if (!trackId || Number.isNaN(trackId)) {
+    throw new Error("유효한 트랙 ID가 필요합니다.");
+  }
+
+  // 트랙이 해당 그룹에 속해 있는지 확인
+  const track = await prisma.spotifyTrack.findUnique({
+    where: { id: trackId },
+    select: { groupId: true },
+  });
+
+  if (!track || track.groupId !== groupId) {
+    throw new Error("해당 트랙은 이 그룹에 속해 있지 않습니다.");
+  }
+
+  // unique constraint 때문에 먼저 null로 설정 후 변경 (순차 실행 필수)
+  await prisma.$transaction(async (tx) => {
+    await tx.spotifyTrackGroup.update({
+      where: { id: groupId },
+      data: { primarySpotifyTrackId: null },
+    });
+    await tx.spotifyTrackGroup.update({
+      where: { id: groupId },
+      data: { primarySpotifyTrackId: trackId },
+    });
+  });
+
+  return { success: true };
 }
