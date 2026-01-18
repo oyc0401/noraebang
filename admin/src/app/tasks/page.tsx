@@ -18,13 +18,17 @@ type TaskAction = (
   options: { dryRun: boolean },
 ) => Promise<void>;
 
+type RangeParams = {
+  startId: string;
+  endId: string;
+};
+
 function useArtistTask(
   taskName: string,
   action: TaskAction,
+  getRange: () => RangeParams,
   defaultDryRun = true,
 ) {
-  const [startId, setStartId] = useState("1");
-  const [endId, setEndId] = useState(String(MAX_ARTIST));
   const [dryRun, setDryRun] = useState(defaultDryRun);
   const [summary, setSummary] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +36,7 @@ function useArtistTask(
   const cancelRef = useRef(false);
 
   const run = () => {
+    const { startId, endId } = getRange();
     const start = Number(startId);
     const end = Number(endId);
     if (!Number.isFinite(start) || !Number.isFinite(end) || start <= 0) {
@@ -91,10 +96,6 @@ function useArtistTask(
   };
 
   return {
-    startId,
-    setStartId,
-    endId,
-    setEndId,
     dryRun,
     setDryRun,
     summary,
@@ -106,30 +107,43 @@ function useArtistTask(
 }
 
 export default function AdminTasksPage() {
+  // 공용 범위 상태
+  const [startId, setStartId] = useState("1");
+  const [endId, setEndId] = useState(String(MAX_ARTIST));
+  const [singleMode, setSingleMode] = useState(false);
+
+  const getRange = () => ({ startId, endId });
+
   const mapTask = useArtistTask(
     "mapProposeSong",
     runMapProposeSongForArtist,
+    getRange,
     false,
   );
   const songTask = useArtistTask(
     "autoFillSongTitles",
     runAutoFillSongTitlesForArtist,
+    getRange,
   );
   const artistTask = useArtistTask(
     "autoFillArtistNames",
     runAutoFillArtistNamesForArtist,
+    getRange,
   );
   const youtubeTask = useArtistTask(
     "mapSongYoutubeVideo",
     runMapSongYoutubeVideoForArtist,
+    getRange,
   );
   const spotifyTask = useArtistTask(
     "mapSongSpotifyGroups",
     runMapSongSpotifyGroupsForArtist,
+    getRange,
   );
   const thumbTask = useArtistTask(
     "updateSongThumbnails",
     runUpdateSongThumbnailsForArtist,
+    getRange,
   );
 
   return (
@@ -144,6 +158,40 @@ export default function AdminTasksPage() {
             있습니다.
           </p>
         </header>
+
+        {/* 공용 범위 입력 */}
+        <section className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="text-sm font-semibold text-blue-700">
+              아티스트 ID 범위
+            </span>
+            <div className="flex items-center gap-3">
+              <RangeInput
+                label={singleMode ? "ID" : "시작 ID"}
+                value={startId}
+                onChange={(val) => {
+                  setStartId(val);
+                  if (singleMode) setEndId(val);
+                }}
+              />
+              {!singleMode && (
+                <RangeInput label="종료 ID" value={endId} onChange={setEndId} />
+              )}
+              <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 text-sm font-semibold text-zinc-700">
+                <input
+                  type="checkbox"
+                  checked={singleMode}
+                  onChange={(e) => {
+                    setSingleMode(e.target.checked);
+                    if (e.target.checked) setEndId(startId);
+                  }}
+                  className="h-4 w-4 rounded border-zinc-300 text-blue-500 focus:ring-blue-400"
+                />
+                단일
+              </label>
+            </div>
+          </div>
+        </section>
 
         <div className="space-y-4">
           <TaskCard
@@ -201,17 +249,11 @@ function TaskCard({
   return (
     <section className="rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="md:w-1/4">
+        <div className="md:w-1/3">
           <h2 className="text-base font-bold text-zinc-900">{title}</h2>
           <p className="text-xs text-zinc-500">{description}</p>
         </div>
-        <div className="flex flex-1 flex-nowrap items-center gap-3 overflow-x-auto">
-          <RangeInputs
-            startValue={task.startId}
-            endValue={task.endId}
-            onStartChange={task.setStartId}
-            onEndChange={task.setEndId}
-          />
+        <div className="flex items-center gap-3">
           <DryRunToggle checked={task.dryRun} onChange={task.setDryRun} />
         </div>
         <div className="flex flex-col gap-2 md:w-48">
@@ -271,52 +313,6 @@ function RangeInput({
   );
 }
 
-function RangeInputs({
-  startValue,
-  endValue,
-  onStartChange,
-  onEndChange,
-  startLabel = "시작 ID",
-  endLabel = "종료 ID",
-}: {
-  startValue: string;
-  endValue: string;
-  onStartChange: (val: string) => void;
-  onEndChange: (val: string) => void;
-  startLabel?: string;
-  endLabel?: string;
-}) {
-  const [singleMode, setSingleMode] = useState(false);
-
-  return (
-    <>
-      <RangeInput
-        label={singleMode ? "ID" : startLabel}
-        value={startValue}
-        onChange={(val) => {
-          onStartChange(val);
-          if (singleMode) onEndChange(val);
-        }}
-      />
-      {!singleMode && (
-        <RangeInput label={endLabel} value={endValue} onChange={onEndChange} />
-      )}
-      <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 px-3 text-sm font-semibold text-zinc-700">
-        <input
-          type="checkbox"
-          checked={singleMode}
-          onChange={(e) => {
-            setSingleMode(e.target.checked);
-            if (e.target.checked) onEndChange(startValue);
-          }}
-          className="h-4 w-4 rounded border-zinc-300 text-blue-500 focus:ring-blue-400"
-        />
-        단일
-      </label>
-    </>
-  );
-}
-
 function DryRunToggle({
   checked,
   onChange,
@@ -325,7 +321,7 @@ function DryRunToggle({
   onChange: (val: boolean) => void;
 }) {
   return (
-    <label className="inline-flex h-11 items-center gap-2 rounded-lg border border-zinc-200 px-3 text-sm font-semibold text-zinc-700">
+    <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 px-3 text-sm font-semibold text-zinc-700">
       <input
         type="checkbox"
         checked={checked}

@@ -71,19 +71,7 @@ export function SongCard({
             <div className="flex-1 min-w-0">
               {/* 제목 및 편집 버튼 */}
               <div className="flex items-start gap-2">
-                <p className="font-medium text-zinc-900 flex-1">
-                  {song.title}
-                  {song.titleKo && (
-                    <span className="ml-2 text-sm text-zinc-500 font-normal">
-                      {`(${song.titleKo})`}
-                    </span>
-                  )}
-                  {song.titleLatin && (
-                    <span className="ml-2 text-sm text-zinc-500 font-normal">
-                      {`(${song.titleLatin})`}
-                    </span>
-                  )}
-                </p>
+                <p className="font-medium text-zinc-900 flex-1">{song.title}</p>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -96,12 +84,58 @@ export function SongCard({
                 </button>
               </div>
 
+              {/* 다국어 제목 라벨 */}
+              {(song.titleKo || song.titleJa || song.titleJaKana || song.titleLatin) && (
+                <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                  {song.titleKo && (
+                    <span className="flex flex-col rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5">
+                      <span className="text-[10px] text-blue-400">titleKo</span>
+                      <span className="text-blue-700">{song.titleKo}</span>
+                    </span>
+                  )}
+                  {song.titleJa && (
+                    <span className="flex flex-col rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5">
+                      <span className="text-[10px] text-amber-400">titleJa</span>
+                      <span className="text-amber-700">{song.titleJa}</span>
+                    </span>
+                  )}
+                
+                  {song.titleLatin && (
+                    <span className="flex flex-col rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5">
+                      <span className="text-[10px] text-emerald-400">titleLatin</span>
+                      <span className="text-emerald-700">{song.titleLatin}</span>
+                    </span>
+                  )}
+                </div>
+              )}
+
               {/* 기본 정보 뱃지 */}
               <div className="mt-1 flex flex-wrap gap-2 text-xs text-zinc-500">
                 <span className="rounded-full bg-zinc-100 px-2 py-0.5">
                   #{song.id}
                 </span>
                 <span>분류: {song.catalog ? song.catalog : "미분류"}</span>
+                {/* Spotify 뱃지 */}
+                {primaryTrack ? (
+                  <a
+                    href={primaryTrack.spotifyUrl ?? `https://open.spotify.com/search/${encodeURIComponent(song.title)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700"
+                  >
+                    <SpotifyIcon className="h-3 w-3" />
+                    <span className="font-medium">{primaryTrack.name}</span>
+                    <span className="text-emerald-500">
+                      {primaryDuration} · 인기 {primaryTrack.popularity ?? "-"} · {primaryRelease?.slice(0, 4) ?? "-"}
+                    </span>
+                  </a>
+                ) : (
+                  <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-500">
+                    Spotify 없음
+                  </span>
+                )}
+                {/* YouTube 뱃지 */}
                 {song.topYoutubeVideo ? (
                   <a
                     href={`https://www.youtube.com/watch?v=${song.topYoutubeVideo.videoId}`}
@@ -195,63 +229,6 @@ export function SongCard({
               </div>
             </div>
 
-            {/* Spotify 그룹 카드 */}
-            {song.spotifyGroup ? (
-              <div className="rounded-lg border border-emerald-100/70 bg-white/70 p-3 text-[11px] text-zinc-500 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
-                    <SpotifyIcon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] uppercase tracking-[0.4em] text-emerald-500">
-                      Group #{song.spotifyGroup.id}
-                    </p>
-                    {primaryTrack?.name ? (
-                      primaryTrack.spotifyUrl ? (
-                        <a
-                          href={primaryTrack.spotifyUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="group block"
-                        >
-                          <span className="text-sm font-semibold text-zinc-900 group-hover:text-emerald-600">
-                            {primaryTrack?.name}
-                          </span>
-                          {primaryTrack.musicBrainzTitle && (
-                            <span className="block text-[11px] text-zinc-400 truncate">{`(${primaryTrack.musicBrainzTitle})`}</span>
-                          )}
-                        </a>
-                      ) : (
-                        <div>
-                          <p className="text-sm font-semibold text-zinc-900">
-                            {primaryTrack?.name}
-                          </p>
-                          {primaryTrack.musicBrainzTitle && (
-                            <span className="block text-[11px] text-zinc-400 truncate">{`(${primaryTrack.musicBrainzTitle})`}</span>
-                          )}
-                        </div>
-                      )
-                    ) : (
-                      <p className="font-semibold text-emerald-600">
-                        Primary track 없음
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-zinc-500">
-                  <span className="inline-flex items-center rounded-full border border-emerald-100 px-2.5 py-0.5">
-                    길이 {primaryDuration}
-                  </span>
-                  <span className="inline-flex items-center rounded-full border border-emerald-100 px-2.5 py-0.5">
-                    인기도 {primaryTrack?.popularity ?? "-"}
-                  </span>
-                  <span className="inline-flex items-center rounded-full border border-emerald-100 px-2.5 py-0.5">
-                    발매일 {primaryRelease}
-                  </span>
-                </div>
-              </div>
-            ) : null}
           </div>
         </div>
       </div>

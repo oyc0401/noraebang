@@ -60,36 +60,42 @@ const detectLanguageField = (title: string): TitleField | null => {
 type SelectedTitle = {
   value: string;
   source: TitleSource;
-} | null;
+};
 
-const selectTitle = (song: SongRecord): SelectedTitle => {
-  // 1순위: song title (영어면 titleLatin, 일본어면 titleJa 등에 먼저 채움)
-  if (song.title?.trim()) {
-    return { value: song.title, source: "songTitle" };
-  }
+/**
+ * 모든 가능한 제목 소스를 수집 (중복 제거)
+ */
+const collectAllTitles = (song: SongRecord): SelectedTitle[] => {
+  const results: SelectedTitle[] = [];
+  const seen = new Set<string>();
 
-  // 2순위: musicBrainzTitle (가장 정확한 제목)
+  const add = (value: string | null | undefined, source: TitleSource) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return;
+    if (seen.has(trimmed)) return;
+    seen.add(trimmed);
+    results.push({ value: trimmed, source });
+  };
+
+  // song title
+  add(song.title, "songTitle");
+
+  // musicBrainzTitle (가장 정확)
   for (const track of song.spotifyTrackGroup?.tracks ?? []) {
-    if (track.musicBrainzTitle?.trim()) {
-      return { value: track.musicBrainzTitle, source: "spotifyMusicBrainzTitle" };
-    }
+    add(track.musicBrainzTitle, "spotifyMusicBrainzTitle");
   }
 
-  // 3순위: spotify track name
+  // spotify track name
   for (const track of song.spotifyTrackGroup?.tracks ?? []) {
-    if (track.name?.trim()) {
-      return { value: track.name, source: "spotifyTrackName" };
-    }
+    add(track.name, "spotifyTrackName");
   }
 
-  // 4순위: youtube video title
+  // youtube video title
   for (const sv of song.youtubeVideos) {
-    if (sv.youtubeVideo.title?.trim()) {
-      return { value: sv.youtubeVideo.title, source: "youtubeVideoTitle" };
-    }
+    add(sv.youtubeVideo.title, "youtubeVideoTitle");
   }
 
-  return null;
+  return results;
 };
 
 export async function autoFillSongTitles(
@@ -162,33 +168,43 @@ export async function autoFillSongTitles(
   const updatedSongIds = new Set<number>();
 
   for (const song of songs) {
-    const selected = selectTitle(song as SongRecord);
-    if (!selected) continue;
+    const allTitles = collectAllTitles(song as SongRecord);
+    if (allTitles.length === 0) continue;
 
-    const field = detectLanguageField(selected.value);
-    const currentValue = (song as Record<TitleField, string | null>)[field];
-    if (currentValue) continue;
+    // 각 필드별로 첫 번째로 매칭되는 소스를 사용 (우선순위 유지)
+    const filledFields = new Set<TitleField>();
 
-    // 기존 title들과 비교해서 유사하면 넣지 않음
-    const existingTitles = [song.title, song.titleKo, song.titleLatin, song.titleJa]
-      .filter((t): t is string => Boolean(t?.trim()));
+    for (const selected of allTitles) {
+      const field = detectLanguageField(selected.value);
+      if (!field) continue;
 
-    if (existingTitles.length > 0) {
-      const match = findBestMatch(selected.value, existingTitles);
-      if (match.answer) {
-        // 이미 유사한 제목이 있음 → skip
-        continue;
+      // 이미 이 필드에 값이 있거나, 이번 루프에서 이미 채웠으면 스킵
+      const currentValue = (song as Record<TitleField, string | null>)[field];
+      if (currentValue) continue;
+      if (filledFields.has(field)) continue;
+
+      // 기존 title들과 비교해서 유사하면 넣지 않음
+      const existingTitles = [song.title, song.titleKo, song.titleLatin, song.titleJa]
+        .filter((t): t is string => Boolean(t?.trim()));
+
+      if (existingTitles.length > 0) {
+        const match = findBestMatch(selected.value, existingTitles);
+        if (match.answer) {
+          // 이미 유사한 제목이 있음 → skip
+          continue;
+        }
       }
-    }
 
-    changes.push({
-      songId: song.id,
-      songTitle: song.title,
-      field,
-      value: selected.value,
-      source: selected.source,
-    });
-    updatedSongIds.add(song.id);
+      changes.push({
+        songId: song.id,
+        songTitle: song.title,
+        field,
+        value: selected.value,
+        source: selected.source,
+      });
+      filledFields.add(field);
+      updatedSongIds.add(song.id);
+    }
   }
 
   if (changes.length === 0) {
