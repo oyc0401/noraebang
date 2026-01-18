@@ -32,15 +32,12 @@ export interface MapSongSpotifyGroupsOptions {
   minArtistId: number;
   maxArtistId: number;
   dryRun?: boolean;
-  force?: boolean;
-  logger?: (line: string) => void;
 }
 
 export interface MapSongSpotifyGroupsResult {
   minArtistId: number;
   maxArtistId: number;
   dryRun: boolean;
-  force: boolean;
   processedArtists: number;
   stats: {
     mappedSongs: number;
@@ -49,8 +46,6 @@ export interface MapSongSpotifyGroupsResult {
     errors: number;
   };
 }
-
-const noop = () => {};
 
 async function fetchArtistData(
   artistId: number,
@@ -180,7 +175,7 @@ function generateMappings(data: ArtistSongsData): Mapping[] {
 
 async function applyMappings(
   mappings: Mapping[],
-  options: { dryRun: boolean; force: boolean; log: (line: string) => void },
+  options: { dryRun: boolean },
 ) {
   let applied = 0;
   let errors = 0;
@@ -188,15 +183,13 @@ async function applyMappings(
 
   for (const mapping of mappings) {
     try {
-      if (!options.force) {
-        const existing = await prisma.song.findUnique({
-          where: { id: mapping.songId },
-          select: { spotifyTrackGroupId: true },
-        });
-        if (existing?.spotifyTrackGroupId) {
-          skipped += 1;
-          continue;
-        }
+      const existing = await prisma.song.findUnique({
+        where: { id: mapping.songId },
+        select: { spotifyTrackGroupId: true },
+      });
+      if (existing?.spotifyTrackGroupId) {
+        skipped += 1;
+        continue;
       }
 
       const spotifyTrack = await prisma.spotifyTrack.findUnique({
@@ -205,13 +198,13 @@ async function applyMappings(
       });
 
       if (!spotifyTrack || !spotifyTrack.groupId) {
-        options.log(`❌ SpotifyTrack ${mapping.spotifyTrackId} 그룹 정보 없음`);
+        console.warn(`❌ SpotifyTrack ${mapping.spotifyTrackId} 그룹 정보 없음`);
         errors += 1;
         continue;
       }
 
       if (options.dryRun) {
-        options.log(
+        console.log(
           `[DRY-RUN] Song ${mapping.songId} ↔ Group ${spotifyTrack.groupId}`,
         );
         applied += 1;
@@ -223,7 +216,7 @@ async function applyMappings(
         applied += 1;
       }
     } catch (error) {
-      options.log(
+      console.error(
         `❌ Song ${mapping.songId} 매핑 실패: ${
           error instanceof Error ? error.message : String(error)
         }`,
@@ -238,14 +231,7 @@ async function applyMappings(
 export async function mapSongSpotifyGroups(
   options: MapSongSpotifyGroupsOptions,
 ): Promise<MapSongSpotifyGroupsResult> {
-  const {
-    minArtistId,
-    maxArtistId,
-    dryRun = false,
-    force = false,
-    logger,
-  } = options;
-  const log = logger ?? (dryRun ? console.log : noop);
+  const { minArtistId, maxArtistId, dryRun = false } = options;
 
   let processedArtists = 0;
   let artistSkippedNoData = 0;
@@ -272,7 +258,7 @@ export async function mapSongSpotifyGroups(
       applied,
       errors: applyErrors,
       skipped,
-    } = await applyMappings(mappings, { dryRun, force, log });
+    } = await applyMappings(mappings, { dryRun });
 
     mappedSongs += applied;
     songSkippedAlreadyLinked += skipped;
@@ -284,7 +270,6 @@ export async function mapSongSpotifyGroups(
     minArtistId,
     maxArtistId,
     dryRun,
-    force,
     processedArtists,
     stats: {
       mappedSongs,

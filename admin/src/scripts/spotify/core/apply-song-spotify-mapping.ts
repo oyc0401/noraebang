@@ -6,7 +6,6 @@ import { prisma } from "../../../lib/prisma";
 function parseArgs() {
   const args = process.argv.slice(2);
   const isDryRun = args.includes("--dry-run");
-  const isForce = args.includes("--force");
 
   let start = 1;
   let end = 300;
@@ -20,17 +19,15 @@ function parseArgs() {
     end = Number.parseInt(args[endIdx + 1], 10);
   }
 
-  return { start, end, isDryRun, isForce };
+  return { start, end, isDryRun };
 }
 
 async function main() {
-  const { start, end, isDryRun, isForce } = parseArgs();
+  const { start, end, isDryRun } = parseArgs();
   const result = await mapSongSpotifyGroups({
     minArtistId: start,
     maxArtistId: end,
     dryRun: isDryRun,
-    force: isForce,
-    logger: console.log,
   });
 
   console.log("\n📊 Summary");

@@ -39,7 +39,6 @@ export interface UpdateSongThumbnailsRange {
 export interface UpdateSongThumbnailsOptions {
   dryRun?: boolean;
   verbose?: boolean;
-  logger?: (line: string) => void;
 }
 
 export interface UpdateSongThumbnailsResult {
@@ -112,10 +111,10 @@ export async function updateSongThumbnails(
   range: UpdateSongThumbnailsRange,
   options: UpdateSongThumbnailsOptions = {},
 ): Promise<UpdateSongThumbnailsResult> {
-  const { dryRun = false, verbose = false, logger } = options;
+  const { dryRun = false, verbose = false } = options;
   const minArtistId = range.minArtistId ?? 1;
   const maxArtistId = range.maxArtistId;
-  const log = logger ?? (verbose ? console.log : noop);
+  const log = verbose ? console.log : noop;
 
   log(
     `\n🖼  updateSongThumbnails → artistId ${minArtistId}~${maxArtistId} ${dryRun ? "(dry-run)" : ""}`,

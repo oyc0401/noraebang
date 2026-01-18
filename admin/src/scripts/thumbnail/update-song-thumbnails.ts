@@ -19,7 +19,7 @@ async function main() {
 
   const result = await updateSongThumbnails(
     { minArtistId, maxArtistId },
-    { dryRun, verbose: true, logger: console.log },
+    { dryRun, verbose: true },
   );
 
   console.log("\n📊 Summary");

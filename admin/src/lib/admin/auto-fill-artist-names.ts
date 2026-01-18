@@ -25,7 +25,6 @@ export interface AutoFillArtistNamesRange {
 export interface AutoFillArtistNamesOptions {
   dryRun?: boolean;
   verbose?: boolean;
-  logger?: (line: string) => void;
 }
 
 export type ArtistNameUpdate = {
@@ -72,13 +71,10 @@ export async function autoFillArtistNames(
   range: AutoFillArtistNamesRange,
   options: AutoFillArtistNamesOptions = {},
 ): Promise<AutoFillArtistNamesResult> {
-  const { dryRun = false, verbose = false, logger } = options;
+  const { dryRun = false, verbose = false } = options;
   const minArtistId = range.minArtistId ?? 1;
   const maxArtistId = range.maxArtistId;
-  const emit = (line: string) => {
-    if (logger) logger(line);
-    if (verbose) console.log(line);
-  };
+  const emit = verbose ? console.log : () => {};
 
   emit(
     `\n👤 autoFillArtistNames → artistId ${minArtistId}~${maxArtistId} ${dryRun ? "(dry-run)" : ""}`,
