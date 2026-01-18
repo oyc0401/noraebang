@@ -18,7 +18,7 @@ type YoutubeVideoInfo = {
   title: string;
 };
 
-export type SongYoutubeVideoMatch = {
+type SongYoutubeVideoMatch = {
   songId: number;
   songTitle: string;
   matchedVideos: Array<{
@@ -34,35 +34,15 @@ export type SongYoutubeVideoMatch = {
 
 export interface MapSongYoutubeVideoOptions {
   dryRun?: boolean;
-  verbose?: boolean;
-}
-
-export interface MapSongYoutubeVideoResult {
-  artistId: number;
-  artistName: string;
-  artistNameKo: string;
-  totalSongs: number;
-  totalVideos: number;
-  dryRun: boolean;
-  mappings: SongYoutubeVideoMatch[];
-  stats: {
-    songsWithMatches: number;
-    songsWithCandidatesOnly: number;
-    songsWithoutMatches: number;
-    totalMatchedLinks: number;
-    inserted: number;
-    skipped: number;
-  };
 }
 
 export async function mapSongYoutubeVideo(
   artistId: number,
   options: MapSongYoutubeVideoOptions = {},
-): Promise<MapSongYoutubeVideoResult> {
-  const { dryRun = false, verbose = false } = options;
-  const emit = verbose ? console.log : () => {};
+): Promise<void> {
+  const { dryRun = false } = options;
 
-  emit(
+  console.log(
     `\n🎬 mapSongYoutubeVideo → artistId=${artistId} ${dryRun ? "(dry-run)" : ""}`,
   );
 
@@ -151,8 +131,8 @@ export async function mapSongYoutubeVideo(
     });
   });
 
-  emit(`  • Songs: ${songsWithTitles.length}`);
-  emit(`  • Topic videos: ${videos.length}`);
+  console.log(`  • Songs: ${songsWithTitles.length}`);
+  console.log(`  • Topic videos: ${videos.length}`);
 
   const mappings = generateMapping(songsWithTitles, videos);
   const withMatches = mappings.filter((m) => m.matchedVideos.length > 0);
@@ -169,31 +149,16 @@ export async function mapSongYoutubeVideo(
     0,
   );
 
-  emit("  • Mapping stats");
-  emit(`    - songs with matches: ${withMatches.length}`);
-  emit(`    - songs with candidates only: ${withCandidatesOnly.length}`);
-  emit(`    - songs without matches: ${withoutMatches.length}`);
-  emit(`    - matched links: ${totalMatchedLinks}`);
+  console.log("  • Mapping stats");
+  console.log(`    - songs with matches: ${withMatches.length}`);
+  console.log(`    - songs with candidates only: ${withCandidatesOnly.length}`);
+  console.log(`    - songs without matches: ${withoutMatches.length}`);
+  console.log(`    - matched links: ${totalMatchedLinks}`);
 
   const { inserted, skipped } = await applyMappings(mappings, dryRun);
-
-  return {
-    artistId: artist.id,
-    artistName: artist.name,
-    artistNameKo: artist.nameKo,
-    totalSongs: songsWithTitles.length,
-    totalVideos: videos.length,
-    dryRun,
-    mappings,
-    stats: {
-      songsWithMatches: withMatches.length,
-      songsWithCandidatesOnly: withCandidatesOnly.length,
-      songsWithoutMatches: withoutMatches.length,
-      totalMatchedLinks,
-      inserted,
-      skipped,
-    },
-  };
+  console.log(
+    `  • 결과: matches=${withMatches.length}, candidatesOnly=${withCandidatesOnly.length}, noMatch=${withoutMatches.length}, inserted=${inserted}, skipped=${skipped}`,
+  );
 }
 
 function generateMapping(

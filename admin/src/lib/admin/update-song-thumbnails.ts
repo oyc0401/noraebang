@@ -38,23 +38,7 @@ export interface UpdateSongThumbnailsRange {
 
 export interface UpdateSongThumbnailsOptions {
   dryRun?: boolean;
-  verbose?: boolean;
 }
-
-export interface UpdateSongThumbnailsResult {
-  minArtistId: number;
-  maxArtistId: number;
-  totalSongs: number;
-  stats: {
-    updated: number;
-    updatedBySpotifyOldest: number;
-    updatedByYoutube: number;
-    unchanged: number;
-    skippedNoSource: number;
-  };
-}
-
-const noop = () => {};
 
 const sameThumbs = (a: ThumbTriple, b: ThumbTriple) =>
   (a.thumbnailDefault ?? null) === (b.thumbnailDefault ?? null) &&
@@ -110,13 +94,12 @@ const pickOldestTrackWithThumbs = (
 export async function updateSongThumbnails(
   range: UpdateSongThumbnailsRange,
   options: UpdateSongThumbnailsOptions = {},
-): Promise<UpdateSongThumbnailsResult> {
-  const { dryRun = false, verbose = false } = options;
+): Promise<void> {
+  const { dryRun = false } = options;
   const minArtistId = range.minArtistId ?? 1;
   const maxArtistId = range.maxArtistId;
-  const log = verbose ? console.log : noop;
 
-  log(
+  console.log(
     `\n🖼  updateSongThumbnails → artistId ${minArtistId}~${maxArtistId} ${dryRun ? "(dry-run)" : ""}`,
   );
 
@@ -160,7 +143,7 @@ export async function updateSongThumbnails(
     },
   });
 
-  log(`  • 대상 곡 수: ${songs.length}`);
+  console.log(`  • 대상 곡 수: ${songs.length}`);
 
   let updated = 0;
   let updatedBySpotifyOldest = 0;
@@ -259,20 +242,7 @@ export async function updateSongThumbnails(
     ).length;
   }
 
-  log(
+  console.log(
     `  • 결과: updated=${updated}, spotify=${updatedBySpotifyOldest}, youtube=${updatedByYoutube}, unchanged=${unchanged}, skipped=${skippedNoSource}`,
   );
-
-  return {
-    minArtistId,
-    maxArtistId,
-    totalSongs: songs.length,
-    stats: {
-      updated,
-      updatedBySpotifyOldest,
-      updatedByYoutube,
-      unchanged,
-      skippedNoSource,
-    },
-  };
 }

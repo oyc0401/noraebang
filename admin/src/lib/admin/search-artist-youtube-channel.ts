@@ -10,35 +10,8 @@ import { prisma } from "../prisma";
 
 export interface MapArtistYoutubeChannelOptions {
   dryRun?: boolean;
-  verbose?: boolean;
   searchQuery?: string;
   maxResults?: number;
-}
-
-type ExistingChannelSnapshot = {
-  id: number;
-  channelId: string;
-  title?: string | null;
-  subscriberCount?: number | null;
-};
-
-export interface MapArtistYoutubeChannelResult {
-  artist: {
-    id: number;
-    name: string;
-    nameKo: string;
-    topicChannel?: ExistingChannelSnapshot | null;
-    mainChannel?: ExistingChannelSnapshot | null;
-  };
-  candidates: YoutubeChannelCandidateSummary[];
-  topicChannel: ChannelMappingSummary;
-  mainChannel: ChannelMappingSummary | null;
-  stats: {
-    candidateCount: number;
-    topicUpdated: boolean;
-    mainUpdated: boolean;
-    dryRun: boolean;
-  };
 }
 
 export interface YoutubeChannelCandidateSummary {
@@ -95,9 +68,8 @@ const stripTopicSuffix = (title?: string | null) =>
 export async function mapArtistYoutubeChannel(
   artistId: number,
   options: MapArtistYoutubeChannelOptions = {},
-): Promise<MapArtistYoutubeChannelResult> {
-  const { dryRun = false, verbose = false } = options;
-  const log = verbose ? console.log : () => {};
+): Promise<void> {
+  const { dryRun = false } = options;
 
   const artist = await prisma.artist.findUnique({
     where: { id: artistId },
@@ -138,8 +110,8 @@ export async function mapArtistYoutubeChannel(
     throw new Error("Search query is empty.");
   }
 
-  log(`\n[Artist #${artist.id}] ${artist.name} (${artist.nameKo})`);
-  log(`  🔍 Search query: "${searchTerm}"`);
+  console.log(`\n[Artist #${artist.id}] ${artist.name} (${artist.nameKo})`);
+  console.log(`  🔍 Search query: "${searchTerm}"`);
 
   const candidates = await collectChannelCandidates(
     searchTerm,
@@ -156,7 +128,7 @@ export async function mapArtistYoutubeChannel(
     }),
   );
 
-  log(`  Candidates found: ${candidateSummaries.length}`);
+  console.log(`  Candidates found: ${candidateSummaries.length}`);
 
   const topicCandidate =
     candidates.find((candidate) => candidate.isTopicChannel) ?? null;
@@ -171,10 +143,10 @@ export async function mapArtistYoutubeChannel(
   let mainUpdated = false;
 
   if (topicCandidate) {
-    log(
+    console.log(
       `  🎯 Topic candidate: ${topicCandidate.details.title} (${topicCandidate.details.channelId})`,
     );
-    log(
+    console.log(
       `     Subscribers: ${topicCandidate.details.subscriberCount?.toLocaleString() || "Hidden"}`,
     );
 
@@ -201,10 +173,10 @@ export async function mapArtistYoutubeChannel(
     const mainSubscribers = mainCandidate?.details.subscriberCount ?? 0;
 
     if (mainCandidate && mainSubscribers > topicSubscribers) {
-      log(
+      console.log(
         `  ⭐️ Main candidate: ${mainCandidate.details.title} (${mainCandidate.details.channelId})`,
       );
-      log(
+      console.log(
         `     Subscribers: ${mainSubscribers.toLocaleString() || "Hidden"}`,
       );
 
@@ -237,29 +209,12 @@ export async function mapArtistYoutubeChannel(
   }
 
   if (!topicCandidate) {
-    log("  ⚠️  No topic channel candidate found.");
+    console.log("  ⚠️  No topic channel candidate found.");
   }
 
-  return {
-    artist: {
-      id: artist.id,
-      name: artist.name,
-      nameKo: artist.nameKo,
-      topicChannel: existingTopic
-        ? snapshotChannel(existingTopic)
-        : undefined,
-      mainChannel: existingMain ? snapshotChannel(existingMain) : undefined,
-    },
-    candidates: candidateSummaries,
-    topicChannel: topicAction,
-    mainChannel: mainAction,
-    stats: {
-      candidateCount: candidateSummaries.length,
-      topicUpdated,
-      mainUpdated,
-      dryRun,
-    },
-  };
+  console.log(
+    `  • 결과: topic=${topicAction.action}, main=${mainAction?.action ?? "n/a"}, candidates=${candidateSummaries.length}`,
+  );
 }
 
 function snapshotChannel(channel: {

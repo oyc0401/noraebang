@@ -24,24 +24,15 @@ function parseArgs() {
 
 async function main() {
   const { start, end, isDryRun } = parseArgs();
-  const result = await mapSongSpotifyGroups({
+  await mapSongSpotifyGroups({
     minArtistId: start,
     maxArtistId: end,
     dryRun: isDryRun,
   });
 
-  console.log("\n📊 Summary");
   console.log(
-    `  artists processed: ${result.processedArtists} (range ${result.minArtistId}~${result.maxArtistId})`,
+    `\n📊 Summary: artists ${start}~${end} ${isDryRun ? "(dry-run)" : ""} 처리 완료`,
   );
-  console.log(`  songs mapped: ${result.stats.mappedSongs}`);
-  console.log(
-    `  artists skipped(no data): ${result.stats.artistSkippedNoData}`,
-  );
-  console.log(
-    `  songs skipped(already linked): ${result.stats.songSkippedAlreadyLinked}`,
-  );
-  console.log(`  errors: ${result.stats.errors}`);
 }
 
 main()

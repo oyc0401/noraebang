@@ -3,26 +3,6 @@ import { searchTJPropose } from "../../thirdparty/tj/searchPropose";
 
 export interface FetchProposeForArtistOptions {
   dryRun?: boolean;
-  verbose?: boolean;
-}
-
-export interface FetchProposeForArtistResult {
-  artistId: number;
-  artistName: string;
-  tjName: string;
-  stats: {
-    fetched: number;
-    created: number;
-    updated: number;
-    skipped: number;
-    errors: number;
-  };
-  /** dry run일 때 미리보기용 */
-  preview: Array<{
-    songTitle: string;
-    songSinger: string;
-    regdateView: string;
-  }>;
 }
 
 /**
@@ -30,15 +10,13 @@ export interface FetchProposeForArtistResult {
  *
  * @param artistId - 아티스트 ID
  * @param options.dryRun - true면 DB 변경 없이 조회만
- * @param options.verbose - true면 콘솔 출력
  * @returns 수집 결과
  */
 export async function fetchProposeForArtist(
   artistId: number,
   options: FetchProposeForArtistOptions = {},
-): Promise<FetchProposeForArtistResult> {
-  const { dryRun = false, verbose = false } = options;
-  const log = verbose ? console.log : () => {};
+): Promise<void> {
+  const { dryRun = false } = options;
 
   // 1. 아티스트 정보 조회
   const artist = await prisma.artist.findUnique({
@@ -60,8 +38,8 @@ export async function fetchProposeForArtist(
 
   const tjName = artist.tjName;
 
-  log(`\n[Artist #${artist.id}] ${artist.name} (tjName: ${tjName})`);
-  if (dryRun) log(`  🔍 DRY-RUN MODE`);
+  console.log(`\n[Artist #${artist.id}] ${artist.name} (tjName: ${tjName})`);
+  if (dryRun) console.log(`  🔍 DRY-RUN MODE`);
 
   const stats = {
     fetched: 0,
@@ -70,39 +48,29 @@ export async function fetchProposeForArtist(
     skipped: 0,
     errors: 0,
   };
-  const preview: FetchProposeForArtistResult["preview"] = [];
 
   try {
     // 2. TJ 신청곡 검색
     const proposeItems = await searchTJPropose(tjName);
 
     if (proposeItems.length === 0) {
-      log(`  → 신청곡 없음`);
-      return {
-        artistId: artist.id,
-        artistName: artist.name,
-        tjName,
-        stats,
-        preview,
-      };
+      console.log(`  → 신청곡 없음`);
+      return;
     }
 
     stats.fetched = proposeItems.length;
-    log(`  → ${proposeItems.length}개 신청곡 발견`);
+    console.log(`  → ${proposeItems.length}개 신청곡 발견`);
 
     if (dryRun) {
       // dry run: 미리보기만
       for (const item of proposeItems.slice(0, 5)) {
-        preview.push({
-          songTitle: item.po_song_title,
-          songSinger: item.po_song_singer,
-          regdateView: item.po_regdate_view,
-        });
-        log(`     - ${item.po_song_title} / ${item.po_song_singer} (${item.po_regdate_view})`);
+        console.log(`     - ${item.po_song_title} / ${item.po_song_singer} (${item.po_regdate_view})`);
       }
       if (proposeItems.length > 5) {
-        log(`     ... 외 ${proposeItems.length - 5}개`);
+        console.log(`     ... 외 ${proposeItems.length - 5}개`);
       }
+      console.log("  • DRY-RUN: 작업 미적용");
+      return;
     } else {
       // 3. DB 반영
       for (const item of proposeItems) {
@@ -153,9 +121,9 @@ export async function fetchProposeForArtist(
         }
       }
 
-      log(`  → 반영 완료 (신규: ${stats.created}, 업데이트: ${stats.updated}, 스킵: ${stats.skipped})`);
+      console.log(`  → 반영 완료 (신규: ${stats.created}, 업데이트: ${stats.updated}, 스킵: ${stats.skipped})`);
       if (stats.errors > 0) {
-        log(`  ⚠️ 오류: ${stats.errors}건`);
+        console.log(`  ⚠️ 오류: ${stats.errors}건`);
       }
 
       // tjProposeFetchedAt 업데이트
@@ -166,15 +134,11 @@ export async function fetchProposeForArtist(
     }
   } catch (error) {
     stats.errors++;
-    log(`  ❌ 오류: ${error}`);
+    console.log(`  ❌ 오류: ${error}`);
     throw error;
   }
 
-  return {
-    artistId: artist.id,
-    artistName: artist.name,
-    tjName,
-    stats,
-    preview,
-  };
+  console.log(
+    `  • 완료: 총 ${stats.fetched}건 → 신규 ${stats.created}, 업데이트 ${stats.updated}, 스킵 ${stats.skipped}, 오류 ${stats.errors}`,
+  );
 }

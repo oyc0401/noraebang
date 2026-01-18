@@ -56,7 +56,6 @@ export default function AdminTasksPage() {
     String(MAX_ARTIST),
   );
   const [spotifyMapDryRun, setSpotifyMapDryRun] = useState(true);
-  const [spotifyMapForce, setSpotifyMapForce] = useState(false);
   const [spotifyMapSummary, setSpotifyMapSummary] = useState<string | null>(
     null,
   );
@@ -95,12 +94,10 @@ export default function AdminTasksPage() {
             `Artist #${artistId} 처리 중... (${artistId - startId + 1}/${total})`,
           );
           try {
-            const result = await runMapProposeSongForArtist(artistId, {
+            await runMapProposeSongForArtist(artistId, {
               dryRun: mapDryRun,
             });
-            console.log(
-              `[mapProposeSong] Artist #${artistId} matched ${result.stats.matched}, updated ${result.stats.updated}`,
-            );
+            console.log(`[mapProposeSong] Artist #${artistId} 완료`);
             success += 1;
           } catch (error) {
             const message =
@@ -148,13 +145,12 @@ export default function AdminTasksPage() {
 
       (async () => {
         try {
-          const result = await runAutoFillSongTitlesJob({
+          await runAutoFillSongTitlesJob({
             startId,
             endId,
             dryRun: songDryRun,
           });
-          const summary = `총 ${result.totalSongs}곡 중 ${result.updatedSongs}곡 업데이트`;
-          setSongSummary(summary);
+          setSongSummary("자동 채우기 완료 (콘솔 로그 참고)");
         } catch (error) {
           const message =
             error instanceof Error
@@ -187,13 +183,12 @@ export default function AdminTasksPage() {
 
       (async () => {
         try {
-          const result = await runAutoFillArtistNamesJob({
+          await runAutoFillArtistNamesJob({
             startId,
             endId,
             dryRun: artistDryRun,
           });
-          const summary = `총 ${result.totalArtists}명 중 ${result.updatedArtists}명 업데이트`;
-          setArtistSummary(summary);
+          setArtistSummary("자동 채우기 완료 (콘솔 로그 참고)");
         } catch (error) {
           const message =
             error instanceof Error
@@ -238,12 +233,10 @@ export default function AdminTasksPage() {
             `Artist #${artistId} 처리 중... (${artistId - startId + 1}/${total})`,
           );
           try {
-            const result = await runMapSongYoutubeVideoForArtist(artistId, {
+            await runMapSongYoutubeVideoForArtist(artistId, {
               dryRun: youtubeDryRun,
             });
-            console.log(
-              `[mapSongYoutubeVideo] Artist #${artistId} matches ${result.stats.songsWithMatches}, inserted ${result.stats.inserted}`,
-            );
+            console.log(`[mapSongYoutubeVideo] Artist #${artistId} 완료`);
             success += 1;
           } catch (error) {
             const message =
@@ -291,13 +284,12 @@ export default function AdminTasksPage() {
 
       (async () => {
         try {
-          const result = await runUpdateSongThumbnailsJob({
+          await runUpdateSongThumbnailsJob({
             startId,
             endId,
             dryRun: thumbDryRun,
           });
-          const summary = `총 ${result.totalSongs}곡 중 ${result.stats.updated}곡 업데이트`;
-          setThumbSummary(summary);
+          setThumbSummary("썸네일 보정 완료 (콘솔 로그 참고)");
         } catch (error) {
           const message =
             error instanceof Error
@@ -324,19 +316,17 @@ export default function AdminTasksPage() {
     startSpotifyMapTransition(() => {
       setSpotifyMapError(null);
       setSpotifyMapSummary(
-        `실행 시작 (Artist ID ${startId}~${endId}, ${spotifyMapDryRun ? "dry-run" : "실제"}${spotifyMapForce ? ", FORCE" : ""})`,
+        `실행 시작 (Artist ID ${startId}~${endId}, ${spotifyMapDryRun ? "dry-run" : "실제"})`,
       );
 
       (async () => {
         try {
-          const result = await runMapSongSpotifyGroupsJob({
+          await runMapSongSpotifyGroupsJob({
             startId,
             endId,
             dryRun: spotifyMapDryRun,
-            force: spotifyMapForce,
           });
-          const summary = `총 ${result.processedArtists}명 중 ${result.stats.mappedSongs}곡 매핑`;
-          setSpotifyMapSummary(summary);
+          setSpotifyMapSummary("자동 매핑 완료 (콘솔 로그 참고)");
         } catch (error) {
           const message =
             error instanceof Error
@@ -487,17 +477,6 @@ export default function AdminTasksPage() {
                   checked={spotifyMapDryRun}
                   onChange={setSpotifyMapDryRun}
                 />
-                <label className="inline-flex h-11 items-center gap-2 rounded-lg border border-zinc-200 px-3 text-sm font-semibold text-zinc-700">
-                  <input
-                    type="checkbox"
-                    checked={spotifyMapForce}
-                    onChange={(event) =>
-                      setSpotifyMapForce(event.target.checked)
-                    }
-                    className="h-4 w-4 rounded border-zinc-300 text-blue-500 focus:ring-blue-400"
-                  />
-                  FORCE
-                </label>
               </>
             }
             onRun={runSpotifyMappingTask}

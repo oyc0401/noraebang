@@ -2,38 +2,8 @@ import { prisma } from "../prisma";
 
 export interface CreateSongsFromSpotifyGroupsOptions {
   dryRun?: boolean;
-  verbose?: boolean;
   /** 특정 그룹 ID들만 처리 (없으면 모든 미연결 그룹) */
   groupIds?: number[];
-}
-
-export interface CreatedSongInfo {
-  songId: number;
-  groupId: number;
-  title: string;
-  titleKo: string | null;
-  titleJa: string | null;
-  thumbnailSource: string | null;
-}
-
-export interface CreateSongsFromSpotifyGroupsResult {
-  artistId: number;
-  artistName: string;
-  stats: {
-    totalGroups: number;
-    created: number;
-    skipped: number;
-    failed: number;
-  };
-  created: CreatedSongInfo[];
-  /** dry run일 때 미리보기용 */
-  preview: Array<{
-    groupId: number;
-    title: string;
-    titleKo: string | null;
-    titleJa: string | null;
-    trackCount: number;
-  }>;
 }
 
 // 언어 감지 유틸리티
@@ -63,9 +33,8 @@ type TitleWithPopularity = {
 export async function createSongsFromSpotifyGroups(
   artistId: number,
   options: CreateSongsFromSpotifyGroupsOptions = {},
-): Promise<CreateSongsFromSpotifyGroupsResult> {
-  const { dryRun = false, verbose = false, groupIds: targetGroupIds } = options;
-  const log = verbose ? console.log : () => {};
+): Promise<void> {
+  const { dryRun = false, groupIds: targetGroupIds } = options;
 
   // 1. 아티스트 정보 조회
   const artist = await prisma.artist.findUnique({
@@ -86,8 +55,8 @@ export async function createSongsFromSpotifyGroups(
     throw new Error(`Artist #${artistId} has no spotifyId`);
   }
 
-  log(`\n[Artist #${artist.id}] ${artist.name}`);
-  if (dryRun) log(`  🔍 DRY-RUN MODE`);
+  console.log(`\n[Artist #${artist.id}] ${artist.name}`);
+  if (dryRun) console.log(`  🔍 DRY-RUN MODE`);
 
   // 2. 아티스트의 스포티파이 트랙 그룹 조회 (Song에 연결되지 않은 것만)
   const artistTracks = await prisma.spotifyArtistTrack.findMany({
@@ -112,14 +81,8 @@ export async function createSongsFromSpotifyGroups(
   ];
 
   if (groupIds.length === 0) {
-    log(`  → 스포티파이 그룹 없음`);
-    return {
-      artistId: artist.id,
-      artistName: artist.name,
-      stats: { totalGroups: 0, created: 0, skipped: 0, failed: 0 },
-      created: [],
-      preview: [],
-    };
+    console.log(`  → 스포티파이 그룹 없음`);
+    return;
   }
 
   // 이미 Song에 연결된 그룹 ID들
@@ -140,16 +103,11 @@ export async function createSongsFromSpotifyGroups(
     unlinkedGroupIds = unlinkedGroupIds.filter((id) => targetSet.has(id));
   }
 
-  log(`  → 전체 그룹: ${groupIds.length}개, 미연결: ${unlinkedGroupIds.length}개`);
+  console.log(`  → 전체 그룹: ${groupIds.length}개, 미연결: ${unlinkedGroupIds.length}개`);
 
   if (unlinkedGroupIds.length === 0) {
-    return {
-      artistId: artist.id,
-      artistName: artist.name,
-      stats: { totalGroups: groupIds.length, created: 0, skipped: groupIds.length, failed: 0 },
-      created: [],
-      preview: [],
-    };
+    console.log("  → 이미 Song과 연결된 그룹만 존재");
+    return;
   }
 
   // 3. 미연결 그룹들의 트랙 정보 조회
@@ -177,8 +135,7 @@ export async function createSongsFromSpotifyGroups(
     skipped: linkedSet.size,
     failed: 0,
   };
-  const created: CreatedSongInfo[] = [];
-  const preview: CreateSongsFromSpotifyGroupsResult["preview"] = [];
+  let processedGroups = 0;
 
   // 4. 각 그룹에서 Song 생성
   for (const group of groups) {
@@ -193,14 +150,7 @@ export async function createSongsFromSpotifyGroups(
       const thumbnailDefault = thumbs[2] ?? thumbs[1] ?? thumbs[0] ?? null;
 
       if (dryRun) {
-        preview.push({
-          groupId: group.id,
-          title,
-          titleKo,
-          titleJa,
-          trackCount: group.tracks.length,
-        });
-        log(`     [Group #${group.id}] "${title}" (Ko: ${titleKo ?? "-"}, Ja: ${titleJa ?? "-"}) - ${group.tracks.length}트랙`);
+        console.log(`     [Group #${group.id}] "${title}" (Ko: ${titleKo ?? "-"}, Ja: ${titleJa ?? "-"}) - ${group.tracks.length}트랙`);
       } else {
         // Song 생성 + 아티스트 연결
         const song = await prisma.song.create({
@@ -223,32 +173,22 @@ export async function createSongsFromSpotifyGroups(
           select: { id: true },
         });
 
-        created.push({
-          songId: song.id,
-          groupId: group.id,
-          title,
-          titleKo,
-          titleJa,
-          thumbnailSource: oldestTrack?.releaseDate ?? null,
-        });
         stats.created++;
-        log(`     ✅ [Song #${song.id}] "${title}" <- [Group #${group.id}]`);
+        processedGroups++;
+        console.log(`     ✅ [Song #${song.id}] "${title}" <- [Group #${group.id}]`);
       }
     } catch (error) {
       stats.failed++;
-      log(`     ❌ [Group #${group.id}] 실패: ${error}`);
+      console.log(`     ❌ [Group #${group.id}] 실패: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
-  log(`\n  → 결과: 생성 ${stats.created}개, 스킵 ${stats.skipped}개, 실패 ${stats.failed}개`);
-
-  return {
-    artistId: artist.id,
-    artistName: artist.name,
-    stats,
-    created,
-    preview,
-  };
+  console.log(`\n  → 결과: 생성 ${stats.created}개, 스킵 ${stats.skipped}개, 실패 ${stats.failed}개`);
+  if (dryRun) {
+    console.log(`  • DRY-RUN: ${groups.length}개 그룹을 미리보기로 출력했습니다.`);
+  } else {
+    console.log(`  • 실제 생성된 그룹 수: ${processedGroups}`);
+  }
 }
 
 /**

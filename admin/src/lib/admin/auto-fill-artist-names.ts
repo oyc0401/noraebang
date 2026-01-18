@@ -24,29 +24,13 @@ export interface AutoFillArtistNamesRange {
 
 export interface AutoFillArtistNamesOptions {
   dryRun?: boolean;
-  verbose?: boolean;
 }
 
-export type ArtistNameUpdate = {
+type ArtistNameUpdate = {
   field: ArtistNameField;
   value: string;
   source: "spotify" | "artistName" | "topicChannel";
 };
-
-export type ArtistNameChange = {
-  artistId: number;
-  artistName: string;
-  updates: ArtistNameUpdate[];
-};
-
-export interface AutoFillArtistNamesResult {
-  maxArtistId: number;
-  totalArtists: number;
-  updatedArtists: number;
-  dryRun: boolean;
-  fieldUpdates: Record<ArtistNameField, number>;
-  changes: ArtistNameChange[];
-}
 
 const removeSpecialChars = (text: string) =>
   text.replace(
@@ -70,13 +54,12 @@ const detectField = (name: string): ArtistNameField => {
 export async function autoFillArtistNames(
   range: AutoFillArtistNamesRange,
   options: AutoFillArtistNamesOptions = {},
-): Promise<AutoFillArtistNamesResult> {
-  const { dryRun = false, verbose = false } = options;
+): Promise<void> {
+  const { dryRun = false } = options;
   const minArtistId = range.minArtistId ?? 1;
   const maxArtistId = range.maxArtistId;
-  const emit = verbose ? console.log : () => {};
 
-  emit(
+  console.log(
     `\n👤 autoFillArtistNames → artistId ${minArtistId}~${maxArtistId} ${dryRun ? "(dry-run)" : ""}`,
   );
 
@@ -98,15 +81,9 @@ export async function autoFillArtistNames(
     },
   });
 
-  emit(`  • Loaded ${artists.length} artists`);
+  console.log(`  • Loaded ${artists.length} artists`);
 
-  const changes: ArtistNameChange[] = [];
-  const fieldUpdates: Record<ArtistNameField, number> = {
-    nameLatin: 0,
-    nameJaKanji: 0,
-    nameJaKana: 0,
-    nameKo: 0,
-  };
+  let updatedArtists = 0;
 
   for (const artist of artists) {
     const updateData: Partial<Record<ArtistNameField, string>> = {};
@@ -124,7 +101,6 @@ export async function autoFillArtistNames(
 
       updateData[field] = name;
       updates.push({ field, value: name, source });
-      fieldUpdates[field] += 1;
     };
 
     saveName(artist.spotifyArtist?.name, "spotify");
@@ -137,13 +113,9 @@ export async function autoFillArtistNames(
 
     if (updates.length === 0) continue;
 
-    changes.push({
-      artistId: artist.id,
-      artistName: artist.name,
-      updates,
-    });
+    updatedArtists += 1;
 
-    emit(
+    console.log(
       `  [Artist #${artist.id}] ${updates
         .map((item) => `${item.field}="${item.value}" (${item.source})`)
         .join(", ")}`,
@@ -158,15 +130,10 @@ export async function autoFillArtistNames(
   }
 
   if (dryRun) {
-    emit("  • DRY-RUN: no database writes");
+    console.log("  • DRY-RUN: no database writes");
   }
 
-  return {
-    maxArtistId,
-    totalArtists: artists.length,
-    updatedArtists: changes.length,
-    dryRun,
-    fieldUpdates,
-    changes,
-  };
+  console.log(
+    `  • 완료: ${artists.length}명 중 ${updatedArtists}명 업데이트 예정`,
+  );
 }
