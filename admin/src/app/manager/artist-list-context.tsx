@@ -11,7 +11,10 @@ import {
   type ReactNode,
 } from "react";
 
-import { fetchManagerArtistsBatch, resolveArtistBatchOffset } from "./action";
+import {
+  fetchManagerArtistsBatch,
+  resolveArtistBatchOffset,
+} from "./action-left";
 import type { ArtistFilterId } from "./filter-options";
 import {
   MANAGER_PAGE_SIZE,

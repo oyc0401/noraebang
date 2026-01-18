@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { searchSongsForManager } from "../action";
+import { searchSongsForManager } from "../action-left";
 import { useManagerArtists } from "../artist-list-context";
 import { artistFilterOptions } from "../filter-options";
 import {
@@ -302,7 +302,9 @@ export function LeftPanel() {
                   </span>
                 </div>
                 {isSongSearching && (
-                  <div className="text-xs text-zinc-500">곡을 검색하는 중...</div>
+                  <div className="text-xs text-zinc-500">
+                    곡을 검색하는 중...
+                  </div>
                 )}
                 {songSearchError && (
                   <div className="text-xs text-red-600">{songSearchError}</div>
