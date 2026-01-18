@@ -2,41 +2,41 @@
 
 import { useEffect } from "react";
 
-import type {
-  ArtistFilterDefinition,
-  ArtistFilterId,
-} from "../filter-options";
+import { useManagerArtists } from "../../artist-list-context";
+import {
+  artistFilterOptions,
+  type ArtistFilterDefinition,
+  type ArtistFilterId,
+} from "../../filter-options";
+import { useManagerStore } from "../../store";
 
-type FilterDialogProps = {
-  filters: ArtistFilterDefinition[];
-  selectedFilters: ArtistFilterId[];
-  onChange: (filters: ArtistFilterId[]) => void;
-  onClose: () => void;
-};
+export function FilterDialog() {
+  const { selectedFilters, setSelectedFilters } = useManagerArtists();
+  const isOpen = useManagerStore((state) => state.isFilterDialogOpen);
+  const closeDialog = useManagerStore((state) => state.closeFilterDialog);
+  const filters: ArtistFilterDefinition[] = artistFilterOptions;
 
-export function FilterDialog({
-  filters,
-  selectedFilters,
-  onChange,
-  onClose,
-}: FilterDialogProps) {
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        closeDialog();
       }
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
+  }, [closeDialog]);
 
   const toggleFilter = (filterId: ArtistFilterId) => {
-    onChange(
+    setSelectedFilters(
       selectedFilters.includes(filterId)
         ? selectedFilters.filter((id) => id !== filterId)
         : [...selectedFilters, filterId],
     );
   };
+
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
@@ -51,7 +51,7 @@ export function FilterDialog({
           <button
             type="button"
             className="text-sm text-zinc-500 cursor-pointer"
-            onClick={onClose}
+            onClick={closeDialog}
           >
             닫기
           </button>
@@ -72,7 +72,9 @@ export function FilterDialog({
               <div>
                 <p className="font-medium text-zinc-900">{filter.label}</p>
                 {filter.description && (
-                  <p className="text-xs text-zinc-500">{filter.description}</p>
+                  <p className="text-xs text-zinc-500">
+                    {filter.description}
+                  </p>
                 )}
               </div>
             </label>
@@ -83,14 +85,14 @@ export function FilterDialog({
           <button
             type="button"
             className="rounded-xl border border-zinc-200 px-4 py-2 text-sm text-zinc-600 cursor-pointer"
-            onClick={() => onChange([])}
+            onClick={() => setSelectedFilters([])}
           >
             전체 해제
           </button>
           <button
             type="button"
             className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white cursor-pointer"
-            onClick={onClose}
+            onClick={closeDialog}
           >
             적용하기
           </button>
