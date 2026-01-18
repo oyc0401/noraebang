@@ -27,8 +27,9 @@ export type UnlinkedYoutubeVideo = {
   viewCount: number;
   thumbnailMedium?: string;
   publishedAt?: Date;
-  channelTitle?: string;
-  channelId?: number;
+  artistId?: number;
+  artistName?: string;
+  artistNameKo?: string;
 };
 
 export async function getUnlinkedYoutubeVideos(): Promise<UnlinkedYoutubeVideo[]> {
@@ -36,6 +37,10 @@ export async function getUnlinkedYoutubeVideos(): Promise<UnlinkedYoutubeVideo[]
     where: {
       songs: {
         none: {},
+      },
+      viewCount: {
+        not: null,
+        gt: 0,
       },
     },
     orderBy: {
@@ -52,8 +57,13 @@ export async function getUnlinkedYoutubeVideos(): Promise<UnlinkedYoutubeVideo[]
         select: {
           youtubeChannel: {
             select: {
-              id: true,
-              title: true,
+              artist: {
+                select: {
+                  id: true,
+                  name: true,
+                  nameKo: true,
+                },
+              },
             },
           },
         },
@@ -62,15 +72,19 @@ export async function getUnlinkedYoutubeVideos(): Promise<UnlinkedYoutubeVideo[]
     },
   });
 
-  return videos.map((video) => ({
-    videoId: video.videoId,
-    title: video.title ?? "",
-    viewCount: Number(video.viewCount ?? 0),
-    thumbnailMedium: video.thumbnailMedium ?? undefined,
-    publishedAt: video.publishedAt ?? undefined,
-    channelTitle: video.channels[0]?.youtubeChannel.title ?? undefined,
-    channelId: video.channels[0]?.youtubeChannel.id ?? undefined,
-  }));
+  return videos.map((video) => {
+    const artist = video.channels[0]?.youtubeChannel.artist;
+    return {
+      videoId: video.videoId,
+      title: video.title ?? "",
+      viewCount: Number(video.viewCount ?? 0),
+      thumbnailMedium: video.thumbnailMedium ?? undefined,
+      publishedAt: video.publishedAt ?? undefined,
+      artistId: artist?.id,
+      artistName: artist?.name,
+      artistNameKo: artist?.nameKo,
+    };
+  });
 }
 
 export type UnlinkedSpotifyTrack = {
@@ -97,6 +111,10 @@ export async function getUnlinkedSpotifyTracks(): Promise<UnlinkedSpotifyTrack[]
         },
       ],
       disabled: false,
+      popularity: {
+        not: null,
+        gt: 0,
+      },
     },
     orderBy: {
       popularity: "desc",

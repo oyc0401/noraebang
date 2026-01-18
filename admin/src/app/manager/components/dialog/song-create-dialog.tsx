@@ -15,6 +15,7 @@ import {
   type UnlinkedSpotifyGroup,
   type UnlinkedYoutubeVideo,
   type UnlinkedSongPropose,
+  refreshSongThumbnail,
 } from "../../action";
 import type { ManagerArtistSongDetail } from "../../types";
 import { useManagerStore } from "../../store";
