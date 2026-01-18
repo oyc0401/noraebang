@@ -6,11 +6,6 @@ import {
   fetchManagerArtistSpotifyPanel,
   leaveSpotifyTrackGroup,
   runMapSongSpotifyGroups,
-  getSpotifyGroupDetail,
-  addTrackToSpotifyGroup,
-  createSpotifyTrackGroup,
-  setSpotifyGroupPrimaryTrack,
-  type SpotifyGroupEditData,
 } from "../action";
 import type {
   ManagerSpotifyGroupSummary,
@@ -19,6 +14,12 @@ import type {
 } from "../types";
 import { useManagerStore } from "../store";
 import { SpotifyIcon } from "./spotify-icon";
+import {
+  SpotifyDialogProvider,
+  type SpotifyDialogContextValue,
+} from "./spotify-dialog-context";
+import { SpotifyGroupEditDialog } from "./dialog/spotify-group-edit-dialog";
+import { SpotifyNewGroupDialog } from "./dialog/spotify-new-group-dialog";
 
 export function SpotifySection() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
@@ -48,15 +49,23 @@ export function SpotifySection() {
   // 새 그룹 만들기 다이얼로그 상태
   const [isNewGroupDialogOpen, setIsNewGroupDialogOpen] = useState(false);
 
-  const openGroupEditDialog = (groupId: number) => {
+  const openGroupEditDialog = useCallback((groupId: number) => {
     setEditingGroupId(groupId);
     setIsGroupEditDialogOpen(true);
-  };
+  }, []);
 
-  const closeGroupEditDialog = () => {
+  const closeGroupEditDialog = useCallback(() => {
     setIsGroupEditDialogOpen(false);
     setEditingGroupId(null);
-  };
+  }, []);
+
+  const openNewGroupDialog = useCallback(() => {
+    setIsNewGroupDialogOpen(true);
+  }, []);
+
+  const closeNewGroupDialog = useCallback(() => {
+    setIsNewGroupDialogOpen(false);
+  }, []);
 
   const handleMapTracks = async () => {
     if (!selectedArtistId) return;
@@ -249,7 +258,7 @@ export function SpotifySection() {
                 <button
                   type="button"
                   className="rounded-full border border-blue-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-blue-600 transition hover:bg-blue-50 cursor-pointer"
-                  onClick={() => setIsNewGroupDialogOpen(true)}
+                  onClick={openNewGroupDialog}
                 >
                   + 새 그룹 만들기
                 </button>
@@ -275,8 +284,36 @@ export function SpotifySection() {
     );
   };
 
+  const dialogContextValue = useMemo<SpotifyDialogContextValue>(
+    () => ({
+      selectedArtistId,
+      orphanTracks: data.orphanTracks,
+      editingGroupId,
+      isGroupEditDialogOpen,
+      openGroupEditDialog,
+      closeGroupEditDialog,
+      isNewGroupDialogOpen,
+      openNewGroupDialog,
+      closeNewGroupDialog,
+      refetch,
+    }),
+    [
+      closeGroupEditDialog,
+      closeNewGroupDialog,
+      data.orphanTracks,
+      editingGroupId,
+      isGroupEditDialogOpen,
+      isNewGroupDialogOpen,
+      openGroupEditDialog,
+      openNewGroupDialog,
+      refetch,
+      selectedArtistId,
+    ],
+  );
+
   return (
-    <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white text-sm text-zinc-700 shadow-sm">
+    <SpotifyDialogProvider value={dialogContextValue}>
+      <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white text-sm text-zinc-700 shadow-sm">
       <div className="flex items-center justify-between border-b border-emerald-100/80 bg-gradient-to-r from-emerald-50/60 to-transparent px-4 pb-3 pt-4">
         <button
           type="button"
@@ -334,25 +371,10 @@ export function SpotifySection() {
 
       <div className="flex-1 min-h-0 overflow-hidden">{renderBody()}</div>
 
-      {/* 그룹 편집 다이얼로그 */}
-      {isGroupEditDialogOpen && editingGroupId && (
-        <SpotifyGroupEditDialog
-          groupId={editingGroupId}
-          orphanTracks={data.orphanTracks}
-          onClose={closeGroupEditDialog}
-          onRefetch={refetch}
-        />
-      )}
-
-      {/* 새 그룹 만들기 다이얼로그 */}
-      {isNewGroupDialogOpen && (
-        <SpotifyNewGroupDialog
-          orphanTracks={data.orphanTracks}
-          onClose={() => setIsNewGroupDialogOpen(false)}
-          onRefetch={refetch}
-        />
-      )}
-    </section>
+      </section>
+      <SpotifyGroupEditDialog />
+      <SpotifyNewGroupDialog />
+    </SpotifyDialogProvider>
   );
 }
 
@@ -708,464 +730,4 @@ function formatDuration(durationMs?: number | null) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}
-
-// 그룹 편집 다이얼로그
-type SpotifyGroupEditDialogProps = {
-  groupId: number;
-  orphanTracks: ManagerSpotifyTrackSummary[];
-  onClose: () => void;
-  onRefetch: () => void;
-};
-
-function SpotifyGroupEditDialog({
-  groupId,
-  orphanTracks,
-  onClose,
-  onRefetch,
-}: SpotifyGroupEditDialogProps) {
-  const [groupData, setGroupData] = useState<SpotifyGroupEditData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
-  const [isSettingPrimary, setIsSettingPrimary] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
-
-  useEffect(() => {
-    async function loadGroup() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await getSpotifyGroupDetail(groupId);
-        setGroupData(data);
-      } catch (err) {
-        setError("그룹 정보를 불러오지 못했습니다.");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadGroup();
-  }, [groupId]);
-
-  const handleAddTrack = async (trackId: number) => {
-    setIsAdding(true);
-    try {
-      await addTrackToSpotifyGroup(groupId, trackId);
-      const data = await getSpotifyGroupDetail(groupId);
-      setGroupData(data);
-      onRefetch();
-    } catch (err) {
-      alert("트랙 추가에 실패했습니다.");
-      console.error(err);
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
-  const handleRemoveTrack = async (trackId: number) => {
-    if (!confirm("이 트랙을 그룹에서 제거하시겠습니까?")) return;
-    setIsRemoving(true);
-    try {
-      await leaveSpotifyTrackGroup(trackId);
-      const data = await getSpotifyGroupDetail(groupId);
-      setGroupData(data);
-      onRefetch();
-    } catch (err) {
-      alert("트랙 제거에 실패했습니다.");
-      console.error(err);
-    } finally {
-      setIsRemoving(false);
-    }
-  };
-
-  const handleSetPrimary = async (trackId: number) => {
-    setIsSettingPrimary(true);
-    try {
-      await setSpotifyGroupPrimaryTrack(groupId, trackId);
-      const data = await getSpotifyGroupDetail(groupId);
-      setGroupData(data);
-      onRefetch();
-    } catch (err) {
-      alert("Primary 트랙 설정에 실패했습니다.");
-      console.error(err);
-    } finally {
-      setIsSettingPrimary(false);
-    }
-  };
-
-  // 그룹에 속하지 않은 트랙들 (orphanTracks에서 현재 그룹 트랙 제외)
-  const availableTracks = useMemo(() => {
-    if (!groupData) return orphanTracks;
-    const groupTrackIds = new Set(groupData.tracks.map((t) => t.id));
-    return orphanTracks.filter((t) => !groupTrackIds.has(t.id));
-  }, [orphanTracks, groupData]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="max-h-[85vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-          <h3 className="text-lg font-semibold text-zinc-900">
-            그룹 #{groupId} 편집
-          </h3>
-          <button
-            type="button"
-            className="text-zinc-400 hover:text-zinc-600 cursor-pointer"
-            onClick={onClose}
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="max-h-[calc(85vh-130px)] overflow-y-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12 text-sm text-zinc-500">
-              로딩 중...
-            </div>
-          ) : error ? (
-            <div className="px-6 py-4 text-sm text-red-600">{error}</div>
-          ) : groupData ? (
-            <div className="space-y-6 p-6">
-              {/* 연결된 곡 */}
-              {groupData.linkedSongs.length > 0 && (
-                <div>
-                  <h4 className="mb-2 text-sm font-semibold text-zinc-800">
-                    연결된 곡
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {groupData.linkedSongs.map((song) => (
-                      <span
-                        key={song.id}
-                        className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs text-emerald-700"
-                      >
-                        #{song.id} {song.title}
-                        {song.titleKo && ` (${song.titleKo})`}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 그룹 내 트랙들 */}
-              <div>
-                <h4 className="mb-2 text-sm font-semibold text-zinc-800">
-                  그룹 내 트랙 ({groupData.tracks.length})
-                </h4>
-                <div className="space-y-2">
-                  {groupData.tracks.map((track) => (
-                    <div
-                      key={track.id}
-                      className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-3"
-                    >
-                      {track.thumbnails?.[0] && (
-                        <img
-                          src={track.thumbnails[0]}
-                          alt=""
-                          className="h-10 w-10 rounded object-cover"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-zinc-900 truncate">
-                          {track.name}
-                        </p>
-                        <p className="text-xs text-zinc-500">
-                          인기도: {track.popularity ?? "-"} · 발매:{" "}
-                          {track.releaseDate ?? "-"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {track.id === groupData.primaryTrackId ? (
-                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                            Primary
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            className="rounded-full border border-emerald-200 px-2 py-0.5 text-xs text-emerald-600 transition hover:bg-emerald-50 disabled:opacity-50 cursor-pointer"
-                            onClick={() => handleSetPrimary(track.id)}
-                            disabled={isSettingPrimary}
-                          >
-                            Primary로 설정
-                          </button>
-                        )}
-                        {groupData.tracks.length > 1 && (
-                          <button
-                            type="button"
-                            className="rounded-full border border-red-200 px-2 py-0.5 text-xs text-red-600 transition hover:bg-red-50 disabled:opacity-50 cursor-pointer"
-                            onClick={() => handleRemoveTrack(track.id)}
-                            disabled={isRemoving || track.id === groupData.primaryTrackId}
-                          >
-                            제거
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 추가 가능한 트랙들 (미지정 트랙) */}
-              {availableTracks.length > 0 && (
-                <div>
-                  <h4 className="mb-2 text-sm font-semibold text-zinc-800">
-                    추가 가능한 트랙 (그룹 미지정)
-                  </h4>
-                  <div className="max-h-60 space-y-2 overflow-y-auto rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-3">
-                    {availableTracks.map((track) => (
-                      <div
-                        key={track.id}
-                        className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-2"
-                      >
-                        {track.thumbnails?.[0] && (
-                          <img
-                            src={track.thumbnails[0]}
-                            alt=""
-                            className="h-8 w-8 rounded object-cover"
-                          />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-zinc-900 truncate">
-                            {track.name}
-                          </p>
-                          <p className="text-xs text-zinc-500">
-                            인기도: {track.popularity ?? "-"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          className="rounded-full border border-blue-200 bg-white px-2.5 py-0.5 text-xs text-blue-600 transition hover:bg-blue-50 disabled:opacity-50 cursor-pointer"
-                          onClick={() => handleAddTrack(track.id)}
-                          disabled={isAdding}
-                        >
-                          {isAdding ? "추가 중..." : "그룹에 추가"}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {availableTracks.length === 0 && (
-                <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-4 text-center text-sm text-zinc-500">
-                  추가할 수 있는 미지정 트랙이 없습니다.
-                </div>
-              )}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="flex justify-end gap-2 border-t border-zinc-200 px-6 py-4">
-          <button
-            type="button"
-            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 cursor-pointer"
-            onClick={onClose}
-          >
-            닫기
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// 새 그룹 만들기 다이얼로그
-type SpotifyNewGroupDialogProps = {
-  orphanTracks: ManagerSpotifyTrackSummary[];
-  onClose: () => void;
-  onRefetch: () => void;
-};
-
-function SpotifyNewGroupDialog({
-  orphanTracks,
-  onClose,
-  onRefetch,
-}: SpotifyNewGroupDialogProps) {
-  const [selectedPrimaryId, setSelectedPrimaryId] = useState<number | null>(null);
-  const [selectedTrackIds, setSelectedTrackIds] = useState<Set<number>>(new Set());
-  const [isCreating, setIsCreating] = useState(false);
-
-  const handleToggleTrack = (trackId: number) => {
-    setSelectedTrackIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(trackId)) {
-        next.delete(trackId);
-        // primary가 제거되면 primary도 해제
-        if (selectedPrimaryId === trackId) {
-          setSelectedPrimaryId(null);
-        }
-      } else {
-        next.add(trackId);
-      }
-      return next;
-    });
-  };
-
-  const handleSetPrimary = (trackId: number) => {
-    // 선택 안 됐으면 선택에도 추가
-    if (!selectedTrackIds.has(trackId)) {
-      setSelectedTrackIds((prev) => new Set(prev).add(trackId));
-    }
-    setSelectedPrimaryId(trackId);
-  };
-
-  const handleCreate = async () => {
-    if (!selectedPrimaryId) {
-      alert("Primary 트랙을 선택해주세요.");
-      return;
-    }
-    if (selectedTrackIds.size === 0) {
-      alert("그룹에 포함할 트랙을 선택해주세요.");
-      return;
-    }
-
-    setIsCreating(true);
-    try {
-      const otherTrackIds = Array.from(selectedTrackIds).filter(
-        (id) => id !== selectedPrimaryId,
-      );
-      await createSpotifyTrackGroup(selectedPrimaryId, otherTrackIds);
-      alert("그룹이 생성되었습니다.");
-      onRefetch();
-      onClose();
-    } catch (err) {
-      alert("그룹 생성에 실패했습니다.");
-      console.error(err);
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  if (orphanTracks.length === 0) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-            <h3 className="text-lg font-semibold text-zinc-900">새 그룹 만들기</h3>
-            <button
-              type="button"
-              className="text-zinc-400 hover:text-zinc-600 cursor-pointer"
-              onClick={onClose}
-            >
-              ✕
-            </button>
-          </div>
-          <div className="p-6 text-center text-sm text-zinc-500">
-            그룹에 추가할 수 있는 미지정 트랙이 없습니다.
-          </div>
-          <div className="flex justify-end border-t border-zinc-200 px-6 py-4">
-            <button
-              type="button"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 cursor-pointer"
-              onClick={onClose}
-            >
-              닫기
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="max-h-[85vh] w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-          <h3 className="text-lg font-semibold text-zinc-900">새 그룹 만들기</h3>
-          <button
-            type="button"
-            className="text-zinc-400 hover:text-zinc-600 cursor-pointer"
-            onClick={onClose}
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="border-b border-zinc-100 px-6 py-3">
-          <p className="text-sm text-zinc-600">
-            그룹에 포함할 트랙을 선택하고, Primary 트랙을 지정하세요.
-          </p>
-          <p className="text-xs text-zinc-500 mt-1">
-            선택됨: {selectedTrackIds.size}개 · Primary:{" "}
-            {selectedPrimaryId
-              ? orphanTracks.find((t) => t.id === selectedPrimaryId)?.name ?? "-"
-              : "미지정"}
-          </p>
-        </div>
-
-        <div className="max-h-[50vh] overflow-y-auto p-6">
-          <div className="space-y-2">
-            {orphanTracks.map((track) => {
-              const isSelected = selectedTrackIds.has(track.id);
-              const isPrimary = selectedPrimaryId === track.id;
-
-              return (
-                <div
-                  key={track.id}
-                  className={`flex items-center gap-3 rounded-lg border p-3 transition ${
-                    isSelected
-                      ? isPrimary
-                        ? "border-emerald-400 bg-emerald-50"
-                        : "border-blue-300 bg-blue-50"
-                      : "border-zinc-200 bg-white hover:border-zinc-300"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => handleToggleTrack(track.id)}
-                    className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                  {track.thumbnails?.[0] && (
-                    <img
-                      src={track.thumbnails[0]}
-                      alt=""
-                      className="h-10 w-10 rounded object-cover"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-zinc-900 truncate">
-                      {track.name}
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      인기도: {track.popularity ?? "-"} · 발매:{" "}
-                      {track.releaseDate ?? "-"}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className={`rounded-full px-2.5 py-0.5 text-xs transition cursor-pointer ${
-                      isPrimary
-                        ? "bg-emerald-100 text-emerald-700 font-medium"
-                        : "border border-emerald-200 text-emerald-600 hover:bg-emerald-50"
-                    }`}
-                    onClick={() => handleSetPrimary(track.id)}
-                  >
-                    {isPrimary ? "Primary" : "Primary로 설정"}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2 border-t border-zinc-200 px-6 py-4">
-          <button
-            type="button"
-            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 cursor-pointer"
-            onClick={onClose}
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-            onClick={handleCreate}
-            disabled={isCreating || !selectedPrimaryId || selectedTrackIds.size === 0}
-          >
-            {isCreating ? "생성 중..." : `그룹 생성 (${selectedTrackIds.size}트랙)`}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
