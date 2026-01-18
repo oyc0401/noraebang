@@ -10,6 +10,8 @@ import {
   runAutoFillSongTitlesJob,
   runMapProposeSongForArtist,
   runMapSongYoutubeVideoForArtist,
+  runUpdateSongThumbnailsJob,
+  runMapSongSpotifyGroupsJob,
 } from "./actions";
 
 export default function AdminTasksPage() {
@@ -43,6 +45,23 @@ export default function AdminTasksPage() {
 
   const mapCancelRef = useRef(false);
   const youtubeCancelRef = useRef(false);
+  const [thumbStartId, setThumbStartId] = useState("1");
+  const [thumbEndId, setThumbEndId] = useState(String(MAX_ARTIST));
+  const [thumbDryRun, setThumbDryRun] = useState(true);
+  const [thumbSummary, setThumbSummary] = useState<string | null>(null);
+  const [thumbError, setThumbError] = useState<string | null>(null);
+  const [thumbPending, startThumbTransition] = useTransition();
+  const [spotifyMapStartArtistId, setSpotifyMapStartArtistId] = useState("1");
+  const [spotifyMapEndArtistId, setSpotifyMapEndArtistId] = useState(
+    String(MAX_ARTIST),
+  );
+  const [spotifyMapDryRun, setSpotifyMapDryRun] = useState(true);
+  const [spotifyMapForce, setSpotifyMapForce] = useState(false);
+  const [spotifyMapSummary, setSpotifyMapSummary] = useState<string | null>(
+    null,
+  );
+  const [spotifyMapError, setSpotifyMapError] = useState<string | null>(null);
+  const [spotifyMapPending, startSpotifyMapTransition] = useTransition();
 
   const runMapTask = () => {
     const startId = Number(mapStartId);
@@ -89,7 +108,9 @@ export default function AdminTasksPage() {
                 ? error.message
                 : "알 수 없는 오류가 발생했습니다.";
             setMapError(message);
-            console.error(`[mapProposeSong] Artist #${artistId} 실패: ${message}`);
+            console.error(
+              `[mapProposeSong] Artist #${artistId} 실패: ${message}`,
+            );
           }
         }
         setMapSummary(
@@ -230,7 +251,9 @@ export default function AdminTasksPage() {
                 ? error.message
                 : "알 수 없는 오류가 발생했습니다.";
             setYoutubeError(message);
-            console.error(`[mapSongYoutubeVideo] Artist #${artistId} 실패: ${message}`);
+            console.error(
+              `[mapSongYoutubeVideo] Artist #${artistId} 실패: ${message}`,
+            );
           }
         }
         setYoutubeSummary(
@@ -248,6 +271,83 @@ export default function AdminTasksPage() {
     setYoutubeSummary("중단 요청 중...");
   };
 
+  const runThumbnailTask = () => {
+    const startId = Number(thumbStartId);
+    const endId = Number(thumbEndId);
+    if (!Number.isFinite(startId) || !Number.isFinite(endId) || startId <= 0) {
+      setThumbError("유효한 ID 범위를 입력하세요.");
+      return;
+    }
+    if (startId > endId) {
+      setThumbError("시작 ID가 종료 ID보다 큽니다.");
+      return;
+    }
+
+    startThumbTransition(() => {
+      setThumbError(null);
+      setThumbSummary(
+        `실행 시작 (ID ${startId}~${endId}, ${thumbDryRun ? "dry-run" : "실제"})`,
+      );
+
+      (async () => {
+        try {
+          const result = await runUpdateSongThumbnailsJob({
+            startId,
+            endId,
+            dryRun: thumbDryRun,
+          });
+          const summary = `총 ${result.totalSongs}곡 중 ${result.stats.updated}곡 업데이트`;
+          setThumbSummary(summary);
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "알 수 없는 오류가 발생했습니다.";
+          setThumbError(message);
+        }
+      })();
+    });
+  };
+
+  const runSpotifyMappingTask = () => {
+    const startId = Number(spotifyMapStartArtistId);
+    const endId = Number(spotifyMapEndArtistId);
+    if (!Number.isFinite(startId) || !Number.isFinite(endId) || startId <= 0) {
+      setSpotifyMapError("유효한 ID 범위를 입력하세요.");
+      return;
+    }
+    if (startId > endId) {
+      setSpotifyMapError("시작 ID가 종료 ID보다 큽니다.");
+      return;
+    }
+
+    startSpotifyMapTransition(() => {
+      setSpotifyMapError(null);
+      setSpotifyMapSummary(
+        `실행 시작 (Artist ID ${startId}~${endId}, ${spotifyMapDryRun ? "dry-run" : "실제"}${spotifyMapForce ? ", FORCE" : ""})`,
+      );
+
+      (async () => {
+        try {
+          const result = await runMapSongSpotifyGroupsJob({
+            startId,
+            endId,
+            dryRun: spotifyMapDryRun,
+            force: spotifyMapForce,
+          });
+          const summary = `총 ${result.processedArtists}명 중 ${result.stats.mappedSongs}곡 매핑`;
+          setSpotifyMapSummary(summary);
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "알 수 없는 오류가 발생했습니다.";
+          setSpotifyMapError(message);
+        }
+      })();
+    });
+  };
+
   return (
     <div className="min-h-screen bg-zinc-50 py-4">
       <div className="w-full px-2 sm:px-3">
@@ -255,7 +355,9 @@ export default function AdminTasksPage() {
           <p className="text-sm font-semibold text-blue-600">Admin Ops</p>
           <h1 className="text-3xl font-bold text-zinc-900">자동화 작업 실행</h1>
           <p className="mt-2 text-sm text-zinc-600">
-            CLI 대신 어드민에서 직접 작업을 수행하세요. 진행 상황은 콘솔과 카드 상태에서 확인할 수 있으며, 긴 작업은 중단 버튼으로 즉시 취소할 수 있습니다.
+            CLI 대신 어드민에서 직접 작업을 수행하세요. 진행 상황은 콘솔과 카드
+            상태에서 확인할 수 있으며, 긴 작업은 중단 버튼으로 즉시 취소할 수
+            있습니다.
           </p>
         </header>
 
@@ -302,10 +404,7 @@ export default function AdminTasksPage() {
                   value={songEndId}
                   onChange={setSongEndId}
                 />
-                <DryRunToggle
-                  checked={songDryRun}
-                  onChange={setSongDryRun}
-                />
+                <DryRunToggle checked={songDryRun} onChange={setSongDryRun} />
               </>
             }
             onRun={runSongFillTask}
@@ -365,6 +464,68 @@ export default function AdminTasksPage() {
             onRun={runYoutubeTask}
             running={youtubePending}
             onCancel={cancelYoutubeTask}
+          />
+
+          <TaskCard
+            title="곡 ↔ Spotify 그룹 매핑"
+            description="findBestMatch로 곡과 SpotifyTrackGroup을 자동 매핑합니다."
+            status={spotifyMapSummary}
+            error={spotifyMapError}
+            controls={
+              <>
+                <RangeInput
+                  label="Artist 시작 ID"
+                  value={spotifyMapStartArtistId}
+                  onChange={setSpotifyMapStartArtistId}
+                />
+                <RangeInput
+                  label="Artist 종료 ID"
+                  value={spotifyMapEndArtistId}
+                  onChange={setSpotifyMapEndArtistId}
+                />
+                <DryRunToggle
+                  checked={spotifyMapDryRun}
+                  onChange={setSpotifyMapDryRun}
+                />
+                <label className="inline-flex h-11 items-center gap-2 rounded-lg border border-zinc-200 px-3 text-sm font-semibold text-zinc-700">
+                  <input
+                    type="checkbox"
+                    checked={spotifyMapForce}
+                    onChange={(event) =>
+                      setSpotifyMapForce(event.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-zinc-300 text-blue-500 focus:ring-blue-400"
+                  />
+                  FORCE
+                </label>
+              </>
+            }
+            onRun={runSpotifyMappingTask}
+            running={spotifyMapPending}
+          />
+
+          <TaskCard
+            title="곡 썸네일 보정"
+            description="Spotify/YouTube 정보를 바탕으로 곡 썸네일을 자동으로 채웁니다."
+            status={thumbSummary}
+            error={thumbError}
+            controls={
+              <>
+                <RangeInput
+                  label="시작 ID"
+                  value={thumbStartId}
+                  onChange={setThumbStartId}
+                />
+                <RangeInput
+                  label="종료 ID"
+                  value={thumbEndId}
+                  onChange={setThumbEndId}
+                />
+                <DryRunToggle checked={thumbDryRun} onChange={setThumbDryRun} />
+              </>
+            }
+            onRun={runThumbnailTask}
+            running={thumbPending}
           />
         </div>
       </div>

@@ -13,6 +13,14 @@ import {
   mapSongYoutubeVideo,
   type MapSongYoutubeVideoResult,
 } from "@/lib/admin/map-song-youtube-video";
+import {
+  mapSongSpotifyGroups,
+  type MapSongSpotifyGroupsResult,
+} from "@/lib/admin/map-song-spotify-groups";
+import {
+  updateSongThumbnails,
+  type UpdateSongThumbnailsResult,
+} from "@/lib/admin/update-song-thumbnails";
 import { MAX_ARTIST } from "@/lib/admin/z-param";
 import { prisma } from "@/lib/prisma";
 
@@ -108,7 +116,10 @@ export async function runMapProposeSongJob(
 
   for (const artist of artists) {
     try {
-      const result = await mapProposeSong(artist.id, { dryRun, verbose: false });
+      const result = await mapProposeSong(artist.id, {
+        dryRun,
+        verbose: false,
+      });
       const message = `matched ${result.stats.matched}, candidates ${result.stats.withCandidates}, noMatch ${result.stats.noMatch}, updated ${result.stats.updated}`;
       logs.push({
         artistId: artist.id,
@@ -122,7 +133,9 @@ export async function runMapProposeSongJob(
       successCount += 1;
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다.";
       logs.push({
         artistId: artist.id,
         artistName: artist.name,
@@ -247,7 +260,9 @@ export async function runMapSongYoutubeVideoJob(
       successCount += 1;
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다.";
       logs.push({
         artistId: artist.id,
         artistName: artist.name,
@@ -266,4 +281,42 @@ export async function runMapSongYoutubeVideoJob(
     dryRun,
     logs,
   };
+}
+
+export async function runUpdateSongThumbnailsJob(
+  input: RunMapProposeSongInput,
+): Promise<UpdateSongThumbnailsResult> {
+  const dryRun = Boolean(input.dryRun);
+  const startId = parsePositiveInt(input.startId, DEFAULT_START_ID)!;
+  const endId = parsePositiveInt(input.endId, MAX_ARTIST)!;
+
+  if (startId > endId) {
+    throw new Error("시작 ID가 종료 ID보다 클 수 없습니다.");
+  }
+
+  return updateSongThumbnails(
+    { minArtistId: startId, maxArtistId: endId },
+    { dryRun, verbose: false, logger: console.log },
+  );
+}
+
+export async function runMapSongSpotifyGroupsJob(
+  input: RunMapProposeSongInput & { force?: boolean | null },
+): Promise<MapSongSpotifyGroupsResult> {
+  const dryRun = Boolean(input.dryRun);
+  const force = Boolean(input.force);
+  const startId = parsePositiveInt(input.startId, DEFAULT_START_ID)!;
+  const endId = parsePositiveInt(input.endId, MAX_ARTIST)!;
+
+  if (startId > endId) {
+    throw new Error("시작 ID가 종료 ID보다 클 수 없습니다.");
+  }
+
+  return mapSongSpotifyGroups({
+    minArtistId: startId,
+    maxArtistId: endId,
+    dryRun,
+    force,
+    logger: console.log,
+  });
 }
