@@ -1,6 +1,6 @@
 import { prisma } from "../prisma";
 
-// updateSongThumbnails는 지정한 artistId 범위의 곡 썸네일을 Spotify/YouTube 정보로 보완합니다.
+// updateSongThumbnails는 단일 아티스트의 곡 썸네일을 Spotify/YouTube 정보로 보완합니다.
 
 type ThumbTriple = {
   thumbnailDefault: string | null;
@@ -30,11 +30,6 @@ type SongRecord = {
     };
   }>;
 };
-
-export interface UpdateSongThumbnailsRange {
-  minArtistId?: number;
-  maxArtistId: number;
-}
 
 export interface UpdateSongThumbnailsOptions {
   dryRun?: boolean;
@@ -92,23 +87,28 @@ const pickOldestTrackWithThumbs = (
 };
 
 export async function updateSongThumbnails(
-  range: UpdateSongThumbnailsRange,
+  artistId: number,
   options: UpdateSongThumbnailsOptions = {},
 ): Promise<void> {
   const { dryRun = false } = options;
-  const minArtistId = range.minArtistId ?? 1;
-  const maxArtistId = range.maxArtistId;
 
   console.log(
-    `\n🖼  updateSongThumbnails → artistId ${minArtistId}~${maxArtistId} ${dryRun ? "(dry-run)" : ""}`,
+    `\n🖼  updateSongThumbnails → artistId=${artistId} ${dryRun ? "(dry-run)" : ""}`,
   );
+
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    select: { id: true, name: true, nameKo: true },
+  });
+
+  if (!artist) {
+    throw new Error(`Artist not found: ${artistId}`);
+  }
 
   const songs = await prisma.song.findMany({
     where: {
       artistSongs: {
-        some: {
-          artistId: { gte: minArtistId, lte: maxArtistId },
-        },
+        some: { artistId },
       },
     },
     select: {
@@ -143,7 +143,13 @@ export async function updateSongThumbnails(
     },
   });
 
-  console.log(`  • 대상 곡 수: ${songs.length}`);
+  console.log(`  • Artist: ${artist.name} (${artist.nameKo ?? ""})`);
+  console.log(`  • Songs: ${songs.length}`);
+
+  if (songs.length === 0) {
+    console.log(`  ⏭️ No songs`);
+    return;
+  }
 
   let updated = 0;
   let updatedBySpotifyOldest = 0;
