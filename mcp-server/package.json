@@ -7,8 +7,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "batch": "tsx src/scripts/batch-mapping.ts",
-    "apply": "tsx src/scripts/apply-mapping.ts"
+    "syl:batch": "tsx src/scripts/song-youtube-link/batch.ts",
+    "syl:apply": "tsx src/scripts/song-youtube-link/apply.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
