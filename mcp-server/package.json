@@ -8,7 +8,10 @@
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "syl:batch": "tsx src/scripts/song-youtube-link/batch.ts",
-    "syl:apply": "tsx src/scripts/song-youtube-link/apply.ts"
+    "syl:apply": "tsx src/scripts/song-youtube-link/apply.ts",
+    "stc:batch": "tsx src/scripts/song-title-check/batch.ts",
+    "stc:enrich": "tsx src/scripts/song-title-check/enrich-pending.ts",
+    "stc:apply": "tsx src/scripts/song-title-check/apply.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
