@@ -1,7 +1,7 @@
 import { prisma } from "../prisma";
 import { findBestMatch } from "../song-spotify-matcher";
 
-// mapSongSpotifyGroups는 아티스트 범위를 순회하면서 Song과 SpotifyTrackGroup을 자동 매핑합니다.
+// mapSongSpotifyGroups는 단일 아티스트의 Song과 SpotifyTrackGroup을 자동 매핑합니다.
 
 type ArtistSongsData = {
   artistId: number;
@@ -12,10 +12,12 @@ type ArtistSongsData = {
     id: number;
     title: string;
     titleKo: string | null;
+    titleLatin: string | null;
+    titleJa: string | null;
   }>;
   spotifyTracks: Array<{
     id: number;
-    title: string;
+    name: string;
     musicBrainzTitle?: string | null;
     groupId?: number | null;
   }>;
@@ -29,8 +31,6 @@ type Mapping = {
 };
 
 export interface MapSongSpotifyGroupsOptions {
-  minArtistId: number;
-  maxArtistId: number;
   dryRun?: boolean;
 }
 
@@ -72,6 +72,7 @@ async function fetchArtistData(
     ? await prisma.spotifyTrack.findMany({
         where: {
           disabled: false,
+          groupId: { not: null },
           artists: {
             some: { spotifyArtistId: spotifyArtist.id },
           },
@@ -107,8 +108,8 @@ function generateMappings(data: ArtistSongsData): Mapping[] {
   for (const song of data.songs) {
     const candidateMbTitles = data.spotifyTracks
       .map((track) => track.musicBrainzTitle)
-      .filter((title): title is string => Boolean(title && title.trim()));
-    const candidateTitles = data.spotifyTracks.map((track) => track.title);
+      .filter((title): title is string => Boolean(title?.trim()));
+    const candidateTitles = data.spotifyTracks.map((track) => track.name);
 
     const sources = [
       song.title,
@@ -118,7 +119,7 @@ function generateMappings(data: ArtistSongsData): Mapping[] {
     ].filter(Boolean) as string[];
 
     let finalAnswer: string | null = null;
-    let answerField: "musicBrainzTitle" | "title" | null = null;
+    let answerField: "musicBrainzTitle" | "name" | null = null;
 
     for (const source of sources) {
       if (candidateMbTitles.length > 0) {
@@ -133,7 +134,7 @@ function generateMappings(data: ArtistSongsData): Mapping[] {
       const result = findBestMatch(source, candidateTitles);
       if (result.answer) {
         finalAnswer = result.answer;
-        answerField = "title";
+        answerField = "name";
         break;
       }
     }
@@ -142,13 +143,13 @@ function generateMappings(data: ArtistSongsData): Mapping[] {
       const matchedTrack = data.spotifyTracks.find((track) =>
         answerField === "musicBrainzTitle"
           ? track.musicBrainzTitle === finalAnswer
-          : track.title === finalAnswer,
+          : track.name === finalAnswer,
       );
 
       if (matchedTrack) {
         mappings.push({
           spotifyTrackId: matchedTrack.id,
-          spotifyTrackName: matchedTrack.musicBrainzTitle || matchedTrack.title,
+          spotifyTrackName: matchedTrack.musicBrainzTitle || matchedTrack.name,
           songId: song.id,
           songName:
             song.titleJa || song.titleLatin || song.titleKo || song.title,
@@ -216,44 +217,45 @@ async function applyMappings(
 }
 
 export async function mapSongSpotifyGroups(
-  options: MapSongSpotifyGroupsOptions,
+  artistId: number,
+  options: MapSongSpotifyGroupsOptions = {},
 ): Promise<void> {
-  const { minArtistId, maxArtistId, dryRun = false } = options;
+  const { dryRun = false } = options;
 
-  let processedArtists = 0;
-  let artistSkippedNoData = 0;
-  let mappedSongs = 0;
-  let songSkippedAlreadyLinked = 0;
-  let errors = 0;
+  console.log(
+    `\n🎵 mapSongSpotifyGroups → artistId=${artistId} ${dryRun ? "(dry-run)" : ""}`,
+  );
 
-  for (let artistId = minArtistId; artistId <= maxArtistId; artistId++) {
-    const data = await fetchArtistData(artistId);
-    if (!data) continue;
+  const data = await fetchArtistData(artistId);
+  if (!data) {
+    throw new Error(`Artist not found: ${artistId}`);
+  }
 
-    if (data.songs.length === 0 || data.spotifyTracks.length === 0) {
-      artistSkippedNoData += 1;
-      continue;
-    }
-
-    const mappings = generateMappings(data);
-    if (mappings.length === 0) {
-      artistSkippedNoData += 1;
-      continue;
-    }
-
-    const {
-      applied,
-      errors: applyErrors,
-      skipped,
-    } = await applyMappings(mappings, { dryRun });
-
-    mappedSongs += applied;
-    songSkippedAlreadyLinked += skipped;
-    errors += applyErrors;
-    processedArtists += 1;
+  if (data.songs.length === 0 || data.spotifyTracks.length === 0) {
+    console.log(
+      `  ⏭️ No data (songs: ${data.songs.length}, tracks: ${data.spotifyTracks.length})`,
+    );
+    return;
   }
 
   console.log(
-    `\n  • Summary(${minArtistId}~${maxArtistId}) mapped=${mappedSongs}, artistSkipped=${artistSkippedNoData}, alreadyLinked=${songSkippedAlreadyLinked}, errors=${errors}`,
+    `  • Artist: ${data.artistName} (${data.artistNameKo})`,
+  );
+  console.log(
+    `  • Songs: ${data.songs.length}, Tracks: ${data.spotifyTracks.length}`,
+  );
+
+  const mappings = generateMappings(data);
+  if (mappings.length === 0) {
+    console.log(`  ⏭️ No mappings generated`);
+    return;
+  }
+
+  console.log(`  • Mappings: ${mappings.length}`);
+
+  const { applied, errors, skipped } = await applyMappings(mappings, { dryRun });
+
+  console.log(
+    `  • 결과: applied=${applied}, skipped=${skipped}, errors=${errors}`,
   );
 }

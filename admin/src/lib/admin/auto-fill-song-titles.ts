@@ -1,6 +1,6 @@
 import { prisma } from "../prisma";
 
-// autoFillSongTitles는 Spotify/곡 제목 정보를 기반으로 미채워진 언어별 제목 필드를 자동 보완합니다.
+// autoFillSongTitles는 단일 아티스트의 곡에 대해 Spotify/곡 제목 정보를 기반으로 미채워진 언어별 제목 필드를 자동 보완합니다.
 
 type TitleField = "titleLatin" | "titleJaKanji" | "titleJaKana" | "titleKo";
 
@@ -19,11 +19,6 @@ type SongRecord = {
   } | null;
 };
 
-export interface AutoFillSongTitlesRange {
-  minArtistId?: number;
-  maxArtistId: number;
-}
-
 export interface AutoFillSongTitlesOptions {
   dryRun?: boolean;
 }
@@ -35,13 +30,6 @@ type SongTitleChange = {
   value: string;
   source: "spotifyTrackName" | "spotifyMusicBrainzTitle" | "songTitle";
 };
-
-const LANGUAGE_FIELDS: TitleField[] = [
-  "titleLatin",
-  "titleJaKanji",
-  "titleJaKana",
-  "titleKo",
-];
 
 const removeSpecialChars = (text: string) =>
   text.replace(
@@ -86,23 +74,28 @@ const selectTitle = (song: SongRecord): SelectedTitle => {
 };
 
 export async function autoFillSongTitles(
-  range: AutoFillSongTitlesRange,
+  artistId: number,
   options: AutoFillSongTitlesOptions = {},
 ): Promise<void> {
   const { dryRun = false } = options;
-  const minArtistId = range.minArtistId ?? 1;
-  const maxArtistId = range.maxArtistId;
 
   console.log(
-    `\n🎼 autoFillSongTitles → artistId ${minArtistId}~${maxArtistId} ${dryRun ? "(dry-run)" : ""}`,
+    `\n🎼 autoFillSongTitles → artistId=${artistId} ${dryRun ? "(dry-run)" : ""}`,
   );
+
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    select: { id: true, name: true, nameKo: true },
+  });
+
+  if (!artist) {
+    throw new Error(`Artist not found: ${artistId}`);
+  }
 
   const songs = await prisma.song.findMany({
     where: {
       artistSongs: {
-        some: {
-          artistId: { gte: minArtistId, lte: maxArtistId },
-        },
+        some: { artistId },
       },
     },
     orderBy: { id: "asc" },
@@ -126,7 +119,13 @@ export async function autoFillSongTitles(
     },
   });
 
-  console.log(`  • Loaded ${songs.length} songs`);
+  console.log(`  • Artist: ${artist.name} (${artist.nameKo ?? ""})`);
+  console.log(`  • Songs: ${songs.length}`);
+
+  if (songs.length === 0) {
+    console.log(`  ⏭️ No songs`);
+    return;
+  }
 
   const changes: SongTitleChange[] = [];
   const updatedSongIds = new Set<number>();
@@ -149,27 +148,29 @@ export async function autoFillSongTitles(
     updatedSongIds.add(song.id);
   }
 
+  if (changes.length === 0) {
+    console.log(`  ⏭️ No updates needed`);
+    return;
+  }
+
   console.log(`  • Pending updates: ${changes.length}`);
 
-  if (!dryRun && changes.length > 0) {
+  if (!dryRun) {
     for (const change of changes) {
       await prisma.song.update({
         where: { id: change.songId },
         data: { [change.field]: change.value },
       });
     }
-    console.log(`  • Updated ${updatedSongIds.size} songs`);
-  } else if (dryRun) {
-    console.log("  • DRY-RUN: no database writes");
   }
 
   for (const change of changes) {
     console.log(
-      `  [Song #${change.songId}] ${change.field}="${change.value}" (${change.source})`,
+      `    [Song #${change.songId}] ${change.field}="${change.value}" (${change.source})`,
     );
   }
 
   console.log(
-    `  • 완료: ${songs.length}곡 중 ${updatedSongIds.size}곡 업데이트 예정`,
+    `  • 결과: updated=${updatedSongIds.size}`,
   );
 }

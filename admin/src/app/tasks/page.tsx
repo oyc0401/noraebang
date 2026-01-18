@@ -1,342 +1,136 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useRef, useState, useTransition } from "react";
 
 import { MAX_ARTIST } from "@/lib/admin/z-param";
 
 import {
-  runAutoFillArtistNamesJob,
-  runAutoFillSongTitlesJob,
+  runAutoFillArtistNamesForArtist,
+  runAutoFillSongTitlesForArtist,
   runMapProposeSongForArtist,
   runMapSongYoutubeVideoForArtist,
-  runUpdateSongThumbnailsJob,
-  runMapSongSpotifyGroupsJob,
+  runUpdateSongThumbnailsForArtist,
+  runMapSongSpotifyGroupsForArtist,
 } from "./actions";
 
+type TaskAction = (
+  artistId: number,
+  options: { dryRun: boolean },
+) => Promise<void>;
+
+function useArtistTask(
+  taskName: string,
+  action: TaskAction,
+  defaultDryRun = true,
+) {
+  const [startId, setStartId] = useState("1");
+  const [endId, setEndId] = useState(String(MAX_ARTIST));
+  const [dryRun, setDryRun] = useState(defaultDryRun);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const cancelRef = useRef(false);
+
+  const run = () => {
+    const start = Number(startId);
+    const end = Number(endId);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || start <= 0) {
+      setError("유효한 ID 범위를 입력하세요.");
+      return;
+    }
+    if (start > end) {
+      setError("시작 ID가 종료 ID보다 큽니다.");
+      return;
+    }
+
+    startTransition(() => {
+      setError(null);
+      setSummary(
+        `실행 시작 (ID ${start}~${end}, ${dryRun ? "dry-run" : "실제"})`,
+      );
+      cancelRef.current = false;
+      const total = end - start + 1;
+
+      (async () => {
+        let success = 0;
+        let cancelled = false;
+        for (let artistId = start; artistId <= end; artistId++) {
+          if (cancelRef.current) {
+            cancelled = true;
+            break;
+          }
+          setSummary(
+            `Artist #${artistId} 처리 중... (${artistId - start + 1}/${total})`,
+          );
+          try {
+            await action(artistId, { dryRun });
+            console.log(`[${taskName}] Artist #${artistId} 완료`);
+            success += 1;
+          } catch (err) {
+            const message =
+              err instanceof Error
+                ? err.message
+                : "알 수 없는 오류가 발생했습니다.";
+            setError(message);
+            console.error(`[${taskName}] Artist #${artistId} 실패: ${message}`);
+          }
+        }
+        setSummary(
+          cancelled
+            ? `사용자 중단 (${success}/${total}명 처리)`
+            : `${success}명 처리 완료`,
+        );
+      })();
+    });
+  };
+
+  const cancel = () => {
+    if (!pending) return;
+    cancelRef.current = true;
+    setSummary("중단 요청 중...");
+  };
+
+  return {
+    startId,
+    setStartId,
+    endId,
+    setEndId,
+    dryRun,
+    setDryRun,
+    summary,
+    error,
+    pending,
+    run,
+    cancel,
+  };
+}
+
 export default function AdminTasksPage() {
-  const [mapStartId, setMapStartId] = useState("1");
-  const [mapEndId, setMapEndId] = useState(String(MAX_ARTIST));
-  const [mapDryRun, setMapDryRun] = useState(false);
-  const [mapSummary, setMapSummary] = useState<string | null>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
-  const [mapPending, startMapTransition] = useTransition();
-
-  const [songStartId, setSongStartId] = useState("1");
-  const [songEndId, setSongEndId] = useState(String(MAX_ARTIST));
-  const [songDryRun, setSongDryRun] = useState(true);
-  const [songSummary, setSongSummary] = useState<string | null>(null);
-  const [songError, setSongError] = useState<string | null>(null);
-  const [songPending, startSongTransition] = useTransition();
-
-  const [artistStartId, setArtistStartId] = useState("1");
-  const [artistEndId, setArtistEndId] = useState(String(MAX_ARTIST));
-  const [artistDryRun, setArtistDryRun] = useState(true);
-  const [artistSummary, setArtistSummary] = useState<string | null>(null);
-  const [artistError, setArtistError] = useState<string | null>(null);
-  const [artistPending, startArtistTransition] = useTransition();
-
-  const [youtubeStartId, setYoutubeStartId] = useState("1");
-  const [youtubeEndId, setYoutubeEndId] = useState(String(MAX_ARTIST));
-  const [youtubeDryRun, setYoutubeDryRun] = useState(true);
-  const [youtubeSummary, setYoutubeSummary] = useState<string | null>(null);
-  const [youtubeError, setYoutubeError] = useState<string | null>(null);
-  const [youtubePending, startYoutubeTransition] = useTransition();
-
-  const mapCancelRef = useRef(false);
-  const youtubeCancelRef = useRef(false);
-  const [thumbStartId, setThumbStartId] = useState("1");
-  const [thumbEndId, setThumbEndId] = useState(String(MAX_ARTIST));
-  const [thumbDryRun, setThumbDryRun] = useState(true);
-  const [thumbSummary, setThumbSummary] = useState<string | null>(null);
-  const [thumbError, setThumbError] = useState<string | null>(null);
-  const [thumbPending, startThumbTransition] = useTransition();
-  const [spotifyMapStartArtistId, setSpotifyMapStartArtistId] = useState("1");
-  const [spotifyMapEndArtistId, setSpotifyMapEndArtistId] = useState(
-    String(MAX_ARTIST),
+  const mapTask = useArtistTask(
+    "mapProposeSong",
+    runMapProposeSongForArtist,
+    false,
   );
-  const [spotifyMapDryRun, setSpotifyMapDryRun] = useState(true);
-  const [spotifyMapSummary, setSpotifyMapSummary] = useState<string | null>(
-    null,
+  const songTask = useArtistTask(
+    "autoFillSongTitles",
+    runAutoFillSongTitlesForArtist,
   );
-  const [spotifyMapError, setSpotifyMapError] = useState<string | null>(null);
-  const [spotifyMapPending, startSpotifyMapTransition] = useTransition();
-
-  const runMapTask = () => {
-    const startId = Number(mapStartId);
-    const endId = Number(mapEndId);
-    if (!Number.isFinite(startId) || !Number.isFinite(endId) || startId <= 0) {
-      setMapError("유효한 ID 범위를 입력하세요.");
-      return;
-    }
-    if (startId > endId) {
-      setMapError("시작 ID가 종료 ID보다 큽니다.");
-      return;
-    }
-
-    startMapTransition(() => {
-      setMapError(null);
-      setMapSummary(
-        `실행 시작 (ID ${startId}~${endId}, ${mapDryRun ? "dry-run" : "실제"})`,
-      );
-      mapCancelRef.current = false;
-      const total = endId - startId + 1;
-
-      (async () => {
-        let success = 0;
-        let cancelled = false;
-        for (let artistId = startId; artistId <= endId; artistId++) {
-          if (mapCancelRef.current) {
-            cancelled = true;
-            break;
-          }
-          setMapSummary(
-            `Artist #${artistId} 처리 중... (${artistId - startId + 1}/${total})`,
-          );
-          try {
-            await runMapProposeSongForArtist(artistId, {
-              dryRun: mapDryRun,
-            });
-            console.log(`[mapProposeSong] Artist #${artistId} 완료`);
-            success += 1;
-          } catch (error) {
-            const message =
-              error instanceof Error
-                ? error.message
-                : "알 수 없는 오류가 발생했습니다.";
-            setMapError(message);
-            console.error(
-              `[mapProposeSong] Artist #${artistId} 실패: ${message}`,
-            );
-          }
-        }
-        setMapSummary(
-          cancelled
-            ? `사용자 중단 (${success}/${total}명 처리)`
-            : `${success}명 처리 완료`,
-        );
-      })();
-    });
-  };
-
-  const cancelMapTask = () => {
-    if (!mapPending) return;
-    mapCancelRef.current = true;
-    setMapSummary("중단 요청 중...");
-  };
-
-  const runSongFillTask = () => {
-    const startId = Number(songStartId);
-    const endId = Number(songEndId);
-    if (!Number.isFinite(startId) || !Number.isFinite(endId) || startId <= 0) {
-      setSongError("유효한 ID 범위를 입력하세요.");
-      return;
-    }
-    if (startId > endId) {
-      setSongError("시작 ID가 종료 ID보다 큽니다.");
-      return;
-    }
-    startSongTransition(() => {
-      setSongError(null);
-      setSongSummary(null);
-      console.log(
-        `[autoFillSongTitles] 실행 시작 (ID ${startId}~${endId}, ${songDryRun ? "dry-run" : "실제"})`,
-      );
-
-      (async () => {
-        try {
-          await runAutoFillSongTitlesJob({
-            startId,
-            endId,
-            dryRun: songDryRun,
-          });
-          setSongSummary("자동 채우기 완료 (콘솔 로그 참고)");
-        } catch (error) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : "알 수 없는 오류가 발생했습니다.";
-          setSongError(message);
-          console.error(`[autoFillSongTitles] 실패: ${message}`);
-        }
-      })();
-    });
-  };
-
-  const runArtistFillTask = () => {
-    const startId = Number(artistStartId);
-    const endId = Number(artistEndId);
-    if (!Number.isFinite(startId) || !Number.isFinite(endId) || startId <= 0) {
-      setArtistError("유효한 ID 범위를 입력하세요.");
-      return;
-    }
-    if (startId > endId) {
-      setArtistError("시작 ID가 종료 ID보다 큽니다.");
-      return;
-    }
-    startArtistTransition(() => {
-      setArtistError(null);
-      setArtistSummary(null);
-      console.log(
-        `[autoFillArtistNames] 실행 시작 (ID ${startId}~${endId}, ${artistDryRun ? "dry-run" : "실제"})`,
-      );
-
-      (async () => {
-        try {
-          await runAutoFillArtistNamesJob({
-            startId,
-            endId,
-            dryRun: artistDryRun,
-          });
-          setArtistSummary("자동 채우기 완료 (콘솔 로그 참고)");
-        } catch (error) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : "알 수 없는 오류가 발생했습니다.";
-          setArtistError(message);
-          console.error(`[autoFillArtistNames] 실패: ${message}`);
-        }
-      })();
-    });
-  };
-
-  const runYoutubeTask = () => {
-    const startId = Number(youtubeStartId);
-    const endId = Number(youtubeEndId);
-    if (!Number.isFinite(startId) || !Number.isFinite(endId) || startId <= 0) {
-      setYoutubeError("유효한 ID 범위를 입력하세요.");
-      return;
-    }
-    if (startId > endId) {
-      setYoutubeError("시작 ID가 종료 ID보다 큽니다.");
-      return;
-    }
-
-    startYoutubeTransition(() => {
-      setYoutubeError(null);
-      setYoutubeSummary(
-        `실행 시작 (ID ${startId}~${endId}, ${youtubeDryRun ? "dry-run" : "실제"})`,
-      );
-      youtubeCancelRef.current = false;
-      const total = endId - startId + 1;
-
-      (async () => {
-        let success = 0;
-        let cancelled = false;
-        for (let artistId = startId; artistId <= endId; artistId++) {
-          if (youtubeCancelRef.current) {
-            cancelled = true;
-            break;
-          }
-          setYoutubeSummary(
-            `Artist #${artistId} 처리 중... (${artistId - startId + 1}/${total})`,
-          );
-          try {
-            await runMapSongYoutubeVideoForArtist(artistId, {
-              dryRun: youtubeDryRun,
-            });
-            console.log(`[mapSongYoutubeVideo] Artist #${artistId} 완료`);
-            success += 1;
-          } catch (error) {
-            const message =
-              error instanceof Error
-                ? error.message
-                : "알 수 없는 오류가 발생했습니다.";
-            setYoutubeError(message);
-            console.error(
-              `[mapSongYoutubeVideo] Artist #${artistId} 실패: ${message}`,
-            );
-          }
-        }
-        setYoutubeSummary(
-          cancelled
-            ? `사용자 중단 (${success}/${total}명 처리)`
-            : `${success}명 처리 완료`,
-        );
-      })();
-    });
-  };
-
-  const cancelYoutubeTask = () => {
-    if (!youtubePending) return;
-    youtubeCancelRef.current = true;
-    setYoutubeSummary("중단 요청 중...");
-  };
-
-  const runThumbnailTask = () => {
-    const startId = Number(thumbStartId);
-    const endId = Number(thumbEndId);
-    if (!Number.isFinite(startId) || !Number.isFinite(endId) || startId <= 0) {
-      setThumbError("유효한 ID 범위를 입력하세요.");
-      return;
-    }
-    if (startId > endId) {
-      setThumbError("시작 ID가 종료 ID보다 큽니다.");
-      return;
-    }
-
-    startThumbTransition(() => {
-      setThumbError(null);
-      setThumbSummary(
-        `실행 시작 (ID ${startId}~${endId}, ${thumbDryRun ? "dry-run" : "실제"})`,
-      );
-
-      (async () => {
-        try {
-          await runUpdateSongThumbnailsJob({
-            startId,
-            endId,
-            dryRun: thumbDryRun,
-          });
-          setThumbSummary("썸네일 보정 완료 (콘솔 로그 참고)");
-        } catch (error) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : "알 수 없는 오류가 발생했습니다.";
-          setThumbError(message);
-        }
-      })();
-    });
-  };
-
-  const runSpotifyMappingTask = () => {
-    const startId = Number(spotifyMapStartArtistId);
-    const endId = Number(spotifyMapEndArtistId);
-    if (!Number.isFinite(startId) || !Number.isFinite(endId) || startId <= 0) {
-      setSpotifyMapError("유효한 ID 범위를 입력하세요.");
-      return;
-    }
-    if (startId > endId) {
-      setSpotifyMapError("시작 ID가 종료 ID보다 큽니다.");
-      return;
-    }
-
-    startSpotifyMapTransition(() => {
-      setSpotifyMapError(null);
-      setSpotifyMapSummary(
-        `실행 시작 (Artist ID ${startId}~${endId}, ${spotifyMapDryRun ? "dry-run" : "실제"})`,
-      );
-
-      (async () => {
-        try {
-          await runMapSongSpotifyGroupsJob({
-            startId,
-            endId,
-            dryRun: spotifyMapDryRun,
-          });
-          setSpotifyMapSummary("자동 매핑 완료 (콘솔 로그 참고)");
-        } catch (error) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : "알 수 없는 오류가 발생했습니다.";
-          setSpotifyMapError(message);
-        }
-      })();
-    });
-  };
+  const artistTask = useArtistTask(
+    "autoFillArtistNames",
+    runAutoFillArtistNamesForArtist,
+  );
+  const youtubeTask = useArtistTask(
+    "mapSongYoutubeVideo",
+    runMapSongYoutubeVideoForArtist,
+  );
+  const spotifyTask = useArtistTask(
+    "mapSongSpotifyGroups",
+    runMapSongSpotifyGroupsForArtist,
+  );
+  const thumbTask = useArtistTask(
+    "updateSongThumbnails",
+    runUpdateSongThumbnailsForArtist,
+  );
 
   return (
     <div className="min-h-screen bg-zinc-50 py-4">
@@ -355,156 +149,37 @@ export default function AdminTasksPage() {
           <TaskCard
             title="TJ 신청곡 → 곡 매핑"
             description="mapProposeSong: 지정 구간의 신청곡을 자동 매핑합니다."
-            status={mapSummary}
-            error={mapError}
-            controls={
-              <>
-                <RangeInput
-                  label="시작 ID"
-                  value={mapStartId}
-                  onChange={setMapStartId}
-                />
-                <RangeInput
-                  label="종료 ID"
-                  value={mapEndId}
-                  onChange={setMapEndId}
-                />
-                <DryRunToggle checked={mapDryRun} onChange={setMapDryRun} />
-              </>
-            }
-            onRun={runMapTask}
-            running={mapPending}
-            onCancel={cancelMapTask}
+            task={mapTask}
           />
 
           <TaskCard
             title="곡 제목 자동 채우기"
             description="Spotify/곡 제목 정보를 활용해 titleLatin/titleJa* 필드를 보완합니다."
-            status={songSummary}
-            error={songError}
-            controls={
-              <>
-                <RangeInput
-                  label="시작 ID"
-                  value={songStartId}
-                  onChange={setSongStartId}
-                />
-                <RangeInput
-                  label="종료 ID"
-                  value={songEndId}
-                  onChange={setSongEndId}
-                />
-                <DryRunToggle checked={songDryRun} onChange={setSongDryRun} />
-              </>
-            }
-            onRun={runSongFillTask}
-            running={songPending}
+            task={songTask}
           />
 
           <TaskCard
             title="아티스트 이름 자동 채우기"
             description="Spotify/토픽 채널 이름을 활용해 nameLatin/nameJa* 필드를 보완합니다."
-            status={artistSummary}
-            error={artistError}
-            controls={
-              <>
-                <RangeInput
-                  label="시작 ID"
-                  value={artistStartId}
-                  onChange={setArtistStartId}
-                />
-                <RangeInput
-                  label="종료 ID"
-                  value={artistEndId}
-                  onChange={setArtistEndId}
-                />
-                <DryRunToggle
-                  checked={artistDryRun}
-                  onChange={setArtistDryRun}
-                />
-              </>
-            }
-            onRun={runArtistFillTask}
-            running={artistPending}
+            task={artistTask}
           />
 
           <TaskCard
             title="곡 ↔ YouTube 토픽 매핑"
             description="토픽 채널 영상과 곡을 비교해 SongYoutubeVideo를 자동으로 채웁니다."
-            status={youtubeSummary}
-            error={youtubeError}
-            controls={
-              <>
-                <RangeInput
-                  label="시작 ID"
-                  value={youtubeStartId}
-                  onChange={setYoutubeStartId}
-                />
-                <RangeInput
-                  label="종료 ID"
-                  value={youtubeEndId}
-                  onChange={setYoutubeEndId}
-                />
-                <DryRunToggle
-                  checked={youtubeDryRun}
-                  onChange={setYoutubeDryRun}
-                />
-              </>
-            }
-            onRun={runYoutubeTask}
-            running={youtubePending}
-            onCancel={cancelYoutubeTask}
+            task={youtubeTask}
           />
 
           <TaskCard
             title="곡 ↔ Spotify 그룹 매핑"
             description="findBestMatch로 곡과 SpotifyTrackGroup을 자동 매핑합니다."
-            status={spotifyMapSummary}
-            error={spotifyMapError}
-            controls={
-              <>
-                <RangeInput
-                  label="Artist 시작 ID"
-                  value={spotifyMapStartArtistId}
-                  onChange={setSpotifyMapStartArtistId}
-                />
-                <RangeInput
-                  label="Artist 종료 ID"
-                  value={spotifyMapEndArtistId}
-                  onChange={setSpotifyMapEndArtistId}
-                />
-                <DryRunToggle
-                  checked={spotifyMapDryRun}
-                  onChange={setSpotifyMapDryRun}
-                />
-              </>
-            }
-            onRun={runSpotifyMappingTask}
-            running={spotifyMapPending}
+            task={spotifyTask}
           />
 
           <TaskCard
             title="곡 썸네일 보정"
             description="Spotify/YouTube 정보를 바탕으로 곡 썸네일을 자동으로 채웁니다."
-            status={thumbSummary}
-            error={thumbError}
-            controls={
-              <>
-                <RangeInput
-                  label="시작 ID"
-                  value={thumbStartId}
-                  onChange={setThumbStartId}
-                />
-                <RangeInput
-                  label="종료 ID"
-                  value={thumbEndId}
-                  onChange={setThumbEndId}
-                />
-                <DryRunToggle checked={thumbDryRun} onChange={setThumbDryRun} />
-              </>
-            }
-            onRun={runThumbnailTask}
-            running={thumbPending}
+            task={thumbTask}
           />
         </div>
       </div>
@@ -512,24 +187,16 @@ export default function AdminTasksPage() {
   );
 }
 
+type ArtistTask = ReturnType<typeof useArtistTask>;
+
 function TaskCard({
   title,
   description,
-  status,
-  error,
-  controls,
-  onRun,
-  running,
-  onCancel,
+  task,
 }: {
   title: string;
   description: string;
-  status: string | null;
-  error: string | null;
-  controls: ReactNode;
-  onRun: () => void;
-  running: boolean;
-  onCancel?: () => void;
+  task: ArtistTask;
 }) {
   return (
     <section className="rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
@@ -539,22 +206,28 @@ function TaskCard({
           <p className="text-xs text-zinc-500">{description}</p>
         </div>
         <div className="flex flex-1 flex-nowrap items-center gap-3 overflow-x-auto">
-          {controls}
+          <RangeInputs
+            startValue={task.startId}
+            endValue={task.endId}
+            onStartChange={task.setStartId}
+            onEndChange={task.setEndId}
+          />
+          <DryRunToggle checked={task.dryRun} onChange={task.setDryRun} />
         </div>
         <div className="flex flex-col gap-2 md:w-48">
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={onRun}
-              disabled={running}
+              onClick={task.run}
+              disabled={task.pending}
               className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {running ? "실행 중..." : "실행"}
+              {task.pending ? "실행 중..." : "실행"}
             </button>
-            {running && onCancel && (
+            {task.pending && (
               <button
                 type="button"
-                onClick={onCancel}
+                onClick={task.cancel}
                 className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:text-red-700"
               >
                 중단
@@ -562,11 +235,11 @@ function TaskCard({
             )}
           </div>
           <p className="text-center text-[11px] text-zinc-500">
-            {status ?? "미실행"}
+            {task.summary ?? "미실행"}
           </p>
-          {error && (
+          {task.error && (
             <p className="text-center text-xs font-semibold text-red-600">
-              {error}
+              {task.error}
             </p>
           )}
         </div>
@@ -595,6 +268,52 @@ function RangeInput({
         min={1}
       />
     </div>
+  );
+}
+
+function RangeInputs({
+  startValue,
+  endValue,
+  onStartChange,
+  onEndChange,
+  startLabel = "시작 ID",
+  endLabel = "종료 ID",
+}: {
+  startValue: string;
+  endValue: string;
+  onStartChange: (val: string) => void;
+  onEndChange: (val: string) => void;
+  startLabel?: string;
+  endLabel?: string;
+}) {
+  const [singleMode, setSingleMode] = useState(false);
+
+  return (
+    <>
+      <RangeInput
+        label={singleMode ? "ID" : startLabel}
+        value={startValue}
+        onChange={(val) => {
+          onStartChange(val);
+          if (singleMode) onEndChange(val);
+        }}
+      />
+      {!singleMode && (
+        <RangeInput label={endLabel} value={endValue} onChange={onEndChange} />
+      )}
+      <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 px-3 text-sm font-semibold text-zinc-700">
+        <input
+          type="checkbox"
+          checked={singleMode}
+          onChange={(e) => {
+            setSingleMode(e.target.checked);
+            if (e.target.checked) onEndChange(startValue);
+          }}
+          className="h-4 w-4 rounded border-zinc-300 text-blue-500 focus:ring-blue-400"
+        />
+        단일
+      </label>
+    </>
   );
 }
 
