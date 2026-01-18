@@ -7,6 +7,10 @@ import { findBestMatch } from "../song-spotify-matcher";
 // - 매칭된 Song에 그룹이 없으면 그룹을 생성하고 Song과 연결
 // - primary는 deprecated이므로 저장하지 않음
 
+// 정규화: NFKC + 공백 정규화 + 소문자 + 공백 제거
+const normalize = (s: string) =>
+  s.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase().replace(/\s+/g, "");
+
 type ArtistData = {
   artistId: number;
   artistName: string;
@@ -102,13 +106,18 @@ async function fetchArtistData(artistId: number): Promise<ArtistData | null> {
 function generateMappings(data: ArtistData): Mapping[] {
   const mappings: Mapping[] = [];
 
-  // title → Song 맵 생성 (중복 제거 + O(1) 조회)
+  // 원본 title → Song 맵 (findBestMatch 결과 조회용)
   const titleToSong = new Map<string, ArtistData["songs"][number]>();
+  // 정규화된 title → Song 맵 (O(1) 완전 일치용)
+  const normalizedToSong = new Map<string, ArtistData["songs"][number]>();
+
   for (const song of data.songs) {
-    if (song.title?.trim()) titleToSong.set(song.title, song);
-    if (song.titleKo?.trim()) titleToSong.set(song.titleKo, song);
-    if (song.titleLatin?.trim()) titleToSong.set(song.titleLatin, song);
-    if (song.titleJa?.trim()) titleToSong.set(song.titleJa, song);
+    for (const title of [song.title, song.titleKo, song.titleLatin, song.titleJa]) {
+      if (title?.trim()) {
+        titleToSong.set(title, song);
+        normalizedToSong.set(normalize(title), song);
+      }
+    }
   }
   const songTitleCandidates = [...titleToSong.keys()];
 
@@ -118,17 +127,29 @@ function generateMappings(data: ArtistData): Mapping[] {
 
     // 1순위: musicBrainzTitle로 매칭
     if (track.musicBrainzTitle?.trim()) {
-      const result = findBestMatch(track.musicBrainzTitle, songTitleCandidates);
-      if (result.answer) {
-        matchedSong = titleToSong.get(result.answer);
+      // O(1) 완전 일치 먼저 시도
+      matchedSong = normalizedToSong.get(normalize(track.musicBrainzTitle));
+
+      // 실패시 findBestMatch (유사도 비교)
+      if (!matchedSong) {
+        const result = findBestMatch(track.musicBrainzTitle, songTitleCandidates);
+        if (result.answer) {
+          matchedSong = titleToSong.get(result.answer);
+        }
       }
     }
 
     // 2순위: name으로 매칭 (musicBrainzTitle 매칭 실패 시)
     if (!matchedSong) {
-      const result = findBestMatch(track.name, songTitleCandidates);
-      if (result.answer) {
-        matchedSong = titleToSong.get(result.answer);
+      // O(1) 완전 일치 먼저 시도
+      matchedSong = normalizedToSong.get(normalize(track.name));
+
+      // 실패시 findBestMatch (유사도 비교)
+      if (!matchedSong) {
+        const result = findBestMatch(track.name, songTitleCandidates);
+        if (result.answer) {
+          matchedSong = titleToSong.get(result.answer);
+        }
       }
     }
 
