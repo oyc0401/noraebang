@@ -1,13 +1,10 @@
 import { prisma } from "../prisma";
 import { findBestMatch } from "../song-spotify-matcher";
+import { normalizeTitle } from "../track-title-normalizer";
 
 // mapSongYoutubeVideo는 아티스트의 토픽 채널 영상 중 SongYoutubeVideo에 연결되지 않은 영상을 Song과 매칭합니다.
 // - 영상 제목과 Song의 title/titleKo/titleLatin/titleJa/spotifyTitle/musicBrainzTitle 비교
 // - 정규화 후 완전 일치 O(1) 먼저 시도, 실패시만 findBestMatch 호출
-
-// 정규화: NFKC + 공백 정규화 + 소문자 + 공백 제거
-const normalize = (s: string) =>
-  s.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase().replace(/\s+/g, "");
 
 type SongData = {
   id: number;
@@ -132,7 +129,7 @@ export async function mapSongYoutubeVideo(
     for (const title of titles) {
       if (title?.trim()) {
         titleToSong.set(title, song);
-        normalizedToSong.set(normalize(title), song);
+        normalizedToSong.set(normalizeTitle(title), song);
       }
     }
   }
@@ -143,7 +140,7 @@ export async function mapSongYoutubeVideo(
 
   for (const video of unmappedVideos) {
     // O(1) 완전 일치 먼저 시도
-    let matchedSong = normalizedToSong.get(normalize(video.title));
+    let matchedSong = normalizedToSong.get(normalizeTitle(video.title));
 
     // 실패시 findBestMatch (유사도 비교)
     if (!matchedSong) {

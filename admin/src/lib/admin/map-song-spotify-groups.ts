@@ -1,15 +1,12 @@
 import { prisma } from "../prisma";
 import { findBestMatch } from "../song-spotify-matcher";
+import { normalizeTitle } from "../track-title-normalizer";
 
 // mapSongSpotifyGroups는 특정 아티스트의 스포티파이 트랙(그룹 미지정)을 Song과 매칭하여 그룹에 연결합니다.
 // - 그룹에 들어있지 않은 트랙들(groupId === null)을 대상으로 매칭 수행
 // - 트랙의 musicBrainzTitle(1순위) 또는 name(2순위)과 Song의 title/titleKo/titleLatin/titleJa 비교
 // - 매칭된 Song에 그룹이 없으면 그룹을 생성하고 Song과 연결
 // - primary는 deprecated이므로 저장하지 않음
-
-// 정규화: NFKC + 공백 정규화 + 소문자 + 공백 제거
-const normalize = (s: string) =>
-  s.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase().replace(/\s+/g, "");
 
 type ArtistData = {
   artistId: number;
@@ -115,7 +112,7 @@ function generateMappings(data: ArtistData): Mapping[] {
     for (const title of [song.title, song.titleKo, song.titleLatin, song.titleJa]) {
       if (title?.trim()) {
         titleToSong.set(title, song);
-        normalizedToSong.set(normalize(title), song);
+        normalizedToSong.set(normalizeTitle(title), song);
       }
     }
   }
@@ -128,7 +125,7 @@ function generateMappings(data: ArtistData): Mapping[] {
     // 1순위: musicBrainzTitle로 매칭
     if (track.musicBrainzTitle?.trim()) {
       // O(1) 완전 일치 먼저 시도
-      matchedSong = normalizedToSong.get(normalize(track.musicBrainzTitle));
+      matchedSong = normalizedToSong.get(normalizeTitle(track.musicBrainzTitle));
 
       // 실패시 findBestMatch (유사도 비교)
       if (!matchedSong) {
@@ -142,7 +139,7 @@ function generateMappings(data: ArtistData): Mapping[] {
     // 2순위: name으로 매칭 (musicBrainzTitle 매칭 실패 시)
     if (!matchedSong) {
       // O(1) 완전 일치 먼저 시도
-      matchedSong = normalizedToSong.get(normalize(track.name));
+      matchedSong = normalizedToSong.get(normalizeTitle(track.name));
 
       // 실패시 findBestMatch (유사도 비교)
       if (!matchedSong) {

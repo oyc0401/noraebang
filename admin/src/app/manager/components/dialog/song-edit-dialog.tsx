@@ -6,14 +6,18 @@ import {
   updateSong,
   deleteSong,
   fetchUnlinkedSpotifyGroups,
+  fetchUnlinkedSpotifyTracks,
   fetchUnlinkedYoutubeVideos,
   fetchUnlinkedSongProposes,
   fetchLinkedYoutubeVideos,
   fetchLinkedSongProposes,
   linkSpotifyGroup,
   unlinkSpotifyGroup,
+  addSpotifyTrackToSong,
+  getSpotifyGroupDetail,
   linkYoutubeVideo,
   unlinkYoutubeVideo,
+  createAndLinkYoutubeVideo,
   linkSongPropose,
   unlinkSongPropose,
   linkSongArtist,
@@ -21,10 +25,12 @@ import {
   searchArtistsForLink,
   refreshSongThumbnail,
   type UnlinkedSpotifyGroup,
+  type UnlinkedSpotifyTrack,
   type UnlinkedYoutubeVideo,
   type UnlinkedSongPropose,
   type LinkedYoutubeVideo,
   type LinkedSongPropose,
+  type SpotifyGroupEditData,
 } from "../../action";
 import type { ManagerArtistSongDetail, SongLinkedArtist } from "../../types";
 import { useSongDialogContext, type SongEditTab } from "../song-dialog-context";
@@ -69,6 +75,9 @@ export function SongEditDialog() {
   const [unlinkedSpotify, setUnlinkedSpotify] = useState<
     UnlinkedSpotifyGroup[]
   >([]);
+  const [unlinkedSpotifyTracks, setUnlinkedSpotifyTracks] = useState<
+    UnlinkedSpotifyTrack[]
+  >([]);
   const [unlinkedYoutube, setUnlinkedYoutube] = useState<
     UnlinkedYoutubeVideo[]
   >([]);
@@ -80,8 +89,14 @@ export function SongEditDialog() {
   const [currentSpotifyGroupId, setCurrentSpotifyGroupId] = useState<
     number | null
   >(null);
+  const [currentSpotifyGroupDetail, setCurrentSpotifyGroupDetail] =
+    useState<SpotifyGroupEditData | null>(null);
 
   const [isLinking, setIsLinking] = useState(false);
+
+  // 유튜브 비디오 추가 상태
+  const [newVideoId, setNewVideoId] = useState("");
+  const [isAddingVideo, setIsAddingVideo] = useState(false);
 
   // 썸네일 상태
   const [currentThumbnail, setCurrentThumbnail] = useState<string | null>(null);
@@ -128,15 +143,17 @@ export function SongEditDialog() {
 
     async function loadLinkData() {
       try {
-        const [spotify, youtube, proposes, linkedYt, linkedPr] =
+        const [spotify, spotifyTracks, youtube, proposes, linkedYt, linkedPr] =
           await Promise.all([
             fetchUnlinkedSpotifyGroups(artistId),
+            fetchUnlinkedSpotifyTracks(artistId),
             fetchUnlinkedYoutubeVideos(artistId),
             fetchUnlinkedSongProposes(artistId),
             fetchLinkedYoutubeVideos(song.id),
             fetchLinkedSongProposes(song.id),
           ]);
         setUnlinkedSpotify(spotify);
+        setUnlinkedSpotifyTracks(spotifyTracks);
         setUnlinkedYoutube(youtube);
         setUnlinkedProposes(proposes);
         setLinkedYoutube(linkedYt);
@@ -148,6 +165,26 @@ export function SongEditDialog() {
 
     loadLinkData();
   }, [open, song, artistId]);
+
+  // 현재 그룹 상세 정보 로드
+  useEffect(() => {
+    if (!open || !currentSpotifyGroupId) {
+      setCurrentSpotifyGroupDetail(null);
+      return;
+    }
+
+    async function loadGroupDetail() {
+      try {
+        const detail = await getSpotifyGroupDetail(currentSpotifyGroupId!);
+        setCurrentSpotifyGroupDetail(detail);
+      } catch (err) {
+        console.error("그룹 상세 정보 로드 실패:", err);
+        setCurrentSpotifyGroupDetail(null);
+      }
+    }
+
+    loadGroupDetail();
+  }, [open, currentSpotifyGroupId]);
 
   // 아티스트 검색
   useEffect(() => {
@@ -258,6 +295,9 @@ export function SongEditDialog() {
       await linkSpotifyGroup(song.id, groupId);
       setCurrentSpotifyGroupId(groupId);
       setUnlinkedSpotify((prev) => prev.filter((g) => g.groupId !== groupId));
+      // 그룹 상세 정보 로드
+      const groupDetail = await getSpotifyGroupDetail(groupId);
+      setCurrentSpotifyGroupDetail(groupDetail);
     } catch (err) {
       console.error(err);
       setError("스포티파이 연결 실패");
@@ -281,6 +321,31 @@ export function SongEditDialog() {
     } catch (err) {
       console.error(err);
       setError("스포티파이 연결 해제 실패");
+    } finally {
+      setIsLinking(false);
+    }
+  }
+
+  // 스포티파이 트랙 추가 (그룹에 추가하거나 새 그룹 생성)
+  async function handleAddSpotifyTrack(trackId: number) {
+    if (!song) return;
+    setIsLinking(true);
+    try {
+      const result = await addSpotifyTrackToSong(song.id, trackId);
+      setCurrentSpotifyGroupId(result.groupId);
+      // 트랙이 그룹에 추가되었으므로 미연결 트랙 목록에서 제거
+      setUnlinkedSpotifyTracks((prev) => prev.filter((t) => t.id !== trackId));
+      // 그룹 상세 정보 새로고침
+      const groupDetail = await getSpotifyGroupDetail(result.groupId);
+      setCurrentSpotifyGroupDetail(groupDetail);
+      // 미연결 그룹 목록도 새로고침 (새 그룹이 생성되었을 수 있음)
+      if (artistId) {
+        const spotify = await fetchUnlinkedSpotifyGroups(artistId);
+        setUnlinkedSpotify(spotify);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message ?? "스포티파이 트랙 추가 실패");
     } finally {
       setIsLinking(false);
     }
@@ -326,6 +391,23 @@ export function SongEditDialog() {
       setError("유튜브 연결 해제 실패");
     } finally {
       setIsLinking(false);
+    }
+  }
+
+  // 유튜브 비디오 추가
+  async function handleAddYoutubeVideo() {
+    if (!song || !newVideoId.trim()) return;
+    setIsAddingVideo(true);
+    setError(null);
+    try {
+      const newVideo = await createAndLinkYoutubeVideo(song.id, newVideoId.trim());
+      setLinkedYoutube((prev) => [...prev, newVideo]);
+      setNewVideoId("");
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message ?? "유튜브 비디오 추가 실패");
+    } finally {
+      setIsAddingVideo(false);
     }
   }
 
@@ -763,30 +845,14 @@ export function SongEditDialog() {
 
           {activeTab === "spotify" && (
             <div className="space-y-4">
-              {/* 현재 연결된 스포티파이 */}
+              {/* 현재 연결된 스포티파이 그룹 */}
               <div>
-                <h5 className="text-xs font-semibold text-zinc-700 mb-2">
-                  연결된 Spotify 그룹
-                </h5>
-                {currentSpotifyGroupId ? (
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-emerald-200 bg-emerald-50">
-                    {song?.spotifyGroup?.primaryTrack?.thumbnails?.[0] && (
-                      <img
-                        src={song.spotifyGroup.primaryTrack.thumbnails[0]}
-                        alt=""
-                        className="w-10 h-10 rounded object-cover"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-emerald-800">
-                        {song?.spotifyGroup?.primaryTrack?.name ??
-                          `그룹 #${currentSpotifyGroupId}`}
-                      </p>
-                      <p className="text-xs text-emerald-600">
-                        그룹 #{currentSpotifyGroupId} · 인기도{" "}
-                        {song?.spotifyGroup?.primaryTrack?.popularity ?? "-"}
-                      </p>
-                    </div>
+                <div className="flex items-center justify-between mb-2">
+                  <h5 className="text-xs font-semibold text-zinc-700">
+                    연결된 Spotify 그룹
+                    {currentSpotifyGroupDetail && ` (${currentSpotifyGroupDetail.tracks.length}트랙)`}
+                  </h5>
+                  {currentSpotifyGroupId && (
                     <button
                       type="button"
                       onClick={handleUnlinkSpotify}
@@ -795,6 +861,43 @@ export function SongEditDialog() {
                     >
                       연결 해제
                     </button>
+                  )}
+                </div>
+                {currentSpotifyGroupId ? (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 overflow-hidden">
+                    <div className="px-3 py-2 bg-emerald-100 text-xs text-emerald-700">
+                      {currentSpotifyGroupDetail?.tracks?.[0]?.name ?? `그룹 #${currentSpotifyGroupId}`}
+                    </div>
+                    {currentSpotifyGroupDetail ? (
+                      <div className="divide-y divide-emerald-100">
+                        {currentSpotifyGroupDetail.tracks.map((track) => (
+                          <div
+                            key={track.id}
+                            className="flex items-center gap-3 px-3 py-2"
+                          >
+                            {track.thumbnails?.[0] && (
+                              <img
+                                src={track.thumbnails[0]}
+                                alt=""
+                                className="w-8 h-8 rounded object-cover"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-emerald-800 truncate">
+                                {track.name}
+                              </p>
+                              <p className="text-[11px] text-emerald-600">
+                                인기도 {track.popularity ?? "-"}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-3 py-4 text-center text-xs text-emerald-600">
+                        로딩 중...
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-xs text-zinc-400">
@@ -848,11 +951,87 @@ export function SongEditDialog() {
                   </div>
                 )}
               </div>
+
+              {/* 미연결 스포티파이 트랙 (그룹에 속하지 않은 트랙) */}
+              <div>
+                <h5 className="text-xs font-semibold text-zinc-700 mb-2">
+                  미연결 Spotify 트랙 ({unlinkedSpotifyTracks.length})
+                </h5>
+                <p className="text-[11px] text-zinc-500 mb-2">
+                  그룹에 속하지 않은 트랙입니다. 선택하면 현재 그룹에 추가되거나 새 그룹이 생성됩니다.
+                </p>
+                {unlinkedSpotifyTracks.length === 0 ? (
+                  <p className="text-xs text-zinc-400">
+                    미연결 트랙이 없습니다.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {unlinkedSpotifyTracks.map((track) => (
+                      <div
+                        key={track.id}
+                        className="flex items-center gap-3 p-2 rounded-lg border border-zinc-200 hover:border-emerald-200"
+                      >
+                        {track.thumbnails?.[0] && (
+                          <img
+                            src={track.thumbnails[0]}
+                            alt=""
+                            className="w-10 h-10 rounded object-cover"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-zinc-900 truncate">
+                            {track.name}
+                          </p>
+                          <p className="text-xs text-zinc-500">
+                            인기도 {track.popularity ?? "-"}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleAddSpotifyTrack(track.id)}
+                          disabled={isLinking}
+                          className="text-xs text-emerald-600 hover:text-emerald-700 disabled:text-zinc-400 cursor-pointer"
+                        >
+                          {currentSpotifyGroupId ? "그룹에 추가" : "그룹 생성"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {activeTab === "youtube" && (
             <div className="space-y-4">
+              {/* 유튜브 비디오 추가 */}
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+                <h5 className="text-xs font-semibold text-zinc-700 mb-2">
+                  유튜브 비디오 추가
+                </h5>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newVideoId}
+                    onChange={(e) => setNewVideoId(e.target.value)}
+                    placeholder="비디오 ID (예: dQw4w9WgXcQ)"
+                    className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-red-300"
+                    disabled={isAddingVideo}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddYoutubeVideo}
+                    disabled={isAddingVideo || !newVideoId.trim()}
+                    className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-zinc-300 cursor-pointer"
+                  >
+                    {isAddingVideo ? "추가 중..." : "추가"}
+                  </button>
+                </div>
+                <p className="mt-2 text-[11px] text-zinc-500">
+                  YouTube URL에서 비디오 ID를 추출하여 입력하세요. (예: youtube.com/watch?v=<strong>dQw4w9WgXcQ</strong>)
+                </p>
+              </div>
+
               {/* 연결된 유튜브 */}
               <div>
                 <h5 className="text-xs font-semibold text-zinc-700 mb-2">

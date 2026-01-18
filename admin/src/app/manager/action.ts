@@ -812,6 +812,64 @@ export type UpdateArtistSpotifyIdInput = {
   spotifyId?: string | null;
 };
 
+async function getSpotifyAccessToken(): Promise<string> {
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    throw new Error(
+      "SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET must be set",
+    );
+  }
+
+  const response = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+    },
+    body: "grant_type=client_credentials",
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to get Spotify access token: ${response.statusText}`,
+    );
+  }
+
+  const data: any = await response.json();
+  return data.access_token;
+}
+
+async function fetchSpotifyArtistById(spotifyId: string) {
+  const accessToken = await getSpotifyAccessToken();
+
+  const response = await fetch(
+    `https://api.spotify.com/v1/artists/${spotifyId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to get Spotify artist with ID "${spotifyId}": ${response.statusText}`,
+    );
+  }
+
+  return (await response.json()) as {
+    id: string;
+    name: string;
+    followers: { total: number };
+    images: Array<{ url: string; height: number; width: number }>;
+    genres: string[];
+    popularity: number;
+    external_urls: { spotify: string };
+  };
+}
+
 export async function updateArtistSpotifyId({
   artistId,
   spotifyId,
@@ -820,12 +878,168 @@ export async function updateArtistSpotifyId({
     throw new Error("유효한 아티스트 ID가 필요합니다.");
   }
   const value = spotifyId?.trim() ? spotifyId.trim() : null;
+
+  // spotifyId가 있으면 SpotifyArtist 테이블에 먼저 upsert
+  if (value) {
+    const existingSpotifyArtist = await prisma.spotifyArtist.findUnique({
+      where: { spotifyId: value },
+      select: { id: true },
+    });
+
+    if (!existingSpotifyArtist) {
+      // Spotify API에서 아티스트 정보 가져와서 생성
+      const spotifyData = await fetchSpotifyArtistById(value);
+
+      await prisma.spotifyArtist.create({
+        data: {
+          spotifyId: spotifyData.id,
+          spotifyUrl: spotifyData.external_urls.spotify,
+          name: spotifyData.name,
+          popularity: spotifyData.popularity,
+          followers: spotifyData.followers.total,
+          genres: spotifyData.genres,
+          thumbnails: spotifyData.images.map((img) => img.url),
+        },
+      });
+    }
+  }
+
   const artist = await prisma.artist.update({
     where: { id: artistId },
     data: { spotifyId: value },
     select: { id: true, spotifyId: true },
   });
   return artist;
+}
+
+export type AddYoutubeChannelInput = {
+  artistId: number;
+  channelId: string;
+  type: "MAIN" | "TOPIC";
+};
+
+export async function addYoutubeChannel({
+  artistId,
+  channelId,
+  type,
+}: AddYoutubeChannelInput) {
+  if (!artistId || Number.isNaN(artistId)) {
+    throw new Error("유효한 아티스트 ID가 필요합니다.");
+  }
+  const trimmedChannelId = channelId?.trim();
+  if (!trimmedChannelId) {
+    throw new Error("유효한 채널 ID가 필요합니다.");
+  }
+
+  // 이미 해당 타입의 채널이 연결되어 있는지 확인
+  const existing = await prisma.youtubeChannel.findUnique({
+    where: {
+      artistId_type: {
+        artistId,
+        type,
+      },
+    },
+    select: { id: true, channelId: true },
+  });
+
+  if (existing) {
+    throw new Error(
+      `이미 ${type} 타입의 채널이 연결되어 있습니다: ${existing.channelId}`,
+    );
+  }
+
+  // YouTube Data API로 채널 정보 가져오기
+  const channelInfo = await fetchYoutubeChannelInfo(trimmedChannelId);
+
+  const channel = await prisma.youtubeChannel.create({
+    data: {
+      artistId,
+      channelId: trimmedChannelId,
+      type,
+      title: channelInfo?.title,
+      description: channelInfo?.description,
+      customUrl: channelInfo?.customUrl,
+      publishedAt: channelInfo?.publishedAt,
+      thumbnailDefault: channelInfo?.thumbnailDefault,
+      thumbnailMedium: channelInfo?.thumbnailMedium,
+      thumbnailHigh: channelInfo?.thumbnailHigh,
+      subscriberCount: channelInfo?.subscriberCount,
+      videoCount: channelInfo?.videoCount,
+      viewCount: channelInfo?.viewCount,
+      hiddenSubscriberCount: channelInfo?.hiddenSubscriberCount,
+      uploadsPlaylistId: channelInfo?.uploadsPlaylistId,
+      fetchedAt: new Date(),
+    },
+    select: {
+      id: true,
+      channelId: true,
+      type: true,
+      title: true,
+    },
+  });
+
+  return channel;
+}
+
+async function fetchYoutubeChannelInfo(channelId: string) {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) {
+    console.warn("YOUTUBE_API_KEY가 설정되지 않아 채널 정보를 가져올 수 없습니다.");
+    return null;
+  }
+
+  const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${channelId}&key=${apiKey}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.warn(`YouTube API 호출 실패: ${response.statusText}`);
+    return null;
+  }
+
+  const data: any = await response.json();
+  const item = data.items?.[0];
+  if (!item) {
+    console.warn(`채널을 찾을 수 없습니다: ${channelId}`);
+    return null;
+  }
+
+  const snippet = item.snippet;
+  const statistics = item.statistics;
+  const contentDetails = item.contentDetails;
+
+  return {
+    title: snippet?.title ?? null,
+    description: snippet?.description ?? null,
+    customUrl: snippet?.customUrl ?? null,
+    publishedAt: snippet?.publishedAt ? new Date(snippet.publishedAt) : null,
+    thumbnailDefault: snippet?.thumbnails?.default?.url ?? null,
+    thumbnailMedium: snippet?.thumbnails?.medium?.url ?? null,
+    thumbnailHigh: snippet?.thumbnails?.high?.url ?? null,
+    subscriberCount: statistics?.subscriberCount
+      ? Number.parseInt(statistics.subscriberCount, 10)
+      : null,
+    videoCount: statistics?.videoCount
+      ? Number.parseInt(statistics.videoCount, 10)
+      : null,
+    viewCount: statistics?.viewCount
+      ? BigInt(statistics.viewCount)
+      : null,
+    hiddenSubscriberCount: statistics?.hiddenSubscriberCount ?? null,
+    uploadsPlaylistId: contentDetails?.relatedPlaylists?.uploads ?? null,
+  };
+}
+
+export async function removeYoutubeChannel(channelId: number) {
+  if (!channelId || Number.isNaN(channelId)) {
+    throw new Error("유효한 채널 ID가 필요합니다.");
+  }
+
+  const deleted = await prisma.youtubeChannel.delete({
+    where: { id: channelId },
+    select: { id: true },
+  });
+
+  return deleted;
 }
 
 export async function deleteArtist(artistId: number) {
@@ -1177,11 +1391,16 @@ export async function fetchManagerArtistYoutubePanel(
     return dateB.localeCompare(dateA);
   });
 
-  // orphan 비디오들 (매핑이 없는 비디오)
+  // orphan 비디오들 (매핑이 없는 비디오) - 조회수 많은 순 정렬
   const orphanVideos = videoIds
     .filter((videoId) => !linkedVideoIds.has(videoId))
     .map((videoId) => videoMap.get(videoId)!)
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort((a, b) => {
+      const viewA = Number(a.viewCount ?? 0);
+      const viewB = Number(b.viewCount ?? 0);
+      return viewB - viewA;
+    });
 
   const groups = groupsRaw.map((g, idx) => ({
     groupIndex: idx + 1,
@@ -2130,6 +2349,129 @@ export async function linkYoutubeVideo(songId: number, videoId: string) {
   return { success: true };
 }
 
+// YouTube Data API로 비디오 정보 가져오기
+async function fetchYoutubeVideoInfo(videoId: string) {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) {
+    throw new Error("YOUTUBE_API_KEY가 설정되지 않았습니다.");
+  }
+
+  const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoId}&key=${apiKey}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`YouTube API 호출 실패: ${response.statusText}`);
+  }
+
+  const data: any = await response.json();
+  const item = data.items?.[0];
+  if (!item) {
+    throw new Error(`비디오를 찾을 수 없습니다: ${videoId}`);
+  }
+
+  const snippet = item.snippet;
+  const statistics = item.statistics;
+  const contentDetails = item.contentDetails;
+
+  // ISO 8601 duration을 초로 변환 (PT1H2M3S -> 3723)
+  const durationStr = contentDetails?.duration ?? "";
+  let durationSeconds: number | null = null;
+  const match = durationStr.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (match) {
+    const hours = Number.parseInt(match[1] ?? "0", 10);
+    const minutes = Number.parseInt(match[2] ?? "0", 10);
+    const seconds = Number.parseInt(match[3] ?? "0", 10);
+    durationSeconds = hours * 3600 + minutes * 60 + seconds;
+  }
+
+  return {
+    videoId,
+    ownerChannelId: snippet?.channelId ?? null,
+    title: snippet?.title ?? null,
+    description: snippet?.description ?? null,
+    publishedAt: snippet?.publishedAt ? new Date(snippet.publishedAt) : null,
+    thumbnailDefault: snippet?.thumbnails?.default?.url ?? null,
+    thumbnailMedium: snippet?.thumbnails?.medium?.url ?? null,
+    thumbnailHigh: snippet?.thumbnails?.high?.url ?? null,
+    thumbnailStandard: snippet?.thumbnails?.standard?.url ?? null,
+    thumbnailMaxres: snippet?.thumbnails?.maxres?.url ?? null,
+    viewCount: statistics?.viewCount ? BigInt(statistics.viewCount) : null,
+    likeCount: statistics?.likeCount
+      ? Number.parseInt(statistics.likeCount, 10)
+      : null,
+    commentCount: statistics?.commentCount
+      ? Number.parseInt(statistics.commentCount, 10)
+      : null,
+    durationSeconds,
+    definition: contentDetails?.definition ?? null,
+    caption: contentDetails?.caption === "true",
+    fetchedAt: new Date(),
+  };
+}
+
+// 유튜브 비디오 생성 후 곡에 연결
+export async function createAndLinkYoutubeVideo(
+  songId: number,
+  videoId: string,
+): Promise<LinkedYoutubeVideo> {
+  if (!songId || Number.isNaN(songId)) {
+    throw new Error("유효한 곡 ID가 필요합니다.");
+  }
+
+  const trimmedVideoId = videoId?.trim();
+  if (!trimmedVideoId) {
+    throw new Error("유효한 비디오 ID가 필요합니다.");
+  }
+
+  // 이미 존재하는 비디오인지 확인
+  const existingVideo = await prisma.youtubeVideo.findUnique({
+    where: { videoId: trimmedVideoId },
+  });
+
+  if (existingVideo) {
+    // 이미 연결되어 있는지 확인
+    const existingLink = await prisma.songYoutubeVideo.findFirst({
+      where: { songId, youtubeVideoId: trimmedVideoId },
+    });
+
+    if (existingLink) {
+      throw new Error("이미 연결된 비디오입니다.");
+    }
+
+    // 연결만 생성
+    await prisma.songYoutubeVideo.create({
+      data: { songId, youtubeVideoId: trimmedVideoId },
+    });
+
+    return {
+      videoId: existingVideo.videoId,
+      title: existingVideo.title,
+      thumbnailMedium: existingVideo.thumbnailMedium,
+      viewCount: existingVideo.viewCount?.toString() ?? null,
+    };
+  }
+
+  // YouTube API에서 비디오 정보 가져오기
+  const videoInfo = await fetchYoutubeVideoInfo(trimmedVideoId);
+
+  // 비디오 생성
+  const newVideo = await prisma.youtubeVideo.create({
+    data: videoInfo,
+  });
+
+  // 곡에 연결
+  await prisma.songYoutubeVideo.create({
+    data: { songId, youtubeVideoId: trimmedVideoId },
+  });
+
+  return {
+    videoId: newVideo.videoId,
+    title: newVideo.title,
+    thumbnailMedium: newVideo.thumbnailMedium,
+    viewCount: newVideo.viewCount?.toString() ?? null,
+  };
+}
+
 // 유튜브 비디오 연결 해제
 export async function unlinkYoutubeVideo(songId: number, videoId: string) {
   if (!songId || Number.isNaN(songId)) {
@@ -2476,4 +2818,122 @@ export async function setSpotifyGroupPrimaryTrack(
   });
 
   return { success: true };
+}
+
+// 그룹에 속하지 않은 스포티파이 트랙 가져오기 (orphan tracks)
+export type UnlinkedSpotifyTrack = {
+  id: number;
+  name: string;
+  spotifyId: string;
+  popularity: number | null;
+  thumbnails: string[];
+};
+
+export async function fetchUnlinkedSpotifyTracks(
+  artistId: number,
+): Promise<UnlinkedSpotifyTrack[]> {
+  if (!artistId || Number.isNaN(artistId)) {
+    return [];
+  }
+
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    select: { spotifyId: true },
+  });
+
+  if (!artist?.spotifyId) {
+    return [];
+  }
+
+  // 아티스트의 모든 스포티파이 트랙 중 그룹에 속하지 않은 것들
+  const artistTracks = await prisma.spotifyArtistTrack.findMany({
+    where: { spotifyArtist: { spotifyId: artist.spotifyId } },
+    select: {
+      spotifyTrack: {
+        select: {
+          id: true,
+          name: true,
+          spotifyId: true,
+          popularity: true,
+          thumbnails: true,
+          groupId: true,
+        },
+      },
+    },
+  });
+
+  return artistTracks
+    .filter((record) => record.spotifyTrack && !record.spotifyTrack.groupId)
+    .map((record) => ({
+      id: record.spotifyTrack.id,
+      name: record.spotifyTrack.name,
+      spotifyId: record.spotifyTrack.spotifyId,
+      popularity: record.spotifyTrack.popularity,
+      thumbnails: record.spotifyTrack.thumbnails,
+    }))
+    .sort((a, b) => (b.popularity ?? -1) - (a.popularity ?? -1));
+}
+
+// 트랙을 곡의 스포티파이 그룹에 추가 (그룹이 없으면 새로 생성)
+export async function addSpotifyTrackToSong(
+  songId: number,
+  trackId: number,
+): Promise<{ groupId: number }> {
+  if (!songId || Number.isNaN(songId)) {
+    throw new Error("유효한 곡 ID가 필요합니다.");
+  }
+  if (!trackId || Number.isNaN(trackId)) {
+    throw new Error("유효한 트랙 ID가 필요합니다.");
+  }
+
+  // 곡 정보 가져오기
+  const song = await prisma.song.findUnique({
+    where: { id: songId },
+    select: { spotifyTrackGroupId: true },
+  });
+
+  if (!song) {
+    throw new Error("곡을 찾을 수 없습니다.");
+  }
+
+  // 트랙이 이미 다른 그룹에 속해있는지 확인
+  const track = await prisma.spotifyTrack.findUnique({
+    where: { id: trackId },
+    select: { groupId: true },
+  });
+
+  if (track?.groupId) {
+    throw new Error("이 트랙은 이미 다른 그룹에 속해 있습니다.");
+  }
+
+  let groupId: number;
+
+  if (song.spotifyTrackGroupId) {
+    // 기존 그룹에 트랙 추가
+    groupId = song.spotifyTrackGroupId;
+    await prisma.spotifyTrack.update({
+      where: { id: trackId },
+      data: { groupId },
+    });
+  } else {
+    // 새 그룹 생성하고 트랙 추가 후 곡에 연결
+    const newGroup = await prisma.spotifyTrackGroup.create({
+      data: {
+        primarySpotifyTrackId: trackId,
+      },
+    });
+    groupId = newGroup.id;
+
+    await prisma.spotifyTrack.update({
+      where: { id: trackId },
+      data: { groupId },
+    });
+
+    await prisma.song.update({
+      where: { id: songId },
+      data: { spotifyTrackGroupId: groupId },
+    });
+  }
+
+  return { groupId };
 }
