@@ -4,6 +4,7 @@ import { autoFillArtistNames } from "@/lib/admin/auto-fill-artist-names";
 import { autoFillSongTitles } from "@/lib/admin/auto-fill-song-titles";
 import { mapProposeSong } from "@/lib/admin/map-propose-song";
 import { mapSongYoutubeVideo } from "@/lib/admin/map-song-youtube-video";
+import { mapSongYoutubeVideoFromSearch } from "@/lib/admin/map-song-youtube-video-from-search";
 import { mapSongSpotifyTracks } from "@/lib/admin/map-song-spotify-tracks";
 import { updateSongThumbnails } from "@/lib/admin/update-song-thumbnails";
 
@@ -37,6 +38,14 @@ export async function runMapSongYoutubeVideoForArtist(
 ): Promise<void> {
   const dryRun = Boolean(options.dryRun);
   await mapSongYoutubeVideo(artistId, { dryRun });
+}
+
+export async function runMapSongYoutubeVideoFromSearchForArtist(
+  artistId: number,
+  options: { dryRun?: boolean } = {},
+): Promise<void> {
+  const dryRun = Boolean(options.dryRun);
+  await mapSongYoutubeVideoFromSearch(artistId, { dryRun });
 }
 
 export async function runUpdateSongThumbnailsForArtist(

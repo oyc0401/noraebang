@@ -37,6 +37,7 @@ export interface YoutubeVideoSearchOptions {
   regionCode?: string;
   relevanceLanguage?: string;
   filterToMusicCategory?: boolean;
+  channelId?: string;
 }
 
 export async function searchYoutubeChannels(
@@ -80,11 +81,15 @@ export async function searchYoutubeVideos(
     regionCode,
     relevanceLanguage,
     filterToMusicCategory = true,
+    channelId,
   } = options;
 
   const clampedResults = Math.min(Math.max(maxResults, 1), 50);
 
-  const cacheKey = buildSearchCacheKey(query, clampedResults);
+  const cacheKey = buildSearchCacheKey(
+    channelId ? `${query.trim()}::channel:${channelId}` : query,
+    clampedResults,
+  );
 
   const cached = await getCachedYoutubeSearch(cacheKey);
   if (cached) {
@@ -113,6 +118,9 @@ export async function searchYoutubeVideos(
 
     if (relevanceLanguage) {
       url.searchParams.set("relevanceLanguage", relevanceLanguage);
+    }
+    if (channelId) {
+      url.searchParams.set("channelId", channelId);
     }
 
     const response = await fetch(url, { cache: "no-store" });
