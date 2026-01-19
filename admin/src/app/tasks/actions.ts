@@ -4,7 +4,7 @@ import { autoFillArtistNames } from "@/lib/admin/auto-fill-artist-names";
 import { autoFillSongTitles } from "@/lib/admin/auto-fill-song-titles";
 import { mapProposeSong } from "@/lib/admin/map-propose-song";
 import { mapSongYoutubeVideo } from "@/lib/admin/map-song-youtube-video";
-import { mapSongSpotifyGroups } from "@/lib/admin/map-song-spotify-groups";
+import { mapSongSpotifyTracks } from "@/lib/admin/map-song-spotify-tracks";
 import { updateSongThumbnails } from "@/lib/admin/update-song-thumbnails";
 
 export async function runAutoFillSongTitlesForArtist(
@@ -52,5 +52,5 @@ export async function runMapSongSpotifyGroupsForArtist(
   options: { dryRun?: boolean } = {},
 ): Promise<void> {
   const dryRun = Boolean(options.dryRun);
-  await mapSongSpotifyGroups(artistId, { dryRun });
+  await mapSongSpotifyTracks(artistId, { dryRun });
 }

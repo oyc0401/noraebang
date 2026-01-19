@@ -1,11 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import {
-  fetchManagerArtistSpotifyPanel,
-  unlinkSpotifyTrack,
-} from "../action";
+import { fetchManagerArtistSpotifyPanel } from "../action";
 import type {
   ManagerSpotifyGroupSummary,
   ManagerSpotifyPanelData,
@@ -112,16 +109,6 @@ export function SpotifySection() {
     setExpandedGroups(next);
   };
 
-  const refetch = useCallback(async () => {
-    if (!selectedArtistId) return;
-    try {
-      const response = await fetchManagerArtistSpotifyPanel(selectedArtistId);
-      setData(response);
-    } catch (error) {
-      console.error(error);
-    }
-  }, [selectedArtistId]);
-
   const renderBody = () => {
     if (!selectedArtistId) {
       return (
@@ -181,7 +168,6 @@ export function SpotifySection() {
                 }
                 isSelected={selectedSongId === group.songId}
                 onSelect={() => setSelectedSongId(group.songId)}
-                onRefetch={refetch}
               />
             ))}
           </div>
@@ -267,7 +253,6 @@ type SpotifyGroupCardProps = {
   onToggle: () => void;
   isSelected: boolean;
   onSelect?: () => void;
-  onRefetch: () => void;
 };
 
 function SpotifyGroupCard({
@@ -276,7 +261,6 @@ function SpotifyGroupCard({
   onToggle,
   isSelected,
   onSelect,
-  onRefetch,
 }: SpotifyGroupCardProps) {
   const tracksToRender =
     isExpanded || !group.primaryTrack ? group.tracks : [group.primaryTrack];
@@ -335,7 +319,6 @@ function SpotifyGroupCard({
             isSelected={isSelected}
             variant="group"
             isPrimary={track.id === group.primaryTrack.id && index === 0}
-            onUnlink={onRefetch}
           />
         ))}
       </div>
@@ -351,7 +334,6 @@ type SpotifyTrackCardProps = {
   isSelected?: boolean;
   variant?: "group" | "standalone";
   isPrimary?: boolean;
-  onUnlink?: () => void;
 };
 
 function SpotifyTrackCard({
@@ -362,32 +344,14 @@ function SpotifyTrackCard({
   isSelected = false,
   variant = "standalone",
   isPrimary = false,
-  onUnlink,
 }: SpotifyTrackCardProps) {
   const openSongCreateDialog = useManagerStore(
     (state) => state.openSongCreateDialog,
   );
-  const [isUnlinking, setIsUnlinking] = useState(false);
 
   const handleCreateSong = (e: React.MouseEvent) => {
     e.stopPropagation();
     openSongCreateDialog(track.name, track.id);
-  };
-
-  const handleUnlink = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm("이 트랙의 Song 연결을 해제하시겠습니까?")) return;
-
-    setIsUnlinking(true);
-    try {
-      await unlinkSpotifyTrack(track.id);
-      onUnlink?.();
-    } catch (error) {
-      console.error(error);
-      alert("연결 해제에 실패했습니다.");
-    } finally {
-      setIsUnlinking(false);
-    }
   };
   const durationLabel = formatDuration(track.durationMs);
   const releaseLabel = track.releaseDate ?? "-";
@@ -468,21 +432,11 @@ function SpotifyTrackCard({
               </p>
             </div>
             {isGroupVariant ? (
-              <div className="flex items-center gap-1 text-[10px] text-emerald-600">
-                {isPrimary ? (
-                  <span className="inline-flex items-center rounded-full border border-emerald-200 px-2 py-0.5">
-                    Primary
-                  </span>
-                ) : null}
-                <button
-                  type="button"
-                  className="inline-flex items-center rounded-full border border-red-200 bg-white px-2 py-0.5 text-red-600 transition hover:bg-red-50 disabled:opacity-50 cursor-pointer"
-                  onClick={handleUnlink}
-                  disabled={isUnlinking}
-                >
-                  {isUnlinking ? "처리중..." : "연결 해제"}
-                </button>
-              </div>
+              isPrimary && (
+                <span className="inline-flex items-center rounded-full border border-emerald-200 px-2 py-0.5 text-[10px] text-emerald-600">
+                  Primary
+                </span>
+              )
             ) : (
               <div className="flex flex-col items-end gap-1 text-[10px]">
                 <span className="inline-flex items-center rounded-full border border-zinc-200 px-2 py-0.5 text-zinc-600">
