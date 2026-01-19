@@ -128,6 +128,12 @@ export function findBestMatch(
     }
   }
 
+  // 2.5: prefix-safe with lowercase (경계 기반 확정, 대소문자 무시)
+  if (!fixedAnswer && alphaGuard) {
+    const idx = candidates.findIndex((c) => isPrefixSafe(qL, K17(c)));
+    if (idx >= 0) fixedAnswer = candidates[idx];
+  }
+
   // ---------------------------------
   // Layer 3.x: 점수 계산 + 후보 생성
   // - fixedAnswer가 있어도 후보 생성은 수행(단, answer는 덮어쓰지 않음)
@@ -276,12 +282,24 @@ const PREFIX_SAFE_BOUNDARIES = new Set<string>([
 ]);
 
 function isPrefixSafe(qWU: string, cWU: string): boolean {
-  if (!qWU) return false;
-  if (!cWU.startsWith(qWU)) return false;
+  if (!qWU || !cWU) return false;
   if (cWU.length === qWU.length) return false; // 완전 일치는 1.0에서 처리
 
-  const next = cWU[qWU.length] ?? "";
-  return PREFIX_SAFE_BOUNDARIES.has(next);
+  // Case 1: candidate가 query로 시작 (기존)
+  // 예: query="Wild Side", candidate="Wild Side -Anime Ver.-"
+  if (cWU.startsWith(qWU)) {
+    const next = cWU[qWU.length] ?? "";
+    return PREFIX_SAFE_BOUNDARIES.has(next);
+  }
+
+  // Case 2: query가 candidate로 시작 (추가)
+  // 예: query="Wild Side -Anime Ver.-", candidate="Wild Side"
+  if (qWU.startsWith(cWU)) {
+    const next = qWU[cWU.length] ?? "";
+    return PREFIX_SAFE_BOUNDARIES.has(next);
+  }
+
+  return false;
 }
 
 // -----------------------------
