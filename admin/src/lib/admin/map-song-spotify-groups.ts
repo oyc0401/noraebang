@@ -176,23 +176,33 @@ async function applyMappings(
   let groupsCreated = 0;
   let errors = 0;
 
+  // 같은 Song에 매칭된 여러 트랙을 처리할 때 그룹을 재사용하기 위한 캐시
+  // (existingGroupId가 null인 Song에 대해 새로 생성한 그룹 ID를 저장)
+  const songIdToNewGroupId = new Map<number, number>();
+
   for (const mapping of mappings) {
     try {
       let groupId = mapping.existingGroupId;
 
       // Song에 그룹이 없으면 그룹 생성 및 Song 연결
       if (!groupId) {
-        if (options.dryRun) {
+        // 이미 같은 Song에 대해 그룹을 생성했는지 확인
+        const cachedGroupId = songIdToNewGroupId.get(mapping.songId);
+        if (cachedGroupId) {
+          groupId = cachedGroupId;
+        } else if (options.dryRun) {
           console.log(
             `[DRY-RUN] 그룹 생성 + Song ${mapping.songId} 연결 예정`,
           );
-          groupId = -1; // dry run용 임시 ID
+          groupId = -mapping.songId; // dry run용 임시 ID (songId 기반으로 일관성 유지)
+          songIdToNewGroupId.set(mapping.songId, groupId);
           groupsCreated += 1;
         } else {
           const newGroup = await prisma.spotifyTrackGroup.create({
             data: {},
           });
           groupId = newGroup.id;
+          songIdToNewGroupId.set(mapping.songId, groupId);
 
           await prisma.song.update({
             where: { id: mapping.songId },
