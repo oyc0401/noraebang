@@ -173,6 +173,50 @@ export default function SpotifySongIssuesPage() {
     all: stats.total,
   };
 
+  const handleCopyYoutubeMissingJson = useCallback(async () => {
+    const targetSongs = filteredSongs.filter((song) => !song.hasYoutube);
+    if (targetSongs.length === 0) {
+      alert("유튜브 채널이 없는 곡이 없습니다.");
+      return;
+    }
+
+    const artistMap = new Map<
+      number,
+      {
+        artistId: number;
+        artistname: string;
+        songs: Array<{ songId: number; title: string }>;
+      }
+    >();
+
+    targetSongs.forEach((song) => {
+      song.artists.forEach((artist) => {
+        if (!artistMap.has(artist.id)) {
+          artistMap.set(artist.id, {
+            artistId: artist.id,
+            artistname: artist.name,
+            songs: [],
+          });
+        }
+        artistMap.get(artist.id)!.songs.push({
+          songId: song.id,
+          title: song.title,
+        });
+      });
+    });
+
+    const payload = Array.from(artistMap.values())
+      .map((artist) => ({
+        ...artist,
+        songs: artist.songs.sort((a, b) => a.songId - b.songId),
+      }))
+      .sort((a, b) => a.artistId - b.artistId);
+
+    const jsonString = JSON.stringify(payload, null, 2);
+    await navigator.clipboard.writeText(jsonString);
+    alert(`유튜브 채널 없는 곡 ${targetSongs.length}개 목록을 복사했습니다.`);
+  }, [filteredSongs]);
+
   return (
     <div className="min-h-screen bg-zinc-50 py-8">
       <div className="mx-auto max-w-6xl px-4">
@@ -292,6 +336,15 @@ export default function SpotifySongIssuesPage() {
                     className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-300 md:min-w-[260px]"
                     placeholder="곡 제목, 아티스트, TJ ID 검색"
                   />
+                  {filter === "youtube" && (
+                    <button
+                      type="button"
+                      onClick={handleCopyYoutubeMissingJson}
+                      className="cursor-pointer shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-100"
+                    >
+                      JSON 추출
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={loadSongs}

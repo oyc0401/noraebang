@@ -26,7 +26,8 @@ const SYSTEM_PROMPT = `Return ONLY valid JSON array. No markdown. No extra text.
 
 const DEVELOPER_PROMPT = `Output schema: Array<{artistId: number, artistName: string, song: Array<{songId:number, songTitle:string, videoId:string, videoName:string}>}>. Do not add unknown fields.
 
-Map only when you can match confidently. Otherwise omit the item.`;
+Map only when you can match confidently. Otherwise omit the item.
+Matches MUST consider official English aliases / promoted translations, not just literal strings. If the video title is an official alias for the song title (e.g., Aimyon's "ひかりもの" marketed as "Raw Like Sushi"), treat it as the same song even if there is zero textual overlap.`;
 
 interface ArtistInput {
   artistId: number;
@@ -65,10 +66,11 @@ function buildUserPrompt(artists: ArtistInput[]): string {
 4. 메들리/라이브/컴필레이션 영상은 절대 매핑하지 마라.
 5. 비슷하게 생겼지만 다른 곡 매칭 금지: "メトロシティ" ≠ "メロドラマ" 같이 발음/글자가 비슷해도 다른 곡이면 절대 매칭하지 마라.
 
-✅ 번역/음역 매칭은 적극 허용:
+✅ 번역/음역/공식 영어명 매칭은 적극 허용:
 - "フィクション" = "Fiction" (같은 단어의 일본어/영어)
 - "夜に駆ける" = "Racing into the Night" (같은 곡의 번역)
 - "アイドル" = "Idol" (카타카나 → 로마자)
+- "ひかりもの" = "Raw Like Sushi" (아이묭이 공식으로 쓰는 영어 타이틀)
 이런 건 같은 곡이니 매핑해라.`;
 }
 

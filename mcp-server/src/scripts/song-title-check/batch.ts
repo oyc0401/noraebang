@@ -11,7 +11,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const OUTPUT_FILE = path.join(__dirname, "../../../output/song-title-check/pending-fixes.json");
+const OUTPUT_FILE = path.join(
+  __dirname,
+  "../../../output/song-title-check/pending-fixes.json",
+);
 const BATCH_THRESHOLD = 100;
 
 const SYSTEM_PROMPT = `You are a Japanese/Korean song title validator with web search capability.
@@ -25,7 +28,8 @@ Each field you include means "change this field to this value".
 title is immutable - never include it in output.
 
 IMPORTANT: Use web search to find official English titles on YouTube/Spotify.
-titleLatin is NOT romanization/pronunciation. It's the official English title used on streaming platforms.`;
+Check YouTube Music, Spotify, Apple Music, label press releases, or official artist sites. If any of these sources use a marketed English alias, you must output that exact alias (case/punctuation sensitive) even if it is very different from the Japanese title. Example: Aimyon's 「ひかりもの」 is branded as "Raw Like Sushi".
+titleLatin is NOT just romanization/pronunciation. It's the official English title used on streaming platforms or documented in official press. Only fall back to romanization/null when no official alias exists anywhere.`;
 
 interface SongInput {
   songId: number;
@@ -73,6 +77,7 @@ titleLatin은 로마자 발음이 아니라 아티스트가 공식 발표한 영
 - "Zanki" ❌ (로마자 발음) → "Time Left" ✓ (공식 영어 제목)
 - "Nani ga Warui" ❌ (로마자 발음) → "What is wrong with" ✓ (공식 영어 제목)
 - "Last Teen" ❌ (단순번역) → "Last Teenage Days" ✓ (공식 영어 제목)
+- "Hikarimono" ❌ (로마자 발음) → "Raw Like Sushi" ✓ (아이묭 「ひかりもの」의 공식 영어 제목)
 
 ⚠️ title이 이미 영어/라틴인 경우 (예: "UFO", "LOVE") → titleLatin에도 그대로 유지해야 함. null로 바꾸면 안 됨!
 
@@ -118,20 +123,26 @@ async function callGPT(artist: ArtistInput): Promise<SongFix[]> {
     });
 
     // Responses API에서 텍스트 추출
-    const outputMessage = response.output.find((item) => item.type === "message");
+    const outputMessage = response.output.find(
+      (item) => item.type === "message",
+    );
     if (!outputMessage || outputMessage.type !== "message") {
       console.error("GPT 응답 없음");
       return [];
     }
 
-    const textContent = outputMessage.content.find((c) => c.type === "output_text");
+    const textContent = outputMessage.content.find(
+      (c) => c.type === "output_text",
+    );
     if (!textContent || textContent.type !== "output_text") {
       console.error("GPT 텍스트 응답 없음");
       return [];
     }
 
     const content = textContent.text;
-    console.log(`  → GPT 응답: ${content.slice(0, 200)}${content.length > 200 ? "..." : ""}`);
+    console.log(
+      `  → GPT 응답: ${content.slice(0, 200)}${content.length > 200 ? "..." : ""}`,
+    );
 
     const parsed = JSON.parse(content);
     return Array.isArray(parsed) ? parsed : [];
@@ -164,7 +175,9 @@ async function loadPendingFixes(): Promise<PendingFixes> {
 
 async function savePendingFixes(data: PendingFixes): Promise<void> {
   const dir = path.dirname(OUTPUT_FILE);
-  await import("node:fs/promises").then((fs) => fs.mkdir(dir, { recursive: true }));
+  await import("node:fs/promises").then((fs) =>
+    fs.mkdir(dir, { recursive: true }),
+  );
   await writeFile(OUTPUT_FILE, JSON.stringify(data, null, 2), "utf-8");
 }
 
@@ -203,7 +216,7 @@ async function getArtistSongs(artistId: number): Promise<ArtistInput | null> {
 
 async function processArtist(
   artistId: number,
-  pendingFixes: PendingFixes
+  pendingFixes: PendingFixes,
 ): Promise<boolean> {
   console.log(`\nArtist ${artistId} 확인 중...`);
 
@@ -220,7 +233,9 @@ async function processArtist(
       return false;
     }
 
-    console.log(`  → ${artistInput.artistName}: ${artistInput.songs.length}개 곡`);
+    console.log(
+      `  → ${artistInput.artistName}: ${artistInput.songs.length}개 곡`,
+    );
 
     // 곡이 너무 많으면 나눠서 처리
     const chunks: SongInput[][] = [];
@@ -257,7 +272,7 @@ async function processArtist(
 
     // 기존 결과에서 같은 artistId가 있으면 교체
     const existingIndex = pendingFixes.results.findIndex(
-      (r) => r.artistId === artistId
+      (r) => r.artistId === artistId,
     );
     const artistFix: ArtistFix = {
       artistId,
@@ -303,10 +318,12 @@ async function main() {
 
   const totalFixes = pendingFixes.results.reduce(
     (sum, r) => sum + r.fixes.length,
-    0
+    0,
   );
   console.log(`\n========== 검증 완료 ==========`);
-  console.log(`총 ${pendingFixes.results.length}개 아티스트, ${totalFixes}개 수정 대기 중`);
+  console.log(
+    `총 ${pendingFixes.results.length}개 아티스트, ${totalFixes}개 수정 대기 중`,
+  );
   console.log(`적용하려면: pnpm stc:apply`);
 }
 
