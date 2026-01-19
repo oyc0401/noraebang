@@ -69,7 +69,9 @@ export async function createSongFromUnmappedTracks(
   });
 
   if (!spotifyArtist) {
-    console.log(`  ⏭️ SpotifyArtist not found for spotifyId: ${artist.spotifyId}`);
+    console.log(
+      `  ⏭️ SpotifyArtist not found for spotifyId: ${artist.spotifyId}`,
+    );
     return;
   }
 
@@ -243,7 +245,7 @@ export async function createSongFromUnmappedTracks(
 
       if (dryRun) {
         console.log(
-          `[DRY-RUN] Song 생성: "${songTitle}" <- Track ${track.id}, Video ${video.videoId}`,
+          `[DRY-RUN] ✅ Song 생성: "${songTitle}" <- Track ${track.id}, Video ${video.videoId}`,
         );
         songsCreated++;
         continue;
@@ -256,7 +258,8 @@ export async function createSongFromUnmappedTracks(
           titleJa: containsJapanese(songTitle) ? songTitle : null,
           titleKo: containsKorean(songTitle) ? songTitle : null,
           catalog: artist.homeCatalog,
-          thumbnailDefault: thumbnails[2] ?? thumbnails[1] ?? thumbnails[0] ?? null,
+          thumbnailDefault:
+            thumbnails[2] ?? thumbnails[1] ?? thumbnails[0] ?? null,
           thumbnailMedium: thumbnails[1] ?? thumbnails[0] ?? null,
           thumbnailHigh: thumbnails[0] ?? null,
           artistSongs: {
@@ -305,7 +308,6 @@ export async function createSongFromUnmappedTracks(
         dryRun,
       );
       videosLinked += linkedVideos;
-
     } catch (error) {
       console.error(
         `❌ Track ${track.id} 처리 실패: ${
@@ -438,7 +440,9 @@ async function linkRelatedVideos(
     const matchedVideo = videoTitleToVideo.get(candidateTitle);
     if (matchedVideo) {
       if (dryRun) {
-        console.log(`  [DRY-RUN] 관련 비디오(후보) 연결: "${matchedVideo.title}"`);
+        console.log(
+          `  [DRY-RUN] 관련 비디오(후보) 연결: "${matchedVideo.title}"`,
+        );
       } else {
         try {
           await prisma.songYoutubeVideo.upsert({

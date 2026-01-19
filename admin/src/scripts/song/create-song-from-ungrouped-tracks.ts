@@ -21,7 +21,7 @@
  */
 
 import "dotenv/config";
-import { createSongFromUngroupedTracks } from "../../lib/admin/create-song-from-ungrouped-tracks";
+import { createSongFromUnmappedTracks } from "../../lib/admin/create-song-from-unmapped-tracks";
 
 async function main() {
   const args = process.argv.slice(2);
@@ -43,14 +43,16 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\n🚀 createSongFromUngroupedTracks: Artist ID ${startId} ~ ${endId}`);
+  console.log(
+    `\n🚀 createSongFromUngroupedTracks: Artist ID ${startId} ~ ${endId}`,
+  );
   if (dryRun) console.log("🔍 DRY-RUN MODE\n");
 
   let totalErrors = 0;
 
   for (let artistId = startId; artistId <= endId; artistId++) {
     try {
-      await createSongFromUngroupedTracks(artistId, { dryRun });
+      await createSongFromUnmappedTracks(artistId, { dryRun });
     } catch (error) {
       if (error instanceof Error && error.message.includes("not found")) {
         // Artist not found는 조용히 스킵

@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import { mapSongSpotifyGroups } from "../../../lib/admin/map-song-spotify-groups";
+import { mapSongSpotifyTracks } from "../../../lib/admin/map-song-spotify-tracks";
 import { prisma } from "../../../lib/prisma";
 
 function parseArgs() {
@@ -24,7 +24,7 @@ function parseArgs() {
 
 async function main() {
   const { start, end, isDryRun } = parseArgs();
-  await mapSongSpotifyGroups({
+  await mapSongSpotifyTracks({
     minArtistId: start,
     maxArtistId: end,
     dryRun: isDryRun,
