@@ -77,6 +77,7 @@ export async function searchUnlinkedSongYoutube(
       artistSongs: { some: { artistId } },
       youtubeVideoId: null,
       youtubeVideos: { none: {} },
+      tjSongId: { not: null },
     },
     select: {
       id: true,
