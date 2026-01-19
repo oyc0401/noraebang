@@ -10,7 +10,6 @@ import { CenterSection } from "./components/center-section";
 import { LeftPanel } from "./components/left-panel";
 import { RightSection } from "./components/right-section";
 import { ArtistCreateDialog } from "./components/dialog/artist-create-dialog";
-import { GroupDetailDialog } from "./components/dialog/group-detail-dialog";
 
 export default function ManagerPage() {
   return (
@@ -36,7 +35,6 @@ function ManagerPageInner() {
         </div>
       </div>
       <ArtistCreateDialog />
-      <GroupDetailDialog />
     </>
   );
 }

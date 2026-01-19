@@ -4,12 +4,9 @@ import { useEffect, useState } from "react";
 
 import {
   createSong,
-  fetchUnlinkedSpotifyGroups,
   fetchUnlinkedSpotifyTracks,
-  getSpotifyGroupDetail,
   fetchUnlinkedYoutubeVideos,
   fetchUnlinkedSongProposes,
-  linkSpotifyGroup,
   addSpotifyTrackToSong,
   linkYoutubeVideo,
   createAndLinkYoutubeVideo,
@@ -17,11 +14,9 @@ import {
   linkSongArtist,
   unlinkSongArtist,
   searchArtistsForLink,
-  type UnlinkedSpotifyGroup,
   type UnlinkedSpotifyTrack,
   type UnlinkedYoutubeVideo,
   type UnlinkedSongPropose,
-  type SpotifyGroupEditData,
   refreshSongThumbnail,
 } from "../../action";
 import type { ManagerArtistSongDetail } from "../../types";
@@ -36,8 +31,8 @@ export function SongCreateDialog() {
   const { artistId, artistInfo, addSong } = useSongDialogContext();
   const isOpen = useManagerStore((state) => state.songCreateDialogOpen);
   const initialTitle = useManagerStore((state) => state.songCreateInitialTitle);
-  const initialSpotifyGroupId = useManagerStore(
-    (state) => state.songCreateInitialSpotifyGroupId,
+  const initialSpotifyTrackId = useManagerStore(
+    (state) => state.songCreateInitialTrackId,
   );
   const closeSongCreateDialog = useManagerStore(
     (state) => state.closeSongCreateDialog,
@@ -57,9 +52,6 @@ export function SongCreateDialog() {
   const [catalog, setCatalog] = useState("");
 
   // 연결할 데이터 선택
-  const [selectedSpotifyGroupId, setSelectedSpotifyGroupId] = useState<
-    number | null
-  >(null);
   const [selectedYoutubeVideoIds, setSelectedYoutubeVideoIds] = useState<
     string[]
   >([]);
@@ -83,14 +75,9 @@ export function SongCreateDialog() {
   >(null);
 
   // 미연결 데이터
-  const [unlinkedSpotify, setUnlinkedSpotify] = useState<
-    UnlinkedSpotifyGroup[]
-  >([]);
   const [unlinkedSpotifyTracks, setUnlinkedSpotifyTracks] = useState<
     UnlinkedSpotifyTrack[]
   >([]);
-  const [selectedSpotifyGroupDetail, setSelectedSpotifyGroupDetail] =
-    useState<SpotifyGroupEditData | null>(null);
   const [selectedSpotifyTrackIds, setSelectedSpotifyTrackIds] = useState<
     number[]
   >([]);
@@ -141,19 +128,8 @@ export function SongCreateDialog() {
     }
   };
 
-  // 스포티파이 그룹 선택 시 제목 자동 채우기
-  const handleSelectSpotify = (groupId: number) => {
-    setSelectedSpotifyGroupId(groupId);
-    setSelectedSpotifyTrackIds([]); // 그룹 선택 시 트랙 선택 초기화
-    const group = unlinkedSpotify.find((g) => g.groupId === groupId);
-    if (group?.primaryTrack?.name) {
-      analyzeAndFillTitle(group.primaryTrack.name);
-    }
-  };
-
-  // 스포티파이 트랙 선택 (그룹 없이 트랙만 선택)
+  // 스포티파이 트랙 선택
   const handleSelectSpotifyTrack = (trackId: number) => {
-    if (selectedSpotifyGroupId) return; // 이미 그룹이 선택된 경우 무시
     const track = unlinkedSpotifyTracks.find((t) => t.id === trackId);
     if (track) {
       setSelectedSpotifyTrackIds((prev) => [...prev, trackId]);
@@ -184,9 +160,7 @@ export function SongCreateDialog() {
     setTitleJaKana("");
     setTitleJa("");
     setCatalog(artistCatalog ?? "");
-    setSelectedSpotifyGroupId(initialSpotifyGroupId ?? null);
-    setSelectedSpotifyGroupDetail(null);
-    setSelectedSpotifyTrackIds([]);
+    setSelectedSpotifyTrackIds(initialSpotifyTrackId ? [initialSpotifyTrackId] : []);
     setSelectedYoutubeVideoIds([]);
     setSelectedProposeIds([]);
     setThumbnailSource(null);
@@ -212,7 +186,7 @@ export function SongCreateDialog() {
   }, [
     open,
     initialTitle,
-    initialSpotifyGroupId,
+    initialSpotifyTrackId,
     artistId,
     artistName,
     artistNameKo,
@@ -226,13 +200,11 @@ export function SongCreateDialog() {
     const id = artistId;
     async function loadData() {
       try {
-        const [spotify, spotifyTracks, youtube, proposes] = await Promise.all([
-          fetchUnlinkedSpotifyGroups(id),
+        const [spotifyTracks, youtube, proposes] = await Promise.all([
           fetchUnlinkedSpotifyTracks(id),
           fetchUnlinkedYoutubeVideos(id),
           fetchUnlinkedSongProposes(id),
         ]);
-        setUnlinkedSpotify(spotify);
         setUnlinkedSpotifyTracks(spotifyTracks);
         setUnlinkedYoutube(youtube);
         setUnlinkedProposes(proposes);
@@ -243,26 +215,6 @@ export function SongCreateDialog() {
 
     loadData();
   }, [open, artistId]);
-
-  // 선택된 스포티파이 그룹 상세 정보 로드
-  useEffect(() => {
-    if (!open || !selectedSpotifyGroupId) {
-      setSelectedSpotifyGroupDetail(null);
-      return;
-    }
-
-    async function loadGroupDetail() {
-      try {
-        const detail = await getSpotifyGroupDetail(selectedSpotifyGroupId!);
-        setSelectedSpotifyGroupDetail(detail);
-      } catch (err) {
-        console.error("그룹 상세 정보 로드 실패:", err);
-        setSelectedSpotifyGroupDetail(null);
-      }
-    }
-
-    loadGroupDetail();
-  }, [open, selectedSpotifyGroupId]);
 
   // 아티스트 검색
   useEffect(() => {
@@ -344,21 +296,12 @@ export function SongCreateDialog() {
         }
       }
 
-      // 3. 스포티파이 그룹 연결 또는 트랙으로 새 그룹 생성
-      if (selectedSpotifyGroupId) {
+      // 3. 스포티파이 트랙 연결
+      for (const trackId of selectedSpotifyTrackIds) {
         try {
-          await linkSpotifyGroup(newSong.id, selectedSpotifyGroupId);
+          await addSpotifyTrackToSong(newSong.id, trackId);
         } catch (err) {
-          console.error("스포티파이 연결 실패:", err);
-        }
-      } else if (selectedSpotifyTrackIds.length > 0) {
-        // 선택된 트랙들로 새 그룹 생성 (첫 번째 트랙으로 그룹 생성 후 나머지 추가)
-        for (const trackId of selectedSpotifyTrackIds) {
-          try {
-            await addSpotifyTrackToSong(newSong.id, trackId);
-          } catch (err) {
-            console.error(`스포티파이 트랙 ${trackId} 추가 실패:`, err);
-          }
+          console.error(`스포티파이 트랙 ${trackId} 추가 실패:`, err);
         }
       }
 
@@ -410,7 +353,7 @@ export function SongCreateDialog() {
 
   if (!open) return null;
 
-  const spotifyCount = selectedSpotifyGroupId ? 1 : selectedSpotifyTrackIds.length;
+  const spotifyCount = selectedSpotifyTrackIds.length;
   const youtubeCount = selectedYoutubeVideoIds.length + (newVideoId.trim() ? 1 : 0);
 
   const tabs = [
@@ -572,43 +515,17 @@ export function SongCreateDialog() {
                   <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-zinc-100 border border-zinc-200">
                     {thumbnailSource === "spotify" && spotifyCount > 0 ? (
                       (() => {
-                        // 그룹이 선택된 경우
-                        if (selectedSpotifyGroupId) {
-                          const group = unlinkedSpotify.find(
-                            (g) => g.groupId === selectedSpotifyGroupId,
-                          );
-                          const thumb = group?.primaryTrack?.thumbnails?.[0];
-                          return thumb ? (
-                            <img
-                              src={thumb}
-                              alt="Spotify 썸네일"
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex items-center justify-center w-full h-full text-xs text-zinc-400">
-                              없음
-                            </span>
-                          );
-                        }
-                        // 트랙이 선택된 경우
-                        if (selectedSpotifyTrackIds.length > 0) {
-                          const track = unlinkedSpotifyTracks.find(
-                            (t) => t.id === selectedSpotifyTrackIds[0],
-                          );
-                          const thumb = track?.thumbnails?.[0];
-                          return thumb ? (
-                            <img
-                              src={thumb}
-                              alt="Spotify 썸네일"
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex items-center justify-center w-full h-full text-xs text-zinc-400">
-                              없음
-                            </span>
-                          );
-                        }
-                        return (
+                        const track = unlinkedSpotifyTracks.find(
+                          (t) => t.id === selectedSpotifyTrackIds[0],
+                        );
+                        const thumb = track?.thumbnails?.[0];
+                        return thumb ? (
+                          <img
+                            src={thumb}
+                            alt="Spotify 썸네일"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
                           <span className="flex items-center justify-center w-full h-full text-xs text-zinc-400">
                             없음
                           </span>
@@ -678,7 +595,7 @@ export function SongCreateDialog() {
                     </div>
                     {spotifyCount === 0 && youtubeCount === 0 && (
                       <p className="text-xs text-amber-600">
-                        Spotify 그룹/트랙이나 YouTube 비디오를 먼저 선택하세요.
+                        Spotify 트랙이나 YouTube 비디오를 먼저 선택하세요.
                       </p>
                     )}
                   </div>
@@ -854,78 +771,12 @@ export function SongCreateDialog() {
 
           {activeTab === "spotify" && (
             <div className="space-y-4">
-              {/* 선택된 스포티파이 그룹 */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h5 className="text-xs font-semibold text-zinc-700">
-                    선택된 Spotify 그룹
-                    {selectedSpotifyGroupDetail && ` (${selectedSpotifyGroupDetail.tracks.length}트랙)`}
-                  </h5>
-                  {selectedSpotifyGroupId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedSpotifyGroupId(null);
-                        setSelectedSpotifyGroupDetail(null);
-                      }}
-                      className="text-xs text-red-600 hover:text-red-700 cursor-pointer"
-                    >
-                      선택 해제
-                    </button>
-                  )}
-                </div>
-                {selectedSpotifyGroupId ? (
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 overflow-hidden">
-                    <div className="px-3 py-2 bg-emerald-100 text-xs text-emerald-700">
-                      {selectedSpotifyGroupDetail?.tracks?.[0]?.name ?? `그룹 #${selectedSpotifyGroupId}`}
-                    </div>
-                    {selectedSpotifyGroupDetail ? (
-                      <div className="divide-y divide-emerald-100">
-                        {selectedSpotifyGroupDetail.tracks.map((track) => (
-                          <div
-                            key={track.id}
-                            className="flex items-center gap-3 px-3 py-2"
-                          >
-                            {track.thumbnails?.[0] && (
-                              <img
-                                src={track.thumbnails[0]}
-                                alt=""
-                                className="w-8 h-8 rounded object-cover"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-emerald-800 truncate">
-                                {track.name}
-                              </p>
-                              <p className="text-[11px] text-emerald-600">
-                                인기도 {track.popularity ?? "-"}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="px-3 py-4 text-center text-xs text-emerald-600">
-                        로딩 중...
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-zinc-400">
-                    선택된 그룹이 없습니다.
-                  </p>
-                )}
-              </div>
-
-              {/* 선택된 스포티파이 트랙 (그룹 없이) */}
-              {selectedSpotifyTrackIds.length > 0 && !selectedSpotifyGroupId && (
+              {/* 선택된 스포티파이 트랙 */}
+              {selectedSpotifyTrackIds.length > 0 && (
                 <div>
                   <h5 className="text-xs font-semibold text-zinc-700 mb-2">
                     선택된 Spotify 트랙 ({selectedSpotifyTrackIds.length})
                   </h5>
-                  <p className="text-[11px] text-zinc-500 mb-2">
-                    곡 생성 시 새 그룹이 생성됩니다.
-                  </p>
                   <div className="space-y-2">
                     {selectedSpotifyTrackIds.map((trackId) => {
                       const track = unlinkedSpotifyTracks.find((t) => t.id === trackId);
@@ -964,62 +815,11 @@ export function SongCreateDialog() {
                 </div>
               )}
 
-              {/* 미연결 스포티파이 그룹 */}
-              <div>
-                <h5 className="text-xs font-semibold text-zinc-700 mb-2">
-                  미연결 Spotify 그룹 ({unlinkedSpotify.length})
-                </h5>
-                {unlinkedSpotify.length === 0 ? (
-                  <p className="text-xs text-zinc-400">
-                    미연결 그룹이 없습니다.
-                  </p>
-                ) : (
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                    {unlinkedSpotify
-                      .filter((g) => g.groupId !== selectedSpotifyGroupId)
-                      .map((group) => (
-                        <div
-                          key={group.groupId}
-                          className="flex items-center gap-3 p-2 rounded-lg border border-zinc-200 hover:border-emerald-200"
-                        >
-                          {group.primaryTrack?.thumbnails?.[0] && (
-                            <img
-                              src={group.primaryTrack.thumbnails[0]}
-                              alt=""
-                              className="w-10 h-10 rounded object-cover"
-                            />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-zinc-900 truncate">
-                              {group.primaryTrack?.name ??
-                                `그룹 #${group.groupId}`}
-                            </p>
-                            <p className="text-xs text-zinc-500">
-                              인기도 {group.primaryTrack?.popularity ?? "-"}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectSpotify(group.groupId)}
-                            disabled={!!selectedSpotifyGroupId || selectedSpotifyTrackIds.length > 0}
-                            className="text-xs text-emerald-600 hover:text-emerald-700 disabled:text-zinc-400 cursor-pointer"
-                          >
-                            선택
-                          </button>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 미연결 스포티파이 트랙 (그룹에 속하지 않은 트랙) */}
+              {/* 미연결 스포티파이 트랙 */}
               <div>
                 <h5 className="text-xs font-semibold text-zinc-700 mb-2">
                   미연결 Spotify 트랙 ({unlinkedSpotifyTracks.length})
                 </h5>
-                <p className="text-[11px] text-zinc-500 mb-2">
-                  그룹에 속하지 않은 트랙입니다. 선택하면 곡 생성 시 새 그룹이 생성됩니다.
-                </p>
                 {unlinkedSpotifyTracks.length === 0 ? (
                   <p className="text-xs text-zinc-400">
                     미연결 트랙이 없습니다.
@@ -1051,8 +851,7 @@ export function SongCreateDialog() {
                           <button
                             type="button"
                             onClick={() => handleSelectSpotifyTrack(track.id)}
-                            disabled={!!selectedSpotifyGroupId}
-                            className="text-xs text-emerald-600 hover:text-emerald-700 disabled:text-zinc-400 cursor-pointer"
+                            className="text-xs text-emerald-600 hover:text-emerald-700 cursor-pointer"
                           >
                             선택
                           </button>
@@ -1297,7 +1096,7 @@ export function SongCreateDialog() {
           <div className="text-xs text-zinc-500">
             {spotifyCount > 0 && (
               <span className="mr-2">
-                Spotify {selectedSpotifyGroupId ? "그룹 1개" : `트랙 ${spotifyCount}개`}
+                Spotify 트랙 {spotifyCount}개
               </span>
             )}
             {youtubeCount > 0 && (

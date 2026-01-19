@@ -29,7 +29,7 @@ const spotifyTrackBaseSelect = {
   musicBrainzTitle: true,
   musicBrainzArtistId: true,
   createdAt: true,
-  groupId: true,
+  songId: true,
   artists: {
     select: {
       spotifyArtist: {
@@ -59,7 +59,7 @@ function mapSpotifyTrackSummary(track: any): ManagerSpotifyTrackSummary {
       popularity: null,
       thumbnails: [],
       createdAt: "",
-      groupId: null,
+      songId: null,
       artists: [],
     };
   }
@@ -78,7 +78,7 @@ function mapSpotifyTrackSummary(track: any): ManagerSpotifyTrackSummary {
       track.createdAt instanceof Date
         ? track.createdAt.toISOString()
         : String(track.createdAt ?? ""),
-    groupId: track.groupId ?? null,
+    songId: track.songId ?? null,
     artists:
       track.artists?.flatMap((link: any) => {
         const spotifyArtist = link.spotifyArtist;
@@ -158,15 +158,9 @@ export async function fetchManagerArtistDetail(
                   artist: true,
                 },
               },
-              spotifyTrackGroup: {
-                select: {
-                  id: true,
-                  tracks: {
-                    orderBy: { popularity: "desc" },
-                    take: 1,
-                    select: spotifyTrackBaseSelect,
-                  },
-                },
+              spotifyTracks: {
+                orderBy: { popularity: "desc" },
+                select: spotifyTrackBaseSelect,
               },
               karaokeSongs: {
                 select: {
@@ -251,14 +245,7 @@ export async function fetchManagerArtistDetail(
         medium: song.thumbnailMedium,
         high: song.thumbnailHigh,
       },
-      spotifyGroup: song.spotifyTrackGroup
-        ? {
-            id: song.spotifyTrackGroup.id,
-            primaryTrack: song.spotifyTrackGroup.tracks[0]
-              ? mapSpotifyTrackSummary(song.spotifyTrackGroup.tracks[0])
-              : null,
-          }
-        : null,
+      spotifyTracks: song.spotifyTracks?.map(mapSpotifyTrackSummary) ?? [],
       tjSong: song.tjSong
         ? {
             id: song.tjSong.id,
@@ -457,15 +444,9 @@ export async function fetchManagerArtistSongs(
               artist: true,
             },
           },
-          spotifyTrackGroup: {
-            select: {
-              id: true,
-              tracks: {
-                orderBy: { popularity: "desc" },
-                take: 1,
-                select: spotifyTrackBaseSelect,
-              },
-            },
+          spotifyTracks: {
+            orderBy: { popularity: "desc" },
+            select: spotifyTrackBaseSelect,
           },
           karaokeSongs: {
             select: {
@@ -555,14 +536,7 @@ export async function fetchManagerArtistSongs(
         medium: song.thumbnailMedium,
         high: song.thumbnailHigh,
       },
-      spotifyGroup: song.spotifyTrackGroup
-        ? {
-            id: song.spotifyTrackGroup.id,
-            primaryTrack: song.spotifyTrackGroup.tracks[0]
-              ? mapSpotifyTrackSummary(song.spotifyTrackGroup.tracks[0])
-              : null,
-          }
-        : null,
+      spotifyTracks: song.spotifyTracks?.map(mapSpotifyTrackSummary) ?? [],
       tjSong: song.tjSong
         ? {
             id: song.tjSong.id,
@@ -607,64 +581,35 @@ export async function fetchManagerArtistSpotifyPanel(
     return { groups: [], orphanTracks: [] };
   }
 
-  const [artistTracks, artistSongLinks] = await Promise.all([
-    prisma.spotifyArtistTrack.findMany({
-      where: { spotifyArtist: { spotifyId: artist.spotifyId } },
-      select: {
-        spotifyTrack: {
-          select: {
-            ...spotifyTrackBaseSelect,
-            group: {
-              select: {
-                id: true,
-                primaryTrack: { select: spotifyTrackBaseSelect },
-                _count: { select: { tracks: true } },
-              },
+  // 아티스트의 스포티파이 트랙 조회 (songId와 song 정보 포함)
+  const artistTracks = await prisma.spotifyArtistTrack.findMany({
+    where: { spotifyArtist: { spotifyId: artist.spotifyId } },
+    select: {
+      spotifyTrack: {
+        select: {
+          ...spotifyTrackBaseSelect,
+          song: {
+            select: {
+              id: true,
+              title: true,
+              titleKo: true,
             },
           },
         },
       },
-      orderBy: { spotifyTrack: { name: "asc" } },
-    }),
-    prisma.artistSong.findMany({
-      where: { artistId },
-      select: {
-        song: {
-          select: {
-            id: true,
-            title: true,
-            titleKo: true,
-            spotifyTrackGroupId: true,
-          },
-        },
-      },
-    }),
-  ]);
+    },
+    orderBy: { spotifyTrack: { name: "asc" } },
+  });
 
-  const linkedSongMap = new Map<
-    number,
-    Array<{ id: number; title: string; titleKo?: string | null }>
-  >();
-  for (const link of artistSongLinks) {
-    const groupId = link.song.spotifyTrackGroupId;
-    if (!groupId) continue;
-    if (!linkedSongMap.has(groupId)) {
-      linkedSongMap.set(groupId, []);
-    }
-    linkedSongMap.get(groupId)!.push({
-      id: link.song.id,
-      title: link.song.title,
-      titleKo: link.song.titleKo ?? null,
-    });
-  }
-
+  // songId 기반으로 그룹화
   const groupsAccumulator = new Map<
     number,
     {
-      groupId: number;
+      songId: number;
+      linkedSong: { id: number; title: string; titleKo?: string | null };
       trackCount: number;
       artistTrackCount: number;
-      primaryTrack: ManagerSpotifyTrackSummary;
+      primaryTrack: ManagerSpotifyTrackSummary | null;
       tracks: ManagerSpotifyTrackSummary[];
     }
   >();
@@ -678,23 +623,30 @@ export async function fetchManagerArtistSpotifyPanel(
     if (!track) continue;
     const summary = mapTrack(track);
 
-    if (track.groupId && track.group) {
-      const fallbackPrimary = track.group.primaryTrack
-        ? mapTrack(track.group.primaryTrack)
-        : summary;
-      const existing = groupsAccumulator.get(track.group.id);
+    if (track.songId && track.song) {
+      const existing = groupsAccumulator.get(track.songId);
       if (existing) {
         existing.artistTrackCount += 1;
+        existing.trackCount += 1;
         existing.tracks.push(summary);
-        if (!existing.primaryTrack && fallbackPrimary) {
-          existing.primaryTrack = fallbackPrimary;
+        // primaryTrack: 인기도가 더 높으면 교체
+        if (
+          existing.primaryTrack &&
+          (summary.popularity ?? -1) > (existing.primaryTrack.popularity ?? -1)
+        ) {
+          existing.primaryTrack = summary;
         }
       } else {
-        groupsAccumulator.set(track.group.id, {
-          groupId: track.group.id,
-          trackCount: track.group._count?.tracks ?? 0,
+        groupsAccumulator.set(track.songId, {
+          songId: track.songId,
+          linkedSong: {
+            id: track.song.id,
+            title: track.song.title,
+            titleKo: track.song.titleKo ?? undefined,
+          },
+          trackCount: 1,
           artistTrackCount: 1,
-          primaryTrack: fallbackPrimary,
+          primaryTrack: summary,
           tracks: [summary],
         });
       }
@@ -704,9 +656,14 @@ export async function fetchManagerArtistSpotifyPanel(
   }
 
   const groups = Array.from(groupsAccumulator.values())
+    .filter((g) => g.primaryTrack !== null)
     .map((group) => ({
-      ...group,
-      linkedSongs: linkedSongMap.get(group.groupId) ?? [],
+      songId: group.songId,
+      trackCount: group.trackCount,
+      artistTrackCount: group.artistTrackCount,
+      primaryTrack: group.primaryTrack!,
+      tracks: group.tracks,
+      linkedSong: group.linkedSong,
     }))
     .sort((a, b) => {
       const popularityA = a.primaryTrack.popularity ?? -1;
@@ -1262,10 +1219,10 @@ export async function fetchManagerArtistYoutubePanel(
           id: true,
           title: true,
           titleKo: true,
-          spotifyTrackGroup: {
-            select: {
-              primaryTrack: { select: { popularity: true } },
-            },
+          spotifyTracks: {
+            orderBy: { popularity: "desc" },
+            take: 1,
+            select: { popularity: true },
           },
         },
       },
@@ -1304,7 +1261,7 @@ export async function fetchManagerArtistYoutubePanel(
       title: mapping.song.title,
       titleKo: mapping.song.titleKo,
       primaryPopularity:
-        mapping.song.spotifyTrackGroup?.primaryTrack?.popularity ?? null,
+        mapping.song.spotifyTracks?.[0]?.popularity ?? null,
     });
   }
 
@@ -1479,15 +1436,9 @@ export async function updateSong(input: UpdateSongInput) {
           artist: true,
         },
       },
-      spotifyTrackGroup: {
-        select: {
-          id: true,
-          tracks: {
-            orderBy: { popularity: "desc" },
-            take: 1,
-            select: spotifyTrackBaseSelect,
-          },
-        },
+      spotifyTracks: {
+        orderBy: { popularity: "desc" },
+        select: spotifyTrackBaseSelect,
       },
       karaokeSongs: {
         select: {
@@ -1533,14 +1484,7 @@ export async function updateSong(input: UpdateSongInput) {
       medium: updatedSong.thumbnailMedium,
       high: updatedSong.thumbnailHigh,
     },
-    spotifyGroup: updatedSong.spotifyTrackGroup
-      ? {
-          id: updatedSong.spotifyTrackGroup.id,
-          primaryTrack: updatedSong.spotifyTrackGroup.tracks[0]
-            ? mapSpotifyTrackSummary(updatedSong.spotifyTrackGroup.tracks[0])
-            : null,
-        }
-      : null,
+    spotifyTracks: updatedSong.spotifyTracks?.map(mapSpotifyTrackSummary) ?? [],
     tjSong: updatedSong.tjSong
       ? {
           id: updatedSong.tjSong.id,
@@ -1588,7 +1532,7 @@ export async function deleteSong(songId: number): Promise<void> {
       data: { songId: null },
     });
 
-    // 곡 삭제 (spotifyTrackGroupId는 Song 측에 있으므로 별도 처리 불필요)
+    // 곡 삭제
     await tx.song.delete({ where: { id: songId } });
   });
 }
@@ -1926,15 +1870,9 @@ export async function createSong({
           artist: true,
         },
       },
-      spotifyTrackGroup: {
-        select: {
-          id: true,
-          tracks: {
-            orderBy: { popularity: "desc" },
-            take: 1,
-            select: spotifyTrackBaseSelect,
-          },
-        },
+      spotifyTracks: {
+        orderBy: { popularity: "desc" },
+        select: spotifyTrackBaseSelect,
       },
       karaokeSongs: {
         select: {
@@ -1998,14 +1936,7 @@ export async function createSong({
       medium: song.thumbnailMedium,
       high: song.thumbnailHigh,
     },
-    spotifyGroup: song.spotifyTrackGroup
-      ? {
-          id: song.spotifyTrackGroup.id,
-          primaryTrack: song.spotifyTrackGroup.tracks[0]
-            ? mapSpotifyTrackSummary(song.spotifyTrackGroup.tracks[0])
-            : null,
-        }
-      : null,
+    spotifyTracks: song.spotifyTracks?.map(mapSpotifyTrackSummary) ?? [],
     tjSong: song.tjSong
       ? {
           id: song.tjSong.id,
@@ -2028,95 +1959,6 @@ export async function createSong({
 }
 
 // ========== 곡 편집용 미연결 데이터 조회 ==========
-
-// 아티스트의 미연결 스포티파이 그룹 조회
-export type UnlinkedSpotifyGroup = {
-  groupId: number;
-  primaryTrack: {
-    name: string;
-    spotifyId: string;
-    popularity: number | null;
-    thumbnails: string[];
-  } | null;
-};
-
-export async function fetchUnlinkedSpotifyGroups(
-  artistId: number,
-): Promise<UnlinkedSpotifyGroup[]> {
-  if (!artistId || Number.isNaN(artistId)) {
-    return [];
-  }
-
-  const artist = await prisma.artist.findUnique({
-    where: { id: artistId },
-    select: { spotifyId: true },
-  });
-
-  if (!artist?.spotifyId) {
-    return [];
-  }
-
-  // 아티스트의 모든 스포티파이 트랙 그룹 가져오기
-  const artistTracks = await prisma.spotifyArtistTrack.findMany({
-    where: { spotifyArtist: { spotifyId: artist.spotifyId } },
-    select: {
-      spotifyTrack: {
-        select: {
-          groupId: true,
-          group: {
-            select: {
-              id: true,
-              primaryTrack: {
-                select: {
-                  name: true,
-                  spotifyId: true,
-                  popularity: true,
-                  thumbnails: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  // 이미 Song에 연결된 그룹 ID들 가져오기
-  const linkedGroupIds = await prisma.song.findMany({
-    where: {
-      spotifyTrackGroupId: { not: null },
-      artistSongs: { some: { artistId } },
-    },
-    select: { spotifyTrackGroupId: true },
-  });
-  const linkedSet = new Set(linkedGroupIds.map((s) => s.spotifyTrackGroupId));
-
-  // 미연결 그룹 필터링
-  const groupMap = new Map<number, UnlinkedSpotifyGroup>();
-  for (const record of artistTracks) {
-    const group = record.spotifyTrack?.group;
-    if (!group || linkedSet.has(group.id) || groupMap.has(group.id)) {
-      continue;
-    }
-    groupMap.set(group.id, {
-      groupId: group.id,
-      primaryTrack: group.primaryTrack
-        ? {
-            name: group.primaryTrack.name,
-            spotifyId: group.primaryTrack.spotifyId,
-            popularity: group.primaryTrack.popularity,
-            thumbnails: group.primaryTrack.thumbnails,
-          }
-        : null,
-    });
-  }
-
-  return Array.from(groupMap.values()).sort((a, b) => {
-    const popA = a.primaryTrack?.popularity ?? -1;
-    const popB = b.primaryTrack?.popularity ?? -1;
-    return popB - popA;
-  });
-}
 
 // 아티스트의 미연결 유튜브 비디오 조회
 export type UnlinkedYoutubeVideo = {
@@ -2302,32 +2144,46 @@ export async function fetchLinkedSongProposes(
 
 // ========== 연결/해제 함수들 ==========
 
-// 스포티파이 그룹 연결
-export async function linkSpotifyGroup(songId: number, groupId: number) {
+// 스포티파이 트랙 연결 (트랙의 songId 설정)
+export async function linkSpotifyTrack(songId: number, trackId: number) {
   if (!songId || Number.isNaN(songId)) {
     throw new Error("유효한 곡 ID가 필요합니다.");
   }
-  if (!groupId || Number.isNaN(groupId)) {
-    throw new Error("유효한 그룹 ID가 필요합니다.");
+  if (!trackId || Number.isNaN(trackId)) {
+    throw new Error("유효한 트랙 ID가 필요합니다.");
   }
 
-  await prisma.song.update({
-    where: { id: songId },
-    data: { spotifyTrackGroupId: groupId },
+  await prisma.spotifyTrack.update({
+    where: { id: trackId },
+    data: { songId },
   });
 
   return { success: true };
 }
 
-// 스포티파이 그룹 연결 해제
-export async function unlinkSpotifyGroup(songId: number) {
+// 스포티파이 트랙 연결 해제 (트랙의 songId를 null로)
+export async function unlinkSpotifyTrack(trackId: number) {
+  if (!trackId || Number.isNaN(trackId)) {
+    throw new Error("유효한 트랙 ID가 필요합니다.");
+  }
+
+  await prisma.spotifyTrack.update({
+    where: { id: trackId },
+    data: { songId: null },
+  });
+
+  return { success: true };
+}
+
+// 곡의 모든 스포티파이 트랙 연결 해제
+export async function unlinkAllSpotifyTracks(songId: number) {
   if (!songId || Number.isNaN(songId)) {
     throw new Error("유효한 곡 ID가 필요합니다.");
   }
 
-  await prisma.song.update({
-    where: { id: songId },
-    data: { spotifyTrackGroupId: null },
+  await prisma.spotifyTrack.updateMany({
+    where: { songId },
+    data: { songId: null },
   });
 
   return { success: true };
@@ -2528,37 +2384,6 @@ export async function unlinkSongPropose(proposeId: number) {
   return { success: true };
 }
 
-// ========== 스포티파이 트랙 그룹 나가기 ==========
-
-export async function leaveSpotifyTrackGroup(trackId: number) {
-  if (!trackId || Number.isNaN(trackId)) {
-    throw new Error("유효한 트랙 ID가 필요합니다.");
-  }
-
-  // 트랙의 현재 그룹 확인
-  const track = await prisma.spotifyTrack.findUnique({
-    where: { id: trackId },
-    select: { groupId: true },
-  });
-
-  await prisma.$transaction(async (tx) => {
-    // 해당 트랙이 그룹의 primary였다면 null로 설정
-    if (track?.groupId) {
-      await tx.spotifyTrackGroup.updateMany({
-        where: { id: track.groupId, primarySpotifyTrackId: trackId },
-        data: { primarySpotifyTrackId: null },
-      });
-    }
-
-    await tx.spotifyTrack.update({
-      where: { id: trackId },
-      data: { groupId: null },
-    });
-  });
-
-  return { success: true };
-}
-
 // ========== 썸네일 새로고침 ==========
 
 export type RefreshThumbnailResult = {
@@ -2580,7 +2405,11 @@ export async function refreshSongThumbnail(
   const song = await prisma.song.findUnique({
     where: { id: songId },
     select: {
-      spotifyTrackGroupId: true,
+      spotifyTracks: {
+        orderBy: { releaseDate: "asc" },
+        take: 1,
+        select: { thumbnails: true },
+      },
       youtubeVideos: {
         select: {
           youtubeVideo: {
@@ -2606,13 +2435,9 @@ export async function refreshSongThumbnail(
   let thumbnailHigh: string | null = null;
   let actualSource: "spotify" | "youtube" | null = null;
 
-  if (source === "spotify" && song.spotifyTrackGroupId) {
-    // 스포티파이 그룹에서 가장 오래된 발매일의 트랙 썸네일 가져오기
-    const oldestTrack = await prisma.spotifyTrack.findFirst({
-      where: { groupId: song.spotifyTrackGroupId },
-      orderBy: { releaseDate: "asc" },
-      select: { thumbnails: true },
-    });
+  if (source === "spotify" && song.spotifyTracks.length > 0) {
+    // 스포티파이 트랙 중 가장 오래된 발매일의 썸네일 가져오기
+    const oldestTrack = song.spotifyTracks[0];
 
     if (oldestTrack?.thumbnails?.length) {
       // Spotify 썸네일은 배열로 저장됨 (보통 3개: 640, 300, 64)
@@ -2682,154 +2507,8 @@ export async function runMapProposeSong(artistId: number) {
   return mapProposeSong(artistId);
 }
 
-// ========== 스포티파이 트랙-곡 자동 매핑 ==========
 
-import { mapSongSpotifyGroups } from "@/lib/admin/map-song-spotify-groups";
-
-export async function runMapSongSpotifyGroups(artistId: number) {
-  if (!artistId || Number.isNaN(artistId)) {
-    throw new Error("유효한 아티스트 ID가 필요합니다.");
-  }
-  return mapSongSpotifyGroups(artistId);
-}
-
-// ========== 스포티파이 그룹 편집 ==========
-
-// 새 그룹 생성
-export async function createSpotifyTrackGroup(
-  primaryTrackId: number,
-  trackIds: number[] = [],
-) {
-  if (!primaryTrackId || Number.isNaN(primaryTrackId)) {
-    throw new Error("유효한 primary 트랙 ID가 필요합니다.");
-  }
-
-  // 새 그룹 생성
-  const group = await prisma.spotifyTrackGroup.create({
-    data: {
-      primarySpotifyTrackId: primaryTrackId,
-    },
-  });
-
-  // primary 트랙 + 추가 트랙들을 그룹에 연결
-  const allTrackIds = [
-    primaryTrackId,
-    ...trackIds.filter((id) => id !== primaryTrackId),
-  ];
-
-  await prisma.spotifyTrack.updateMany({
-    where: { id: { in: allTrackIds } },
-    data: { groupId: group.id },
-  });
-
-  return { groupId: group.id };
-}
-
-// 트랙을 그룹에 추가
-export async function addTrackToSpotifyGroup(groupId: number, trackId: number) {
-  if (!groupId || Number.isNaN(groupId)) {
-    throw new Error("유효한 그룹 ID가 필요합니다.");
-  }
-  if (!trackId || Number.isNaN(trackId)) {
-    throw new Error("유효한 트랙 ID가 필요합니다.");
-  }
-
-  await prisma.spotifyTrack.update({
-    where: { id: trackId },
-    data: { groupId },
-  });
-
-  return { success: true };
-}
-
-// 그룹 상세 정보 (편집용)
-export type SpotifyGroupEditData = {
-  groupId: number;
-  primaryTrackId: number;
-  tracks: ManagerSpotifyTrackSummary[];
-  linkedSongs: Array<{ id: number; title: string; titleKo?: string | null }>;
-};
-
-export async function getSpotifyGroupDetail(
-  groupId: number,
-): Promise<SpotifyGroupEditData> {
-  if (!groupId || Number.isNaN(groupId)) {
-    throw new Error("유효한 그룹 ID가 필요합니다.");
-  }
-
-  const group = await prisma.spotifyTrackGroup.findUnique({
-    where: { id: groupId },
-    select: {
-      id: true,
-      primarySpotifyTrackId: true,
-      tracks: {
-        select: spotifyTrackBaseSelect,
-        orderBy: { popularity: "desc" },
-      },
-      songs: {
-        select: {
-          id: true,
-          title: true,
-          titleKo: true,
-        },
-      },
-    },
-  });
-
-  if (!group) {
-    throw new Error("그룹을 찾을 수 없습니다.");
-  }
-
-  return {
-    groupId: group.id,
-    primaryTrackId: group.primarySpotifyTrackId ?? 0,
-    tracks: group.tracks.map(mapSpotifyTrackSummary),
-    linkedSongs: group.songs.map((s) => ({
-      id: s.id,
-      title: s.title,
-      titleKo: s.titleKo ?? undefined,
-    })),
-  };
-}
-
-// primary 트랙 변경
-export async function setSpotifyGroupPrimaryTrack(
-  groupId: number,
-  trackId: number,
-) {
-  if (!groupId || Number.isNaN(groupId)) {
-    throw new Error("유효한 그룹 ID가 필요합니다.");
-  }
-  if (!trackId || Number.isNaN(trackId)) {
-    throw new Error("유효한 트랙 ID가 필요합니다.");
-  }
-
-  // 트랙이 해당 그룹에 속해 있는지 확인
-  const track = await prisma.spotifyTrack.findUnique({
-    where: { id: trackId },
-    select: { groupId: true },
-  });
-
-  if (!track || track.groupId !== groupId) {
-    throw new Error("해당 트랙은 이 그룹에 속해 있지 않습니다.");
-  }
-
-  // unique constraint 때문에 먼저 null로 설정 후 변경 (순차 실행 필수)
-  await prisma.$transaction(async (tx) => {
-    await tx.spotifyTrackGroup.update({
-      where: { id: groupId },
-      data: { primarySpotifyTrackId: null },
-    });
-    await tx.spotifyTrackGroup.update({
-      where: { id: groupId },
-      data: { primarySpotifyTrackId: trackId },
-    });
-  });
-
-  return { success: true };
-}
-
-// 그룹에 속하지 않은 스포티파이 트랙 가져오기 (orphan tracks)
+// Song에 연결되지 않은 스포티파이 트랙 가져오기 (orphan tracks)
 export type UnlinkedSpotifyTrack = {
   id: number;
   name: string;
@@ -2854,7 +2533,7 @@ export async function fetchUnlinkedSpotifyTracks(
     return [];
   }
 
-  // 아티스트의 모든 스포티파이 트랙 중 그룹에 속하지 않은 것들
+  // 아티스트의 모든 스포티파이 트랙 중 Song에 연결되지 않은 것들
   const artistTracks = await prisma.spotifyArtistTrack.findMany({
     where: { spotifyArtist: { spotifyId: artist.spotifyId } },
     select: {
@@ -2865,14 +2544,14 @@ export async function fetchUnlinkedSpotifyTracks(
           spotifyId: true,
           popularity: true,
           thumbnails: true,
-          groupId: true,
+          songId: true,
         },
       },
     },
   });
 
   return artistTracks
-    .filter((record) => record.spotifyTrack && !record.spotifyTrack.groupId)
+    .filter((record) => record.spotifyTrack && !record.spotifyTrack.songId)
     .map((record) => ({
       id: record.spotifyTrack.id,
       name: record.spotifyTrack.name,
@@ -2883,11 +2562,11 @@ export async function fetchUnlinkedSpotifyTracks(
     .sort((a, b) => (b.popularity ?? -1) - (a.popularity ?? -1));
 }
 
-// 트랙을 곡의 스포티파이 그룹에 추가 (그룹이 없으면 새로 생성)
+// 트랙을 곡에 연결 (songId 설정)
 export async function addSpotifyTrackToSong(
   songId: number,
   trackId: number,
-): Promise<{ groupId: number }> {
+): Promise<{ success: boolean }> {
   if (!songId || Number.isNaN(songId)) {
     throw new Error("유효한 곡 ID가 필요합니다.");
   }
@@ -2895,54 +2574,31 @@ export async function addSpotifyTrackToSong(
     throw new Error("유효한 트랙 ID가 필요합니다.");
   }
 
-  // 곡 정보 가져오기
+  // 곡 존재 확인
   const song = await prisma.song.findUnique({
     where: { id: songId },
-    select: { spotifyTrackGroupId: true },
+    select: { id: true },
   });
 
   if (!song) {
     throw new Error("곡을 찾을 수 없습니다.");
   }
 
-  // 트랙이 이미 다른 그룹에 속해있는지 확인
+  // 트랙이 이미 다른 Song에 연결되어 있는지 확인
   const track = await prisma.spotifyTrack.findUnique({
     where: { id: trackId },
-    select: { groupId: true },
+    select: { songId: true },
   });
 
-  if (track?.groupId) {
-    throw new Error("이 트랙은 이미 다른 그룹에 속해 있습니다.");
+  if (track?.songId) {
+    throw new Error("이 트랙은 이미 다른 곡에 연결되어 있습니다.");
   }
 
-  let groupId: number;
+  // 트랙을 곡에 연결
+  await prisma.spotifyTrack.update({
+    where: { id: trackId },
+    data: { songId },
+  });
 
-  if (song.spotifyTrackGroupId) {
-    // 기존 그룹에 트랙 추가
-    groupId = song.spotifyTrackGroupId;
-    await prisma.spotifyTrack.update({
-      where: { id: trackId },
-      data: { groupId },
-    });
-  } else {
-    // 새 그룹 생성하고 트랙 추가 후 곡에 연결
-    const newGroup = await prisma.spotifyTrackGroup.create({
-      data: {
-        primarySpotifyTrackId: trackId,
-      },
-    });
-    groupId = newGroup.id;
-
-    await prisma.spotifyTrack.update({
-      where: { id: trackId },
-      data: { groupId },
-    });
-
-    await prisma.song.update({
-      where: { id: songId },
-      data: { spotifyTrackGroupId: groupId },
-    });
-  }
-
-  return { groupId };
+  return { success: true };
 }
