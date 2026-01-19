@@ -51,14 +51,14 @@ export async function searchUnlinkedSongYoutube(
   options: SearchUnlinkedSongYoutubeOptions = {},
 ): Promise<ArtistYoutubeSongSearchResult> {
   const {
-    maxResultsPerSong = 50,
+    maxResultsPerSong = 5,
     maxSongs,
     regionCode,
     relevanceLanguage,
     filterToMusicCategory,
   } = options;
 
-  const perSongLimit = clamp(Math.floor(maxResultsPerSong), 1, 50);
+  const perSongLimit = clamp(Math.floor(maxResultsPerSong), 1, 10);
   const artist = await prisma.artist.findUnique({
     where: { id: artistId },
     select: {
@@ -131,33 +131,30 @@ export async function searchUnlinkedSongYoutube(
 
   for (const song of limitedSongs) {
     const queryTitle = buildSongSearchTitle(song);
-    const query = `${queryTitle} ${artist.name}`.trim();
+    const query = queryTitle.trim();
 
-    console.log(`  → Searching "${song.title}" with query: ${query}`);
+    console.log(
+      `(${artistId})  → Searching "${song.title}" with query: ${query}`,
+    );
 
     try {
-      const response = await searchYoutubeVideos(query, {
-        maxResults: perSongLimit,
-        regionCode,
-        relevanceLanguage,
-        filterToMusicCategory,
+      const videos = await searchSongVideosForChannels({
+        query,
+        perSongLimit,
+        topicChannelIds,
+        searchOptions: {
+          maxResults: perSongLimit,
+          regionCode,
+          relevanceLanguage,
+          filterToMusicCategory,
+        },
       });
-
-      const videos = extractVideoCandidates(response.items)
-        .slice(0, perSongLimit)
-        .filter(
-          (video) => video.channelId && topicChannelIds.has(video.channelId),
-        );
 
       videos.forEach((video) => allVideoIds.push(video.videoId));
 
-      console.log(`     • Candidates found (topic only): ${videos.length}`);
+      console.log(`     • Candidates found: ${videos.length}`);
 
       const prioritizedVideos = prioritizeTopicMatches(videos, topicChannelIds);
-
-      prioritizedVideos.forEach((v) => {
-        console.log(`🌀 ${v.videoName}`);
-      });
 
       songResults.push({
         songId: song.id,
@@ -278,4 +275,44 @@ function chunkArray<T>(input: T[], size: number): T[][] {
 function clamp(value: number, min: number, max: number) {
   if (Number.isNaN(value)) return min;
   return Math.min(Math.max(value, min), max);
+}
+
+async function searchSongVideosForChannels({
+  query,
+  perSongLimit,
+  topicChannelIds,
+  searchOptions,
+}: {
+  query: string;
+  perSongLimit: number;
+  topicChannelIds: Set<string>;
+  searchOptions: SearchUnlinkedSongYoutubeOptions;
+}): Promise<YoutubeVideoCandidate[]> {
+  const uniqueVideos = new Map<string, YoutubeVideoCandidate>();
+  const channelIds = Array.from(topicChannelIds).filter(Boolean);
+
+  const baseOptions = {
+    maxResults: perSongLimit,
+    regionCode: searchOptions.regionCode,
+    relevanceLanguage: searchOptions.relevanceLanguage,
+    filterToMusicCategory: searchOptions.filterToMusicCategory,
+  };
+
+  if (channelIds.length > 0) {
+    for (const channelId of channelIds) {
+      const response = await searchYoutubeVideos(query, {
+        ...baseOptions,
+        channelId,
+      });
+      const candidates = extractVideoCandidates(response.items);
+      for (const video of candidates) {
+        if (!uniqueVideos.has(video.videoId)) {
+          uniqueVideos.set(video.videoId, video);
+        }
+      }
+      if (uniqueVideos.size >= perSongLimit) break;
+    }
+  }
+
+  return Array.from(uniqueVideos.values()).slice(0, perSongLimit);
 }

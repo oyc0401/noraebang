@@ -9,6 +9,7 @@ import {
   runAutoFillSongTitlesForArtist,
   runMapProposeSongForArtist,
   runMapSongYoutubeVideoForArtist,
+  runMapSongYoutubeVideoFromSearchForArtist,
   runUpdateSongThumbnailsForArtist,
   runMapSongSpotifyGroupsForArtist,
 } from "./actions";
@@ -135,6 +136,11 @@ export default function AdminTasksPage() {
     runMapSongYoutubeVideoForArtist,
     getRange,
   );
+  const youtubeSearchTask = useArtistTask(
+    "mapSongYoutubeVideoFromSearch",
+    runMapSongYoutubeVideoFromSearchForArtist,
+    getRange,
+  );
   const spotifyTask = useArtistTask(
     "mapSongSpotifyGroups",
     runMapSongSpotifyGroupsForArtist,
@@ -216,6 +222,11 @@ export default function AdminTasksPage() {
             title="곡 ↔ YouTube 토픽 매핑"
             description="토픽 채널 영상과 곡을 비교해 SongYoutubeVideo를 자동으로 채웁니다."
             task={youtubeTask}
+          />
+          <TaskCard
+            title="검색 결과 기반 YouTube 매핑"
+            description="searchUnlinkedSongYoutube 결과를 활용해 곡과 토픽 채널 영상을 연결합니다."
+            task={youtubeSearchTask}
           />
 
           <TaskCard
