@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { MAX_ARTIST } from "@/lib/admin/z-param";
 
 import {
+  addYoutubeVideoToSong,
   getSpotifySongIssues,
   getUnlinkedYoutubeVideos,
   getUnlinkedSpotifyTracks,
@@ -48,6 +49,11 @@ export default function SpotifySongIssuesPage() {
   const [loadingSpotify, setLoadingSpotify] = useState(false);
   const [youtubeLoaded, setYoutubeLoaded] = useState(false);
   const [spotifyLoaded, setSpotifyLoaded] = useState(false);
+  const [youtubeLinkInputs, setYoutubeLinkInputs] = useState<Record<number, string>>({});
+  const [youtubeLinkStatus, setYoutubeLinkStatus] = useState<
+    Record<number, { type: "success" | "error"; message: string }>
+  >({});
+  const [linkingSongId, setLinkingSongId] = useState<number | null>(null);
 
   const loadSongs = useCallback(async () => {
     setLoading(true);
@@ -165,6 +171,68 @@ export default function SpotifySongIssuesPage() {
       return haystacks.some((value) => value.includes(normalizedSearch));
     });
   }, [songs, filter, search]);
+
+  const handleYoutubeInputChange = useCallback((songId: number, value: string) => {
+    setYoutubeLinkInputs((prev) => ({
+      ...prev,
+      [songId]: value,
+    }));
+    setYoutubeLinkStatus((prev) => {
+      if (!prev[songId]) return prev;
+      const next = { ...prev };
+      delete next[songId];
+      return next;
+    });
+  }, []);
+
+  const handleAttachYoutubeVideo = useCallback(
+    async (songId: number) => {
+      const url = (youtubeLinkInputs[songId] ?? "").trim();
+      if (!url) {
+        setYoutubeLinkStatus((prev) => ({
+          ...prev,
+          [songId]: { type: "error", message: "유튜브 주소를 입력해주세요." },
+        }));
+        return;
+      }
+
+      try {
+        setLinkingSongId(songId);
+        const result = await addYoutubeVideoToSong(songId, url);
+        if (!result.success) {
+          setYoutubeLinkStatus((prev) => ({
+            ...prev,
+            [songId]: { type: "error", message: result.error },
+          }));
+          return;
+        }
+        setYoutubeLinkInputs((prev) => ({
+          ...prev,
+          [songId]: "",
+        }));
+        setYoutubeLinkStatus((prev) => ({
+          ...prev,
+          [songId]: {
+            type: "success",
+            message: `"${result.videoTitle ?? result.videoId}" 영상이 연결되었습니다.`,
+          },
+        }));
+        await loadSongs();
+      } catch (err) {
+        console.error(err);
+        setYoutubeLinkStatus((prev) => ({
+          ...prev,
+          [songId]: {
+            type: "error",
+            message: "유튜브 영상을 연결하는 중 오류가 발생했습니다.",
+          },
+        }));
+      } finally {
+        setLinkingSongId(null);
+      }
+    },
+    [youtubeLinkInputs, loadSongs],
+  );
 
   const statusCountMap: Record<FilterValue, number> = {
     spotify: stats.missingSpotify,
@@ -433,10 +501,68 @@ export default function SpotifySongIssuesPage() {
                               </span>
                             </div>
                           )}
-                          {song.tjSong?.title && (
-                            <p className="text-xs text-zinc-500">
-                              TJ 제목: {song.tjSong.title}
-                            </p>
+                          {song.tjSong && (
+                            <div className="text-xs text-zinc-500 space-y-0.5">
+                              {song.tjSong.title && (
+                                <p>TJ 제목: {song.tjSong.title}</p>
+                              )}
+                              {song.tjSong.artist && (
+                                <p>TJ 아티스트: {song.tjSong.artist}</p>
+                              )}
+                            </div>
+                          )}
+                          {lacksYoutube && (
+                            <div className="mt-3 space-y-2">
+                              <p className="text-xs font-semibold text-red-700">
+                                유튜브 영상 직접 연결
+                              </p>
+                              <div className="flex flex-col gap-2 sm:flex-row">
+                                <input
+                                  type="text"
+                                  value={youtubeLinkInputs[song.id] ?? ""}
+                                  onChange={(event) =>
+                                    handleYoutubeInputChange(song.id, event.target.value)
+                                  }
+                                  placeholder="YouTube / YouTube Music URL"
+                                  className="w-full rounded-lg border border-red-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-300"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleAttachYoutubeVideo(song.id)}
+                                  disabled={linkingSongId === song.id}
+                                  className="cursor-pointer rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  {linkingSongId === song.id ? "연결 중..." : "연결"}
+                                </button>
+                                <a
+                                  href={`https://music.youtube.com/search?q=${encodeURIComponent(
+                                    `${song.title ?? ""} ${song.artists[0]?.name ?? ""}`.trim(),
+                                  )}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-blue-300 hover:text-blue-700 text-center"
+                                >
+                                  유튜브뮤직 검색
+                                </a>
+                              </div>
+                              <div className="text-[11px] text-zinc-500">
+                                <p>
+                                  유튜브/유튜브뮤직 링크를 붙여넣으면 해당 영상을 생성하고 곡에 연결합니다.
+                                </p>
+                                {youtubeLinkStatus[song.id] && (
+                                  <p
+                                    className={[
+                                      "mt-1 font-semibold",
+                                      youtubeLinkStatus[song.id]?.type === "success"
+                                        ? "text-emerald-600"
+                                        : "text-red-600",
+                                    ].join(" ")}
+                                  >
+                                    {youtubeLinkStatus[song.id]?.message}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           )}
                         </div>
                         <div className="flex flex-col items-start gap-2 md:items-end">

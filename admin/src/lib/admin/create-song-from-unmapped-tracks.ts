@@ -7,6 +7,8 @@ import { normalizeTitle } from "../track-title-normalizer";
 // 해당 SpotifyTrack과 YoutubeVideo를 연결합니다.
 // 추가로 생성된 Song에 대해 inst, remix 등 관련 버전도 연결합니다.
 
+const targetPopularity = 30;
+
 type UnmappedTrack = {
   id: number;
   name: string;
@@ -118,7 +120,7 @@ export async function createSongFromUnmappedTracks(
     where: {
       disabled: false,
       songId: null,
-      popularity: { gte: 40 },
+      popularity: { gte: targetPopularity },
       artists: {
         some: { spotifyArtistId: spotifyArtist.id },
       },
