@@ -24,7 +24,7 @@ const BATCH_THRESHOLD = 50;
 
 const SYSTEM_PROMPT = `Return ONLY valid JSON array. No markdown. No extra text.`;
 
-const DEVELOPER_PROMPT = `Output schema: Array<{artistId: number, artistName: string, song: Array<{songId:number, songTitle:string, videoId:string, videoName:string}>, latin: Array<{songId:number, songTitle:string, titleLatin:string}>}>. Do not add unknown fields.
+const DEVELOPER_PROMPT = `Output schema: Array<{artistId: number, artistName: string, song: Array<{songId:number, songTitle:string, videoId:string, videoName:string}>}>. Do not add unknown fields.
 
 Map only when you can match confidently. Otherwise omit the item.`;
 
@@ -32,7 +32,6 @@ interface ArtistInput {
   artistId: number;
   artistName: string;
   songs: Array<{ songId: number; songTitle: string }>;
-  songsNeedLatin: Array<{ songId: number; songTitle: string }>;
   youtubeVideos: Array<{ videoId: string; videoTitle: string }>;
 }
 
@@ -40,9 +39,7 @@ function buildUserPrompt(artists: ArtistInput[]): string {
   const inputJson = JSON.stringify(artists);
   return `Input: ${inputJson}. Produce output in the schema.
 
-입력 JSON 배열에서 각 아티스트별로:
-1. songs의 songTitle ↔ youtubeVideos의 videoTitle 매핑 → song 배열에 출력
-2. songsNeedLatin의 songTitle과 일치하는 youtubeVideos의 videoTitle 찾아서 → latin 배열에 titleLatin으로 출력
+입력 JSON 배열에서 각 아티스트별로 songTitle ↔ videoTitle을 매핑해, 지정한 출력 JSON 스키마 그대로 반환해라(형식 변경 금지).
 
 <출력 강제포맷>
 [
@@ -55,13 +52,6 @@ function buildUserPrompt(artists: ArtistInput[]): string {
         "songTitle": "アカシア",
         "videoId": "4dnT-kKIO6Y",
         "videoName": "Acacia"
-      }
-    ],
-    "latin": [
-      {
-        "songId": 10017,
-        "songTitle": "フィクション",
-        "titleLatin": "Fiction"
       }
     ]
   }
@@ -79,9 +69,7 @@ function buildUserPrompt(artists: ArtistInput[]): string {
 - "フィクション" = "Fiction" (같은 단어의 일본어/영어)
 - "夜に駆ける" = "Racing into the Night" (같은 곡의 번역)
 - "アイドル" = "Idol" (카타카나 → 로마자)
-이런 건 같은 곡이니 매핑해라.
-
-latin 배열: songsNeedLatin에서 youtubeVideos 제목과 일치하는 곡의 로마자 제목을 추출. videoTitle이 로마자면 그대로, 아니면 로마자로 변환.`;
+이런 건 같은 곡이니 매핑해라.`;
 }
 
 async function callGPT(artists: ArtistInput[]): Promise<MappingPayload[]> {
@@ -171,10 +159,6 @@ function toArtistInput(data: UnmappedData): ArtistInput {
     artistId: data.artistId,
     artistName: data.name,
     songs: allSongs,
-    songsNeedLatin: data.mappedSongsWithoutLatin.map((s) => ({
-      songId: s.id,
-      songTitle: s.title,
-    })),
     youtubeVideos: Array.from(videoMap.values()).map((v) => ({
       videoId: v.videoId,
       videoTitle: v.videoTitle,
@@ -183,7 +167,7 @@ function toArtistInput(data: UnmappedData): ArtistInput {
 }
 
 function getItemCount(artist: ArtistInput): number {
-  return artist.songs.length + artist.songsNeedLatin.length + artist.youtubeVideos.length;
+  return artist.songs.length + artist.youtubeVideos.length;
 }
 
 /**
