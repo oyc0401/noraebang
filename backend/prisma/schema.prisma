@@ -268,10 +268,6 @@ model SpotifyArtistTrack {
 model SpotifyTrackGroup {
   id                    Int      @id @default(autoincrement())
   primarySpotifyTrackId Int?     @map("primary_spotify_track_id")
-  // titleKo               String?  @map("title_ko")
-  // titleLatin            String?  @map("title_latin")
-  // titleJaKana           String?  @map("title_ja_kana")
-  // titleJaKanji          String?  @map("title_ja_kanji")
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
@@ -311,6 +307,8 @@ model SpotifyTrack {
 
   @@index([groupId])
   @@index([songId])
+  @@index([songId, popularity]) // 가장 인기있는 트랙
+  @@index([songId, releaseDate]) // 가장 오래된 트랙
   @@index([isrc])
   @@map("spotify_track")
 }

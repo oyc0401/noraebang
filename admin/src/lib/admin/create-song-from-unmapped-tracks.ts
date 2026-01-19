@@ -13,6 +13,11 @@ type UnmappedTrack = {
   musicBrainzTitle: string | null;
   popularity: number | null;
   thumbnails: string[];
+  artists: {
+    spotifyArtist: {
+      spotifyId: string;
+    };
+  }[];
 };
 
 type UnmappedVideo = {
@@ -113,7 +118,7 @@ export async function createSongFromUnmappedTracks(
     where: {
       disabled: false,
       songId: null,
-      popularity: { gte: 50 },
+      popularity: { gte: 40 },
       artists: {
         some: { spotifyArtistId: spotifyArtist.id },
       },
@@ -124,6 +129,15 @@ export async function createSongFromUnmappedTracks(
       musicBrainzTitle: true,
       popularity: true,
       thumbnails: true,
+      artists: {
+        select: {
+          spotifyArtist: {
+            select: {
+              spotifyId: true,
+            },
+          },
+        },
+      },
     },
     orderBy: { popularity: "desc" },
   });
@@ -166,6 +180,7 @@ export async function createSongFromUnmappedTracks(
   console.log(`  • Artist: ${artist.name} (${artist.nameKo})`);
   console.log(`  • Existing Songs: ${existingSongs.length}`);
   console.log(`  • Unmapped Tracks: ${unmappedTracks.length}`);
+  // console.log(`  • Unmapped Tracks:`, unmappedTracks);
   console.log(`  • Unmapped Videos: ${unmappedVideos.length}`);
 
   if (unmappedTracks.length === 0 || unmappedVideos.length === 0) {
@@ -193,34 +208,50 @@ export async function createSongFromUnmappedTracks(
   const processedNormalizedTitles = new Set<string>();
 
   for (const track of unmappedTracks) {
-    const trackTitle = track.musicBrainzTitle || track.name;
-    const normalizedTrackTitle = normalizeTitle(trackTitle);
+    // musicBrainzTitle과 name 둘 다 시도
+    const titlesToTry = [track.musicBrainzTitle, track.name].filter(
+      (t): t is string => !!t,
+    );
 
-    // 이미 Song에 존재하는지 확인 (기존 Song)
-    const existingSong = normalizedToSong.get(normalizedTrackTitle);
-    if (existingSong) {
-      continue;
-    }
+    let matchedVideo: UnmappedVideo | undefined;
 
-    // 이번 루프에서 이미 처리 예정인 제목인지 확인
-    if (processedNormalizedTitles.has(normalizedTrackTitle)) {
-      continue;
-    }
+    for (const trackTitle of titlesToTry) {
+      const normalizedTrackTitle = normalizeTitle(trackTitle);
 
-    // O(1) 완전 일치 먼저 시도
-    let matchedVideo = normalizedVideoToVideo.get(normalizedTrackTitle);
+      // 이미 Song에 존재하는지 확인 (기존 Song)
+      if (normalizedToSong.has(normalizedTrackTitle)) {
+        matchedVideo = undefined;
+        break; // 이미 존재하면 이 트랙 전체 스킵
+      }
 
-    // 실패시 findBestMatch
-    if (!matchedVideo) {
-      const result = findBestMatch(trackTitle, videoTitleCandidates);
-      if (result.answer) {
-        matchedVideo = videoTitleToVideo.get(result.answer);
+      // 이번 루프에서 이미 처리 예정인 제목인지 확인
+      if (processedNormalizedTitles.has(normalizedTrackTitle)) {
+        matchedVideo = undefined;
+        break;
+      }
+
+      // O(1) 완전 일치 먼저 시도
+      matchedVideo = normalizedVideoToVideo.get(normalizedTrackTitle);
+
+      // 실패시 findBestMatch
+      if (!matchedVideo) {
+        const result = findBestMatch(trackTitle, videoTitleCandidates);
+        if (result.answer) {
+          matchedVideo = videoTitleToVideo.get(result.answer);
+        }
+      }
+
+      if (matchedVideo) {
+        break;
       }
     }
 
     if (matchedVideo && !processedVideoIds.has(matchedVideo.videoId)) {
       processedVideoIds.add(matchedVideo.videoId);
-      processedNormalizedTitles.add(normalizedTrackTitle);
+      // 모든 제목 변형을 처리됨으로 표시
+      for (const t of titlesToTry) {
+        processedNormalizedTitles.add(normalizeTitle(t));
+      }
       trackVideoMatches.push({ track, video: matchedVideo });
     }
   }
@@ -243,32 +274,72 @@ export async function createSongFromUnmappedTracks(
       const songTitle = track.musicBrainzTitle || track.name;
       const thumbnails = track.thumbnails ?? [];
 
+      // 트랙의 각 SpotifyArtist에 대해 가장 곡이 많은 Artist 찾기
+      const spotifyIds = track.artists.map((a) => a.spotifyArtist.spotifyId);
+      const relatedArtists = await prisma.artist.findMany({
+        where: { spotifyId: { in: spotifyIds } },
+        select: {
+          id: true,
+          name: true,
+          spotifyId: true,
+          _count: { select: { artistSongs: true } },
+        },
+      });
+
+      // 각 SpotifyArtist별로 곡이 가장 많은 Artist 선택
+      const spotifyIdToArtists = new Map<string, typeof relatedArtists>();
+      for (const a of relatedArtists) {
+        if (!a.spotifyId) continue;
+        const list = spotifyIdToArtists.get(a.spotifyId) ?? [];
+        list.push(a);
+        spotifyIdToArtists.set(a.spotifyId, list);
+      }
+
+      const artistIdsToLink = new Set<number>();
+      artistIdsToLink.add(artistId); // 현재 아티스트는 항상 포함
+
+      for (const [, artists] of spotifyIdToArtists) {
+        // 곡 수 기준 내림차순 정렬 후 첫 번째 선택
+        const sorted = artists.sort(
+          (a, b) => b._count.artistSongs - a._count.artistSongs,
+        );
+        if (sorted[0]) {
+          artistIdsToLink.add(sorted[0].id);
+        }
+      }
+
+      const linkedArtists = relatedArtists.filter((a) =>
+        artistIdsToLink.has(a.id),
+      );
+
       if (dryRun) {
+        const artistNames = linkedArtists.map((a) => a.name).join(", ");
         console.log(
-          `[DRY-RUN] ✅ Song 생성: "${songTitle}" <- Track ${track.id}, Video ${video.videoId}`,
+          `[DRY-RUN] ✅ Song 생성: "${songTitle}" <- Track ${track.id}, Video ${video.videoId}, Artists: [${artistNames}]`,
         );
         songsCreated++;
         continue;
       }
 
-      // Song 생성
+      // Song 생성 (선택된 아티스트들만 연결)
       const newSong = await prisma.song.create({
         data: {
           title: songTitle,
-          titleJa: containsJapanese(songTitle) ? songTitle : null,
-          titleKo: containsKorean(songTitle) ? songTitle : null,
           catalog: artist.homeCatalog,
           thumbnailDefault:
             thumbnails[2] ?? thumbnails[1] ?? thumbnails[0] ?? null,
           thumbnailMedium: thumbnails[1] ?? thumbnails[0] ?? null,
           thumbnailHigh: thumbnails[0] ?? null,
           artistSongs: {
-            create: {
-              artistId,
-            },
+            create: [...artistIdsToLink].map((id) => ({ artistId: id })),
           },
         },
       });
+
+      if (linkedArtists.length > 1) {
+        const artistNames = linkedArtists.map((a) => a.name).join(", ");
+        console.log(`  ℹ️ 다중 아티스트 연결: [${artistNames}]`);
+      }
 
       console.log(`✅ Song ${newSong.id} 생성: "${songTitle}"`);
       songsCreated++;
@@ -468,12 +539,4 @@ async function linkRelatedVideos(
   }
 
   return linkedCount;
-}
-
-function containsJapanese(text: string): boolean {
-  return /[\u3040-\u309F\u30A0-\u30FF]/.test(text);
-}
-
-function containsKorean(text: string): boolean {
-  return /[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(text);
 }
