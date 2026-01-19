@@ -577,17 +577,23 @@ export default function SpotifySongIssuesPage() {
                         </a>
                       )}
                       <div className="flex-1 min-w-0">
-                        <a
-                          href={`https://open.spotify.com/track/${track.spotifyId}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-semibold text-zinc-900 hover:text-emerald-600 cursor-pointer line-clamp-1"
-                        >
+                        <p className="font-semibold text-zinc-900 line-clamp-1">
                           {track.name}
-                        </a>
-                        {track.artistNames.length > 0 && (
-                          <p className="text-sm text-zinc-500 mt-1 line-clamp-1">
-                            {track.artistNames.join(", ")}
+                        </p>
+                        {track.spotifyArtists.length > 0 && (
+                          <p className="text-sm text-zinc-500 mt-1">
+                            {track.spotifyArtists.map((artist, idx) => (
+                              <span key={idx} className="mr-3">
+                                {artist.artistId ? (
+                                  <>
+                                    <span className="text-emerald-600">#{artist.artistId}</span>{" "}
+                                    {artist.name}
+                                  </>
+                                ) : (
+                                  <span className="text-zinc-400">{artist.name}</span>
+                                )}
+                              </span>
+                            ))}
                           </p>
                         )}
                         <div className="flex items-center gap-3 mt-2 text-xs text-zinc-500">

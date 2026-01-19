@@ -19,6 +19,12 @@ export interface UnmappedData {
     duration?: number;
     viewCount?: number;
   }>;
+  mappedSongsWithoutLatin: Array<{
+    id: number;
+    title: string;
+    titleKo?: string;
+    titleJa?: string;
+  }>;
 }
 
 export interface MappingItem {
@@ -28,10 +34,17 @@ export interface MappingItem {
   videoName: string;
 }
 
+export interface LatinItem {
+  songId: number;
+  songTitle: string;
+  titleLatin: string;
+}
+
 export interface MappingPayload {
   artistId: number;
   artistName: string;
   song: MappingItem[];
+  latin?: LatinItem[];
 }
 
 /**
@@ -92,6 +105,27 @@ export async function getUnmappedData(artistId: number): Promise<UnmappedData> {
     orderBy: { viewCount: "desc" },
   });
 
+  // 유튜브 매핑은 되었지만 titleLatin이 없는 곡 조회
+  const mappedSongsWithoutLatin = await prisma.song.findMany({
+    where: {
+      artistSongs: {
+        some: { artistId },
+      },
+      OR: [
+        { youtubeVideos: { some: {} } },
+        { youtubeVideoId: { not: null } },
+      ],
+      titleLatin: null,
+    },
+    select: {
+      id: true,
+      title: true,
+      titleKo: true,
+      titleJa: true,
+    },
+    orderBy: { id: "asc" },
+  });
+
   return {
     artistId: artist.id,
     name: artist.name,
@@ -110,6 +144,12 @@ export async function getUnmappedData(artistId: number): Promise<UnmappedData> {
       videoTitle: video.title ?? "",
       duration: video.durationSeconds ?? undefined,
       viewCount: video.viewCount ? Number(video.viewCount) : undefined,
+    })),
+    mappedSongsWithoutLatin: mappedSongsWithoutLatin.map((song) => ({
+      id: song.id,
+      title: song.title,
+      titleKo: song.titleKo ?? undefined,
+      titleJa: song.titleJa ?? undefined,
     })),
   };
 }
