@@ -34,17 +34,10 @@ export interface MappingItem {
   videoName: string;
 }
 
-export interface LatinItem {
-  songId: number;
-  songTitle: string;
-  titleLatin: string;
-}
-
 export interface MappingPayload {
   artistId: number;
   artistName: string;
   song: MappingItem[];
-  latin?: LatinItem[];
 }
 
 /**
