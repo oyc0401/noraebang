@@ -418,13 +418,18 @@ export default function SpotifySongIssuesPage() {
                               <span className="font-medium text-zinc-900">
                                 아티스트
                               </span>
-                              <span className="ml-2">
-                                {song.artists
-                                  .map(
-                                    (artist) =>
-                                      `${artist.nameKo} (${artist.name})`,
-                                  )
-                                  .join(", ")}
+                              <span className="ml-2 flex flex-wrap gap-1 text-sm">
+                                {song.artists.map((artist, index) => (
+                                  <span key={artist.id} className="inline-flex items-center gap-1">
+                                    {artist.nameKo
+                                      ? `${artist.nameKo} (${artist.name})`
+                                      : artist.name}
+                                    <span className="text-xs text-zinc-500">#{artist.id}</span>
+                                    {index < song.artists.length - 1 && (
+                                      <span className="text-zinc-400">,</span>
+                                    )}
+                                  </span>
+                                ))}
                               </span>
                             </div>
                           )}
