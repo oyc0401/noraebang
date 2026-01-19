@@ -108,16 +108,7 @@ export async function getUnlinkedSpotifyTracks(): Promise<
 > {
   const tracks = await prisma.spotifyTrack.findMany({
     where: {
-      OR: [
-        { groupId: null },
-        {
-          group: {
-            songs: {
-              none: {},
-            },
-          },
-        },
-      ],
+      songId: null, // Song과 연결되지 않은 트랙만 조회
       disabled: false,
       popularity: {
         not: null,
