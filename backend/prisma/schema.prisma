@@ -68,6 +68,7 @@ model Song {
   karaokeSongs      KaraokeSong[]
   artistSongs       ArtistSong[]
   spotifyTrackGroup SpotifyTrackGroup? @relation(fields: [spotifyTrackGroupId], references: [id], onDelete: SetNull)
+  spotifyTracks     SpotifyTrack[]
   tjSong            TjSong?            @relation(fields: [tjSongId], references: [id], onDelete: SetNull)
   aliases           SongAlias[]
   youtubeVideos     SongYoutubeVideo[]
@@ -299,14 +300,17 @@ model SpotifyTrack {
   thumbnails                String[] @default([])
   disabled                  Boolean  @default(false)
   groupId                   Int?     @map("group_id")
+  songId                    Int?     @map("song_id")
   createdAt                 DateTime @default(now()) @map("created_at")
   updatedAt                 DateTime @updatedAt @map("updated_at")
 
   group           SpotifyTrackGroup?   @relation("GroupTracks", fields: [groupId], references: [id], onDelete: SetNull)
   primaryForGroups SpotifyTrackGroup[]  @relation("PrimaryTrack")
   artists         SpotifyArtistTrack[]
+  song            Song?                @relation(fields: [songId], references: [id], onDelete: SetNull)
 
   @@index([groupId])
+  @@index([songId])
   @@index([isrc])
   @@map("spotify_track")
 }
