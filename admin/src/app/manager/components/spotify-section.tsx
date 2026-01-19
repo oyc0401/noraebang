@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   fetchManagerArtistSpotifyPanel,
-  leaveSpotifyTrackGroup,
-  runMapSongSpotifyGroups,
+  unlinkSpotifyTrack,
 } from "../action";
 import type {
   ManagerSpotifyGroupSummary,
@@ -14,18 +13,12 @@ import type {
 } from "../types";
 import { useManagerStore } from "../store";
 import { SpotifyIcon } from "./spotify-icon";
-import {
-  SpotifyDialogProvider,
-  type SpotifyDialogContextValue,
-} from "./spotify-dialog-context";
-import { SpotifyGroupEditDialog } from "./dialog/spotify-group-edit-dialog";
-import { SpotifyNewGroupDialog } from "./dialog/spotify-new-group-dialog";
 
 export function SpotifySection() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
-  const selectedGroupId = useManagerStore((state) => state.selectedGroupId);
-  const setSelectedGroupId = useManagerStore(
-    (state) => state.setSelectedGroupId,
+  const selectedSongId = useManagerStore((state) => state.selectedSongId);
+  const setSelectedSongId = useManagerStore(
+    (state) => state.setSelectedSongId,
   );
   const setRightSectionType = useManagerStore(
     (state) => state.setRightSectionType,
@@ -40,60 +33,14 @@ export function SpotifySection() {
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
     {},
   );
-  const [isMapping, setIsMapping] = useState(false);
 
-  // 그룹 편집 다이얼로그 상태
-  const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
-  const [isGroupEditDialogOpen, setIsGroupEditDialogOpen] = useState(false);
-
-  // 새 그룹 만들기 다이얼로그 상태
-  const [isNewGroupDialogOpen, setIsNewGroupDialogOpen] = useState(false);
-
-  const openGroupEditDialog = useCallback((groupId: number) => {
-    setEditingGroupId(groupId);
-    setIsGroupEditDialogOpen(true);
-  }, []);
-
-  const closeGroupEditDialog = useCallback(() => {
-    setIsGroupEditDialogOpen(false);
-    setEditingGroupId(null);
-  }, []);
-
-  const openNewGroupDialog = useCallback(() => {
-    setIsNewGroupDialogOpen(true);
-  }, []);
-
-  const closeNewGroupDialog = useCallback(() => {
-    setIsNewGroupDialogOpen(false);
-  }, []);
-
-  const handleMapTracks = async () => {
-    if (!selectedArtistId) return;
-    if (
-      !confirm(
-        `그룹 미지정 트랙(${data.orphanTracks.length}개)을 곡과 자동 매핑하시겠습니까?\n\n트랙 제목과 곡 제목을 비교하여 매칭합니다.`,
-      )
-    )
-      return;
-
-    setIsMapping(true);
-    try {
-      await runMapSongSpotifyGroups(selectedArtistId);
-      alert("자동 매핑 완료! (로그를 확인하세요)");
-      refetch();
-    } catch (error) {
-      alert(`오류: ${error}`);
-    } finally {
-      setIsMapping(false);
-    }
-  };
 
   useEffect(() => {
     if (!selectedArtistId) {
       setData({ groups: [], orphanTracks: [] });
       setIsLoading(false);
       setErrorMessage(null);
-      setSelectedGroupId(null);
+      setSelectedSongId(null);
       return;
     }
 
@@ -127,35 +74,32 @@ export function SpotifySection() {
     return () => {
       cancelled = true;
     };
-  }, [selectedArtistId, setSelectedGroupId]);
+  }, [selectedArtistId, setSelectedSongId]);
 
   useEffect(() => {
-    if (!selectedGroupId) {
+    if (!selectedSongId) {
       return;
     }
-    const element = document.getElementById(`spotify-group-${selectedGroupId}`);
+    const element = document.getElementById(`spotify-song-${selectedSongId}`);
     element?.scrollIntoView({ block: "nearest" });
-  }, [selectedGroupId, data.groups.length]);
+  }, [selectedSongId, data.groups.length]);
 
   useEffect(() => {
     setExpandedGroups((prev) => {
       const next: Record<number, boolean> = {};
       data.groups.forEach((group) => {
-        next[group.groupId] = prev[group.groupId] ?? false;
+        next[group.songId] = prev[group.songId] ?? false;
       });
       return next;
     });
   }, [data.groups]);
 
-  const hasContent = useMemo(
-    () => data.groups.length > 0 || data.orphanTracks.length > 0,
-    [data.groups.length, data.orphanTracks.length],
-  );
+  const hasContent = data.groups.length > 0 || data.orphanTracks.length > 0;
 
   const handleCollapseAll = () => {
     const next: Record<number, boolean> = {};
     data.groups.forEach((group) => {
-      next[group.groupId] = false;
+      next[group.songId] = false;
     });
     setExpandedGroups(next);
   };
@@ -163,7 +107,7 @@ export function SpotifySection() {
   const handleExpandAll = () => {
     const next: Record<number, boolean> = {};
     data.groups.forEach((group) => {
-      next[group.groupId] = true;
+      next[group.songId] = true;
     });
     setExpandedGroups(next);
   };
@@ -226,23 +170,18 @@ export function SpotifySection() {
 
             {data.groups.map((group) => (
               <SpotifyGroupCard
-                key={group.groupId}
+                key={group.songId}
                 group={group}
-                isExpanded={expandedGroups[group.groupId] ?? true}
+                isExpanded={expandedGroups[group.songId] ?? true}
                 onToggle={() =>
                   setExpandedGroups((prev) => ({
                     ...prev,
-                    [group.groupId]: !(prev[group.groupId] ?? true),
+                    [group.songId]: !(prev[group.songId] ?? true),
                   }))
                 }
-                isSelected={selectedGroupId === group.groupId}
-                onSelect={
-                  group.linkedSongs.length
-                    ? () => setSelectedGroupId(group.groupId)
-                    : undefined
-                }
+                isSelected={selectedSongId === group.songId}
+                onSelect={() => setSelectedSongId(group.songId)}
                 onRefetch={refetch}
-                onEditGroup={() => openGroupEditDialog(group.groupId)}
               />
             ))}
           </div>
@@ -252,20 +191,11 @@ export function SpotifySection() {
           <div className="px-4 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-zinc-800">
-                그룹 미지정 트랙 ({data.orphanTracks.length})
+                미연결 트랙 ({data.orphanTracks.length})
               </h3>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="rounded-full border border-blue-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-blue-600 transition hover:bg-blue-50 cursor-pointer"
-                  onClick={openNewGroupDialog}
-                >
-                  + 새 그룹 만들기
-                </button>
-                <span className="text-xs text-zinc-500">
-                  그룹에 속하지 않은 순수 트랙
-                </span>
-              </div>
+              <span className="text-xs text-zinc-500">
+                Song에 연결되지 않은 트랙
+              </span>
             </div>
             <div className="space-y-2">
               {data.orphanTracks.map((track) => (
@@ -284,36 +214,8 @@ export function SpotifySection() {
     );
   };
 
-  const dialogContextValue = useMemo<SpotifyDialogContextValue>(
-    () => ({
-      selectedArtistId,
-      orphanTracks: data.orphanTracks,
-      editingGroupId,
-      isGroupEditDialogOpen,
-      openGroupEditDialog,
-      closeGroupEditDialog,
-      isNewGroupDialogOpen,
-      openNewGroupDialog,
-      closeNewGroupDialog,
-      refetch,
-    }),
-    [
-      closeGroupEditDialog,
-      closeNewGroupDialog,
-      data.orphanTracks,
-      editingGroupId,
-      isGroupEditDialogOpen,
-      isNewGroupDialogOpen,
-      openGroupEditDialog,
-      openNewGroupDialog,
-      refetch,
-      selectedArtistId,
-    ],
-  );
-
   return (
-    <SpotifyDialogProvider value={dialogContextValue}>
-      <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white text-sm text-zinc-700 shadow-sm">
+    <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white text-sm text-zinc-700 shadow-sm">
       <div className="flex items-center justify-between border-b border-emerald-100/80 bg-gradient-to-r from-emerald-50/60 to-transparent px-4 pb-3 pt-4">
         <button
           type="button"
@@ -353,28 +255,9 @@ export function SpotifySection() {
         </div>
       </div>
 
-      {/* 액션 버튼 영역 */}
-      {selectedArtistId && data.orphanTracks.length > 0 && (
-        <div className="flex items-center gap-2 border-b border-emerald-100/80 bg-emerald-50/30 px-4 py-2">
-          <button
-            type="button"
-            className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-            onClick={handleMapTracks}
-            disabled={isMapping}
-          >
-            {isMapping
-              ? "매핑 중..."
-              : `트랙-곡 자동 매핑 (${data.orphanTracks.length})`}
-          </button>
-        </div>
-      )}
-
       <div className="flex-1 min-h-0 overflow-hidden">{renderBody()}</div>
 
-      </section>
-      <SpotifyGroupEditDialog />
-      <SpotifyNewGroupDialog />
-    </SpotifyDialogProvider>
+    </section>
   );
 }
 
@@ -385,7 +268,6 @@ type SpotifyGroupCardProps = {
   isSelected: boolean;
   onSelect?: () => void;
   onRefetch: () => void;
-  onEditGroup: () => void;
 };
 
 function SpotifyGroupCard({
@@ -395,58 +277,41 @@ function SpotifyGroupCard({
   isSelected,
   onSelect,
   onRefetch,
-  onEditGroup,
 }: SpotifyGroupCardProps) {
-  const hasLinkedSongs = group.linkedSongs.length > 0;
   const tracksToRender =
     isExpanded || !group.primaryTrack ? group.tracks : [group.primaryTrack];
 
   return (
     <div
-      id={`spotify-group-${group.groupId}`}
-      className={` border-1  p-4 shadow-sm transition ${
-        hasLinkedSongs && onSelect ? "cursor-pointer" : "cursor-default"
-      } ${
+      id={`spotify-song-${group.songId}`}
+      className={`border-1 p-4 shadow-sm transition cursor-pointer ${
         isSelected
           ? "border-emerald-400 bg-emerald-50/70"
-          : hasLinkedSongs
-            ? "border-gray-300 bg-white hover:border-emerald-300"
-            : "border-amber-300 bg-amber-50 hover:border-amber-400"
+          : "border-gray-300 bg-white hover:border-emerald-300"
       }`}
       onClick={() => {
-        if (!hasLinkedSongs || !onSelect) return;
-        onSelect();
+        onSelect?.();
       }}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-xs font-semibold text-zinc-900">
-            그룹 #{group.groupId}
+            {group.linkedSong.title}
+            {group.linkedSong.titleKo && (
+              <span className="ml-1 text-zinc-500">
+                ({group.linkedSong.titleKo})
+              </span>
+            )}
           </p>
           <p className="text-[11px] text-zinc-500">
-            {group.tracks.length} 트랙 · {group.linkedSongs.length}곡 연결
+            Song #{group.linkedSong.id} · {group.tracks.length}트랙 (아티스트
+            트랙 {group.artistTrackCount}개)
           </p>
         </div>
         <div className="flex items-center gap-2 text-[11px]">
-          <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 ${
-              hasLinkedSongs
-                ? "border border-emerald-200 text-emerald-700"
-                : "border border-dashed border-amber-200 text-amber-600"
-            }`}
-          >
-            {hasLinkedSongs ? "연결됨" : "미연결"}
+          <span className="inline-flex items-center rounded-full px-2 py-0.5 border border-emerald-200 text-emerald-700">
+            연결됨
           </span>
-          <button
-            type="button"
-            className="rounded-full border border-blue-200 px-2.5 py-0.5 text-[11px] text-blue-600 transition hover:border-blue-300 hover:bg-blue-50 cursor-pointer"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEditGroup();
-            }}
-          >
-            그룹 편집
-          </button>
           <button
             type="button"
             className="rounded-full border border-zinc-200 px-2.5 py-0.5 text-[11px] text-zinc-600 transition hover:border-emerald-200 hover:text-emerald-700 cursor-pointer"
@@ -462,15 +327,15 @@ function SpotifyGroupCard({
       <div className="mt-3 space-y-2">
         {tracksToRender.map((track, index) => (
           <SpotifyTrackCard
-            key={`${group.groupId}-${track.id}`}
+            key={`${group.songId}-${track.id}`}
             track={track}
-            groupId={group.groupId}
-            linkedSongs={group.linkedSongs}
+            songId={group.songId}
+            linkedSong={group.linkedSong}
             onSelect={onSelect}
             isSelected={isSelected}
             variant="group"
             isPrimary={track.id === group.primaryTrack.id && index === 0}
-            onLeaveGroup={onRefetch}
+            onUnlink={onRefetch}
           />
         ))}
       </div>
@@ -480,62 +345,62 @@ function SpotifyGroupCard({
 
 type SpotifyTrackCardProps = {
   track: ManagerSpotifyTrackSummary;
-  groupId?: number | null;
-  linkedSongs?: Array<{ id: number; title: string; titleKo?: string | null }>;
+  songId?: number | null;
+  linkedSong?: { id: number; title: string; titleKo?: string | null };
   onSelect?: () => void;
   isSelected?: boolean;
   variant?: "group" | "standalone";
   isPrimary?: boolean;
-  onLeaveGroup?: () => void;
+  onUnlink?: () => void;
 };
 
 function SpotifyTrackCard({
   track,
-  groupId,
-  linkedSongs = [],
+  songId,
+  linkedSong,
   onSelect,
   isSelected = false,
   variant = "standalone",
   isPrimary = false,
-  onLeaveGroup,
+  onUnlink,
 }: SpotifyTrackCardProps) {
   const openSongCreateDialog = useManagerStore(
     (state) => state.openSongCreateDialog,
   );
-  const [isLeaving, setIsLeaving] = useState(false);
+  const [isUnlinking, setIsUnlinking] = useState(false);
 
   const handleCreateSong = (e: React.MouseEvent) => {
     e.stopPropagation();
-    openSongCreateDialog(track.name, groupId ?? undefined);
+    openSongCreateDialog(track.name, track.id);
   };
 
-  const handleLeaveGroup = async (e: React.MouseEvent) => {
+  const handleUnlink = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("이 트랙을 그룹에서 제거하시겠습니까?")) return;
+    if (!confirm("이 트랙의 Song 연결을 해제하시겠습니까?")) return;
 
-    setIsLeaving(true);
+    setIsUnlinking(true);
     try {
-      await leaveSpotifyTrackGroup(track.id);
-      onLeaveGroup?.();
+      await unlinkSpotifyTrack(track.id);
+      onUnlink?.();
     } catch (error) {
       console.error(error);
-      alert("그룹 나가기에 실패했습니다.");
+      alert("연결 해제에 실패했습니다.");
     } finally {
-      setIsLeaving(false);
+      setIsUnlinking(false);
     }
   };
   const durationLabel = formatDuration(track.durationMs);
   const releaseLabel = track.releaseDate ?? "-";
-  const hasLinkedSongs = Boolean(groupId && linkedSongs.length > 0);
+  const hasLinkedSong = Boolean(songId && linkedSong);
   const isGroupVariant = variant === "group";
-  const canSelect = Boolean(onSelect) && (!groupId || hasLinkedSongs);
+  const canSelect = Boolean(onSelect);
   const cardStateClass = isGroupVariant
     ? "border border-zinc-100 bg-white/80"
     : isSelected
       ? "border-emerald-400 bg-emerald-50/70"
       : "border-zinc-100 bg-white/80";
-  const showLinkedSongs =
-    Boolean(groupId) && (!isGroupVariant || (isGroupVariant && isPrimary));
+  const showLinkedSong =
+    Boolean(songId) && (!isGroupVariant || (isGroupVariant && isPrimary));
 
   return (
     <div
@@ -609,50 +474,27 @@ function SpotifyTrackCard({
                     Primary
                   </span>
                 ) : null}
-                {linkedSongs.length === 0 && (
-                  <button
-                    type="button"
-                    className="inline-flex items-center rounded-full border border-blue-200 bg-white px-2 py-0.5 text-blue-600 transition hover:bg-blue-50 cursor-pointer"
-                    onClick={handleCreateSong}
-                  >
-                    곡 만들기
-                  </button>
-                )}
-                {groupId && linkedSongs.length === 0 && (
-                  <button
-                    type="button"
-                    className="inline-flex items-center rounded-full border border-red-200 bg-white px-2 py-0.5 text-red-600 transition hover:bg-red-50 disabled:opacity-50 cursor-pointer"
-                    onClick={handleLeaveGroup}
-                    disabled={isLeaving}
-                  >
-                    {isLeaving ? "처리중..." : "그룹 나가기"}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="inline-flex items-center rounded-full border border-red-200 bg-white px-2 py-0.5 text-red-600 transition hover:bg-red-50 disabled:opacity-50 cursor-pointer"
+                  onClick={handleUnlink}
+                  disabled={isUnlinking}
+                >
+                  {isUnlinking ? "처리중..." : "연결 해제"}
+                </button>
               </div>
             ) : (
               <div className="flex flex-col items-end gap-1 text-[10px]">
-                {groupId ? (
-                  <>
-                    <span className="inline-flex items-center rounded-full border border-emerald-200 px-2 py-0.5 text-emerald-700">
-                      그룹 #{groupId}
-                    </span>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 ${
-                        hasLinkedSongs
-                          ? "border border-emerald-200 text-emerald-700"
-                          : "border border-dashed border-amber-200 text-amber-600"
-                      }`}
-                    >
-                      {hasLinkedSongs
-                        ? `${linkedSongs.length}곡 연결`
-                        : "연결된 곡 없음"}
-                    </span>
-                  </>
-                ) : (
-                  <span className="inline-flex items-center rounded-full border border-zinc-200 px-2 py-0.5 text-zinc-600">
-                    단독 트랙
-                  </span>
-                )}
+                <span className="inline-flex items-center rounded-full border border-zinc-200 px-2 py-0.5 text-zinc-600">
+                  미연결 트랙
+                </span>
+                <button
+                  type="button"
+                  className="inline-flex items-center rounded-full border border-blue-200 bg-white px-2 py-0.5 text-blue-600 transition hover:bg-blue-50 cursor-pointer"
+                  onClick={handleCreateSong}
+                >
+                  곡 만들기
+                </button>
               </div>
             )}
           </div>
@@ -694,29 +536,18 @@ function SpotifyTrackCard({
                 ))
             )}
           </div>
-          {showLinkedSongs ? (
-            hasLinkedSongs ? (
-              <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-zinc-600">
-                {linkedSongs.map((song) => (
-                  <span
-                    key={`${track.id}-song-${song.id}`}
-                    className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2 py-0.5"
-                  >
-                    <span className="text-[10px] text-zinc-400">
-                      #{song.id}
-                    </span>
-                    <span className="font-medium text-zinc-700">
-                      {song.title}
-                      {song.titleKo ? ` (${song.titleKo})` : ""}
-                    </span>
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-2 text-[11px] text-zinc-400">
-                아직 이 그룹과 연결된 곡이 없습니다.
-              </p>
-            )
+          {showLinkedSong && linkedSong ? (
+            <div className="mt-2 flex flex-wrap gap-1 text-[11px] text-zinc-600">
+              <span className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2 py-0.5">
+                <span className="text-[10px] text-zinc-400">
+                  #{linkedSong.id}
+                </span>
+                <span className="font-medium text-zinc-700">
+                  {linkedSong.title}
+                  {linkedSong.titleKo ? ` (${linkedSong.titleKo})` : ""}
+                </span>
+              </span>
+            </div>
           ) : null}
         </div>
       </div>

@@ -7,8 +7,8 @@ type SongItem = ManagerArtistDetail["songs"][number];
 
 type SongCardProps = {
   song: SongItem;
-  isGroupSelected: boolean;
-  onSelectGroup: (groupId: number | null) => void;
+  isSelected: boolean;
+  onSelect: (songId: number | null) => void;
   onEditClick: (
     song: SongItem,
     options?: {
@@ -25,8 +25,8 @@ type SongCardProps = {
 
 export function SongCard({
   song,
-  isGroupSelected,
-  onSelectGroup,
+  isSelected,
+  onSelect,
   onEditClick,
 }: SongCardProps) {
   const thumbnailSrc =
@@ -35,16 +35,19 @@ export function SongCard({
     song.thumbnails.high ??
     null;
 
-  const primaryTrack = song.spotifyGroup?.primaryTrack;
+  // spotifyTracks에서 가장 인기있는 트랙을 primary로 사용
+  const primaryTrack = song.spotifyTracks
+    ?.slice()
+    .sort((a, b) => (b.popularity ?? -1) - (a.popularity ?? -1))[0];
   const primaryRelease = primaryTrack?.releaseDate ?? "-";
   const primaryDuration = formatDuration(primaryTrack?.durationMs);
 
   return (
     <div
       id={`song-card-${song.id}`}
-      onClick={() => onSelectGroup(song.spotifyGroup?.id ?? null)}
+      onClick={() => onSelect(song.spotifyTracks?.length ? song.id : null)}
       className={`rounded-xl border px-4 py-3 transition cursor-pointer ${
-        isGroupSelected
+        isSelected
           ? "border-blue-400 bg-blue-50"
           : "border-zinc-100 bg-white/80 hover:border-zinc-200"
       }`}

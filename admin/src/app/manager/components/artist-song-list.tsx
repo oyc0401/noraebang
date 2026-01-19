@@ -3,33 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  createSong,
   fetchManagerArtistSongs,
   fetchManagerArtistInfo,
-  updateSong,
-  deleteSong,
-  fetchUnlinkedSpotifyGroups,
-  fetchUnlinkedYoutubeVideos,
-  fetchUnlinkedSongProposes,
-  fetchLinkedYoutubeVideos,
-  fetchLinkedSongProposes,
-  linkSpotifyGroup,
-  unlinkSpotifyGroup,
-  linkYoutubeVideo,
-  unlinkYoutubeVideo,
-  linkSongPropose,
-  unlinkSongPropose,
-  linkSongArtist,
-  unlinkSongArtist,
-  searchArtistsForLink,
-  refreshSongThumbnail,
-  type UnlinkedSpotifyGroup,
-  type UnlinkedYoutubeVideo,
-  type UnlinkedSongPropose,
-  type LinkedYoutubeVideo,
-  type LinkedSongPropose,
 } from "../action";
-import type { ManagerArtistSongDetail, SongLinkedArtist } from "../types";
+import type { ManagerArtistSongDetail } from "../types";
 import { useManagerStore } from "../store";
 import { SongCard } from "./song-card";
 import {
@@ -39,15 +16,14 @@ import {
 } from "./song-dialog-context";
 import { SongEditDialog } from "./dialog/song-edit-dialog";
 import { SongCreateDialog } from "./dialog/song-create-dialog";
-type ArtistSearchResult = { id: number; name: string; nameKo: string };
 
 type SongSortType = "popularity-desc" | "popularity-asc" | "tj-first";
 
 export function ArtistSongList() {
   const selectedArtistId = useManagerStore((state) => state.selectedArtistId);
-  const selectedGroupId = useManagerStore((state) => state.selectedGroupId);
-  const setSelectedGroupId = useManagerStore(
-    (state) => state.setSelectedGroupId,
+  const selectedSongId = useManagerStore((state) => state.selectedSongId);
+  const setSelectedSongId = useManagerStore(
+    (state) => state.setSelectedSongId,
   );
 
   const [songs, setSongs] = useState<ManagerArtistSongDetail[]>([]);
@@ -191,35 +167,43 @@ export function ArtistSongList() {
     };
   }, [selectedArtistId]);
 
-  // selectedGroupId가 현재 곡 목록에 없으면 초기화
+  // selectedSongId가 현재 곡 목록에 없으면 초기화
   useEffect(() => {
     if (
-      selectedGroupId &&
-      !songs.some((song) => song.spotifyGroup?.id === selectedGroupId)
+      selectedSongId &&
+      !songs.some((song) => song.id === selectedSongId)
     ) {
-      setSelectedGroupId(null);
+      setSelectedSongId(null);
     }
-  }, [songs, selectedGroupId, setSelectedGroupId]);
+  }, [songs, selectedSongId, setSelectedSongId]);
 
   const sortedSongs = useMemo(() => {
+    // 각 곡의 primary track (가장 인기 높은 트랙) 구하는 함수
+    const getPrimaryTrack = (song: ManagerArtistSongDetail) =>
+      song.spotifyTracks
+        ?.slice()
+        .sort((a, b) => (b.popularity ?? -1) - (a.popularity ?? -1))[0];
+
     return [...songs].sort((a, b) => {
       // 스포티파이 연결 없으면 -1 (0보다 낮음)
-      const popA = a.spotifyGroup?.primaryTrack?.popularity ?? -1;
-      const popB = b.spotifyGroup?.primaryTrack?.popularity ?? -1;
+      const primaryA = getPrimaryTrack(a);
+      const primaryB = getPrimaryTrack(b);
+      const popA = primaryA?.popularity ?? -1;
+      const popB = primaryB?.popularity ?? -1;
 
       if (sortType === "popularity-desc") {
         // 스포티파이 인기순 (높은순)
         if (popA !== popB) return popB - popA;
-        const releaseA = a.spotifyGroup?.primaryTrack?.releaseDate ?? "";
-        const releaseB = b.spotifyGroup?.primaryTrack?.releaseDate ?? "";
+        const releaseA = primaryA?.releaseDate ?? "";
+        const releaseB = primaryB?.releaseDate ?? "";
         return releaseA.localeCompare(releaseB);
       }
 
       if (sortType === "popularity-asc") {
         // 스포티파이 인기순 (낮은순)
         if (popA !== popB) return popA - popB;
-        const releaseA = a.spotifyGroup?.primaryTrack?.releaseDate ?? "";
-        const releaseB = b.spotifyGroup?.primaryTrack?.releaseDate ?? "";
+        const releaseA = primaryA?.releaseDate ?? "";
+        const releaseB = primaryB?.releaseDate ?? "";
         return releaseA.localeCompare(releaseB);
       }
 
@@ -228,25 +212,25 @@ export function ArtistSongList() {
       const tjB = b.karaoke.length > 0 ? 1 : 0;
       if (tjA !== tjB) return tjB - tjA;
       if (popA !== popB) return popB - popA;
-      const releaseA = a.spotifyGroup?.primaryTrack?.releaseDate ?? "";
-      const releaseB = b.spotifyGroup?.primaryTrack?.releaseDate ?? "";
+      const releaseA = primaryA?.releaseDate ?? "";
+      const releaseB = primaryB?.releaseDate ?? "";
       return releaseA.localeCompare(releaseB);
     });
   }, [songs, sortType]);
 
-  // 선택된 그룹으로 스크롤
+  // 선택된 곡으로 스크롤
   useEffect(() => {
-    if (!songs.length || !selectedGroupId) {
+    if (!songs.length || !selectedSongId) {
       return;
     }
     const targetSong = sortedSongs.find(
-      (song) => song.spotifyGroup?.id === selectedGroupId,
+      (song) => song.id === selectedSongId,
     );
     if (targetSong) {
       const element = document.getElementById(`song-card-${targetSong.id}`);
       element?.scrollIntoView({ block: "nearest" });
     }
-  }, [sortedSongs, selectedGroupId]);
+  }, [sortedSongs, selectedSongId]);
 
   if (!selectedArtistId) {
     return null;
@@ -317,11 +301,11 @@ export function ArtistSongList() {
             <SongCard
               key={song.id}
               song={song}
-              isGroupSelected={
-                Boolean(song.spotifyGroup?.id) &&
-                song.spotifyGroup?.id === selectedGroupId
+              isSelected={
+                Boolean(song.spotifyTracks?.length) &&
+                song.id === selectedSongId
               }
-              onSelectGroup={setSelectedGroupId}
+              onSelect={setSelectedSongId}
               onEditClick={(s, options) =>
                 openSongEditDialog(s, { focusTab: options?.focusTab })
               }

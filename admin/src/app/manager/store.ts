@@ -6,8 +6,9 @@ export type RightSectionType = "spotify" | "youtube" | "tj";
 type ManagerStoreState = {
   selectedArtistId: number | null;
   setSelectedArtistId: (artistId: number | null) => void;
-  selectedGroupId: number | null;
-  setSelectedGroupId: (groupId: number | null) => void;
+  // 선택된 Song ID (해당 Song에 연결된 Spotify 트랙들을 보여줌)
+  selectedSongId: number | null;
+  setSelectedSongId: (songId: number | null) => void;
   rightSectionType: RightSectionType;
   setRightSectionType: (type: RightSectionType) => void;
   isArtistNameDialogOpen: boolean;
@@ -34,25 +35,26 @@ type ManagerStoreState = {
   isAliasDialogOpen: boolean;
   openAliasDialog: () => void;
   closeAliasDialog: () => void;
-  groupDetail: { groupId: number; tracks: ManagerSpotifyTrackSummary[] } | null;
-  openGroupDetail: (
-    groupId: number,
+  // Song에 연결된 Spotify 트랙 상세 보기
+  songSpotifyDetail: { songId: number; tracks: ManagerSpotifyTrackSummary[] } | null;
+  openSongSpotifyDetail: (
+    songId: number,
     tracks: ManagerSpotifyTrackSummary[],
   ) => void;
-  closeGroupDetail: () => void;
+  closeSongSpotifyDetail: () => void;
   // 곡 생성 다이얼로그
   songCreateDialogOpen: boolean;
   songCreateInitialTitle: string;
-  songCreateInitialSpotifyGroupId: number | null;
-  openSongCreateDialog: (initialTitle?: string, spotifyGroupId?: number) => void;
+  songCreateInitialTrackId: number | null;
+  openSongCreateDialog: (initialTitle?: string, trackId?: number) => void;
   closeSongCreateDialog: () => void;
 };
 
 export const useManagerStore = create<ManagerStoreState>((set) => ({
   selectedArtistId: null,
   setSelectedArtistId: (selectedArtistId) => set({ selectedArtistId }),
-  selectedGroupId: null,
-  setSelectedGroupId: (selectedGroupId) => set({ selectedGroupId }),
+  selectedSongId: null,
+  setSelectedSongId: (selectedSongId) => set({ selectedSongId }),
   rightSectionType: "spotify",
   setRightSectionType: (rightSectionType) => set({ rightSectionType }),
   isArtistNameDialogOpen: false,
@@ -79,23 +81,23 @@ export const useManagerStore = create<ManagerStoreState>((set) => ({
   isAliasDialogOpen: false,
   openAliasDialog: () => set({ isAliasDialogOpen: true }),
   closeAliasDialog: () => set({ isAliasDialogOpen: false }),
-  groupDetail: null,
-  openGroupDetail: (groupId, tracks) => set({ groupDetail: { groupId, tracks } }),
-  closeGroupDetail: () => set({ groupDetail: null }),
+  songSpotifyDetail: null,
+  openSongSpotifyDetail: (songId, tracks) => set({ songSpotifyDetail: { songId, tracks } }),
+  closeSongSpotifyDetail: () => set({ songSpotifyDetail: null }),
   // 곡 생성 다이얼로그
   songCreateDialogOpen: false,
   songCreateInitialTitle: "",
-  songCreateInitialSpotifyGroupId: null,
-  openSongCreateDialog: (initialTitle, spotifyGroupId) =>
+  songCreateInitialTrackId: null,
+  openSongCreateDialog: (initialTitle, trackId) =>
     set({
       songCreateDialogOpen: true,
       songCreateInitialTitle: initialTitle ?? "",
-      songCreateInitialSpotifyGroupId: spotifyGroupId ?? null,
+      songCreateInitialTrackId: trackId ?? null,
     }),
   closeSongCreateDialog: () =>
     set({
       songCreateDialogOpen: false,
       songCreateInitialTitle: "",
-      songCreateInitialSpotifyGroupId: null,
+      songCreateInitialTrackId: null,
     }),
 }));

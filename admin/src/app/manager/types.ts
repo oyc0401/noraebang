@@ -31,7 +31,6 @@ export type SongLinkedArtist = {
   name: string;
   nameKo: string;
   role?: string | null;
-  order: number;
 };
 
 export type ManagerSongSearchResult = {
@@ -72,10 +71,7 @@ export type ManagerArtistSongDetail = {
     provider: string;
     karaokeNo: string;
   }>;
-  spotifyGroup?: {
-    id: number;
-    primaryTrack: ManagerSpotifyTrackSummary | null;
-  } | null;
+  spotifyTracks?: ManagerSpotifyTrackSummary[];
   tjSong?: {
     id: string;
     title?: string | null;
@@ -150,7 +146,7 @@ export type ManagerSpotifyTrackSummary = {
   musicBrainzArtistId?: string | null;
   thumbnails: string[];
   createdAt: string;
-  groupId?: number | null;
+  songId?: number | null;
   artists: Array<{
     artistId?: number | null;
     spotifyName: string;
@@ -158,17 +154,18 @@ export type ManagerSpotifyTrackSummary = {
   }>;
 };
 
+// 같은 songId를 가진 트랙들의 그룹 (songId 기반)
 export type ManagerSpotifyGroupSummary = {
-  groupId: number;
+  songId: number;
   trackCount: number;
   artistTrackCount: number;
-  primaryTrack: ManagerSpotifyTrackSummary;
+  primaryTrack: ManagerSpotifyTrackSummary; // 인기도 가장 높은 트랙
   tracks: ManagerSpotifyTrackSummary[];
-  linkedSongs: Array<{
+  linkedSong: {
     id: number;
     title: string;
     titleKo?: string | null;
-  }>;
+  };
 };
 
 export type ManagerSpotifyPanelData = {
