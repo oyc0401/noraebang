@@ -25,7 +25,7 @@ import {
 } from "../../lib/admin/map-song-youtube-video-from-search.ts";
 
 type ParsedArgs = {
-  artistId: number;
+  artistIds: number[];
   options: MapSongYoutubeVideoFromSearchOptions;
 };
 
@@ -42,17 +42,37 @@ Options:
 `.trim();
 
 function parseArgs(argv: string[]): ParsedArgs {
-  const artistArg = argv.find((arg) => /^\d+$/.test(arg));
-  if (!artistArg) {
+  const numericArgs = argv.filter((arg) => /^\d+$/.test(arg));
+  if (numericArgs.length === 0) {
     console.error("❌ artistId가 필요합니다.\n");
     console.log(USAGE);
     process.exit(1);
   }
 
-  const artistId = Number.parseInt(artistArg, 10);
-  if (Number.isNaN(artistId)) {
-    console.error(`❌ 잘못된 artistId: ${artistArg}`);
-    process.exit(1);
+  let artistIds: number[] = [];
+
+  if (numericArgs.length >= 2) {
+    const startId = Number.parseInt(numericArgs[0], 10);
+    const endId = Number.parseInt(numericArgs[1], 10);
+
+    if (Number.isNaN(startId) || Number.isNaN(endId)) {
+      console.error(`❌ 잘못된 범위 입력: ${numericArgs[0]} ${numericArgs[1]}`);
+      process.exit(1);
+    }
+
+    if (startId > endId) {
+      console.error(`❌ 범위가 올바르지 않습니다. 시작 ID(${startId})가 끝 ID(${endId})보다 큽니다.`);
+      process.exit(1);
+    }
+
+    artistIds = Array.from({ length: endId - startId + 1 }, (_, idx) => startId + idx);
+  } else {
+    const artistId = Number.parseInt(numericArgs[0], 10);
+    if (Number.isNaN(artistId)) {
+      console.error(`❌ 잘못된 artistId: ${numericArgs[0]}`);
+      process.exit(1);
+    }
+    artistIds = [artistId];
   }
 
   const options: MapSongYoutubeVideoFromSearchOptions = {
@@ -83,7 +103,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     options.filterToMusicCategory = true;
   }
 
-  return { artistId, options };
+  return { artistIds, options };
 }
 
 function readNumberFlag(argv: string[], name: string): number | undefined {
@@ -114,15 +134,18 @@ function readStringFlag(argv: string[], name: string): string | undefined {
 }
 
 async function main() {
-  const { artistId, options } = parseArgs(process.argv.slice(2));
+  const { artistIds, options } = parseArgs(process.argv.slice(2));
 
   console.log(
-    `🚀 map-song-youtube-video-from-search: artistId=${artistId} ${
+    `🚀 map-song-youtube-video-from-search: artistIds=${artistIds.join(", ")} ${
       options.dryRun ? "(dry-run)" : ""
     }`,
   );
 
-  await mapSongYoutubeVideoFromSearch(artistId, options);
+  for (const artistId of artistIds) {
+    console.log(`\n==================== [Artist ID ${artistId}] ====================`);
+    await mapSongYoutubeVideoFromSearch(artistId, options);
+  }
 }
 
 main()
