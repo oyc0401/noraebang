@@ -51,14 +51,14 @@ export async function searchUnlinkedSongYoutube(
   options: SearchUnlinkedSongYoutubeOptions = {},
 ): Promise<ArtistYoutubeSongSearchResult> {
   const {
-    maxResultsPerSong = 5,
+    maxResultsPerSong = 50,
     maxSongs,
     regionCode,
     relevanceLanguage,
     filterToMusicCategory,
   } = options;
 
-  const perSongLimit = clamp(Math.floor(maxResultsPerSong), 1, 10);
+  const perSongLimit = clamp(Math.floor(maxResultsPerSong), 1, 50);
   const artist = await prisma.artist.findUnique({
     where: { id: artistId },
     select: {
@@ -143,16 +143,21 @@ export async function searchUnlinkedSongYoutube(
         filterToMusicCategory,
       });
 
-      const videos = extractVideoCandidates(response.items).slice(
-        0,
-        perSongLimit,
-      );
+      const videos = extractVideoCandidates(response.items)
+        .slice(0, perSongLimit)
+        .filter(
+          (video) => video.channelId && topicChannelIds.has(video.channelId),
+        );
 
       videos.forEach((video) => allVideoIds.push(video.videoId));
 
-      console.log(`     • Candidates found: ${videos.length}`);
+      console.log(`     • Candidates found (topic only): ${videos.length}`);
 
       const prioritizedVideos = prioritizeTopicMatches(videos, topicChannelIds);
+
+      prioritizedVideos.forEach((v) => {
+        console.log(`🌀 ${v.videoName}`);
+      });
 
       songResults.push({
         songId: song.id,
