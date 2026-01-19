@@ -32,7 +32,9 @@ export type UnlinkedYoutubeVideo = {
   artistNameKo?: string;
 };
 
-export async function getUnlinkedYoutubeVideos(): Promise<UnlinkedYoutubeVideo[]> {
+export async function getUnlinkedYoutubeVideos(): Promise<
+  UnlinkedYoutubeVideo[]
+> {
   const videos = await prisma.youtubeVideo.findMany({
     where: {
       songs: {
@@ -46,7 +48,7 @@ export async function getUnlinkedYoutubeVideos(): Promise<UnlinkedYoutubeVideo[]
     orderBy: {
       viewCount: "desc",
     },
-    take: 100,
+    take: 1000,
     select: {
       videoId: true,
       title: true,
@@ -94,10 +96,16 @@ export type UnlinkedSpotifyTrack = {
   popularity: number;
   thumbnails: string[];
   releaseDate?: string;
-  artistNames: string[];
+  spotifyArtists: Array<{
+    name: string;
+    artistId?: number;
+    artistNameKo?: string;
+  }>;
 };
 
-export async function getUnlinkedSpotifyTracks(): Promise<UnlinkedSpotifyTrack[]> {
+export async function getUnlinkedSpotifyTracks(): Promise<
+  UnlinkedSpotifyTrack[]
+> {
   const tracks = await prisma.spotifyTrack.findMany({
     where: {
       OR: [
@@ -114,6 +122,18 @@ export async function getUnlinkedSpotifyTracks(): Promise<UnlinkedSpotifyTrack[]
       popularity: {
         not: null,
         gt: 0,
+      },
+      // 아티스트 ID가 MAX_ARTIST 이하인 트랙만 필터링
+      artists: {
+        some: {
+          spotifyArtist: {
+            artists: {
+              some: {
+                id: { lte: MAX_ARTIST },
+              },
+            },
+          },
+        },
       },
     },
     orderBy: {
@@ -132,6 +152,16 @@ export async function getUnlinkedSpotifyTracks(): Promise<UnlinkedSpotifyTrack[]
           spotifyArtist: {
             select: {
               name: true,
+              artists: {
+                where: {
+                  id: { lte: MAX_ARTIST },
+                },
+                select: {
+                  id: true,
+                  name: true,
+                  nameKo: true,
+                },
+              },
             },
           },
         },
@@ -139,15 +169,27 @@ export async function getUnlinkedSpotifyTracks(): Promise<UnlinkedSpotifyTrack[]
     },
   });
 
-  return tracks.map((track) => ({
-    id: track.id,
-    spotifyId: track.spotifyId,
-    name: track.name,
-    popularity: track.popularity ?? 0,
-    thumbnails: track.thumbnails,
-    releaseDate: track.releaseDate ?? undefined,
-    artistNames: track.artists.map((a) => a.spotifyArtist.name),
-  }));
+  return tracks.map((track) => {
+    // 스포티파이 아티스트별로 연결된 Artist 정보 추출
+    const spotifyArtists = track.artists.map((a) => {
+      const linkedArtist = a.spotifyArtist.artists[0]; // MAX_ARTIST 이하인 첫 번째 아티스트
+      return {
+        name: a.spotifyArtist.name,
+        artistId: linkedArtist?.id,
+        artistNameKo: linkedArtist?.nameKo,
+      };
+    });
+
+    return {
+      id: track.id,
+      spotifyId: track.spotifyId,
+      name: track.name,
+      popularity: track.popularity ?? 0,
+      thumbnails: track.thumbnails,
+      releaseDate: track.releaseDate ?? undefined,
+      spotifyArtists,
+    };
+  });
 }
 
 export async function getSpotifySongIssues(): Promise<SpotifySongIssue[]> {
