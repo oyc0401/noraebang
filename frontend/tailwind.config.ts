@@ -13,7 +13,7 @@ const config: Config = {
         primary: "#ad2bee",
         "background-light": "#f7f6f8",
         "background-dark": "#010101", // 배경색
-        "surface-dark": "#151216",
+        "surface-dark": "#1C191E",
         "surface-light": "#ffffff",
         "surface-border": "#302437",
         "surface-text": "#8A8F9C",

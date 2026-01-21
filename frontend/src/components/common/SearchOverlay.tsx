@@ -46,9 +46,9 @@ export function SearchOverlay() {
                   <button
                     key={`suggestion-${card.suggestion.title}-${index}`}
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (card.suggestion?.title) {
-                        router.push(`/search?q=${card.suggestion.title}`);
+                        await router.push(`/search?q=${card.suggestion.title}`);
                         clearSearch();
                       }
                     }}
@@ -70,9 +70,9 @@ export function SearchOverlay() {
                   <button
                     key={`artist-${card.artist.id}`}
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (card.artist?.slug) {
-                        router.push(`/artist/${card.artist.slug}`);
+                        await router.push(`/artist/${card.artist.slug}`);
                         clearSearch();
                       }
                     }}
@@ -106,9 +106,9 @@ export function SearchOverlay() {
                   <button
                     key={`song-${card.song.id}`}
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (card.song?.artistSlug) {
-                        router.push(
+                        await router.push(
                           `/artist/${card.song.artistSlug}#${card.song.id}`,
                         );
                         clearSearch();

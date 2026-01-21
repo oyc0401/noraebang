@@ -10,7 +10,7 @@ export function HomeSearchBar() {
     <button
       type="button"
       onClick={() => setSearchActive(true)}
-      className="flex w-full items-center rounded-lg h-14 bg-surface-dark shadow-sm ring-1 ring-surface-border overflow-hidden transition-all cursor-pointer"
+      className="flex w-full items-center rounded-lg h-14 bg-surface-dark shadow-sm overflow-hidden transition-all cursor-pointer"
     >
       <div className="flex items-center justify-center pl-4 text-[#6B7280]">
         <SearchIcon className="size-6" />

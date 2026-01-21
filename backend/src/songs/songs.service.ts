@@ -18,12 +18,12 @@ type SongWithRelations = {
     role: string | null;
     artist: { name: string; nameKo: string; slug: string | null };
   }[];
-  spotifyTrackGroup: {
-    primaryTrack: {
+  songSpotifyTracks: {
+    spotifyTrack: {
       popularity: number | null;
       releaseDate: string | null;
-    } | null;
-  } | null;
+    };
+  }[];
 };
 
 type SongDtoData = {
@@ -206,21 +206,25 @@ export class SongsService {
     // 전체 개수 조회
     const total = await this.prisma.song.count({ where: whereClause });
 
-    // 3. 곡 조회 (필요한 필드만 select) - 정렬을 위해 spotifyTrackGroup 정보 추가
+    // 3. 곡 조회 (필요한 필드만 select) - 정렬을 위해 songSpotifyTracks 정보 추가
     const songs = await this.prisma.song.findMany({
       where: whereClause,
       select: {
         ...this.songDtoSelect,
         tjSongId: true,
-        spotifyTrackGroup: {
+        songSpotifyTracks: {
           select: {
-            primaryTrack: {
+            spotifyTrack: {
               select: {
                 popularity: true,
                 releaseDate: true,
               },
             },
           },
+          orderBy: {
+            spotifyTrack: { popularity: "desc" },
+          },
+          take: 1,
         },
       },
     });
@@ -234,16 +238,20 @@ export class SongsService {
         return bHasTj ? 1 : -1;
       }
 
-      // 2. Spotify primary track의 popularity (높은 순)
-      const aPopularity = a.spotifyTrackGroup?.primaryTrack?.popularity ?? -1;
-      const bPopularity = b.spotifyTrackGroup?.primaryTrack?.popularity ?? -1;
+      // 2. Spotify 트랙의 popularity (높은 순) - 가장 인기 있는 트랙 기준
+      const aPopularity =
+        a.songSpotifyTracks[0]?.spotifyTrack?.popularity ?? -1;
+      const bPopularity =
+        b.songSpotifyTracks[0]?.spotifyTrack?.popularity ?? -1;
       if (aPopularity !== bPopularity) {
         return bPopularity - aPopularity;
       }
 
-      // 3. Primary track의 releaseDate (최신순)
-      const aReleaseDate = a.spotifyTrackGroup?.primaryTrack?.releaseDate ?? "";
-      const bReleaseDate = b.spotifyTrackGroup?.primaryTrack?.releaseDate ?? "";
+      // 3. 트랙의 releaseDate (최신순)
+      const aReleaseDate =
+        a.songSpotifyTracks[0]?.spotifyTrack?.releaseDate ?? "";
+      const bReleaseDate =
+        b.songSpotifyTracks[0]?.spotifyTrack?.releaseDate ?? "";
       if (aReleaseDate !== bReleaseDate) {
         return bReleaseDate.localeCompare(aReleaseDate);
       }
