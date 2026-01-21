@@ -19,7 +19,7 @@ const config: Config = {
         "surface-text": "#8A8F9C",
       },
       fontFamily: {
-        display: ["'Be Vietnam Pro'", "'Noto Sans KR'", "sans-serif"],
+        display: ["'Roboto'", "sans-serif"],
       },
     },
   },
