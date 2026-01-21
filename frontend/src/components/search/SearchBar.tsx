@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { useSearchStore } from "@/store/searchStore";
 
 export function SearchBar() {
-  const { query, setQuery, clearSearch } = useSearchStore();
+  const { query, setQuery } = useSearchStore();
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -14,11 +14,10 @@ export function SearchBar() {
     inputRef.current?.focus();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (query.trim()) {
-      await router.push(`/search?q=${query}`);
-      clearSearch();
+      router.push(`/search?q=${query}`);
     }
   };
 

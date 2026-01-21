@@ -2,7 +2,8 @@
 
 import { Clock, Search } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/search";
 import { KaraokeBadge } from "@/components/common/KaraokeBadge";
 import { SearchBar } from "@/components/search/SearchBar";
@@ -11,7 +12,22 @@ import { useSearchStore } from "@/store/searchStore";
 
 export function SearchOverlay() {
   const router = useRouter();
-  const { query, setQuery, clearSearch } = useSearchStore();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { query, clearSearch } = useSearchStore();
+  const initialPathname = useRef(pathname);
+  const initialSearchParams = useRef(searchParams.toString());
+
+  // 라우트 변경 감지하여 오버레이 닫기
+  useEffect(() => {
+    const currentSearchParams = searchParams.toString();
+    if (
+      pathname !== initialPathname.current ||
+      currentSearchParams !== initialSearchParams.current
+    ) {
+      clearSearch();
+    }
+  }, [pathname, searchParams, clearSearch]);
 
   // 완성형 한글이 아니면 API 호출 안함
   const shouldFetch = query.length > 0 && !hasIncompleteKorean(query);
@@ -46,10 +62,9 @@ export function SearchOverlay() {
                   <button
                     key={`suggestion-${card.suggestion.title}-${index}`}
                     type="button"
-                    onClick={async () => {
+                    onClick={() => {
                       if (card.suggestion?.title) {
-                        await router.push(`/search?q=${card.suggestion.title}`);
-                        clearSearch();
+                        router.push(`/search?q=${card.suggestion.title}`);
                       }
                     }}
                     className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
@@ -70,10 +85,9 @@ export function SearchOverlay() {
                   <button
                     key={`artist-${card.artist.id}`}
                     type="button"
-                    onClick={async () => {
+                    onClick={() => {
                       if (card.artist?.slug) {
-                        await router.push(`/artist/${card.artist.slug}`);
-                        clearSearch();
+                        router.push(`/artist/${card.artist.slug}`);
                       }
                     }}
                     className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-4"
@@ -106,12 +120,11 @@ export function SearchOverlay() {
                   <button
                     key={`song-${card.song.id}`}
                     type="button"
-                    onClick={async () => {
+                    onClick={() => {
                       if (card.song?.artistSlug) {
-                        await router.push(
+                        router.push(
                           `/artist/${card.song.artistSlug}#${card.song.id}`,
                         );
-                        clearSearch();
                       }
                     }}
                     className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-4"
