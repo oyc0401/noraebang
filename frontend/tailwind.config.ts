@@ -12,8 +12,8 @@ const config: Config = {
       colors: {
         primary: "#ad2bee",
         "background-light": "#f7f6f8",
-        "background-dark": "#1C1022",
-        "surface-dark": "#2a1b32",
+        "background-dark": "#010101", // 배경색
+        "surface-dark": "#151216",
         "surface-light": "#ffffff",
         "surface-border": "#302437",
         "surface-text": "#8A8F9C",

@@ -92,7 +92,7 @@ export function LinkPasteCard() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-surface-dark p-4 shadow-sm ring-1 ring-surface-border">
+    <div className="relative overflow-hidden rounded-2xl bg-[#242026] p-4 shadow-sm ring-1 ring-surface-border">
       {/* iOS Safari를 위한 숨겨진 input */}
       <input
         ref={inputRef}
