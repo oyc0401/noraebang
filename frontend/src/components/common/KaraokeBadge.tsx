@@ -12,7 +12,7 @@ export function KaraokeBadge({
   isMV,
 }: KaraokeBadgeProps) {
   return (
-    <div className="inline-flex items-center gap-1 rounded-full bg-[#1D1D42] px-2 py-1">
+    <div className="flex items-center justify-center gap-1 rounded-full bg-[#1D1D42] px-2 py-1 w-[58px] h-[22px]">
       <span className="text-[10px] font-bold text-[#63AAFF]">
         {provider} {number}
       </span>
