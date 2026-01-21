@@ -68,12 +68,12 @@ async function fetchArtistData(artistId: number): Promise<ArtistData | null> {
     },
   });
 
-  // songId가 null인 트랙들만 조회
+  // Song에 연결되지 않은 트랙들만 조회 (다대다)
   const unmappedTracks = spotifyArtist
     ? await prisma.spotifyTrack.findMany({
         where: {
           disabled: false,
-          songId: null,
+          songs: { none: {} },
           artists: {
             some: { spotifyArtistId: spotifyArtist.id },
           },
@@ -178,9 +178,12 @@ async function applyMappings(
         );
         applied += 1;
       } else {
-        await prisma.spotifyTrack.update({
-          where: { id: mapping.trackId },
-          data: { songId: mapping.songId },
+        // 다대다 관계로 연결
+        await prisma.songSpotifyTrack.create({
+          data: {
+            songId: mapping.songId,
+            spotifyTrackId: mapping.trackId,
+          },
         });
 
         console.log(
