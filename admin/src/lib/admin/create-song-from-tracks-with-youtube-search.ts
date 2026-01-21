@@ -129,7 +129,7 @@ export async function createSongFromTracksWithYoutubeSearch(
   const unmappedTracks = await prisma.spotifyTrack.findMany({
     where: {
       disabled: false,
-      songId: null,
+      songs: { none: {} },
       popularity: { gte: TARGET_POPULARITY },
       artists: {
         some: { spotifyArtistId: spotifyArtist.id },
@@ -303,10 +303,12 @@ export async function createSongFromTracksWithYoutubeSearch(
       );
       songsCreated++;
 
-      // 트랙을 Song에 연결
-      await prisma.spotifyTrack.update({
-        where: { id: track.id },
-        data: { songId: newSong.id },
+      // 트랙을 Song에 연결 (다대다)
+      await prisma.songSpotifyTrack.create({
+        data: {
+          songId: newSong.id,
+          spotifyTrackId: track.id,
+        },
       });
       tracksLinked++;
 

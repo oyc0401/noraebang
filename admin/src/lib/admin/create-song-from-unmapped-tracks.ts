@@ -119,7 +119,7 @@ export async function createSongFromUnmappedTracks(
   const unmappedTracks = await prisma.spotifyTrack.findMany({
     where: {
       disabled: false,
-      songId: null,
+      songs: { none: {} },
       popularity: { gte: targetPopularity },
       artists: {
         some: { spotifyArtistId: spotifyArtist.id },
@@ -346,10 +346,12 @@ export async function createSongFromUnmappedTracks(
       console.log(`✅ Song ${newSong.id} 생성: "${songTitle}"`);
       songsCreated++;
 
-      // 트랙을 Song에 연결 (songId 설정)
-      await prisma.spotifyTrack.update({
-        where: { id: track.id },
-        data: { songId: newSong.id },
+      // 트랙을 Song에 연결 (다대다)
+      await prisma.songSpotifyTrack.create({
+        data: {
+          songId: newSong.id,
+          spotifyTrackId: track.id,
+        },
       });
       tracksLinked++;
 
@@ -429,9 +431,11 @@ async function linkRelatedTracks(
       if (dryRun) {
         console.log(`  [DRY-RUN] 관련 트랙 연결: "${matchedTrack.name}"`);
       } else {
-        await prisma.spotifyTrack.update({
-          where: { id: matchedTrack.id },
-          data: { songId },
+        await prisma.songSpotifyTrack.create({
+          data: {
+            songId,
+            spotifyTrackId: matchedTrack.id,
+          },
         });
         console.log(`  ✅ 관련 트랙 연결: "${matchedTrack.name}"`);
       }
@@ -445,9 +449,11 @@ async function linkRelatedTracks(
       if (dryRun) {
         console.log(`  [DRY-RUN] 관련 트랙(후보) 연결: "${matchedTrack.name}"`);
       } else {
-        await prisma.spotifyTrack.update({
-          where: { id: matchedTrack.id },
-          data: { songId },
+        await prisma.songSpotifyTrack.create({
+          data: {
+            songId,
+            spotifyTrackId: matchedTrack.id,
+          },
         });
         console.log(`  ✅ 관련 트랙(후보) 연결: "${matchedTrack.name}"`);
       }
