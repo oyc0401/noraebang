@@ -65,14 +65,15 @@ model Song {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  karaokeSongs      KaraokeSong[]
-  artistSongs       ArtistSong[]
-  spotifyTrackGroup SpotifyTrackGroup? @relation(fields: [spotifyTrackGroupId], references: [id], onDelete: SetNull)
-  spotifyTracks     SpotifyTrack[]
-  tjSong            TjSong?            @relation(fields: [tjSongId], references: [id], onDelete: SetNull)
-  aliases           SongAlias[]
-  youtubeVideos     SongYoutubeVideo[]
-  songProposes      SongPropose[]
+  karaokeSongs       KaraokeSong[]
+  artistSongs        ArtistSong[]
+  spotifyTrackGroup  SpotifyTrackGroup? @relation(fields: [spotifyTrackGroupId], references: [id], onDelete: SetNull)
+  spotifyTracks      SpotifyTrack[]
+  songSpotifyTracks  SongSpotifyTrack[]
+  tjSong             TjSong?            @relation(fields: [tjSongId], references: [id], onDelete: SetNull)
+  aliases            SongAlias[]
+  youtubeVideos      SongYoutubeVideo[]
+  songProposes       SongPropose[]
 
   @@index([youtubeVideoId])
   @@index([catalog])
@@ -296,14 +297,15 @@ model SpotifyTrack {
   thumbnails                String[] @default([])
   disabled                  Boolean  @default(false)
   groupId                   Int?     @map("group_id")
-  songId                    Int?     @map("song_id")
+  songId                    Int?     @map("song_id") // deprecated: SongSpotifyTrack으로 이전 예정
   createdAt                 DateTime @default(now()) @map("created_at")
   updatedAt                 DateTime @updatedAt @map("updated_at")
 
-  group           SpotifyTrackGroup?   @relation("GroupTracks", fields: [groupId], references: [id], onDelete: SetNull)
+  group            SpotifyTrackGroup?   @relation("GroupTracks", fields: [groupId], references: [id], onDelete: SetNull)
   primaryForGroups SpotifyTrackGroup[]  @relation("PrimaryTrack")
-  artists         SpotifyArtistTrack[]
-  song            Song?                @relation(fields: [songId], references: [id], onDelete: SetNull)
+  artists          SpotifyArtistTrack[]
+  song             Song?                @relation(fields: [songId], references: [id], onDelete: SetNull)
+  songs            SongSpotifyTrack[]
 
   @@index([groupId])
   @@index([songId])
@@ -311,6 +313,21 @@ model SpotifyTrack {
   @@index([songId, releaseDate]) // 가장 오래된 트랙
   @@index([isrc])
   @@map("spotify_track")
+}
+
+model SongSpotifyTrack {
+  id             Int      @id @default(autoincrement())
+  songId         Int      @map("song_id")
+  spotifyTrackId Int      @map("spotify_track_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  song         Song         @relation(fields: [songId], references: [id], onDelete: Cascade)
+  spotifyTrack SpotifyTrack @relation(fields: [spotifyTrackId], references: [id], onDelete: Cascade)
+
+  @@unique([songId, spotifyTrackId])
+  @@index([songId])
+  @@index([spotifyTrackId])
+  @@map("song_spotify_track")
 }
 
 enum ArtistRole {
