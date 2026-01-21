@@ -37,11 +37,11 @@ export type SongWithRelations = Awaited<
   tjSong?: {
     id: string;
   };
-  spotifyTrack?: {
-    spotifyTrack?: {
+  songSpotifyTracks?: Array<{
+    spotifyTrack: {
       popularity?: number;
     };
-  };
+  }>;
 };
 
 type SongArtist = SongWithRelations["artistSongs"][number]["artist"];
@@ -330,7 +330,11 @@ function createArtistSpotifyPopularity(song: SongWithRelations) {
 }
 
 function createSpotifyTrackPopularity(song: SongWithRelations) {
-  return song.spotifyTrack?.spotifyTrack?.popularity ?? 0;
+  const popularities =
+    song.songSpotifyTracks
+      ?.map((sst) => sst.spotifyTrack?.popularity)
+      .filter((p): p is number => p !== undefined && p !== null) ?? [];
+  return popularities.length > 0 ? Math.max(...popularities) : 0;
 }
 
 function createSongPopularity(song: SongWithRelations) {

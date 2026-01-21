@@ -14,10 +14,10 @@ export function SearchBar() {
     inputRef.current?.focus();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/search?q=${query}`);
+      await router.push(`/search?q=${query}`);
       clearSearch();
     }
   };

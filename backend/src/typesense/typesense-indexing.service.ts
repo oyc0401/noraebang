@@ -107,9 +107,9 @@ export class TypesenseIndexingService {
         tjSong: {
           select: { id: true },
         },
-        spotifyTrackGroup: {
+        songSpotifyTracks: {
           include: {
-            primaryTrack: {
+            spotifyTrack: {
               select: {
                 popularity: true,
               },
