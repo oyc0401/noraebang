@@ -581,18 +581,22 @@ export async function fetchManagerArtistSpotifyPanel(
     return { groups: [], orphanTracks: [] };
   }
 
-  // 아티스트의 스포티파이 트랙 조회 (songId와 song 정보 포함)
+  // 아티스트의 스포티파이 트랙 조회 (다대다 관계로 songs 포함)
   const artistTracks = await prisma.spotifyArtistTrack.findMany({
     where: { spotifyArtist: { spotifyId: artist.spotifyId } },
     select: {
       spotifyTrack: {
         select: {
           ...spotifyTrackBaseSelect,
-          song: {
+          songs: {
             select: {
-              id: true,
-              title: true,
-              titleKo: true,
+              song: {
+                select: {
+                  id: true,
+                  title: true,
+                  titleKo: true,
+                },
+              },
             },
           },
         },
@@ -601,7 +605,7 @@ export async function fetchManagerArtistSpotifyPanel(
     orderBy: { spotifyTrack: { name: "asc" } },
   });
 
-  // songId 기반으로 그룹화
+  // songId 기반으로 그룹화 (다대다: 첫 번째 연결된 Song 기준)
   const groupsAccumulator = new Map<
     number,
     {
@@ -623,8 +627,11 @@ export async function fetchManagerArtistSpotifyPanel(
     if (!track) continue;
     const summary = mapTrack(track);
 
-    if (track.songId && track.song) {
-      const existing = groupsAccumulator.get(track.songId);
+    // 다대다: 첫 번째 연결된 Song을 사용
+    const linkedSong = track.songs?.[0]?.song;
+    if (linkedSong) {
+      const songId = linkedSong.id;
+      const existing = groupsAccumulator.get(songId);
       if (existing) {
         existing.artistTrackCount += 1;
         existing.trackCount += 1;
@@ -637,12 +644,12 @@ export async function fetchManagerArtistSpotifyPanel(
           existing.primaryTrack = summary;
         }
       } else {
-        groupsAccumulator.set(track.songId, {
-          songId: track.songId,
+        groupsAccumulator.set(songId, {
+          songId,
           linkedSong: {
-            id: track.song.id,
-            title: track.song.title,
-            titleKo: track.song.titleKo ?? undefined,
+            id: linkedSong.id,
+            title: linkedSong.title,
+            titleKo: linkedSong.titleKo ?? undefined,
           },
           trackCount: 1,
           artistTrackCount: 1,
@@ -1520,6 +1527,9 @@ export async function deleteSong(songId: number): Promise<void> {
     // SongYoutubeVideo 연결 삭제
     await tx.songYoutubeVideo.deleteMany({ where: { songId } });
 
+    // SongSpotifyTrack 연결 삭제 (다대다)
+    await tx.songSpotifyTrack.deleteMany({ where: { songId } });
+
     // KaraokeSong 연결 삭제
     await tx.karaokeSong.deleteMany({ where: { songId } });
 
@@ -2144,7 +2154,7 @@ export async function fetchLinkedSongProposes(
 
 // ========== 연결/해제 함수들 ==========
 
-// 스포티파이 트랙 연결 (트랙의 songId 설정)
+// 스포티파이 트랙 연결 (다대다 관계)
 export async function linkSpotifyTrack(songId: number, trackId: number) {
   if (!songId || Number.isNaN(songId)) {
     throw new Error("유효한 곡 ID가 필요합니다.");
@@ -2153,37 +2163,53 @@ export async function linkSpotifyTrack(songId: number, trackId: number) {
     throw new Error("유효한 트랙 ID가 필요합니다.");
   }
 
-  await prisma.spotifyTrack.update({
-    where: { id: trackId },
-    data: { songId },
+  // 이미 연결되어 있는지 확인
+  const existing = await prisma.songSpotifyTrack.findUnique({
+    where: {
+      songId_spotifyTrackId: { songId, spotifyTrackId: trackId },
+    },
+  });
+
+  if (existing) {
+    throw new Error("이미 연결된 트랙입니다.");
+  }
+
+  await prisma.songSpotifyTrack.create({
+    data: { songId, spotifyTrackId: trackId },
   });
 
   return { success: true };
 }
 
-// 스포티파이 트랙 연결 해제 (트랙의 songId를 null로)
-export async function unlinkSpotifyTrack(trackId: number) {
+// 스포티파이 트랙 연결 해제 (다대다 관계)
+export async function unlinkSpotifyTrack(trackId: number, songId?: number) {
   if (!trackId || Number.isNaN(trackId)) {
     throw new Error("유효한 트랙 ID가 필요합니다.");
   }
 
-  await prisma.spotifyTrack.update({
-    where: { id: trackId },
-    data: { songId: null },
-  });
+  if (songId) {
+    // 특정 곡과의 연결만 해제
+    await prisma.songSpotifyTrack.deleteMany({
+      where: { spotifyTrackId: trackId, songId },
+    });
+  } else {
+    // 모든 곡과의 연결 해제
+    await prisma.songSpotifyTrack.deleteMany({
+      where: { spotifyTrackId: trackId },
+    });
+  }
 
   return { success: true };
 }
 
-// 곡의 모든 스포티파이 트랙 연결 해제
+// 곡의 모든 스포티파이 트랙 연결 해제 (다대다 관계)
 export async function unlinkAllSpotifyTracks(songId: number) {
   if (!songId || Number.isNaN(songId)) {
     throw new Error("유효한 곡 ID가 필요합니다.");
   }
 
-  await prisma.spotifyTrack.updateMany({
+  await prisma.songSpotifyTrack.deleteMany({
     where: { songId },
-    data: { songId: null },
   });
 
   return { success: true };
@@ -2533,7 +2559,7 @@ export async function fetchUnlinkedSpotifyTracks(
     return [];
   }
 
-  // 아티스트의 모든 스포티파이 트랙 중 Song에 연결되지 않은 것들
+  // 아티스트의 모든 스포티파이 트랙 중 Song에 연결되지 않은 것들 (다대다)
   const artistTracks = await prisma.spotifyArtistTrack.findMany({
     where: { spotifyArtist: { spotifyId: artist.spotifyId } },
     select: {
@@ -2544,14 +2570,14 @@ export async function fetchUnlinkedSpotifyTracks(
           spotifyId: true,
           popularity: true,
           thumbnails: true,
-          songId: true,
+          songs: { select: { songId: true } },
         },
       },
     },
   });
 
   return artistTracks
-    .filter((record) => record.spotifyTrack && !record.spotifyTrack.songId)
+    .filter((record) => record.spotifyTrack && record.spotifyTrack.songs.length === 0)
     .map((record) => ({
       id: record.spotifyTrack.id,
       name: record.spotifyTrack.name,
@@ -2562,7 +2588,7 @@ export async function fetchUnlinkedSpotifyTracks(
     .sort((a, b) => (b.popularity ?? -1) - (a.popularity ?? -1));
 }
 
-// 트랙을 곡에 연결 (songId 설정)
+// 트랙을 곡에 연결 (다대다 관계)
 export async function addSpotifyTrackToSong(
   songId: number,
   trackId: number,
@@ -2584,20 +2610,20 @@ export async function addSpotifyTrackToSong(
     throw new Error("곡을 찾을 수 없습니다.");
   }
 
-  // 트랙이 이미 다른 Song에 연결되어 있는지 확인
-  const track = await prisma.spotifyTrack.findUnique({
-    where: { id: trackId },
-    select: { songId: true },
+  // 이미 연결되어 있는지 확인
+  const existing = await prisma.songSpotifyTrack.findUnique({
+    where: {
+      songId_spotifyTrackId: { songId, spotifyTrackId: trackId },
+    },
   });
 
-  if (track?.songId) {
-    throw new Error("이 트랙은 이미 다른 곡에 연결되어 있습니다.");
+  if (existing) {
+    throw new Error("이미 연결된 트랙입니다.");
   }
 
-  // 트랙을 곡에 연결
-  await prisma.spotifyTrack.update({
-    where: { id: trackId },
-    data: { songId },
+  // 트랙을 곡에 연결 (다대다)
+  await prisma.songSpotifyTrack.create({
+    data: { songId, spotifyTrackId: trackId },
   });
 
   return { success: true };
