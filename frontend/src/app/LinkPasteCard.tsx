@@ -116,7 +116,7 @@ export function LinkPasteCard() {
                 alt={foundSong.title}
                 width={72}
                 height={72}
-                className="rounded-full shrink-0"
+                className="size-[72px] rounded-lg shrink-0 object-cover"
               />
             )}
             <div className="flex-1 min-w-0">
