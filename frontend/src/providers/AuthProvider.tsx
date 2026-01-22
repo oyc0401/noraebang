@@ -2,26 +2,19 @@
 
 import { useEffect, useRef } from "react";
 import { API_BASE_URL } from "@/api/config";
-import {
-  getAccessToken,
-  getDeviceId,
-  getRefreshToken,
-  setTokens,
-} from "@/lib/auth";
+import { getAccessToken, getRefreshToken, setTokens } from "@/lib/auth";
 import { useAuthStore } from "@/store/authStore";
 
 interface AuthResponse {
   accessToken: string;
   refreshToken: string;
-  deviceId: string;
   expiresIn: number;
 }
 
-async function anonymousLogin(deviceId?: string): Promise<AuthResponse> {
+async function anonymousLogin(): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}/auth/anonymous`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ deviceId }),
   });
 
   if (!response.ok) {
@@ -43,16 +36,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const existingToken = getAccessToken();
         const existingRefreshToken = getRefreshToken();
-        const existingDeviceId = getDeviceId();
 
-        if (existingToken && existingRefreshToken && existingDeviceId) {
-          setAuth(0, existingDeviceId);
+        if (existingToken && existingRefreshToken) {
+          setAuth(0);
           return;
         }
 
-        const result = await anonymousLogin(existingDeviceId);
-        setTokens(result.accessToken, result.refreshToken, result.deviceId);
-        setAuth(0, result.deviceId);
+        const result = await anonymousLogin();
+        setTokens(result.accessToken, result.refreshToken);
+        setAuth(0);
       } catch (error) {
         console.error("Auth initialization failed:", error);
         setLoading(false);

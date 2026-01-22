@@ -4,12 +4,6 @@ export class ProfileResponseDto {
   @ApiProperty({ example: 1 })
   id: number;
 
-  @ApiProperty({
-    example: "550e8400-e29b-41d4-a716-446655440000",
-    required: false,
-  })
-  deviceId?: string;
-
   @ApiProperty({ example: "user@example.com", required: false })
   email?: string;
 

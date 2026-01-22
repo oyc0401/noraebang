@@ -1,18 +1,12 @@
 import { create } from "zustand";
-import {
-  clearTokens,
-  getAccessToken,
-  getDeviceId,
-  setTokens,
-} from "@/lib/auth";
+import { clearTokens, getAccessToken } from "@/lib/auth";
 
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   userId?: number;
-  deviceId?: string;
 
-  setAuth: (userId: number, deviceId: string) => void;
+  setAuth: (userId: number) => void;
   setLoading: (loading: boolean) => void;
   logout: () => void;
   initialize: () => void;
@@ -22,14 +16,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: true,
   userId: undefined,
-  deviceId: undefined,
 
-  setAuth: (userId, deviceId) => {
+  setAuth: (userId) => {
     set({
       isAuthenticated: true,
       isLoading: false,
       userId,
-      deviceId,
     });
   },
 
@@ -43,18 +35,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: false,
       isLoading: false,
       userId: undefined,
-      deviceId: undefined,
     });
   },
 
   initialize: () => {
     const token = getAccessToken();
-    const deviceId = getDeviceId();
-    if (token && deviceId) {
+    if (token) {
       set({
         isAuthenticated: true,
         isLoading: false,
-        deviceId,
       });
     } else {
       set({ isLoading: false });

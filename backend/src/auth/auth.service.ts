@@ -5,13 +5,12 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
-import { v4 as uuidv4 } from "uuid";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuthResponseDto, ProfileResponseDto } from "./dto";
 import { JwtPayload } from "./strategies/jwt.strategy";
 
 const ACCESS_TOKEN_EXPIRES_IN = 15 * 60; // 15분
-const REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60; // 7일
+const REFRESH_TOKEN_EXPIRES_IN = 30 * 24 * 60 * 60; // 30일
 
 @Injectable()
 export class AuthService {
@@ -21,20 +20,12 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async anonymousLogin(deviceId?: string): Promise<AuthResponseDto> {
-    const finalDeviceId = deviceId || uuidv4();
-
-    let user = await this.prisma.user.findUnique({
-      where: { deviceId: finalDeviceId },
+  async anonymousLogin(): Promise<AuthResponseDto> {
+    const user = await this.prisma.user.create({
+      data: {},
     });
 
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: { deviceId: finalDeviceId },
-      });
-    }
-
-    const tokens = await this.generateTokens(user.id, finalDeviceId);
+    const tokens = await this.generateTokens(user.id, user.email ?? undefined);
 
     const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
     await this.prisma.user.update({
@@ -48,7 +39,6 @@ export class AuthService {
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      deviceId: finalDeviceId,
       expiresIn: ACCESS_TOKEN_EXPIRES_IN,
     };
   }
@@ -80,11 +70,7 @@ export class AuthService {
       throw new UnauthorizedException("Invalid refresh token");
     }
 
-    const tokens = await this.generateTokens(
-      user.id,
-      user.deviceId ?? undefined,
-      user.email ?? undefined,
-    );
+    const tokens = await this.generateTokens(user.id, user.email ?? undefined);
 
     const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
     await this.prisma.user.update({
@@ -98,7 +84,6 @@ export class AuthService {
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      deviceId: user.deviceId ?? "",
       expiresIn: ACCESS_TOKEN_EXPIRES_IN,
     };
   }
@@ -114,7 +99,6 @@ export class AuthService {
 
     return {
       id: user.id,
-      deviceId: user.deviceId ?? undefined,
       email: user.email ?? undefined,
       createdAt: user.createdAt,
       lastLoginAt: user.lastLoginAt,
@@ -128,21 +112,15 @@ export class AuthService {
     });
   }
 
-  private async generateTokens(
-    userId: number,
-    deviceId?: string,
-    email?: string,
-  ) {
+  private async generateTokens(userId: number, email?: string) {
     const accessPayload: JwtPayload = {
       sub: userId,
-      deviceId,
       email,
       type: "access",
     };
 
     const refreshPayload: JwtPayload = {
       sub: userId,
-      deviceId,
       email,
       type: "refresh",
     };

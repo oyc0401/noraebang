@@ -9,7 +9,6 @@ import { AuthService } from "./auth.service";
 import { CurrentUser } from "./decorators/current-user.decorator";
 import type { CurrentUserData } from "./decorators/current-user.decorator";
 import {
-  AnonymousLoginDto,
   AuthResponseDto,
   ProfileResponseDto,
   RefreshTokenDto,
@@ -22,12 +21,10 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post("anonymous")
-  @ApiOperation({ summary: "익명 로그인", description: "기기 ID로 익명 로그인하여 토큰 발급" })
+  @ApiOperation({ summary: "익명 로그인", description: "새 익명 사용자 생성 및 토큰 발급" })
   @ApiResponse({ status: 200, type: AuthResponseDto })
-  async anonymousLogin(
-    @Body() dto: AnonymousLoginDto,
-  ): Promise<AuthResponseDto> {
-    return this.authService.anonymousLogin(dto.deviceId);
+  async anonymousLogin(): Promise<AuthResponseDto> {
+    return this.authService.anonymousLogin();
   }
 
   @Post("refresh")
