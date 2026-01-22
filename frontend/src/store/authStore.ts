@@ -1,6 +1,4 @@
 import { create } from "zustand";
-import { clearTokens, getAccessToken } from "@/lib/auth";
-
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -9,7 +7,6 @@ interface AuthState {
   setAuth: (userId: number) => void;
   setLoading: (loading: boolean) => void;
   logout: () => void;
-  initialize: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -30,23 +27,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    clearTokens();
     set({
       isAuthenticated: false,
       isLoading: false,
       userId: undefined,
     });
-  },
-
-  initialize: () => {
-    const token = getAccessToken();
-    if (token) {
-      set({
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } else {
-      set({ isLoading: false });
-    }
   },
 }));

@@ -2,26 +2,29 @@
 
 import { useEffect, useRef } from "react";
 import { API_BASE_URL } from "@/api/config";
-import { getAccessToken, getRefreshToken, setTokens } from "@/lib/auth";
+import { ApiError, customFetch } from "@/api/client";
+import type { ProfileResponseDto } from "@/api/model/models";
 import { useAuthStore } from "@/store/authStore";
 
-interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-}
-
-async function anonymousLogin(): Promise<AuthResponse> {
+async function anonymousLogin(): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/auth/anonymous`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
   });
 
   if (!response.ok) {
     throw new Error("Anonymous login failed");
   }
 
-  return response.json();
+  await response.json().catch(() => ({}));
+}
+
+async function fetchProfile(): Promise<ProfileResponseDto> {
+  return customFetch<ProfileResponseDto>({
+    url: "/auth/profile",
+    method: "GET",
+  });
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -34,19 +37,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function initAuth() {
       try {
-        const existingToken = getAccessToken();
-        const existingRefreshToken = getRefreshToken();
-
-        if (existingToken && existingRefreshToken) {
-          setAuth(0);
-          return;
-        }
-
-        const result = await anonymousLogin();
-        setTokens(result.accessToken, result.refreshToken);
-        setAuth(0);
+        const profile = await fetchProfile();
+        setAuth(profile.id);
+        return;
       } catch (error) {
-        console.error("Auth initialization failed:", error);
+        if (error instanceof ApiError && error.status === 401) {
+          try {
+            await anonymousLogin();
+            const profile = await fetchProfile();
+            setAuth(profile.id);
+            return;
+          } catch (loginError) {
+            console.error("Anonymous login failed:", loginError);
+          }
+        } else {
+          console.error("Auth initialization failed:", error);
+        }
         setLoading(false);
       }
     }

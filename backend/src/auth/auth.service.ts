@@ -1,16 +1,14 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuthResponseDto, ProfileResponseDto } from "./dto";
+import {
+  ACCESS_TOKEN_EXPIRES_IN,
+  REFRESH_TOKEN_EXPIRES_IN,
+} from "./constants";
 import { JwtPayload } from "./strategies/jwt.strategy";
-
-const ACCESS_TOKEN_EXPIRES_IN = 15 * 60; // 15분
-const REFRESH_TOKEN_EXPIRES_IN = 30 * 24 * 60 * 60; // 30일
 
 @Injectable()
 export class AuthService {
