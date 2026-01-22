@@ -82,7 +82,22 @@ export const customFetch = async <T>({
     );
   }
 
-  return response.json();
+  const responseText = await response.text();
+  if (!responseText.trim()) {
+    return undefined as T;
+  }
+
+  try {
+    return JSON.parse(responseText) as T;
+  } catch {
+    throw new ApiError(
+      "Invalid JSON response",
+      response.status,
+      response.statusText,
+      fullUrl,
+      responseText,
+    );
+  }
 };
 
 async function attemptRefresh(): Promise<boolean> {
