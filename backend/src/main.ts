@@ -19,6 +19,7 @@ async function bootstrap() {
     .setTitle("노래방 검색 API")
     .setDescription("노래방 검색 서비스 API 문서")
     .setVersion("1.0")
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api", app, document);
