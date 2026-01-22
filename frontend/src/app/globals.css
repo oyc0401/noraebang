@@ -1,6 +1,10 @@
 @config "../../tailwind.config.ts";
 @import "tailwindcss";
 
+html {
+  background: #010101;
+}
+
 body {
   font-family: "Roboto", sans-serif;
 }
