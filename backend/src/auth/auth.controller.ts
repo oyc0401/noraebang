@@ -25,13 +25,7 @@ import {
 } from "./constants";
 import { CurrentUser } from "./decorators/current-user.decorator";
 import type { CurrentUserData } from "./decorators/current-user.decorator";
-import {
-  AuthResponseDto,
-  MobileAnonymousLoginDto,
-  MobileAuthResponseDto,
-  ProfileResponseDto,
-  RefreshTokenDto,
-} from "./dto";
+import { AuthResponseDto, ProfileResponseDto, RefreshTokenDto } from "./dto";
 import { JwtAuthGuard } from "./guards";
 import { getCookieValue } from "./utils/cookies";
 
@@ -44,36 +38,13 @@ export class AuthController {
   @ApiOperation({ summary: "익명 로그인", description: "새 익명 사용자 생성 및 토큰 발급" })
   @ApiResponse({ status: 200, type: AuthResponseDto })
   async anonymousLogin(
-    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
     const tokens = await this.authService.anonymousLogin();
     this.setAuthCookies(res, tokens);
-    const includeTokens = this.shouldIncludeTokens(req);
     return {
       expiresIn: ACCESS_TOKEN_EXPIRES_IN,
       success: true,
-      ...(includeTokens ? tokens : {}),
-    };
-  }
-
-  @Post("anonymous/mobile")
-  @ApiOperation({
-    summary: "앱 익명 로그인",
-    description: "deviceId + 서명 기반으로 토큰 발급",
-  })
-  @ApiResponse({ status: 200, type: MobileAuthResponseDto })
-  async anonymousMobileLogin(
-    @Body() dto: MobileAnonymousLoginDto,
-  ): Promise<MobileAuthResponseDto> {
-    const { tokens, deviceSecret } =
-      await this.authService.anonymousMobileLogin(dto);
-
-    return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: ACCESS_TOKEN_EXPIRES_IN,
-      deviceSecret,
     };
   }
 
@@ -94,11 +65,9 @@ export class AuthController {
 
     const tokens = await this.authService.refreshTokens(refreshToken);
     this.setAuthCookies(res, tokens);
-    const includeTokens = this.shouldIncludeTokens(req);
     return {
       expiresIn: ACCESS_TOKEN_EXPIRES_IN,
       success: true,
-      ...(includeTokens ? tokens : {}),
     };
   }
 
@@ -147,19 +116,6 @@ export class AuthController {
   private clearAuthCookies(res: Response): void {
     res.clearCookie(ACCESS_TOKEN_COOKIE, this.baseCookieOptions);
     res.clearCookie(REFRESH_TOKEN_COOKIE, this.baseCookieOptions);
-  }
-
-  private shouldIncludeTokens(req?: Request): boolean {
-    const headerValue = req?.headers["x-client-type"];
-    if (!headerValue) {
-      return false;
-    }
-    if (Array.isArray(headerValue)) {
-      return headerValue.some(
-        (value) => value && value.toLowerCase() === "mobile",
-      );
-    }
-    return headerValue.toLowerCase() === "mobile";
   }
 
 }
