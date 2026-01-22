@@ -91,7 +91,7 @@ export class AuthController {
     @CurrentUser() user: CurrentUserData,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    await this.authService.logout(user.id);
+    await this.authService.logout(user.id, user.sessionId);
     this.clearAuthCookies(res);
   }
 

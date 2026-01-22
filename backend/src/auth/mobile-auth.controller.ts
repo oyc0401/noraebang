@@ -98,7 +98,7 @@ export class MobileAuthController {
   async logout(
     @CurrentUser() user: CurrentUserData,
   ): Promise<MobileLogoutResponseDto> {
-    await this.authService.logout(user.id);
+    await this.authService.logout(user.id, user.sessionId);
     return { success: true };
   }
 }

@@ -10,6 +10,7 @@ export interface JwtPayload {
   sub: number;
   email?: string;
   type: "access" | "refresh";
+  sessionId?: string;
 }
 
 @Injectable()
@@ -39,6 +40,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: payload.sub,
       email: payload.email,
+      sessionId: payload.sessionId,
     };
   }
 }

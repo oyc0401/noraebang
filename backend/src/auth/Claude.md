@@ -22,15 +22,16 @@
 - `/auth/mobile/logout`: DB상의 refresh 토큰을 제거하고 `{ success: true }`를 반환. 쿠키 클리어는 하지 않는다.
 
 ### AuthService (`backend/src/auth/auth.service.ts`)
-- `anonymousLogin()`: 빈 사용자 생성 후 `generateAndStoreTokens`.
-- `anonymousMobileLogin()`: `deviceId` 기반으로 기존 사용자 조회. 서명 검증 성공 시 토큰만 재발급, 아니면 새 유저 + `deviceSecret` 생성.
-- `refreshTokens()`: refresh 토큰 검증 → 해시 비교 → 새 access/refresh 토큰 발급.
+- `anonymousLogin()`: 빈 사용자 생성 후 `createSessionAndTokens`로 세션을 만든다.
+- `anonymousMobileLogin()`: `deviceId` 기반으로 기존 사용자 조회. 서명 검증 성공 시 해당 사용자에 새 세션을 추가, 아니면 새 유저 + `deviceSecret` 생성.
+- `refreshTokens()`: refresh 토큰 검증 → 세션 조회 → 해시 비교 → 같은 세션 ID로 토큰 롤링(`rotateSessionTokens`).
 - `getProfile()`: 사용자 존재 여부 확인 후 기본 정보 반환.
-- `logout()`: DB에 저장된 refresh 토큰 해시 제거.
-- 내부 유틸: `generateTokens`, `storeRefreshToken`, `generateDeviceSecret`, `verifyDeviceSignature`.
+- `logout()`: 세션 ID가 있으면 해당 세션만 삭제, 없으면 전체 세션 삭제.
+- 내부 유틸: `generateTokens`, `storeSession`, `generateDeviceSecret`, `verifyDeviceSignature`.
 
 ### 토큰 전략과 가드
-- `JwtStrategy`: access 토큰만 허용(`payload.type === "access"`). 우선 쿠키에서 토큰을 찾고 없으면 Authorization 헤더를 사용.
+- `JwtStrategy`: access 토큰만 허용(`payload.type === "access"`). 우선 쿠키에서 토큰을 찾고 없으면 Authorization 헤더를 사용한다.
+- Access/refresh JWT에는 `sessionId`를 함께 실어 보내고, 가드는 `CurrentUser`에 이를 주입한다. 기존 토큰과의 호환을 위해 `sessionId`가 비어 있으면 서버가 `legacy-<userId>` 세션으로 매핑한다.
 - `JwtAuthGuard`: 기본 보호용.
 - `OptionalJwtAuthGuard`: 로그인 여부에 따라 선택적으로 정보를 제공할 때 사용 가능하도록 준비.
 
@@ -42,14 +43,26 @@ model User {
   password     String?
   deviceId     String?  @unique @map("device_id")
   deviceSecret String?  @map("device_secret")
-  refreshToken String?  @map("refresh_token")
-  refreshTokenLastUsedAt DateTime? @map("refresh_token_last_used_at")
-  refreshTokenExpiresAt  DateTime? @map("refresh_token_expires_at")
   lastLoginAt  DateTime @default(now())
   ...
+
+  sessions UserSession[]
+}
+
+model UserSession {
+  id                     String   @id
+  userId                 Int      @map("user_id")
+  refreshTokenHash       String   @map("refresh_token_hash")
+  refreshTokenLastUsedAt DateTime? @map("refresh_token_last_used_at")
+  refreshTokenExpiresAt  DateTime? @map("refresh_token_expires_at")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 ```
-- 모든 익명/앱 로그인은 `User` 테이블을 공용으로 사용한다. 이메일 계정이 생기면 해당 필드가 채워지는 방식.
+- 한 사용자당 여러 세션(`UserSession`)을 가질 수 있어, 폰/PC/브라우저 프로필마다 독립적으로 refresh 토큰을 유지한다.
+- 기존 `refresh_token` 컬럼은 `user_session` 테이블로 이전해서 확장성을 확보했다. 마이그레이션 시 기존 토큰은 `legacy-<userId>` 형태의 세션 ID로 백필한다.
 
 ## 프런트엔드 연동 흐름
 
@@ -60,12 +73,13 @@ model User {
 
 ### customFetch (`frontend/src/api/client.ts`)
 - 요청이 401이면 즉시 `attemptRefresh()`를 실행해 토큰 재발급 후 한 번 더 시도한다.
-- 명시적인 슬라이딩 연장은 서버가 `refreshTokenLastUsedAt/ExpiresAt`으로 관리하므로, 클라이언트 로컬 시계/스토리지에 의존하지 않는다.
+- 슬라이딩 만료는 서버의 `UserSession.refreshTokenLastUsedAt/ExpiresAt`로 관리해, 클라이언트 로컬 시계/스토리지에 의존하지 않는다.
 
 ## 왜 이렇게 했나?
 - **웹/모바일 경로 분리**: `x-client-type` 헤더로 분기하던 구조보다 명시적인 라우팅이 안전하고, 정책이 달라도 구현을 재사용할 수 있다.
 - **쿠키 기반**: 클라 코드에서 토큰을 다루지 않아도 되어 보안이 단순해진다. 서버 렌더링(next)과도 자연스럽게 동작.
 - **익명 사용자 분리**: 검색 히스토리, 즐겨찾기 등 향후 기능을 위해 익명 사용자도 고유 ID를 가지게 했다.
 - **모바일 기기 서명**: 단순 `deviceId`만으로는 탈취 위험이 있으므로, 한 번 발급된 `deviceSecret`을 사용해 HMAC 서명을 강제했다. 재설치 등 edge case는 `deviceSecret` 백업을 전제로 한다.
-- **서버 주도 슬라이딩 만료**: `refreshTokenLastUsedAt`과 `refreshTokenExpiresAt`을 서버에서 갱신하면서 쿠키/토큰의 수명을 연장하므로, 사용자의 로컬 시계나 스토리지에 의존하지 않는다.
+- **서버 주도 슬라이딩 만료**: 각 `UserSession`에 `refreshTokenLastUsedAt/ExpiresAt`을 저장하고 갱신해 쿠키/토큰 수명을 연장하므로, 사용자의 로컬 환경이나 다른 세션과 독립적으로 관리된다.
+- **다중 기기 세션 유지**: 세션 ID를 refresh 토큰에 포함시켜 기기별로 독립적인 로그인 상태를 유지하고, 한 기기에서 로그아웃해도 다른 기기에 영향을 주지 않는다. 구버전 토큰도 `legacy-<userId>` 세션으로 자동 연결해 끊김 없이 전환된다.
 - **자동 복구**: 사용자가 로그아웃 또는 토큰 만료로 보호된 API 호출이 실패하더라도, 프런트가 즉시 익명 로그인 또는 refresh 로직을 재시도해 UX를 끊김 없이 유지한다.
