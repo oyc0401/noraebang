@@ -350,7 +350,7 @@ model UserSession {
   userId                 Int       @map("user_id")
   refreshTokenHash       String    @map("refresh_token_hash")
   refreshTokenLastUsedAt DateTime? @map("refresh_token_last_used_at")
-  refreshTokenExpiresAt  DateTime? @map("refresh_token_expires_at")
+  refreshTokenExpiresAt  DateTime  @map("refresh_token_expires_at")
   createdAt              DateTime  @default(now()) @map("created_at")
   updatedAt              DateTime  @updatedAt @map("updated_at")
   user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -362,7 +362,7 @@ model UserSession {
 model DeviceChallenge {
   id        String   @id
   userId    Int      @map("user_id")
-  deviceId  String   @map("device_id")
+  deviceId  String   @unique @map("device_id")
   nonceHash String   @map("nonce_hash")
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
@@ -370,8 +370,6 @@ model DeviceChallenge {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([deviceId, usedAt])
-  @@index([deviceId, expiresAt])
   @@map("device_challenge")
 }
 
