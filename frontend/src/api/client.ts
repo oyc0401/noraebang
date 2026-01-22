@@ -1,5 +1,7 @@
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { getAccessToken, getRefreshToken, setTokens } from "@/lib/auth";
+import { API_BASE_URL } from "./config";
+
+export { API_BASE_URL };
 
 interface CustomFetchConfig {
   url: string;
@@ -8,6 +10,52 @@ interface CustomFetchConfig {
   data?: unknown;
   headers?: Record<string, string>;
   signal?: AbortSignal;
+}
+
+interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  deviceId: string;
+  expiresIn: number;
+}
+
+async function refreshTokens(refreshToken: string): Promise<AuthResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Token refresh failed");
+  }
+
+  return response.json();
+}
+
+async function getValidToken(): Promise<string | undefined> {
+  const accessToken = getAccessToken();
+  const refreshToken = getRefreshToken();
+
+  if (!accessToken || !refreshToken) {
+    return undefined;
+  }
+
+  try {
+    const payload = JSON.parse(atob(accessToken.split(".")[1]));
+    const exp = payload.exp * 1000;
+    const now = Date.now();
+
+    if (exp - now < 60 * 1000) {
+      const result = await refreshTokens(refreshToken);
+      setTokens(result.accessToken, result.refreshToken, result.deviceId);
+      return result.accessToken;
+    }
+
+    return accessToken;
+  } catch {
+    return accessToken;
+  }
 }
 
 export class ApiError extends Error {
@@ -46,11 +94,17 @@ export const customFetch = async <T>({
 
   const fullUrl = `${API_BASE_URL}${url}${queryString}`;
 
+  const token = await getValidToken();
+  const authHeaders: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+
   const response = await fetch(fullUrl, {
     method,
     signal,
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders,
       ...headers,
     },
     body: data ? JSON.stringify(data) : undefined,
