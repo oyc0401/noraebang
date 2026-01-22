@@ -192,88 +192,35 @@ export class SongsService {
     page: number = 1,
     limit: number = 20,
   ): Promise<{ songs: SongDto[]; total: number }> {
-    // 1. 주어진 artistId로 Artist 조회
-    const artist = await this.prisma.artist.findUnique({
-      where: { id: artistId },
-    });
-
-    const targetArtistIds: number[] = [artistId];
-
-    // slug는 한 개만 허용하므로 추가 매핑 없음
-
+    const skip = (page - 1) * limit;
     const whereClause = {
       artistSongs: {
         some: {
-          artistId: { in: targetArtistIds },
+          artistId,
         },
       },
     };
 
-    // 전체 개수 조회
     const total = await this.prisma.song.count({ where: whereClause });
 
-    // 3. 곡 조회 (필요한 필드만 select) - 정렬을 위해 songSpotifyTracks 정보 추가
+    if (total === 0) {
+      return { songs: [], total };
+    }
+
     const songs = await this.prisma.song.findMany({
       where: whereClause,
-      select: {
-        ...this.songDtoSelect,
-        tjSongId: true,
-        songSpotifyTracks: {
-          select: {
-            spotifyTrack: {
-              select: {
-                popularity: true,
-                releaseDate: true,
-              },
-            },
-          },
-          orderBy: {
-            spotifyTrack: { popularity: "desc" },
-          },
-          take: 1,
-        },
-      },
+      select: this.songDtoSelect,
+      orderBy: [
+        { score: "desc" },
+        { id: "asc" },
+      ],
+      skip,
+      take: limit,
     });
 
-    // 4. 정렬: 1. TJ 매핑 여부, 2. Spotify 인기도, 3. 출시년도
-    const sortedSongs = songs.sort((a, b) => {
-      // 1. TJ 매핑 여부 (tjSongId가 있으면 우선)
-      const aHasTj = !!a.tjSongId;
-      const bHasTj = !!b.tjSongId;
-      if (aHasTj !== bHasTj) {
-        return bHasTj ? 1 : -1;
-      }
-
-      // 2. Spotify 트랙의 popularity (높은 순) - 가장 인기 있는 트랙 기준
-      const aPopularity =
-        a.songSpotifyTracks[0]?.spotifyTrack?.popularity ?? -1;
-      const bPopularity =
-        b.songSpotifyTracks[0]?.spotifyTrack?.popularity ?? -1;
-      if (aPopularity !== bPopularity) {
-        return bPopularity - aPopularity;
-      }
-
-      // 3. 트랙의 releaseDate (최신순)
-      const aReleaseDate =
-        a.songSpotifyTracks[0]?.spotifyTrack?.releaseDate ?? "";
-      const bReleaseDate =
-        b.songSpotifyTracks[0]?.spotifyTrack?.releaseDate ?? "";
-      if (aReleaseDate !== bReleaseDate) {
-        return bReleaseDate.localeCompare(aReleaseDate);
-      }
-
-      // 4. 기본 정렬: id 오름차순
-      return a.id - b.id;
-    });
-
-    // 5. 페이지네이션 적용
-    const skip = (page - 1) * limit;
-    const paginatedSongs = sortedSongs.slice(skip, skip + limit);
-
-    // 6. DTO로 변환
-    const tjSongMap = await this.buildTjSongMap(paginatedSongs);
+    const tjSongMap = await this.buildTjSongMap(songs);
     return {
-      songs: paginatedSongs.map((song) => this.mapToDto(song, tjSongMap)),
+      songs: songs.map((song) => this.mapToDto(song, tjSongMap)),
       total,
     };
   }

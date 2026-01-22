@@ -83,6 +83,7 @@ describe("transformSongToDocument", () => {
       title: "밤을 달리다",
       catalog: "JPOP",
       updatedAt: new Date("2025-01-01"),
+      score: 156,
       titleKo: "밤을 달리다",
       titleLatin: "yoru ni kakeru",
       titleJaKanji: "夜に駆ける",
@@ -116,11 +117,13 @@ describe("transformSongToDocument", () => {
         },
       ],
       tjSongId: "12345",
-      spotifyTrack: {
-        spotifyTrack: {
-          popularity: 70,
+      songSpotifyTracks: [
+        {
+          spotifyTrack: {
+            popularity: 70,
+          },
         },
-      },
+      ],
     };
 
     return { ...base, ...overrides };
@@ -183,10 +186,11 @@ describe("transformSongToDocument", () => {
     expect(result.songPopularity).toBe(156);
   });
 
-  it("티제이 곡만 있어도 인기도가 계산되어야 함", () => {
+  it("티제이 곡만 있어도 인기도가 계산되어야 함 (score 없을 때 기존 로직 사용)", () => {
     const song = createSong({
       tjSongId: "TJ-002",
-      spotifyTrack: undefined,
+      score: null,
+      songSpotifyTracks: [],
       artistSongs: [
         {
           artist: {
@@ -206,5 +210,11 @@ describe("transformSongToDocument", () => {
 
     expect(result.artistPopularity).toBe(2);
     expect(result.songPopularity).toBe(7); // artistPopularity 2 + tj bonus 5
+  });
+
+  it("score 필드가 있으면 songPopularity는 해당 값을 사용해야 함", () => {
+    const song = createSong({ score: 321.23 });
+    const result = transformSongToDocument(song as any);
+    expect(result.songPopularity).toBe(321.23);
   });
 });
