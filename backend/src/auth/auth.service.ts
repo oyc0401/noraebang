@@ -61,6 +61,13 @@ export class AuthService {
       throw new UnauthorizedException("User not found or logged out");
     }
 
+    if (
+      !user.refreshTokenExpiresAt ||
+      user.refreshTokenExpiresAt.getTime() < Date.now()
+    ) {
+      throw new UnauthorizedException("Refresh token expired");
+    }
+
     const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
     if (!isValid) {
       throw new UnauthorizedException("Invalid refresh token");
@@ -151,7 +158,11 @@ export class AuthService {
   async logout(userId: number): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },
-      data: { refreshToken: null },
+      data: {
+        refreshToken: null,
+        refreshTokenExpiresAt: null,
+        refreshTokenLastUsedAt: null,
+      },
     });
   }
 
@@ -197,11 +208,15 @@ export class AuthService {
     refreshToken: string,
   ): Promise<void> {
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + REFRESH_TOKEN_EXPIRES_IN * 1000);
     await this.prisma.user.update({
       where: { id: userId },
       data: {
         refreshToken: hashedRefreshToken,
-        lastLoginAt: new Date(),
+        refreshTokenLastUsedAt: now,
+        refreshTokenExpiresAt: expiresAt,
+        lastLoginAt: now,
       },
     });
   }
