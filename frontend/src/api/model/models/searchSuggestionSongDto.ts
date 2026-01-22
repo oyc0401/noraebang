@@ -14,6 +14,10 @@ export interface SearchSuggestionSongDto {
   title: string;
   /** 곡 한글 제목 */
   titleKo?: string;
+  /** 곡 일본어 제목 */
+  titleJa?: string;
+  /** 곡 로마자 제목 */
+  titleLatin?: string;
   /** 곡의 대표 아티스트명 */
   artistName: string;
   /** 곡의 대표 아티스트 slug */

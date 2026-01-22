@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { YoutubeInfoDto } from './youtubeInfoDto';
+import type { SpotifyInfoDto } from './spotifyInfoDto';
 
 export interface ArtistDetailsDto {
   id: number;
@@ -22,4 +23,5 @@ export interface ArtistDetailsDto {
   /** TJ에서 사용하는 아티스트 이름 */
   tjName?: string;
   youtube?: YoutubeInfoDto;
+  spotify?: SpotifyInfoDto;
 }

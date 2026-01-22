@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import type { ArtistDetailsDto } from "@/api/model/models";
+import SpotifyIcon from "@/icons/spotify-filled.svg";
+import YoutubeMusicIcon from "@/icons/youtube-music-filled.svg";
 
 interface ProfileHeaderProps {
   artist: ArtistDetailsDto;
@@ -10,6 +12,15 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ artist }: ProfileHeaderProps) {
   const thumbnailSrc =
     artist.thumbnailHigh ?? artist.thumbnailMedium ?? artist.thumbnailDefault;
+
+  const youtubeUrl = artist.youtube
+    ? `https://music.youtube.com/channel/${artist.youtube.channelId}`
+    : undefined;
+
+  const spotifyUrl = artist.spotify
+    ? (artist.spotify.spotifyUrl ??
+      `https://open.spotify.com/artist/${artist.spotify.spotifyId}`)
+    : undefined;
 
   return (
     <div className="relative w-full aspect-[4/3]">
@@ -33,8 +44,39 @@ export function ProfileHeader({ artist }: ProfileHeaderProps) {
           {artist.nameKo}
         </h1>
         <p className="text-md text-white/70">{artist.name}</p>
-        <button aria-label="유튜브뮤직 이동"></button>
-        <button aria-label="스포티파이 이동"></button>
+
+        {/* 외부 링크 버튼 */}
+        {(youtubeUrl || spotifyUrl) && (
+          <div className="flex items-center gap-1 mt-2">
+            {youtubeUrl && (
+              <a
+                href={youtubeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="유튜브뮤직 이동"
+                className="flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
+              >
+                <Image
+                  src={YoutubeMusicIcon}
+                  alt="YouTube Music"
+                  width={44}
+                  height={44}
+                />
+              </a>
+            )}
+            {spotifyUrl && (
+              <a
+                href={spotifyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="스포티파이 이동"
+                className="flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
+              >
+                <Image src={SpotifyIcon} alt="Spotify" width={44} height={44} />
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
