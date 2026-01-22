@@ -95,27 +95,33 @@ export class AuthController {
     this.clearAuthCookies(res);
   }
 
-  private readonly baseCookieOptions: CookieOptions = {
+  private readonly accessCookieOptions: CookieOptions = {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
   };
+  private readonly refreshCookieOptions: CookieOptions = {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/auth/refresh",
+  };
 
   private setAuthCookies(res: Response, tokens: AuthTokens): void {
     res.cookie(ACCESS_TOKEN_COOKIE, tokens.accessToken, {
-      ...this.baseCookieOptions,
+      ...this.accessCookieOptions,
       maxAge: ACCESS_TOKEN_EXPIRES_IN * 1000,
     });
     res.cookie(REFRESH_TOKEN_COOKIE, tokens.refreshToken, {
-      ...this.baseCookieOptions,
+      ...this.refreshCookieOptions,
       maxAge: REFRESH_TOKEN_EXPIRES_IN * 1000,
     });
   }
 
   private clearAuthCookies(res: Response): void {
-    res.clearCookie(ACCESS_TOKEN_COOKIE, this.baseCookieOptions);
-    res.clearCookie(REFRESH_TOKEN_COOKIE, this.baseCookieOptions);
+    res.clearCookie(ACCESS_TOKEN_COOKIE, this.accessCookieOptions);
+    res.clearCookie(REFRESH_TOKEN_COOKIE, this.refreshCookieOptions);
   }
 
 }

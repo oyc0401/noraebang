@@ -6,7 +6,13 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
-import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "crypto";
+import {
+  createHash,
+  createHmac,
+  randomBytes,
+  randomUUID,
+  timingSafeEqual,
+} from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import {
   MobileAnonymousLoginDto,
@@ -14,6 +20,7 @@ import {
 } from "./dto";
 import {
   ACCESS_TOKEN_EXPIRES_IN,
+  MOBILE_CHALLENGE_TTL_SECONDS,
   REFRESH_TOKEN_EXPIRES_IN,
 } from "./constants";
 import { JwtPayload } from "./strategies/jwt.strategy";
@@ -53,10 +60,12 @@ export class AuthService {
       throw new UnauthorizedException("Invalid token type");
     }
 
-    const sessionId = payload.sessionId ?? `legacy-${payload.sub}`;
+    if (!payload.sessionId) {
+      throw new UnauthorizedException("Session identifier is missing");
+    }
 
     const session = await this.prisma.userSession.findUnique({
-      where: { id: sessionId },
+      where: { id: payload.sessionId },
       include: { user: true },
     });
 
@@ -80,6 +89,9 @@ export class AuthService {
       session.refreshTokenHash,
     );
     if (!isValid) {
+      await this.prisma.userSession
+        .delete({ where: { id: session.id } })
+        .catch(() => undefined);
       throw new UnauthorizedException("Invalid refresh token");
     }
 
@@ -118,6 +130,8 @@ export class AuthService {
         throw new UnauthorizedException("Signature is required");
       }
 
+      await this.consumeDeviceChallenge(existingUser.id, deviceId, nonce);
+
       const isValidSignature = this.verifyDeviceSignature(
         existingUser.deviceSecret,
         nonce,
@@ -150,6 +164,49 @@ export class AuthService {
     );
 
     return { tokens, deviceSecret };
+  }
+
+  async requestMobileChallenge(deviceId: string): Promise<{
+    nonce: string;
+    expiresIn: number;
+  }> {
+    const normalizedId = deviceId?.trim();
+    if (!normalizedId) {
+      throw new BadRequestException("Device ID is required");
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { deviceId: normalizedId },
+      select: { id: true, deviceSecret: true },
+    });
+
+    if (!user || !user.deviceSecret) {
+      throw new UnauthorizedException("Device secret not registered");
+    }
+
+    const nonce = randomBytes(32).toString("hex");
+    const expiresAt = new Date(
+      Date.now() + MOBILE_CHALLENGE_TTL_SECONDS * 1000,
+    );
+    const nonceHash = this.hashNonce(nonce);
+
+    await this.prisma.deviceChallenge.upsert({
+      where: { deviceId: normalizedId },
+      update: {
+        nonceHash,
+        expiresAt,
+        usedAt: null,
+      },
+      create: {
+        id: randomUUID(),
+        userId: user.id,
+        deviceId: normalizedId,
+        nonceHash,
+        expiresAt,
+      },
+    });
+
+    return { nonce, expiresIn: MOBILE_CHALLENGE_TTL_SECONDS };
   }
 
   async getProfile(userId: number): Promise<ProfileResponseDto> {
@@ -267,8 +324,61 @@ export class AuthService {
     ]);
   }
 
+  private async consumeDeviceChallenge(
+    userId: number,
+    deviceId: string,
+    nonce: string,
+  ): Promise<void> {
+    const challenge = await this.prisma.deviceChallenge.findUnique({
+      where: { deviceId },
+    });
+
+    if (!challenge || challenge.userId !== userId) {
+      throw new UnauthorizedException("Device challenge required");
+    }
+
+    if (challenge.usedAt) {
+      await this.prisma.deviceChallenge
+        .delete({ where: { deviceId } })
+        .catch(() => undefined);
+      throw new UnauthorizedException("Device challenge already used");
+    }
+
+    if (challenge.expiresAt.getTime() < Date.now()) {
+      await this.prisma.deviceChallenge
+        .delete({ where: { deviceId } })
+        .catch(() => undefined);
+      throw new UnauthorizedException("Device challenge expired");
+    }
+
+    const expected = Buffer.from(challenge.nonceHash, "hex");
+    const provided = this.hashNonceBuffer(nonce);
+
+    if (
+      expected.length !== provided.length ||
+      !timingSafeEqual(expected, provided)
+    ) {
+      await this.prisma.deviceChallenge
+        .delete({ where: { deviceId } })
+        .catch(() => undefined);
+      throw new UnauthorizedException("Invalid device nonce");
+    }
+
+    await this.prisma.deviceChallenge
+      .delete({ where: { deviceId } })
+      .catch(() => undefined);
+  }
+
   private generateDeviceSecret(): string {
     return randomBytes(32).toString("hex");
+  }
+
+  private hashNonce(nonce: string): string {
+    return createHash("sha256").update(nonce).digest("hex");
+  }
+
+  private hashNonceBuffer(nonce: string): Buffer {
+    return createHash("sha256").update(nonce).digest();
   }
 
   private verifyDeviceSignature(
