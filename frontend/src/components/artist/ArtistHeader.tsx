@@ -17,9 +17,7 @@ export function ArtistHeader({ transparent }: ArtistHeaderProps) {
     <header
       className={cn(
         "z-20 flex h-14 items-center justify-between pl-2 pr-1.5 transition-colors duration-300",
-        transparent
-          ? "bg-transparent"
-          : "sticky top-0 bg-background-dark/95 backdrop-blur-md",
+        transparent ? "bg-transparent" : "sticky top-0 bg-background-dark/95",
       )}
     >
       <button
