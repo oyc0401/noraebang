@@ -10,6 +10,28 @@ interface CustomFetchConfig {
   signal?: AbortSignal;
 }
 
+export class ApiError extends Error {
+  status: number;
+  statusText: string;
+  url: string;
+  body?: unknown;
+
+  constructor(
+    message: string,
+    status: number,
+    statusText: string,
+    url: string,
+    body?: unknown,
+  ) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.statusText = statusText;
+    this.url = url;
+    this.body = body;
+  }
+}
+
 export const customFetch = async <T>({
   url,
   method,
@@ -22,7 +44,9 @@ export const customFetch = async <T>({
     ? `?${new URLSearchParams(params as Record<string, string>).toString()}`
     : "";
 
-  const response = await fetch(`${API_BASE_URL}${url}${queryString}`, {
+  const fullUrl = `${API_BASE_URL}${url}${queryString}`;
+
+  const response = await fetch(fullUrl, {
     method,
     signal,
     headers: {
@@ -34,8 +58,15 @@ export const customFetch = async <T>({
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
-    throw new Error(
-      (errorBody as { message?: string }).message || `HTTP ${response.status}`,
+    const message =
+      (errorBody as { message?: string }).message ||
+      `HTTP ${response.status} ${response.statusText}`;
+    throw new ApiError(
+      message,
+      response.status,
+      response.statusText,
+      fullUrl,
+      errorBody,
     );
   }
 

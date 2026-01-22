@@ -17,6 +17,7 @@ const config: Config = {
         "surface-light": "#ffffff",
         "surface-border": "#302437",
         "surface-text": "#8A8F9C",
+        icon: "#F1F0F1",
       },
       fontFamily: {
         display: ["'Roboto'", "sans-serif"],

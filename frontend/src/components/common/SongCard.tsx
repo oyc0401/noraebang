@@ -1,52 +1,65 @@
+import { EllipsisVertical } from "lucide-react";
 import Image from "next/image";
-import { KaraokeBadge } from "@/components/common/KaraokeBadge";
-import { RecommendBadge } from "./RecommendBadge";
+import { cn } from "@/lib/cn";
 
 interface SongCardProps {
+  id?: string;
   thumbnail?: string;
   title: string;
   subtitle: string;
   tjNumber?: string;
+  isSelected?: boolean;
   onClick?: () => void;
 }
 
 export function SongCard({
+  id,
   thumbnail,
   title,
   subtitle,
   tjNumber,
+  isSelected,
   onClick,
 }: SongCardProps) {
   return (
     <button
       type="button"
+      id={id}
       onClick={onClick}
-      className="w-full   flex items-center hover:bg-white/5 cursor-pointer transition-colors text-left"
+      className={cn(
+        "w-full flex rounded-sm items-center hover:bg-white/5 cursor-pointer transition-colors text-left px-2 py-2 ",
+        isSelected && "bg-white/15",
+      )}
     >
       {thumbnail && (
-        <Image
-          src={thumbnail}
-          alt={title}
-          width={54}
-          height={54}
-          className="rounded-sm shrink-0 mx-4 my-2 object-cover size-12"
-        />
+        <div className="relative w-14 h-14 shrink-0 mr-4">
+          <Image
+            src={thumbnail}
+            alt={title}
+            fill
+            sizes="56px"
+            className="rounded-sm object-cover"
+          />
+        </div>
       )}
       <div className="flex-1 min-w-0 flex flex-row items-center">
         <div className="flex-1 ">
-          <p className="text-sm font-semibold text-white line-clamp-2 pt-[3px]">
+          <p className="text-sm font-semibold text-white line-clamp-2 leading-tight">
             {title}
           </p>
 
-          <p className="text-sm text-gray-400 truncate pt-[1px]">{subtitle}</p>
+          <p className="text-sm   truncate pt-[1px]">
+            <span className="text-gray-400">{subtitle}</span>
+            {tjNumber ? (
+              <span className="text-[#CE8FED] ml-2">{`TJ - ${tjNumber}`}</span>
+            ) : (
+              <span className="text-[#C1B369] ml-2">{"추천 0"}</span>
+            )}
+          </p>
         </div>
 
-        <div className="px-4 shrink-0">
-          {tjNumber ? (
-            <KaraokeBadge provider="TJ" number={tjNumber} />
-          ) : (
-            <RecommendBadge />
-          )}
+        <div className="shrink-0">
+          <EllipsisVertical className="size-5 text-icon" />
         </div>
       </div>
     </button>

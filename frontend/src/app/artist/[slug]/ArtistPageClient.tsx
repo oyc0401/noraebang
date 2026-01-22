@@ -12,11 +12,14 @@ import type {
 import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
 import { Header } from "@/components/common/Header";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
+import { SongCard } from "@/components/common/SongCard";
 import { useSearchStore } from "@/store/searchStore";
 import { ActionButtons } from "./ActionButtons";
 import { ARTIST_SONGS_PAGE_SIZE } from "./constants";
 import { ProfileHeader } from "./ProfileHeader";
-import { SongListItem } from "./SongListItem";
+
+const formatSongTitle = (title: string, titleKo?: string) =>
+  titleKo ? `${title} - ${titleKo}` : title;
 
 const RECOMMENDATION_COUNT = 0;
 
@@ -122,19 +125,28 @@ export default function ArtistPageClient({
       </div>
 
       {songs.length > 0 && (
-        <div className="flex flex-col gap-1 pb-10">
-          {songs.map((song) => (
-            <SongListItem
-              key={song.id}
-              song={song}
-              isSelected={selectedSongId === song.id.toString()}
-              onClick={() => {
-                const newHash = `#${song.id}`;
-                window.history.replaceState(null, "", newHash);
-                setSelectedSongId(song.id.toString());
-              }}
-            />
-          ))}
+        <div className="flex flex-col pb-10 px-2">
+          {songs.map((song) => {
+            const tjNumber = song.karaokeSongs?.find(
+              (k) => k.provider === "TJ",
+            )?.karaokeNo;
+            return (
+              <SongCard
+                key={song.id}
+                id={song.id.toString()}
+                thumbnail={song.thumbnailDefault}
+                title={formatSongTitle(song.title, song.titleKo)}
+                subtitle={song.artists.map((a) => a.name).join(", ")}
+                tjNumber={tjNumber}
+                isSelected={selectedSongId === song.id.toString()}
+                onClick={() => {
+                  const newHash = `#${song.id}`;
+                  window.history.replaceState(null, "", newHash);
+                  setSelectedSongId(song.id.toString());
+                }}
+              />
+            );
+          })}
         </div>
       )}
 
