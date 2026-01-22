@@ -183,6 +183,17 @@ export class ArtistsService {
             thumbnailHigh: true,
           },
         },
+        spotifyArtist: {
+          select: {
+            spotifyId: true,
+            spotifyUrl: true,
+            name: true,
+            popularity: true,
+            followers: true,
+            genres: true,
+            thumbnails: true,
+          },
+        },
         _count: {
           select: {
             artistSongs: true,
@@ -199,6 +210,8 @@ export class ArtistsService {
       const mainChannel =
         artist.youtubeChannels.find((ch) => ch.type === "MAIN") ??
         artist.youtubeChannels.find((ch) => ch.type === "TOPIC");
+
+      const spotifyArtist = artist.spotifyArtist;
 
       return {
         id: artist.id,
@@ -221,6 +234,20 @@ export class ArtistsService {
               thumbnailDefault: mainChannel.thumbnailDefault ?? undefined,
               thumbnailMedium: mainChannel.thumbnailMedium ?? undefined,
               thumbnailHigh: mainChannel.thumbnailHigh ?? undefined,
+            }
+          : undefined,
+        spotify: spotifyArtist
+          ? {
+              spotifyId: spotifyArtist.spotifyId,
+              spotifyUrl: spotifyArtist.spotifyUrl ?? undefined,
+              name: spotifyArtist.name,
+              popularity: spotifyArtist.popularity ?? undefined,
+              followers: spotifyArtist.followers ?? undefined,
+              genres:
+                spotifyArtist.genres.length > 0
+                  ? spotifyArtist.genres
+                  : undefined,
+              imageUrl: spotifyArtist.thumbnails[0] ?? undefined,
             }
           : undefined,
       };
@@ -307,7 +334,7 @@ export class ArtistsService {
   }
 
   /**
-   * slug로 아티스트 상세 조회 (YouTube 정보 포함)
+   * slug로 아티스트 상세 조회 (YouTube, Spotify 정보 포함)
    */
   async findBySlug(slug: string): Promise<ArtistDetailsDto | null> {
     const artist = await this.prisma.artist.findUnique({
@@ -336,6 +363,17 @@ export class ArtistsService {
             thumbnailHigh: true,
           },
         },
+        spotifyArtist: {
+          select: {
+            spotifyId: true,
+            spotifyUrl: true,
+            name: true,
+            popularity: true,
+            followers: true,
+            genres: true,
+            thumbnails: true,
+          },
+        },
         _count: {
           select: { artistSongs: true },
         },
@@ -347,6 +385,8 @@ export class ArtistsService {
     const mainChannel =
       artist.youtubeChannels.find((ch) => ch.type === "MAIN") ??
       artist.youtubeChannels.find((ch) => ch.type === "TOPIC");
+
+    const spotifyArtist = artist.spotifyArtist;
 
     return {
       id: artist.id,
@@ -370,6 +410,20 @@ export class ArtistsService {
             thumbnailDefault: mainChannel.thumbnailDefault ?? undefined,
             thumbnailMedium: mainChannel.thumbnailMedium ?? undefined,
             thumbnailHigh: mainChannel.thumbnailHigh ?? undefined,
+          }
+        : undefined,
+      spotify: spotifyArtist
+        ? {
+            spotifyId: spotifyArtist.spotifyId,
+            spotifyUrl: spotifyArtist.spotifyUrl ?? undefined,
+            name: spotifyArtist.name,
+            popularity: spotifyArtist.popularity ?? undefined,
+            followers: spotifyArtist.followers ?? undefined,
+            genres:
+              spotifyArtist.genres.length > 0
+                ? spotifyArtist.genres
+                : undefined,
+            imageUrl: spotifyArtist.thumbnails[0] ?? undefined,
           }
         : undefined,
     };

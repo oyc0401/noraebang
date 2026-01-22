@@ -38,6 +38,7 @@ export * from './songDetailResponseDto';
 export * from './songDto';
 export * from './songListResponseDto';
 export * from './songsControllerFindByArtistIdParams';
+export * from './spotifyInfoDto';
 export * from './typesenseReindexRequestDto';
 export * from './typesenseReindexRequestDtoTarget';
 export * from './youtubeInfoDto';

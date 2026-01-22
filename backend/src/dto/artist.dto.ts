@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { SpotifyInfoDto } from "./spotify.dto";
 import { YoutubeInfoDto } from "./youtube.dto";
 
 export class ArtistDto {
@@ -105,4 +106,7 @@ export class ArtistDetailsDto {
 
   @ApiProperty({ type: YoutubeInfoDto, required: false })
   youtube?: YoutubeInfoDto;
+
+  @ApiProperty({ type: SpotifyInfoDto, required: false })
+  spotify?: SpotifyInfoDto;
 }
