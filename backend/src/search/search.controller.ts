@@ -6,7 +6,6 @@ import {
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
 import { ErrorResponseDto } from "../dto";
-import { fetchYoutubeOembed } from "../thirdparty/youtube/oembed.js";
 import { SearchResponseDto } from "./dto/search-response.dto";
 import { SearchSuggestionsQueryDto } from "./dto/search-suggestions-query.dto";
 import { SearchSuggestionsResponseDto } from "./dto/search-suggestions-response.dto";
@@ -143,20 +142,16 @@ export class SearchController {
       throw new BadRequestException("URL parameter is required");
     }
 
-    const result = await this.searchService.findSongByYoutubeUrl(url);
-
-    if (result.song) {
-      return {
-        song: result.song,
-        message: "DB에서 곡을 찾았습니다",
-      };
-    }
+    const { songs, matchedByVideoId } =
+      await this.searchService.findSongByYoutubeUrl(url);
 
     return {
-      youtube: result.youtube
-        ? { title: result.youtube.title, authorName: result.youtube.authorName }
-        : undefined,
-      message: "DB에서 곡을 찾지 못했습니다",
+      songs,
+      matchedByVideoId,
+      message:
+        songs.length > 0
+          ? "DB에서 곡을 찾았습니다"
+          : "DB에서 곡을 찾지 못했습니다",
     };
   }
 }

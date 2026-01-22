@@ -2,7 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { useSearchControllerSearch } from "@/api/model/search/search";
+import {
+  useSearchControllerSearch,
+  useSearchControllerSearchSongByYoutubeUrl,
+} from "@/api/model/search/search";
 import { ArtistCard } from "@/components/common/ArtistCard";
 import { SongCard } from "@/components/common/SongCard";
 import { SearchHeader } from "@/components/search/SearchHeader";
@@ -13,26 +16,43 @@ export function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
+  const youtubeUrl = searchParams.get("url") || "";
   const { setQuery, clearSearch } = useSearchStore();
 
-  const { data: searchResponse, isLoading } = useSearchControllerSearch(
-    { query },
-    { query: { enabled: !!query } },
-  );
+  // 일반 검색
+  const { data: searchResponse, isLoading: isSearchLoading } =
+    useSearchControllerSearch(
+      { query },
+      { query: { enabled: !!query && !youtubeUrl } },
+    );
+
+  // 유튜브 URL 검색
+  const { data: youtubeSearchResponse, isLoading: isYoutubeLoading } =
+    useSearchControllerSearchSongByYoutubeUrl(
+      { url: youtubeUrl },
+      { query: { enabled: !!youtubeUrl } },
+    );
+
+  const isLoading = isSearchLoading || isYoutubeLoading;
 
   useEffect(() => {
     setQuery(query);
   }, [query, setQuery]);
 
-  const hasQuery = query.trim().length > 0;
+  const hasQuery = query.trim().length > 0 || youtubeUrl.trim().length > 0;
 
   // Filter the data into artists and songs
-  const artists = searchResponse?.data
-    ?.filter((item) => item.type === "artist")
-    .map((item) => item.artist);
-  const songs = searchResponse?.data
-    ?.filter((item) => item.type === "song")
-    .map((item) => item.song);
+  const artists = youtubeUrl
+    ? [] // 유튜브 URL 검색 시 아티스트 결과 없음
+    : searchResponse?.data
+        ?.filter((item) => item.type === "artist")
+        .map((item) => item.artist);
+
+  const songs = youtubeUrl
+    ? youtubeSearchResponse?.songs // 유튜브 URL 검색 결과
+    : searchResponse?.data
+        ?.filter((item) => item.type === "song")
+        .map((item) => item.song);
 
   return (
     <div className="bg-background-dark flex flex-col min-h-screen">
