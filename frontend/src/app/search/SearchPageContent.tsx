@@ -37,7 +37,7 @@ export function SearchPageContent() {
     <div className="bg-background-dark flex flex-col min-h-screen">
       <SearchHeader value={hasQuery ? query : ""} />
 
-      <main className="flex-1 flex flex-col w-full mx-auto overflow-y-auto py-4 gap-6">
+      <main className="flex-1 flex flex-col w-full mx-auto overflow-y-auto py-2 px-2 gap-6">
         {!hasQuery && (
           <div className="px-4 text-center text-gray-400 py-16">
             검색어를 입력해 주세요.
@@ -48,33 +48,31 @@ export function SearchPageContent() {
           artists &&
           artists.length > 0 && ( // Use the new 'artists' array
             <div>
-              <h2 className="text-xl font-bold mb-4 px-4">아티스트</h2>
-              <div className="space-y-2">
-                {artists.map(
-                  (artist) =>
-                    artist && (
-                      <ArtistCard
-                        key={`artist-${artist.id}`}
-                        thumbnail={artist.thumbnailDefault}
-                        title={artist.nameKo || artist.name}
-                        subtitle={artist.name}
-                        onClick={() => {
-                          if (artist?.slug) {
-                            router.push(`/artist/${artist.slug}`);
-                            clearSearch();
-                          }
-                        }}
-                      />
-                    ),
-                )}
-              </div>
+              <h2 className="text-xl font-bold mb-3 px-2">아티스트</h2>
+              {artists.map(
+                (artist) =>
+                  artist && (
+                    <ArtistCard
+                      key={`artist-${artist.id}`}
+                      thumbnail={artist.thumbnailDefault}
+                      title={artist.nameKo || artist.name}
+                      subtitle={artist.name}
+                      onClick={() => {
+                        if (artist?.slug) {
+                          router.push(`/artist/${artist.slug}`);
+                          clearSearch();
+                        }
+                      }}
+                    />
+                  ),
+              )}
             </div>
           )}
         {hasQuery &&
           songs &&
           songs.length > 0 && ( // Use the new 'songs' array
             <div>
-              <h2 className="text-xl font-bold mb-4 px-4">곡</h2>
+              <h2 className="text-xl font-bold mb-3 px-2">곡</h2>
               {songs.map((song) => {
                 if (!song) {
                   return null;

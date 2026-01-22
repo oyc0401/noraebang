@@ -31,8 +31,8 @@ export function SongCard({
         isSelected && "bg-white/15",
       )}
     >
-      {thumbnail && (
-        <div className="relative w-14 h-14 shrink-0 mr-4">
+      <div className="relative w-14 h-14 shrink-0 mr-4 rounded-sm bg-gray-700">
+        {thumbnail && (
           <Image
             src={thumbnail}
             alt={title}
@@ -40,8 +40,8 @@ export function SongCard({
             sizes="56px"
             className="rounded-sm object-cover"
           />
-        </div>
-      )}
+        )}
+      </div>
       <div className="flex-1 min-w-0 flex flex-row items-center">
         <div className="flex-1 ">
           <p className="text-sm font-semibold text-white line-clamp-2 leading-tight">

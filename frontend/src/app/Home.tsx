@@ -1,11 +1,8 @@
 "use client";
 
 import { Header } from "@/components/common/Header";
-import { HomeSearchBar } from "@/components/home/HomeSearchBar";
-import { LinkPasteCard } from "@/components/home/LinkPasteCard";
-import { PopularSongs } from "@/components/home/PopularSongs";
-import { RecentlyPlayed } from "@/components/home/RecentlyPlayed";
-import { RecentlyReleased } from "@/components/home/RecentlyReleased";
+import { HomeSearchBar } from "@/app/HomeSearchBar";
+import { LinkPasteCard } from "@/app/LinkPasteCard";
 
 export function Home() {
   return (
@@ -24,15 +21,6 @@ export function Home() {
         </div>
         <div className="px-4 py-4">
           <LinkPasteCard />
-        </div>
-        <div className="w-full mb-6">
-          <RecentlyPlayed />
-        </div>
-        <div className="w-full px-4 mb-2">
-          <RecentlyReleased />
-        </div>
-        <div className="w-full px-4 py-4 mb-8">
-          <PopularSongs />
         </div>
       </main>
     </>

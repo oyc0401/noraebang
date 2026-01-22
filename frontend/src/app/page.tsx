@@ -1,7 +1,7 @@
 "use client";
 
 import { SearchOverlay } from "@/components/common/SearchOverlay";
-import { Home } from "@/components/home/Home";
+import { Home } from "@/app/Home";
 import { useSearchStore } from "@/store/searchStore";
 
 export default function HomePage() {
