@@ -8,9 +8,9 @@ import { useRef, useState } from "react";
 import type { SongDto } from "@/api/model/models";
 import { searchControllerSearchSongByYoutubeUrl } from "@/api/model/search/search";
 import { KaraokeBadge } from "@/components/common/KaraokeBadge";
-import AppleMusicIcon from "@/icons/apple-music.svg";
-import SpotifyIcon from "@/icons/spotify.svg";
-import YoutubeMusicIcon from "@/icons/youtube-music.svg";
+import AppleMusicIcon from "@/icons/apple-music-filled.svg";
+import SpotifyIcon from "@/icons/spotify-filled.svg";
+import YoutubeMusicIcon from "@/icons/youtube-music-filled.svg";
 import { isYoutubeUrl } from "@/lib/youtube";
 import { useSearchStore } from "@/store/searchStore";
 
