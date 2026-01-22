@@ -375,6 +375,20 @@ model ArtistTjSong {
   @@map("artist_tj_song")
 }
 
+// 사용자 테이블
+model User {
+  id           Int      @id @default(autoincrement())
+  deviceId     String?  @unique @map("device_id")  // 익명 사용자용
+  email        String?  @unique                     // 이메일 로그인용
+  password     String?                              // 해시된 비밀번호
+  refreshToken String?  @map("refresh_token")
+  lastLoginAt  DateTime @default(now()) @map("last_login_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("user")
+}
+
 // 곡 신청 테이블
 model SongPropose {
   id          Int     @id @default(autoincrement())
