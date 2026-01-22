@@ -29,7 +29,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
-        {/* <script
+        <script
           src="//cdn.jsdelivr.net/npm/eruda"
           dangerouslySetInnerHTML={{ __html: "" }}
         />
@@ -41,7 +41,7 @@ export default function RootLayout({
               }
             `,
           }}
-        /> */}
+        />
       </head>
       <body className="bg-background-dark font-display min-h-screen flex flex-col text-white antialiased">
         <Providers>{children}</Providers>

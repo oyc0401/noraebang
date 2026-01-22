@@ -5,10 +5,13 @@ import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/search";
-import { KaraokeBadge } from "@/components/common/KaraokeBadge";
+import { SongCard } from "@/components/common/SongCard";
 import { SearchBar } from "@/components/search/SearchBar";
 import { hasIncompleteKorean } from "@/lib/korean";
 import { useSearchStore } from "@/store/searchStore";
+
+const formatSongTitle = (title: string, titleKo?: string) =>
+  titleKo ? `${title} - ${titleKo}` : title;
 
 export function SearchOverlay() {
   const router = useRouter();
@@ -116,10 +119,17 @@ export function SearchOverlay() {
 
               // 곡 카드
               if (card.song) {
+                const tjKaraoke = card.song.karaokeSongs?.find(
+                  (k) => k.provider === "TJ",
+                );
+
                 return (
-                  <button
+                  <SongCard
                     key={`song-${card.song.id}`}
-                    type="button"
+                    thumbnail={card.song.thumbnail}
+                    title={formatSongTitle(card.song.title, card.song.titleKo)}
+                    subtitle={card.song.artistName ?? ""}
+                    tjNumber={tjKaraoke?.karaokeNo}
                     onClick={() => {
                       if (card.song?.artistSlug) {
                         router.push(
@@ -127,36 +137,7 @@ export function SearchOverlay() {
                         );
                       }
                     }}
-                    className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-4"
-                  >
-                    {card.song.thumbnail && (
-                      <Image
-                        src={card.song.thumbnail}
-                        alt={card.song.title}
-                        width={48}
-                        height={48}
-                        className="rounded-lg shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs text-gray-400 mb-1">곡</div>
-                      <div className="font-semibold text-white truncate">
-                        {card.song.titleKo || card.song.title}
-                      </div>
-                      <div className="text-sm text-gray-400 truncate mb-1">
-                        {card.song.artistName}
-                      </div>
-                      {card.song.karaokeSongs &&
-                        card.song.karaokeSongs.length > 0 &&
-                        (card.song.karaokeSongs[0].provider === "TJ" ||
-                          card.song.karaokeSongs[0].provider === "KY") && (
-                          <KaraokeBadge
-                            provider={card.song.karaokeSongs[0].provider}
-                            number={card.song.karaokeSongs[0].karaokeNo}
-                          />
-                        )}
-                    </div>
-                  </button>
+                  />
                 );
               }
 
