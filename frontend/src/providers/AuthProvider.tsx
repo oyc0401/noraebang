@@ -28,12 +28,16 @@ async function fetchProfile(): Promise<ProfileResponseDto> {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setAuth, setLoading } = useAuthStore();
-  const initialized = useRef(false);
+  const { isAuthenticated, setAuth, setLoading } = useAuthStore();
+  const initializing = useRef(false);
 
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    if (isAuthenticated || initializing.current) {
+      return;
+    }
+
+    initializing.current = true;
+    setLoading(true);
 
     async function initAuth() {
       try {
@@ -57,8 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    initAuth();
-  }, [setAuth, setLoading]);
+    initAuth().finally(() => {
+      initializing.current = false;
+    });
+  }, [isAuthenticated, setAuth, setLoading]);
 
   return <>{children}</>;
 }
