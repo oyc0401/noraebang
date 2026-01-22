@@ -499,14 +499,14 @@ export class SearchService {
   }
 
   async findSongByYoutubeUrl(url: string): Promise<{
-    song: SongDto | null;
-    youtube?: { title: string; authorName: string };
+    songs: SongDto[];
+    matchedByVideoId: boolean;
   }> {
     const videoId = this.extractYoutubeVideoId(url);
 
-    // 1) videoId로 DB 먼저 스캔 (SongYoutubeVideo 매핑)
+    // 1) videoId로 DB 먼저 스캔 (SongYoutubeVideo 매핑) - 일치하는 모든 곡 반환
     if (videoId) {
-      const mapping = await this.prisma.songYoutubeVideo.findFirst({
+      const mappings = await this.prisma.songYoutubeVideo.findMany({
         where: { youtubeVideoId: videoId },
         select: {
           song: {
@@ -515,28 +515,36 @@ export class SearchService {
         },
       });
 
-      if (mapping?.song) {
-        const tjSongMap = await this.buildTjSongMap([mapping.song]);
-        console.log(`DB발견: ${videoId}`);
-        return { song: this.mapSongToDto(mapping.song, tjSongMap) };
+      if (mappings.length > 0) {
+        const songs = mappings.map((m) => m.song);
+        const tjSongMap = await this.buildTjSongMap(songs);
+        console.log(`DB발견: ${videoId}, ${songs.length}개`);
+        return {
+          songs: songs.map((song) => this.mapSongToDto(song, tjSongMap)),
+          matchedByVideoId: true,
+        };
       }
     }
 
-    // 2) 없으면 oEmbed → title/authorName으로 Typesense 검색
-    const youtube = await fetchYoutubeOembed(url); // 기존에 쓰던 유틸 그대로 사용
-    const matchedSongs = await this.searchSongsByTitleAndArtistName({
-      title: youtube.title,
-      authorName: youtube.author_name,
+    // 2) 없으면 oEmbed → title/authorName으로 Typesense 검색 (모든 결과 반환)
+    const youtube = await fetchYoutubeOembed(url);
+    // 1단계: 공백 제거
+    // 2단계: 특수문자를 공백으로 변환
+    const cleanTitle = youtube.title
+      .replace(/\s+/g, "")
+      .replace(/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?`~\-😀-🙏]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const cleanAuthor = youtube.author_name
+      .replace(/\s+/g, "")
+      .replace(/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?`~\-😀-🙏]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const songs = await this.searchSongsByTitleAndArtistName({
+      title: cleanTitle,
+      authorName: cleanAuthor,
     });
-
-    if (matchedSongs.length > 0) {
-      return { song: matchedSongs[0] };
-    }
-
-    return {
-      song: null,
-      youtube: { title: youtube.title, authorName: youtube.author_name },
-    };
+    return { songs, matchedByVideoId: false };
   }
 
   private extractYoutubeVideoId(input: string): string | null {

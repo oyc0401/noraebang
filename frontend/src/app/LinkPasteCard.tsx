@@ -22,18 +22,18 @@ export function LinkPasteCard() {
 
   const youtubeMutation = useMutation({
     mutationFn: async (url: string) => {
-      return searchControllerSearchSongByYoutubeUrl({ url });
+      const result = await searchControllerSearchSongByYoutubeUrl({ url });
+      return { songs: result.songs, matchedByVideoId: result.matchedByVideoId, url };
     },
     onSuccess: (data) => {
-      // DB에서 곡을 찾은 경우
-      if (data.song) {
-        setFoundSong(data.song);
-      }
-      // DB에서 곡을 찾지 못한 경우
-      else if (data.youtube) {
-        const { title, authorName } = data.youtube;
-        setQuery(`${title} ${authorName}`.trim());
-        setSearchActive(true);
+      const { songs, matchedByVideoId, url } = data;
+
+      // 유튜브 ID로 직접 매칭 + 곡 1개일 때만 메인에 표시
+      if (matchedByVideoId && songs.length === 1) {
+        setFoundSong(songs[0]);
+      } else {
+        // 검색 쿼리로 찾았거나, 0개/여러 개면 검색 페이지로 이동
+        router.push(`/search?url=${encodeURIComponent(url)}`);
       }
     },
   });

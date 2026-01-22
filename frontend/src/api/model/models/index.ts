@@ -42,5 +42,4 @@ export * from './spotifyInfoDto';
 export * from './typesenseReindexRequestDto';
 export * from './typesenseReindexRequestDtoTarget';
 export * from './youtubeInfoDto';
-export * from './youtubeOembedDataDto';
 export * from './youtubeSongSearchResponseDto';
