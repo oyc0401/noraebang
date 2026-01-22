@@ -6,9 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface AuthResponseDto {
-  /** Access token 만료 시간 (초) */
-  expiresIn: number;
-  /** 쿠키 설정 성공 여부 */
+export interface MobileLogoutResponseDto {
+  /** 로그아웃 처리 성공 여부 */
   success: boolean;
 }

@@ -23,6 +23,7 @@ export * from './errorResponseDto';
 export * from './karaokeSongDto';
 export * from './mobileAnonymousLoginDto';
 export * from './mobileAuthResponseDto';
+export * from './mobileLogoutResponseDto';
 export * from './profileResponseDto';
 export * from './searchControllerGetSearchSuggestionsParams';
 export * from './searchControllerSearchParams';

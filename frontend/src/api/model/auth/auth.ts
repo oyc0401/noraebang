@@ -26,8 +26,6 @@ import type {
 
 import type {
   AuthResponseDto,
-  MobileAnonymousLoginDto,
-  MobileAuthResponseDto,
   ProfileResponseDto
 } from '.././models';
 
@@ -96,71 +94,6 @@ export const useAuthControllerAnonymousLogin = <TError = unknown,
       > => {
 
       const mutationOptions = getAuthControllerAnonymousLoginMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * deviceId + 서명 기반으로 토큰 발급
- * @summary 앱 익명 로그인
- */
-export const authControllerAnonymousMobileLogin = (
-    mobileAnonymousLoginDto: MobileAnonymousLoginDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customFetch<MobileAuthResponseDto | MobileAuthResponseDto>(
-      {url: `/auth/anonymous/mobile`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: mobileAnonymousLoginDto, signal
-    },
-      );
-    }
-  
-
-
-export const getAuthControllerAnonymousMobileLoginMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerAnonymousMobileLogin>>, TError,{data: MobileAnonymousLoginDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authControllerAnonymousMobileLogin>>, TError,{data: MobileAnonymousLoginDto}, TContext> => {
-
-const mutationKey = ['authControllerAnonymousMobileLogin'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authControllerAnonymousMobileLogin>>, {data: MobileAnonymousLoginDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authControllerAnonymousMobileLogin(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthControllerAnonymousMobileLoginMutationResult = NonNullable<Awaited<ReturnType<typeof authControllerAnonymousMobileLogin>>>
-    export type AuthControllerAnonymousMobileLoginMutationBody = MobileAnonymousLoginDto
-    export type AuthControllerAnonymousMobileLoginMutationError = unknown
-
-    /**
- * @summary 앱 익명 로그인
- */
-export const useAuthControllerAnonymousMobileLogin = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerAnonymousMobileLogin>>, TError,{data: MobileAnonymousLoginDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof authControllerAnonymousMobileLogin>>,
-        TError,
-        {data: MobileAnonymousLoginDto},
-        TContext
-      > => {
-
-      const mutationOptions = getAuthControllerAnonymousMobileLoginMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
