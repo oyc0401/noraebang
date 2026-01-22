@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
+export * from './anonymousLoginDto';
 export * from './apiResponseMeta';
 export * from './artistDetailResponseDto';
 export * from './artistDetailsDto';
@@ -18,8 +19,11 @@ export * from './artistsControllerFindAllDetailsParams';
 export * from './artistsControllerFindAllDetailsSort';
 export * from './artistsControllerFindAllParams';
 export * from './artistsControllerFindAllSort';
+export * from './authResponseDto';
 export * from './errorResponseDto';
 export * from './karaokeSongDto';
+export * from './profileResponseDto';
+export * from './refreshTokenDto';
 export * from './searchControllerGetSearchSuggestionsParams';
 export * from './searchControllerSearchParams';
 export * from './searchControllerSearchSongByYoutubeUrlParams';
