@@ -63,18 +63,8 @@ export default function ArtistPageClient({
     }
   }, []);
 
-  const allSongs =
+  const songs =
     data?.pages.flatMap<SongDto>((page) => page.data ?? []) ?? [];
-
-  // TJ 곡이 있는 곡을 먼저 정렬
-  const songs = [...allSongs].sort((a, b) => {
-    const aHasTJ = a.karaokeSongs?.some((k) => k.provider === "TJ") ?? false;
-    const bHasTJ = b.karaokeSongs?.some((k) => k.provider === "TJ") ?? false;
-
-    if (aHasTJ && !bHasTJ) return -1;
-    if (!aHasTJ && bHasTJ) return 1;
-    return 0;
-  });
 
   // Effect for handling scrolling to a target song from a hash
   useEffect(() => {
@@ -168,13 +158,8 @@ export default function ArtistPageClient({
         </div>
       )}
 
-      <div ref={ref} className="h-20 flex items-center justify-center">
-        {isFetchingNextPage && (
-          <Loader2 className="size-6 animate-spin text-white" />
-        )}
-        {!hasNextPage && !isLoading && songs.length > 0 && (
-          <p className="text-sm text-white/60">모든 곡을 불러왔습니다.</p>
-        )}
+      <div ref={ref} className="">
+        {/* {isFetchingNextPage && <div className=" text-white" />} */}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
+import { ARTIST_SONGS_PAGE_SIZE } from "@/app/artist/[slug]/constants";
 
 export const useInfiniteSongs = (artistId: number) => {
   return useInfiniteQuery({
@@ -9,7 +10,7 @@ export const useInfiniteSongs = (artistId: number) => {
     queryFn: ({ pageParam }) =>
       songsControllerFindByArtistId(artistId, {
         page: pageParam.toString(),
-        limit: "20",
+        limit: `${ARTIST_SONGS_PAGE_SIZE}`,
       }),
     getNextPageParam: (lastPage) => {
       const hasMore = lastPage.meta?.hasMore;
