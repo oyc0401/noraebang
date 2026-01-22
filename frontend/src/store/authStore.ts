@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { customFetch } from "@/api/client";
+
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -6,7 +8,7 @@ interface AuthState {
 
   setAuth: (userId: number) => void;
   setLoading: (loading: boolean) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -26,7 +28,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: loading });
   },
 
-  logout: () => {
+  logout: async () => {
+    try {
+      await customFetch<void>({
+        url: "/auth/logout",
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("Logout request failed:", error);
+    }
+
     set({
       isAuthenticated: false,
       isLoading: false,

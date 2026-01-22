@@ -16,7 +16,7 @@ import {
 } from "@nestjs/swagger";
 import type { Request, Response } from "express";
 import type { CookieOptions } from "express";
-import { AuthService } from "./auth.service";
+import { AuthService, type AuthTokens } from "./auth.service";
 import {
   ACCESS_TOKEN_COOKIE,
   ACCESS_TOKEN_EXPIRES_IN,
@@ -41,10 +41,18 @@ export class AuthController {
   @Post("anonymous")
   @ApiOperation({ summary: "익명 로그인", description: "새 익명 사용자 생성 및 토큰 발급" })
   @ApiResponse({ status: 200, type: AuthResponseDto })
-  async anonymousLogin(@Res({ passthrough: true }) res: Response): Promise<AuthResponseDto> {
+  async anonymousLogin(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponseDto> {
     const tokens = await this.authService.anonymousLogin();
     this.setAuthCookies(res, tokens);
-    return tokens;
+    const includeTokens = this.shouldIncludeTokens(req);
+    return {
+      expiresIn: ACCESS_TOKEN_EXPIRES_IN,
+      success: true,
+      ...(includeTokens ? tokens : {}),
+    };
   }
 
   @Post("refresh")
@@ -64,7 +72,12 @@ export class AuthController {
 
     const tokens = await this.authService.refreshTokens(refreshToken);
     this.setAuthCookies(res, tokens);
-    return tokens;
+    const includeTokens = this.shouldIncludeTokens(req);
+    return {
+      expiresIn: ACCESS_TOKEN_EXPIRES_IN,
+      success: true,
+      ...(includeTokens ? tokens : {}),
+    };
   }
 
   @Get("profile")
@@ -98,7 +111,7 @@ export class AuthController {
     path: "/",
   };
 
-  private setAuthCookies(res: Response, tokens: AuthResponseDto): void {
+  private setAuthCookies(res: Response, tokens: AuthTokens): void {
     res.cookie(ACCESS_TOKEN_COOKIE, tokens.accessToken, {
       ...this.baseCookieOptions,
       maxAge: ACCESS_TOKEN_EXPIRES_IN * 1000,
@@ -112,6 +125,19 @@ export class AuthController {
   private clearAuthCookies(res: Response): void {
     res.clearCookie(ACCESS_TOKEN_COOKIE, this.baseCookieOptions);
     res.clearCookie(REFRESH_TOKEN_COOKIE, this.baseCookieOptions);
+  }
+
+  private shouldIncludeTokens(req?: Request): boolean {
+    const headerValue = req?.headers["x-client-type"];
+    if (!headerValue) {
+      return false;
+    }
+    if (Array.isArray(headerValue)) {
+      return headerValue.some(
+        (value) => value && value.toLowerCase() === "mobile",
+      );
+    }
+    return headerValue.toLowerCase() === "mobile";
   }
 
 }

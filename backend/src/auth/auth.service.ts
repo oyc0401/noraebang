@@ -3,12 +3,17 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { PrismaService } from "../prisma/prisma.service";
-import { AuthResponseDto, ProfileResponseDto } from "./dto";
+import { ProfileResponseDto } from "./dto";
 import {
   ACCESS_TOKEN_EXPIRES_IN,
   REFRESH_TOKEN_EXPIRES_IN,
 } from "./constants";
 import { JwtPayload } from "./strategies/jwt.strategy";
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -18,7 +23,7 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async anonymousLogin(): Promise<AuthResponseDto> {
+  async anonymousLogin(): Promise<AuthTokens> {
     const user = await this.prisma.user.create({
       data: {},
     });
@@ -34,14 +39,10 @@ export class AuthService {
       },
     });
 
-    return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: ACCESS_TOKEN_EXPIRES_IN,
-    };
+    return tokens;
   }
 
-  async refreshTokens(refreshToken: string): Promise<AuthResponseDto> {
+  async refreshTokens(refreshToken: string): Promise<AuthTokens> {
     let payload: JwtPayload;
     try {
       payload = this.jwtService.verify<JwtPayload>(refreshToken, {
@@ -79,11 +80,7 @@ export class AuthService {
       },
     });
 
-    return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: ACCESS_TOKEN_EXPIRES_IN,
-    };
+    return tokens;
   }
 
   async getProfile(userId: number): Promise<ProfileResponseDto> {
@@ -110,7 +107,7 @@ export class AuthService {
     });
   }
 
-  private async generateTokens(userId: number, email?: string) {
+  private async generateTokens(userId: number, email?: string): Promise<AuthTokens> {
     const accessPayload: JwtPayload = {
       sub: userId,
       email,
