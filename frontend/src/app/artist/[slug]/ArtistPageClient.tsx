@@ -14,7 +14,6 @@ import { Header } from "@/components/common/Header";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { SongCard } from "@/components/common/SongCard";
 import { useSearchStore } from "@/store/searchStore";
-import { ActionButtons } from "./ActionButtons";
 import { ARTIST_SONGS_PAGE_SIZE } from "./constants";
 import { ProfileHeader } from "./ProfileHeader";
 
@@ -129,9 +128,12 @@ export default function ArtistPageClient({
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-dark text-white">
-      <Header />
-      <ProfileHeader artist={artist} />
-      <ActionButtons />
+      <div className="relative">
+        <div className="absolute top-0 left-0 right-0 z-20">
+          <Header transparent />
+        </div>
+        <ProfileHeader artist={artist} />
+      </div>
 
       <div className="flex items-end justify-between px-6 pt-6 pb-3">
         <h3 className="tracking-tight text-xl font-bold leading-tight text-white">
@@ -151,7 +153,12 @@ export default function ArtistPageClient({
                 key={song.id}
                 id={song.id.toString()}
                 thumbnail={song.thumbnailDefault}
-                title={formatSongTitle(song.title, song.titleKo, song.titleJa, song.titleLatin)}
+                title={formatSongTitle(
+                  song.title,
+                  song.titleKo,
+                  song.titleJa,
+                  song.titleLatin,
+                )}
                 subtitle={song.artists.map((a) => a.name).join(", ")}
                 tjNumber={tjNumber}
                 isSelected={selectedSongId === song.id.toString()}

@@ -466,7 +466,7 @@ export class SearchService {
     const tjSongMap = await this.buildTjSongMap(sortedSongs);
     for (const song of sortedSongs) {
       const primaryArtist = song.artistSongs[0]?.artist;
-      const artistNames = song.artistSongs.map((as) => as.artist.nameKo).join(", ");
+      const artistNames = song.artistSongs.map((as) => as.artist.name).join(", ");
       cards.push({
         song: {
           id: song.id,
