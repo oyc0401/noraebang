@@ -30,6 +30,8 @@ type SongDtoData = {
   id: number;
   title: string;
   titleKo: string | null;
+  titleJa: string | null;
+  titleLatin: string | null;
   catalog: string | null;
   thumbnailDefault: string | null;
   thumbnailMedium: string | null;
@@ -52,6 +54,8 @@ export class SongsService {
     id: true,
     title: true,
     titleKo: true,
+    titleJa: true,
+    titleLatin: true,
     catalog: true,
     thumbnailDefault: true,
     thumbnailMedium: true,
@@ -109,6 +113,8 @@ export class SongsService {
       id: song.id,
       title: song.title,
       titleKo: song.titleKo ?? undefined,
+      titleJa: song.titleJa ?? undefined,
+      titleLatin: song.titleLatin ?? undefined,
       catalog: song.catalog ?? undefined,
       artists: song.artistSongs.map((as) => ({
         artistId: as.artistId,

@@ -10,8 +10,24 @@ import { SearchBar } from "@/components/search/SearchBar";
 import { hasIncompleteKorean } from "@/lib/korean";
 import { useSearchStore } from "@/store/searchStore";
 
-const formatSongTitle = (title: string, titleKo?: string) =>
-  titleKo ? `${title} - ${titleKo}` : title;
+const formatSongTitle = (
+  title: string,
+  titleKo?: string,
+  titleJa?: string,
+  titleLatin?: string,
+) => {
+  if (titleKo) {
+    if (titleJa) return `${titleKo} - ${titleJa}`;
+    if (titleLatin) return `${titleKo} - ${titleLatin}`;
+    return titleKo;
+  }
+  if (titleJa) {
+    if (titleLatin) return `${titleJa} - ${titleLatin}`;
+    return titleJa;
+  }
+  if (titleLatin) return titleLatin;
+  return title;
+};
 
 export function SearchOverlay() {
   const router = useRouter();
@@ -127,7 +143,7 @@ export function SearchOverlay() {
                   <SongCard
                     key={`song-${card.song.id}`}
                     thumbnail={card.song.thumbnail}
-                    title={formatSongTitle(card.song.title, card.song.titleKo)}
+                    title={formatSongTitle(card.song.title, card.song.titleKo, card.song.titleJa, card.song.titleLatin)}
                     subtitle={card.song.artistName ?? ""}
                     tjNumber={tjKaraoke?.karaokeNo}
                     onClick={() => {

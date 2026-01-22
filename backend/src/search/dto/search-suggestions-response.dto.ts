@@ -56,6 +56,20 @@ export class SearchSuggestionSongDto {
   titleKo?: string;
 
   @ApiProperty({
+    description: "곡 일본어 제목",
+    example: "夜に駆ける",
+    required: false,
+  })
+  titleJa?: string;
+
+  @ApiProperty({
+    description: "곡 로마자 제목",
+    example: "Yoru ni Kakeru",
+    required: false,
+  })
+  titleLatin?: string;
+
+  @ApiProperty({
     description: "곡의 대표 아티스트명",
     example: "YOASOBI",
   })

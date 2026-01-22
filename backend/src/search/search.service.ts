@@ -12,6 +12,8 @@ type SongWithRelations = {
   id: number;
   title: string;
   titleKo: string | null;
+  titleJa: string | null;
+  titleLatin: string | null;
   catalog: string | null;
   thumbnailDefault: string | null;
   thumbnailMedium: string | null;
@@ -56,6 +58,8 @@ const SONG_SEARCH_SELECT = {
   id: true,
   title: true,
   titleKo: true,
+  titleJa: true,
+  titleLatin: true,
   catalog: true,
   thumbnailDefault: true,
   thumbnailMedium: true,
@@ -120,6 +124,8 @@ export class SearchService {
       id: song.id,
       title: song.title,
       titleKo: song.titleKo ?? undefined,
+      titleJa: song.titleJa ?? undefined,
+      titleLatin: song.titleLatin ?? undefined,
       catalog: song.catalog ?? undefined,
       artists: song.artistSongs.map((artistSong) => ({
         artistId: artistSong.artistId,
@@ -460,12 +466,15 @@ export class SearchService {
     const tjSongMap = await this.buildTjSongMap(sortedSongs);
     for (const song of sortedSongs) {
       const primaryArtist = song.artistSongs[0]?.artist;
+      const artistNames = song.artistSongs.map((as) => as.artist.nameKo).join(", ");
       cards.push({
         song: {
           id: song.id,
           title: song.title,
           titleKo: song.titleKo ?? undefined,
-          artistName: primaryArtist?.name ?? "Unknown",
+          titleJa: song.titleJa ?? undefined,
+          titleLatin: song.titleLatin ?? undefined,
+          artistName: artistNames || "Unknown",
           artistSlug: primaryArtist?.slug ?? undefined,
           karaokeSongs: song.karaokeSongs.map((karaokeSong) => {
             const dto: KaraokeSongDto = {
