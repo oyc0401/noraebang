@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Search } from "lucide-react";
+import { ArrowLeft, Clock, Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/search";
@@ -41,17 +41,17 @@ export function SearchOverlay() {
 
   return (
     <div className="bg-background-dark flex flex-col">
-      <header className="sticky top-0 z-20 flex items-center pl-4 pr-2 gap-2 bg-background-dark backdrop-blur-md py-4">
-        <div className="flex-1">
-          <SearchBar />
-        </div>
+      <header className="sticky top-0 z-20 flex h-14 items-center gap-2 bg-background-dark pl-2 pr-1.5 backdrop-blur-md">
         <button
           type="button"
           onClick={clearSearch}
-          className="text-gray-400 hover:text-white transition-colors size-11 flex items-center justify-center text-sm"
+          className="text-gray-400 hover:text-white transition-colors size-11 flex items-center justify-center"
         >
-          취소
+          <ArrowLeft className="size-6" />
         </button>
+        <div className="flex-1">
+          <SearchBar />
+        </div>
       </header>
       <main className="flex-1 flex flex-col w-full mx-auto overflow-y-auto px-2 py-2">
         {suggestions?.data.cards &&

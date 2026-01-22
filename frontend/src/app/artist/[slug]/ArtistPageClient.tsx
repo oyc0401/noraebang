@@ -52,6 +52,7 @@ export default function ArtistPageClient({
     });
 
   const { ref, inView } = useInView();
+  const { ref: headerRef, inView: isHeaderVisible } = useInView();
 
   // Set initial target from hash on component mount
   useEffect(() => {
@@ -111,9 +112,10 @@ export default function ArtistPageClient({
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-dark text-white">
       <div className="fixed top-0 left-0 right-0 z-20 max-w-lg mx-auto">
-        <ArtistHeader transparent />
+        <ArtistHeader transparent={isHeaderVisible} />
       </div>
       <ProfileHeader artist={artist} />
+      <div ref={headerRef} />
 
       <div className="flex items-end justify-between px-6 pt-6 pb-3">
         <h3 className="tracking-tight text-xl font-bold leading-tight text-white">
