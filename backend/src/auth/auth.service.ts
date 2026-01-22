@@ -1,9 +1,17 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
+import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
-import { ProfileResponseDto } from "./dto";
+import {
+  MobileAnonymousLoginDto,
+  ProfileResponseDto,
+} from "./dto";
 import {
   ACCESS_TOKEN_EXPIRES_IN,
   REFRESH_TOKEN_EXPIRES_IN,
@@ -28,18 +36,7 @@ export class AuthService {
       data: {},
     });
 
-    const tokens = await this.generateTokens(user.id, user.email ?? undefined);
-
-    const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        refreshToken: hashedRefreshToken,
-        lastLoginAt: new Date(),
-      },
-    });
-
-    return tokens;
+    return this.generateAndStoreTokens(user.id, user.email ?? undefined);
   }
 
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
@@ -69,18 +66,69 @@ export class AuthService {
       throw new UnauthorizedException("Invalid refresh token");
     }
 
-    const tokens = await this.generateTokens(user.id, user.email ?? undefined);
+    return this.generateAndStoreTokens(user.id, user.email ?? undefined);
+  }
 
-    const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
-    await this.prisma.user.update({
-      where: { id: user.id },
+  async anonymousMobileLogin(
+    dto: MobileAnonymousLoginDto,
+  ): Promise<{ tokens: AuthTokens; deviceSecret?: string }> {
+    const deviceId = dto.deviceId?.trim();
+    const nonce = dto.nonce?.trim();
+    const signature = dto.signature?.trim();
+
+    if (!deviceId) {
+      throw new BadRequestException("Device ID is required");
+    }
+
+    if (!nonce) {
+      throw new BadRequestException("Nonce is required");
+    }
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { deviceId },
+    });
+
+    if (existingUser) {
+      if (!existingUser.deviceSecret) {
+        throw new UnauthorizedException("Device secret not registered");
+      }
+
+      if (!signature) {
+        throw new UnauthorizedException("Signature is required");
+      }
+
+      const isValidSignature = this.verifyDeviceSignature(
+        existingUser.deviceSecret,
+        nonce,
+        signature,
+      );
+
+      if (!isValidSignature) {
+        throw new UnauthorizedException("Invalid device signature");
+      }
+
+      const tokens = await this.generateAndStoreTokens(
+        existingUser.id,
+        existingUser.email ?? undefined,
+      );
+
+      return { tokens };
+    }
+
+    const deviceSecret = this.generateDeviceSecret();
+    const newUser = await this.prisma.user.create({
       data: {
-        refreshToken: hashedRefreshToken,
-        lastLoginAt: new Date(),
+        deviceId,
+        deviceSecret,
       },
     });
 
-    return tokens;
+    const tokens = await this.generateAndStoreTokens(
+      newUser.id,
+      newUser.email ?? undefined,
+    );
+
+    return { tokens, deviceSecret };
   }
 
   async getProfile(userId: number): Promise<ProfileResponseDto> {
@@ -107,7 +155,10 @@ export class AuthService {
     });
   }
 
-  private async generateTokens(userId: number, email?: string): Promise<AuthTokens> {
+  private async generateTokens(
+    userId: number,
+    email?: string,
+  ): Promise<AuthTokens> {
     const accessPayload: JwtPayload = {
       sub: userId,
       email,
@@ -130,5 +181,55 @@ export class AuthService {
     ]);
 
     return { accessToken, refreshToken };
+  }
+
+  private async generateAndStoreTokens(
+    userId: number,
+    email?: string,
+  ): Promise<AuthTokens> {
+    const tokens = await this.generateTokens(userId, email);
+    await this.storeRefreshToken(userId, tokens.refreshToken);
+    return tokens;
+  }
+
+  private async storeRefreshToken(
+    userId: number,
+    refreshToken: string,
+  ): Promise<void> {
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        refreshToken: hashedRefreshToken,
+        lastLoginAt: new Date(),
+      },
+    });
+  }
+
+  private generateDeviceSecret(): string {
+    return randomBytes(32).toString("hex");
+  }
+
+  private verifyDeviceSignature(
+    deviceSecret: string,
+    nonce: string,
+    signature: string,
+  ): boolean {
+    try {
+      const expected = this.createDeviceSignature(deviceSecret, nonce);
+      const provided = Buffer.from(signature, "hex");
+
+      if (expected.length !== provided.length) {
+        return false;
+      }
+
+      return timingSafeEqual(expected, provided);
+    } catch {
+      return false;
+    }
+  }
+
+  private createDeviceSignature(deviceSecret: string, nonce: string): Buffer {
+    return createHmac("sha256", deviceSecret).update(nonce).digest();
   }
 }

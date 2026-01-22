@@ -380,6 +380,8 @@ model User {
   id           Int      @id @default(autoincrement())
   email        String?  @unique
   password     String?
+  deviceId     String?  @unique @map("device_id")
+  deviceSecret String?  @map("device_secret")
   refreshToken String?  @map("refresh_token")
   lastLoginAt  DateTime @default(now()) @map("last_login_at")
   createdAt    DateTime @default(now()) @map("created_at")
