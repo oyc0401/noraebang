@@ -11,7 +11,7 @@
 
 ### AuthController (`backend/src/auth/auth.controller.ts`)
 - `/auth/anonymous`: 웹 익명 로그인. 새 `user` 레코드 생성 → access/refresh 토큰 발급 → HttpOnly 쿠키에 저장.
-- `/auth/refresh`: 웹 전용. Refresh 쿠키로만 새 토큰을 발급하며, 실패 시 `401 Unauthorized`.
+- `/auth/refresh`: 웹 전용. Refresh 쿠키로만 새 토큰을 발급하며, `WEB_ORIGIN`과 일치하는 Origin/Referer를 반드시 요구한다.
 - `/auth/profile`: `JwtAuthGuard`로 보호된 현재 사용자 프로필 조회.
 - `/auth/logout`: refresh 토큰 무효화 및 쿠키 삭제.
 
@@ -100,6 +100,8 @@ model DeviceChallenge {
 - **다중 기기 세션 유지**: 세션 ID(UUID v4)를 refresh 토큰에 포함시켜 기기별로 독립적인 로그인 상태를 유지하고, 한 기기에서 로그아웃/탈취가 발생해도 다른 기기에 영향을 주지 않는다.
 - **앱 챌린지 2단계**: deviceId는 단순 식별자일 뿐이며, 서버가 발급한 nonce를 사용해 `deviceSecret`으로 서명해야만 기존 기기를 재연결할 수 있다. nonce는 TTL·1회용으로 관리하며, 최신 요청이 항상 이전 nonce를 대체(Replace)해 레이스 상황에서도 안전하다.
 - **웹 쿠키 최소 권한**: access 토큰은 `/` 경로, refresh 토큰은 `/auth/refresh` 경로로만 전송해, 불필요한 엔드포인트에 refresh 쿠키가 노출되지 않도록 했다.
+- **Origin 기반 CSRF 방어**: `/auth/refresh`, `/auth/logout` 등 상태 변경 요청은 `WEB_ORIGIN`과 일치하는 Origin/Referer 헤더가 있어야 통과한다.
 - **Refresh 로테이션 및 재사용 탐지**: refresh 호출 시마다 새 토큰을 발급하고 DB 해시를 교체한다. 이전 토큰이 다시 제출되면 매칭되는 세션을 즉시 폐기해 탈취 시도를 차단한다.
 - **Refresh 해시 보호**: `REFRESH_TOKEN_PEPPER` 기반 HMAC-SHA256으로 refresh 토큰을 해시하여 DB만 탈취되더라도 원문을 알아내기 어렵게 한다.
+- **익명 유저 청소 전략**: `/auth/anonymous`, `/auth/mobile/anonymous`, `/auth/mobile/challenge`에는 필수적으로 rate limit을 걸고, `lastLoginAt`/세션 만료 기준으로 장기간 미사용 익명 계정을 주기적으로 정리한다. `DeviceChallenge` 역시 TTL이 지난 레코드는 배치로 삭제한다.
 - **자동 복구**: 사용자가 로그아웃 또는 토큰 만료로 보호된 API 호출이 실패하더라도, 프런트가 즉시 익명 로그인 또는 refresh 로직을 재시도해 UX를 끊김 없이 유지한다.
