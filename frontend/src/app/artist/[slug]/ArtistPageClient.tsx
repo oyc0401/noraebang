@@ -10,7 +10,7 @@ import type {
   SongListResponseDto,
 } from "@/api/model/models";
 import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
-import { Header } from "@/components/common/Header";
+import { ArtistHeader } from "@/components/artist/ArtistHeader";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { SongCard } from "@/components/common/SongCard";
 import { formatSongTitle } from "@/lib/formatSongTitle";
@@ -110,12 +110,10 @@ export default function ArtistPageClient({
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-dark text-white">
-      <div className="relative">
-        <div className="absolute top-0 left-0 right-0 z-20">
-          <Header transparent />
-        </div>
-        <ProfileHeader artist={artist} />
+      <div className="fixed top-0 left-0 right-0 z-20 max-w-lg mx-auto">
+        <ArtistHeader transparent />
       </div>
+      <ProfileHeader artist={artist} />
 
       <div className="flex items-end justify-between px-6 pt-6 pb-3">
         <h3 className="tracking-tight text-xl font-bold leading-tight text-white">
