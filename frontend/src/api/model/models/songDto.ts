@@ -12,6 +12,8 @@ export interface SongDto {
   id: number;
   title: string;
   titleKo?: string;
+  titleJa?: string;
+  titleLatin?: string;
   catalog?: string;
   artists: ArtistSongDto[];
   karaokeSongs?: KaraokeSongDto[];

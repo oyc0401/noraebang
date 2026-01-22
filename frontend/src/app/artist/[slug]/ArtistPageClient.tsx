@@ -18,8 +18,24 @@ import { ActionButtons } from "./ActionButtons";
 import { ARTIST_SONGS_PAGE_SIZE } from "./constants";
 import { ProfileHeader } from "./ProfileHeader";
 
-const formatSongTitle = (title: string, titleKo?: string) =>
-  titleKo ? `${title} - ${titleKo}` : title;
+const formatSongTitle = (
+  title: string,
+  titleKo?: string,
+  titleJa?: string,
+  titleLatin?: string,
+) => {
+  if (titleKo) {
+    if (titleJa) return `${titleKo} - ${titleJa}`;
+    if (titleLatin) return `${titleKo} - ${titleLatin}`;
+    return titleKo;
+  }
+  if (titleJa) {
+    if (titleLatin) return `${titleJa} - ${titleLatin}`;
+    return titleJa;
+  }
+  if (titleLatin) return titleLatin;
+  return title;
+};
 
 const RECOMMENDATION_COUNT = 0;
 
@@ -135,7 +151,7 @@ export default function ArtistPageClient({
                 key={song.id}
                 id={song.id.toString()}
                 thumbnail={song.thumbnailDefault}
-                title={formatSongTitle(song.title, song.titleKo)}
+                title={formatSongTitle(song.title, song.titleKo, song.titleJa, song.titleLatin)}
                 subtitle={song.artists.map((a) => a.name).join(", ")}
                 tjNumber={tjNumber}
                 isSelected={selectedSongId === song.id.toString()}
