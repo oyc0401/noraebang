@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Post,
   Req,
@@ -8,6 +9,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -32,7 +34,14 @@ import { getCookieValue } from "./utils/cookies";
 @ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    configService: ConfigService,
+  ) {
+    this.allowedOrigin = configService.get<string>("WEB_ORIGIN") ?? undefined;
+  }
+
+  private readonly allowedOrigin?: string;
 
   @Post("anonymous")
   @ApiOperation({ summary: "익명 로그인", description: "새 익명 사용자 생성 및 토큰 발급" })
@@ -56,6 +65,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
+    this.ensureSameOrigin(req);
     const refreshToken =
       dto?.refreshToken ?? getCookieValue(req, REFRESH_TOKEN_COOKIE);
 
@@ -65,6 +75,8 @@ export class AuthController {
 
     const tokens = await this.authService.refreshTokens(refreshToken);
     this.setAuthCookies(res, tokens);
+    res.set("Cache-Control", "no-store");
+    res.set("Pragma", "no-cache");
     return {
       expiresIn: ACCESS_TOKEN_EXPIRES_IN,
       success: true,
@@ -89,8 +101,10 @@ export class AuthController {
   @ApiResponse({ status: 200 })
   async logout(
     @CurrentUser() user: CurrentUserData,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
+    this.ensureSameOrigin(req);
     await this.authService.logout(user.id, user.sessionId);
     this.clearAuthCookies(res);
   }
@@ -124,4 +138,22 @@ export class AuthController {
     res.clearCookie(REFRESH_TOKEN_COOKIE, this.refreshCookieOptions);
   }
 
+  private ensureSameOrigin(req: Request): void {
+    if (!this.allowedOrigin) {
+      return;
+    }
+    const headerOrigin = req.headers.origin ?? req.headers.referer;
+    if (!headerOrigin) {
+      throw new ForbiddenException("Origin header required");
+    }
+    let parsedOrigin: string | undefined;
+    try {
+      parsedOrigin = new URL(headerOrigin).origin;
+    } catch {
+      throw new ForbiddenException("Invalid origin");
+    }
+    if (parsedOrigin !== this.allowedOrigin) {
+      throw new ForbiddenException("Origin not allowed");
+    }
+  }
 }
