@@ -378,9 +378,8 @@ model ArtistTjSong {
 // 사용자 테이블
 model User {
   id           Int      @id @default(autoincrement())
-  deviceId     String?  @unique @map("device_id")  // 익명 사용자용
-  email        String?  @unique                     // 이메일 로그인용
-  password     String?                              // 해시된 비밀번호
+  email        String?  @unique
+  password     String?
   refreshToken String?  @map("refresh_token")
   lastLoginAt  DateTime @default(now()) @map("last_login_at")
   createdAt    DateTime @default(now()) @map("created_at")

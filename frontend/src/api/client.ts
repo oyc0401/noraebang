@@ -15,7 +15,6 @@ interface CustomFetchConfig {
 interface AuthResponse {
   accessToken: string;
   refreshToken: string;
-  deviceId: string;
   expiresIn: number;
 }
 
@@ -48,7 +47,7 @@ async function getValidToken(): Promise<string | undefined> {
 
     if (exp - now < 60 * 1000) {
       const result = await refreshTokens(refreshToken);
-      setTokens(result.accessToken, result.refreshToken, result.deviceId);
+      setTokens(result.accessToken, result.refreshToken);
       return result.accessToken;
     }
 

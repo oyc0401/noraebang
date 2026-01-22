@@ -5,7 +5,6 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 
 export interface JwtPayload {
   sub: number;
-  deviceId?: string;
   email?: string;
   type: "access" | "refresh";
 }
@@ -27,7 +26,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   validate(payload: JwtPayload) {
     return {
       id: payload.sub,
-      deviceId: payload.deviceId,
       email: payload.email,
     };
   }
