@@ -7,6 +7,8 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import {
+  createCipheriv,
+  createDecipheriv,
   createHash,
   createHmac,
   randomBytes,
@@ -36,7 +38,15 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    const secretKey = this.configService.get<string>("DEVICE_SECRET_KEY");
+    if (!secretKey) {
+      throw new Error("DEVICE_SECRET_KEY is not defined");
+    }
+    this.deviceSecretKey = createHash("sha256").update(secretKey).digest();
+  }
+
+  private readonly deviceSecretKey: Buffer;
 
   async anonymousLogin(): Promise<AuthTokens> {
     const user = await this.prisma.user.create({
@@ -132,8 +142,9 @@ export class AuthService {
 
       await this.consumeDeviceChallenge(existingUser.id, deviceId, nonce);
 
+      const decryptedSecret = this.decryptDeviceSecret(existingUser.deviceSecret);
       const isValidSignature = this.verifyDeviceSignature(
-        existingUser.deviceSecret,
+        decryptedSecret,
         nonce,
         signature,
       );
@@ -151,10 +162,11 @@ export class AuthService {
     }
 
     const deviceSecret = this.generateDeviceSecret();
+    const encryptedSecret = this.encryptDeviceSecret(deviceSecret);
     const newUser = await this.prisma.user.create({
       data: {
         deviceId,
-        deviceSecret,
+        deviceSecret: encryptedSecret,
       },
     });
 
@@ -190,14 +202,12 @@ export class AuthService {
     );
     const nonceHash = this.hashNonce(nonce);
 
-    await this.prisma.deviceChallenge.upsert({
+    await this.prisma.deviceChallenge.deleteMany({
       where: { deviceId: normalizedId },
-      update: {
-        nonceHash,
-        expiresAt,
-        usedAt: null,
-      },
-      create: {
+    });
+
+    await this.prisma.deviceChallenge.create({
+      data: {
         id: randomUUID(),
         userId: user.id,
         deviceId: normalizedId,
@@ -329,43 +339,36 @@ export class AuthService {
     deviceId: string,
     nonce: string,
   ): Promise<void> {
-    const challenge = await this.prisma.deviceChallenge.findUnique({
-      where: { deviceId },
+    const nonceHash = this.hashNonce(nonce);
+    const challenge = await this.prisma.deviceChallenge.findFirst({
+      where: {
+        deviceId,
+        userId,
+        nonceHash,
+        usedAt: null,
+      },
+      orderBy: { createdAt: "desc" },
     });
 
-    if (!challenge || challenge.userId !== userId) {
+    if (!challenge) {
       throw new UnauthorizedException("Device challenge required");
-    }
-
-    if (challenge.usedAt) {
-      await this.prisma.deviceChallenge
-        .delete({ where: { deviceId } })
-        .catch(() => undefined);
-      throw new UnauthorizedException("Device challenge already used");
     }
 
     if (challenge.expiresAt.getTime() < Date.now()) {
       await this.prisma.deviceChallenge
-        .delete({ where: { deviceId } })
+        .update({
+          where: { id: challenge.id },
+          data: { usedAt: new Date() },
+        })
         .catch(() => undefined);
       throw new UnauthorizedException("Device challenge expired");
     }
 
-    const expected = Buffer.from(challenge.nonceHash, "hex");
-    const provided = this.hashNonceBuffer(nonce);
-
-    if (
-      expected.length !== provided.length ||
-      !timingSafeEqual(expected, provided)
-    ) {
-      await this.prisma.deviceChallenge
-        .delete({ where: { deviceId } })
-        .catch(() => undefined);
-      throw new UnauthorizedException("Invalid device nonce");
-    }
-
     await this.prisma.deviceChallenge
-      .delete({ where: { deviceId } })
+      .update({
+        where: { id: challenge.id },
+        data: { usedAt: new Date() },
+      })
       .catch(() => undefined);
   }
 
@@ -373,12 +376,26 @@ export class AuthService {
     return randomBytes(32).toString("hex");
   }
 
-  private hashNonce(nonce: string): string {
-    return createHash("sha256").update(nonce).digest("hex");
+  private encryptDeviceSecret(secret: string): string {
+    const iv = randomBytes(12);
+    const cipher = createCipheriv("aes-256-gcm", this.deviceSecretKey, iv);
+    const ciphertext = Buffer.concat([cipher.update(secret, "utf8"), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    return Buffer.concat([iv, tag, ciphertext]).toString("base64");
   }
 
-  private hashNonceBuffer(nonce: string): Buffer {
-    return createHash("sha256").update(nonce).digest();
+  private decryptDeviceSecret(payload: string): string {
+    const buffer = Buffer.from(payload, "base64");
+    const iv = buffer.subarray(0, 12);
+    const tag = buffer.subarray(12, 28);
+    const ciphertext = buffer.subarray(28);
+    const decipher = createDecipheriv("aes-256-gcm", this.deviceSecretKey, iv);
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString("utf8");
+  }
+
+  private hashNonce(nonce: string): string {
+    return createHash("sha256").update(nonce).digest("hex");
   }
 
   private verifyDeviceSignature(
