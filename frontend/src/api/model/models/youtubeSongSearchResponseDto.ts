@@ -10,5 +10,7 @@ import type { SongDto } from './songDto';
 export interface YoutubeSongSearchResponseDto {
   /** DB에서 찾은 곡 정보 목록 (유튜브 ID 일치 시 해당 곡들, 검색 시 여러 개) */
   songs: SongDto[];
+  /** 유튜브 Video ID로 직접 매칭되었는지 여부 (false면 oEmbed 검색으로 찾음) */
+  matchedByVideoId: boolean;
   message: string;
 }
