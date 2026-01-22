@@ -36,6 +36,7 @@ export function ArtistCard({
             fill
             sizes="56px"
             className="rounded-full object-cover"
+            unoptimized
           />
         )}
       </div>

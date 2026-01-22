@@ -39,6 +39,7 @@ export function SongCard({
             fill
             sizes="56px"
             className="rounded-sm object-cover"
+            unoptimized
           />
         )}
       </div>
