@@ -382,14 +382,28 @@ model User {
   password     String?
   deviceId     String?  @unique @map("device_id")
   deviceSecret String?  @map("device_secret")
-  refreshToken String?  @map("refresh_token")
-  refreshTokenLastUsedAt DateTime? @map("refresh_token_last_used_at")
-  refreshTokenExpiresAt  DateTime? @map("refresh_token_expires_at")
   lastLoginAt  DateTime @default(now()) @map("last_login_at")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  sessions UserSession[]
+
   @@map("user")
+}
+
+model UserSession {
+  id                      String   @id
+  userId                  Int      @map("user_id")
+  refreshTokenHash        String   @map("refresh_token_hash")
+  refreshTokenLastUsedAt  DateTime? @map("refresh_token_last_used_at")
+  refreshTokenExpiresAt   DateTime? @map("refresh_token_expires_at")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_session")
 }
 
 // 곡 신청 테이블

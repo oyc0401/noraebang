@@ -6,7 +6,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
-import { createHmac, randomBytes, timingSafeEqual } from "crypto";
+import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import {
   MobileAnonymousLoginDto,
@@ -36,7 +36,7 @@ export class AuthService {
       data: {},
     });
 
-    return this.generateAndStoreTokens(user.id, user.email ?? undefined);
+    return this.createSessionAndTokens(user.id, user.email ?? undefined);
   }
 
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
@@ -53,27 +53,41 @@ export class AuthService {
       throw new UnauthorizedException("Invalid token type");
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
+    const sessionId = payload.sessionId ?? `legacy-${payload.sub}`;
+
+    const session = await this.prisma.userSession.findUnique({
+      where: { id: sessionId },
+      include: { user: true },
     });
 
-    if (!user || !user.refreshToken) {
+    if (!session || session.userId !== payload.sub) {
+      throw new UnauthorizedException("Session not found");
+    }
+
+    if (!session.user || !session.refreshTokenHash) {
       throw new UnauthorizedException("User not found or logged out");
     }
 
     if (
-      !user.refreshTokenExpiresAt ||
-      user.refreshTokenExpiresAt.getTime() < Date.now()
+      !session.refreshTokenExpiresAt ||
+      session.refreshTokenExpiresAt.getTime() < Date.now()
     ) {
       throw new UnauthorizedException("Refresh token expired");
     }
 
-    const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
+    const isValid = await bcrypt.compare(
+      refreshToken,
+      session.refreshTokenHash,
+    );
     if (!isValid) {
       throw new UnauthorizedException("Invalid refresh token");
     }
 
-    return this.generateAndStoreTokens(user.id, user.email ?? undefined);
+    return this.rotateSessionTokens(
+      session.id,
+      session.userId,
+      session.user.email ?? undefined,
+    );
   }
 
   async anonymousMobileLogin(
@@ -114,7 +128,7 @@ export class AuthService {
         throw new UnauthorizedException("Invalid device signature");
       }
 
-      const tokens = await this.generateAndStoreTokens(
+      const tokens = await this.createSessionAndTokens(
         existingUser.id,
         existingUser.email ?? undefined,
       );
@@ -130,7 +144,7 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.generateAndStoreTokens(
+    const tokens = await this.createSessionAndTokens(
       newUser.id,
       newUser.email ?? undefined,
     );
@@ -155,31 +169,38 @@ export class AuthService {
     };
   }
 
-  async logout(userId: number): Promise<void> {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        refreshToken: null,
-        refreshTokenExpiresAt: null,
-        refreshTokenLastUsedAt: null,
-      },
+  async logout(userId: number, sessionId?: string): Promise<void> {
+    if (sessionId) {
+      await this.prisma.userSession
+        .delete({
+          where: { id: sessionId },
+        })
+        .catch(() => undefined);
+      return;
+    }
+
+    await this.prisma.userSession.deleteMany({
+      where: { userId },
     });
   }
 
   private async generateTokens(
     userId: number,
+    sessionId: string,
     email?: string,
   ): Promise<AuthTokens> {
     const accessPayload: JwtPayload = {
       sub: userId,
       email,
       type: "access",
+      sessionId,
     };
 
     const refreshPayload: JwtPayload = {
       sub: userId,
       email,
       type: "refresh",
+      sessionId,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -194,31 +215,56 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async generateAndStoreTokens(
+  private async createSessionAndTokens(
     userId: number,
     email?: string,
   ): Promise<AuthTokens> {
-    const tokens = await this.generateTokens(userId, email);
-    await this.storeRefreshToken(userId, tokens.refreshToken);
+    const sessionId = randomUUID();
+    const tokens = await this.generateTokens(userId, sessionId, email);
+    await this.storeSession(sessionId, userId, tokens.refreshToken);
     return tokens;
   }
 
-  private async storeRefreshToken(
+  private async rotateSessionTokens(
+    sessionId: string,
+    userId: number,
+    email?: string,
+  ): Promise<AuthTokens> {
+    const tokens = await this.generateTokens(userId, sessionId, email);
+    await this.storeSession(sessionId, userId, tokens.refreshToken);
+    return tokens;
+  }
+
+  private async storeSession(
+    sessionId: string,
     userId: number,
     refreshToken: string,
   ): Promise<void> {
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
     const now = new Date();
     const expiresAt = new Date(now.getTime() + REFRESH_TOKEN_EXPIRES_IN * 1000);
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        refreshToken: hashedRefreshToken,
-        refreshTokenLastUsedAt: now,
-        refreshTokenExpiresAt: expiresAt,
-        lastLoginAt: now,
-      },
-    });
+
+    await this.prisma.$transaction([
+      this.prisma.userSession.upsert({
+        where: { id: sessionId },
+        update: {
+          refreshTokenHash: hashedRefreshToken,
+          refreshTokenLastUsedAt: now,
+          refreshTokenExpiresAt: expiresAt,
+        },
+        create: {
+          id: sessionId,
+          userId,
+          refreshTokenHash: hashedRefreshToken,
+          refreshTokenLastUsedAt: now,
+          refreshTokenExpiresAt: expiresAt,
+        },
+      }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { lastLoginAt: now },
+      }),
+    ]);
   }
 
   private generateDeviceSecret(): string {
