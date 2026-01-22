@@ -55,7 +55,7 @@ export function SearchPageContent() {
                   artist && (
                     <ArtistCard
                       key={`artist-${artist.id}`}
-                      thumbnail={artist.thumbnailDefault}
+                      thumbnail={artist.thumbnailMedium}
                       title={artist.nameKo || artist.name}
                       subtitle={artist.name}
                       onClick={() => {
@@ -93,7 +93,7 @@ export function SearchPageContent() {
                 return (
                   <SongCard
                     key={`song-${song.id}`}
-                    thumbnail={song.thumbnailDefault}
+                    thumbnail={song.thumbnailMedium}
                     title={formatSongTitle(
                       song.title,
                       song.titleKo,
