@@ -27,6 +27,8 @@ import { CurrentUser } from "./decorators/current-user.decorator";
 import type { CurrentUserData } from "./decorators/current-user.decorator";
 import {
   AuthResponseDto,
+  MobileAnonymousLoginDto,
+  MobileAuthResponseDto,
   ProfileResponseDto,
   RefreshTokenDto,
 } from "./dto";
@@ -52,6 +54,26 @@ export class AuthController {
       expiresIn: ACCESS_TOKEN_EXPIRES_IN,
       success: true,
       ...(includeTokens ? tokens : {}),
+    };
+  }
+
+  @Post("anonymous/mobile")
+  @ApiOperation({
+    summary: "앱 익명 로그인",
+    description: "deviceId + 서명 기반으로 토큰 발급",
+  })
+  @ApiResponse({ status: 200, type: MobileAuthResponseDto })
+  async anonymousMobileLogin(
+    @Body() dto: MobileAnonymousLoginDto,
+  ): Promise<MobileAuthResponseDto> {
+    const { tokens, deviceSecret } =
+      await this.authService.anonymousMobileLogin(dto);
+
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresIn: ACCESS_TOKEN_EXPIRES_IN,
+      deviceSecret,
     };
   }
 
