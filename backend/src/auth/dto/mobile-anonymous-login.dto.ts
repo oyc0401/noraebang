@@ -8,9 +8,8 @@ export class MobileAnonymousLoginDto {
   deviceId: string;
 
   @ApiProperty({
-    description:
-      "클라이언트에서 생성한 nonce. timestamp 등 재사용되지 않는 값 사용 권장",
-    example: "1705916400000:random",
+    description: "서버에서 발급받은 1회용 nonce",
+    example: "c4a1f9e8b7...",
   })
   nonce: string;
 

@@ -19,6 +19,8 @@ import type { CurrentUserData } from "./decorators/current-user.decorator";
 import {
   MobileAnonymousLoginDto,
   MobileAuthResponseDto,
+  MobileDeviceChallengeDto,
+  MobileDeviceChallengeResponseDto,
   MobileLogoutResponseDto,
   ProfileResponseDto,
   RefreshTokenDto,
@@ -29,6 +31,18 @@ import { JwtAuthGuard } from "./guards";
 @Controller("auth/mobile")
 export class MobileAuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post("challenge")
+  @ApiOperation({
+    summary: "앱 기기 nonce 발급",
+    description: "등록된 기기 ID에 대해 1회용 nonce를 발급합니다.",
+  })
+  @ApiResponse({ status: 200, type: MobileDeviceChallengeResponseDto })
+  async requestChallenge(
+    @Body() dto: MobileDeviceChallengeDto,
+  ): Promise<MobileDeviceChallengeResponseDto> {
+    return this.authService.requestMobileChallenge(dto.deviceId);
+  }
 
   @Post("anonymous")
   @ApiOperation({
