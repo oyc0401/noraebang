@@ -19,7 +19,7 @@ export function SearchHeader({ value }: SearchHeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-2 bg-background-dark/95 pr-4 pl-2 py-4 backdrop-blur-md">
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-2 bg-background-dark/95 pl-2 pr-1.5 backdrop-blur-md">
       <Link
         href="/"
         className="text-gray-400 hover:text-white transition-colors size-11 flex items-center justify-center"

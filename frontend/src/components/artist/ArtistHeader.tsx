@@ -16,7 +16,7 @@ export function ArtistHeader({ transparent }: ArtistHeaderProps) {
   return (
     <header
       className={cn(
-        "z-20 flex h-14 items-center justify-between pl-1.5 pr-1.5",
+        "z-20 flex h-14 items-center justify-between pl-2 pr-1.5 transition-colors duration-300",
         transparent
           ? "bg-transparent"
           : "sticky top-0 bg-background-dark/95 backdrop-blur-md",
@@ -25,7 +25,7 @@ export function ArtistHeader({ transparent }: ArtistHeaderProps) {
       <button
         type="button"
         onClick={() => router.back()}
-        className="flex size-11 items-center justify-center text-white/80 transition-colors hover:text-white"
+        className="flex size-11 items-center justify-center text-gray-400 transition-colors hover:text-white"
         aria-label="뒤로가기"
       >
         <ArrowLeft className="size-6" />
@@ -33,7 +33,7 @@ export function ArtistHeader({ transparent }: ArtistHeaderProps) {
       <div className="flex items-center">
         <button
           type="button"
-          className="flex size-11 items-center justify-center text-white/80 transition-colors hover:text-white"
+          className="flex size-11 items-center justify-center text-gray-400 transition-colors hover:text-white"
           aria-label="검색"
           onClick={() => setSearchActive(true)}
         >
