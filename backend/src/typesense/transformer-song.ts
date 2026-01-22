@@ -17,6 +17,7 @@ import {
 export type SongWithRelations = Awaited<
   ReturnType<PrismaClient["song"]["findMany"]>
 >[number] & {
+  score?: number | null;
   artistSongs: Array<{
     artist: {
       id: number;
@@ -338,6 +339,10 @@ function createSpotifyTrackPopularity(song: SongWithRelations) {
 }
 
 function createSongPopularity(song: SongWithRelations) {
+  if (typeof song.score === "number") {
+    return song.score;
+  }
+
   const spotifyTrackPopularity = createSpotifyTrackPopularity(song);
   const artistSpotifyPopularity = createArtistSpotifyPopularity(song);
   const tjSongCount = createTjSongCount(song);

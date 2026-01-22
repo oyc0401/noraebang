@@ -7,6 +7,7 @@ import { mapSongYoutubeVideo } from "@/lib/admin/map-song-youtube-video";
 import { mapSongYoutubeVideoFromSearch } from "@/lib/admin/map-song-youtube-video-from-search";
 import { mapSongSpotifyTracks } from "@/lib/admin/map-song-spotify-tracks";
 import { updateSongThumbnails } from "@/lib/admin/update-song-thumbnails";
+import { updateSongScore } from "@/lib/admin/update-song-score";
 
 export async function runAutoFillSongTitlesForArtist(
   artistId: number,
@@ -62,4 +63,12 @@ export async function runMapSongSpotifyGroupsForArtist(
 ): Promise<void> {
   const dryRun = Boolean(options.dryRun);
   await mapSongSpotifyTracks(artistId, { dryRun });
+}
+
+export async function runUpdateSongScoreForArtist(
+  artistId: number,
+  options: { dryRun?: boolean } = {},
+): Promise<void> {
+  const dryRun = Boolean(options.dryRun);
+  await updateSongScore(artistId, { dryRun });
 }

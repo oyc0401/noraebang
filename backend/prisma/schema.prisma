@@ -57,6 +57,7 @@ model Song {
   youtubeFetchedAt    DateTime? @map("youtube_fetched_at")
   spotifyTrackGroupId Int?      @map("spotify_track_group_id")
   tjSongId            String?   @unique @map("tj_song_id")
+  score               Float?    @map("score")
 
   thumbnailDefault String? @map("thumbnail_default")
   thumbnailMedium  String? @map("thumbnail_medium")

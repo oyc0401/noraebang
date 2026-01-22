@@ -12,6 +12,7 @@ import {
   runMapSongYoutubeVideoFromSearchForArtist,
   runUpdateSongThumbnailsForArtist,
   runMapSongSpotifyGroupsForArtist,
+  runUpdateSongScoreForArtist,
 } from "./actions";
 
 type TaskAction = (
@@ -151,6 +152,11 @@ export default function AdminTasksPage() {
     runUpdateSongThumbnailsForArtist,
     getRange,
   );
+  const scoreTask = useArtistTask(
+    "updateSongScore",
+    runUpdateSongScoreForArtist,
+    getRange,
+  );
 
   return (
     <div className="min-h-screen bg-zinc-50 py-4">
@@ -239,6 +245,11 @@ export default function AdminTasksPage() {
             title="곡 썸네일 보정"
             description="Spotify/YouTube 정보를 바탕으로 곡 썸네일을 자동으로 채웁니다."
             task={thumbTask}
+          />
+          <TaskCard
+            title="곡 점수 산출"
+            description="Spotify 인기, TJ 여부, YouTube 조회수를 조합해 score 컬럼을 계산합니다."
+            task={scoreTask}
           />
         </div>
       </div>
