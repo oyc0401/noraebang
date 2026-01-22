@@ -2,6 +2,9 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
+import type { Request } from "express";
+import { ACCESS_TOKEN_COOKIE } from "../constants";
+import { getCookieValue } from "../utils/cookies";
 
 export interface JwtPayload {
   sub: number;
@@ -17,7 +20,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new Error("JWT_SECRET is not defined");
     }
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (req: Request) => {
+        const cookieToken = getCookieValue(req, ACCESS_TOKEN_COOKIE);
+        if (cookieToken) {
+          return cookieToken;
+        }
+        return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+      },
       ignoreExpiration: false,
       secretOrKey: secret,
     });

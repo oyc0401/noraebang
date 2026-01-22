@@ -1,4 +1,3 @@
-import { getAccessToken, getRefreshToken, setTokens } from "@/lib/auth";
 import { API_BASE_URL } from "./config";
 
 export { API_BASE_URL };
@@ -10,51 +9,6 @@ interface CustomFetchConfig {
   data?: unknown;
   headers?: Record<string, string>;
   signal?: AbortSignal;
-}
-
-interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-}
-
-async function refreshTokens(refreshToken: string): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Token refresh failed");
-  }
-
-  return response.json();
-}
-
-async function getValidToken(): Promise<string | undefined> {
-  const accessToken = getAccessToken();
-  const refreshToken = getRefreshToken();
-
-  if (!accessToken || !refreshToken) {
-    return undefined;
-  }
-
-  try {
-    const payload = JSON.parse(atob(accessToken.split(".")[1]));
-    const exp = payload.exp * 1000;
-    const now = Date.now();
-
-    if (exp - now < 60 * 1000) {
-      const result = await refreshTokens(refreshToken);
-      setTokens(result.accessToken, result.refreshToken);
-      return result.accessToken;
-    }
-
-    return accessToken;
-  } catch {
-    return accessToken;
-  }
 }
 
 export class ApiError extends Error {
@@ -93,21 +47,26 @@ export const customFetch = async <T>({
 
   const fullUrl = `${API_BASE_URL}${url}${queryString}`;
 
-  const token = await getValidToken();
-  const authHeaders: Record<string, string> = token
-    ? { Authorization: `Bearer ${token}` }
-    : {};
+  const fetchRequest = () =>
+    fetch(fullUrl, {
+      method,
+      signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
 
-  const response = await fetch(fullUrl, {
-    method,
-    signal,
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders,
-      ...headers,
-    },
-    body: data ? JSON.stringify(data) : undefined,
-  });
+  let response = await fetchRequest();
+
+  if (response.status === 401) {
+    const refreshed = await attemptRefresh();
+    if (refreshed) {
+      response = await fetchRequest();
+    }
+  }
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
@@ -125,3 +84,22 @@ export const customFetch = async <T>({
 
   return response.json();
 };
+
+async function attemptRefresh(): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    await response.json().catch(() => ({}));
+    return true;
+  } catch {
+    return false;
+  }
+}
