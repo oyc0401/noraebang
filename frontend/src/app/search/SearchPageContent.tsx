@@ -6,6 +6,7 @@ import { useSearchControllerSearch } from "@/api/model/search/search";
 import { ArtistCard } from "@/components/common/ArtistCard";
 import { SongCard } from "@/components/common/SongCard";
 import { SearchHeader } from "@/components/search/SearchHeader";
+import { formatSongTitle } from "@/lib/formatSongTitle";
 import { useSearchStore } from "@/store/searchStore";
 
 export function SearchPageContent() {
@@ -93,7 +94,12 @@ export function SearchPageContent() {
                   <SongCard
                     key={`song-${song.id}`}
                     thumbnail={song.thumbnailDefault}
-                    title={song.title}
+                    title={formatSongTitle(
+                      song.title,
+                      song.titleKo,
+                      song.titleJa,
+                      song.titleLatin,
+                    )}
                     subtitle={artistForDisplay.nameKo ?? ""}
                     tjNumber={tjKaraoke?.karaokeNo}
                     onClick={() => {

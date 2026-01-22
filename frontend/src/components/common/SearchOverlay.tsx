@@ -7,27 +7,9 @@ import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/sear
 import { ArtistCard } from "@/components/common/ArtistCard";
 import { SongCard } from "@/components/common/SongCard";
 import { SearchBar } from "@/components/search/SearchBar";
+import { formatSongTitle } from "@/lib/formatSongTitle";
 import { hasIncompleteKorean } from "@/lib/korean";
 import { useSearchStore } from "@/store/searchStore";
-
-const formatSongTitle = (
-  title: string,
-  titleKo?: string,
-  titleJa?: string,
-  titleLatin?: string,
-) => {
-  if (titleKo) {
-    if (titleJa) return `${titleKo} - ${titleJa}`;
-    if (titleLatin) return `${titleKo} - ${titleLatin}`;
-    return titleKo;
-  }
-  if (titleJa) {
-    if (titleLatin) return `${titleJa} - ${titleLatin}`;
-    return titleJa;
-  }
-  if (titleLatin) return titleLatin;
-  return title;
-};
 
 export function SearchOverlay() {
   const router = useRouter();
