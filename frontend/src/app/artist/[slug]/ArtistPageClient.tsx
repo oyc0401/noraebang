@@ -13,28 +13,10 @@ import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
 import { Header } from "@/components/common/Header";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { SongCard } from "@/components/common/SongCard";
+import { formatSongTitle } from "@/lib/formatSongTitle";
 import { useSearchStore } from "@/store/searchStore";
 import { ARTIST_SONGS_PAGE_SIZE } from "./constants";
 import { ProfileHeader } from "./ProfileHeader";
-
-const formatSongTitle = (
-  title: string,
-  titleKo?: string,
-  titleJa?: string,
-  titleLatin?: string,
-) => {
-  if (titleKo) {
-    if (titleJa) return `${titleKo} - ${titleJa}`;
-    if (titleLatin) return `${titleKo} - ${titleLatin}`;
-    return titleKo;
-  }
-  if (titleJa) {
-    if (titleLatin) return `${titleJa} - ${titleLatin}`;
-    return titleJa;
-  }
-  if (titleLatin) return titleLatin;
-  return title;
-};
 
 const RECOMMENDATION_COUNT = 0;
 
