@@ -55,10 +55,11 @@ model Song {
   titleJaKana         String?            @map("title_ja_kana")
   titleJaKanji        String?            @map("title_ja_kanji")
   titleLatin          String?            @map("title_latin")
+  titleJa             String?            @map("title_ja")
   spotifyTrackGroupId Int?               @map("spotify_track_group_id")
   tjSongId            String?            @unique @map("tj_song_id")
   titleJaPronu        String?            @map("title_ja_pronu")
-  titleJa             String?            @map("title_ja")
+  titleLatinPronu     String?            @map("title_latin_pronu")
   score               Float?             @map("score")
   artistSongs         ArtistSong[]
   karaokeSongs        KaraokeSong[]
