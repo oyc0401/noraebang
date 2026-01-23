@@ -6,22 +6,27 @@
  * OpenAPI spec version: 1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   ErrorResponseDto,
+  SaveSearchClickDto,
   SearchControllerGetSearchSuggestionsParams,
   SearchControllerSearchParams,
   SearchControllerSearchSongByYoutubeUrlParams,
@@ -317,3 +322,69 @@ export function useSearchControllerSearchSongByYoutubeUrl<TData = Awaited<Return
 
 
 
+/**
+ * 검색 결과에서 클릭한 아티스트/곡을 저장합니다.
+ * @summary 검색 클릭 기록 저장
+ */
+export const searchControllerSaveSearchClick = (
+    saveSearchClickDto: SaveSearchClickDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customFetch<void>(
+      {url: `/search/click`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: saveSearchClickDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSearchControllerSaveSearchClickMutationOptions = <TError = ErrorResponseDto,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchControllerSaveSearchClick>>, TError,{data: SaveSearchClickDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof searchControllerSaveSearchClick>>, TError,{data: SaveSearchClickDto}, TContext> => {
+
+const mutationKey = ['searchControllerSaveSearchClick'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof searchControllerSaveSearchClick>>, {data: SaveSearchClickDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  searchControllerSaveSearchClick(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SearchControllerSaveSearchClickMutationResult = NonNullable<Awaited<ReturnType<typeof searchControllerSaveSearchClick>>>
+    export type SearchControllerSaveSearchClickMutationBody = SaveSearchClickDto
+    export type SearchControllerSaveSearchClickMutationError = ErrorResponseDto
+
+    /**
+ * @summary 검색 클릭 기록 저장
+ */
+export const useSearchControllerSaveSearchClick = <TError = ErrorResponseDto,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchControllerSaveSearchClick>>, TError,{data: SaveSearchClickDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof searchControllerSaveSearchClick>>,
+        TError,
+        {data: SaveSearchClickDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSearchControllerSaveSearchClickMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    

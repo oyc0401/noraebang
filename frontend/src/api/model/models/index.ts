@@ -25,6 +25,7 @@ export * from './mobileAnonymousLoginDto';
 export * from './mobileAuthResponseDto';
 export * from './mobileLogoutResponseDto';
 export * from './profileResponseDto';
+export * from './saveSearchClickDto';
 export * from './searchControllerGetSearchSuggestionsParams';
 export * from './searchControllerSearchParams';
 export * from './searchControllerSearchSongByYoutubeUrlParams';

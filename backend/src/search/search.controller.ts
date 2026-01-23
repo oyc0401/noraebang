@@ -18,10 +18,9 @@ import {
   CurrentUser,
   type CurrentUserData,
 } from "../auth/decorators/current-user.decorator";
-import { JwtAuthGuard } from "../auth/guards";
+import { JwtAuthGuard, OptionalJwtAuthGuard } from "../auth/guards";
 import { ErrorResponseDto } from "../dto";
 import { SaveSearchClickDto } from "./dto/save-search-click.dto";
-import { SaveSearchHistoryDto } from "./dto/save-search-history.dto";
 import { SearchResponseDto } from "./dto/search-response.dto";
 import { SearchSuggestionsQueryDto } from "./dto/search-suggestions-query.dto";
 import { SearchSuggestionsResponseDto } from "./dto/search-suggestions-response.dto";
@@ -34,6 +33,7 @@ export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @Get()
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({
     summary: "통합 검색",
     description: "아티스트와 곡을 통합 검색합니다.",
@@ -70,6 +70,7 @@ export class SearchController {
     @Query("query") query: string,
     @Query("page") page?: string,
     @Query("limit") limit?: string,
+    @CurrentUser() user?: CurrentUserData,
   ): Promise<SearchResponseDto> {
     if (!query) {
       throw new BadRequestException("Query parameter is required");
@@ -83,6 +84,11 @@ export class SearchController {
       pageNumber,
       limitNumber,
     );
+
+    // 첫 페이지이고 로그인 유저이면 검색 기록 저장
+    if (pageNumber === 1 && user?.id) {
+      this.searchService.saveSearchHistory(user.id, query).catch(() => {});
+    }
 
     return {
       data: results,
@@ -130,6 +136,7 @@ export class SearchController {
   }
 
   @Get("youtube")
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({
     summary: "유튜브 URL로 단일곡 검색",
     description:
@@ -153,6 +160,7 @@ export class SearchController {
   })
   async searchSongByYoutubeUrl(
     @Query("url") url: string,
+    @CurrentUser() user?: CurrentUserData,
   ): Promise<YoutubeSongSearchResponseDto> {
     if (!url) {
       throw new BadRequestException("URL parameter is required");
@@ -160,6 +168,11 @@ export class SearchController {
 
     const { songs, matchedByVideoId } =
       await this.searchService.findSongByYoutubeUrl(url);
+
+    // 로그인 유저이면 검색 기록 저장
+    if (user?.id) {
+      this.searchService.saveSearchHistory(user.id, undefined, url).catch(() => {});
+    }
 
     return {
       songs,
@@ -169,22 +182,6 @@ export class SearchController {
           ? "DB에서 곡을 찾았습니다"
           : "DB에서 곡을 찾지 못했습니다",
     };
-  }
-
-  @Post("history")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: "검색 기록 저장",
-    description: "사용자의 검색어를 저장합니다.",
-  })
-  @SwaggerApiResponse({ status: 201, description: "저장 성공" })
-  @SwaggerApiResponse({ status: 401, description: "인증 필요", type: ErrorResponseDto })
-  async saveSearchHistory(
-    @CurrentUser() user: CurrentUserData,
-    @Body() dto: SaveSearchHistoryDto,
-  ): Promise<void> {
-    await this.searchService.saveSearchHistory(user.id, dto.query, dto.url);
   }
 
   @Post("click")
