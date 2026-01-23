@@ -5,9 +5,9 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
+import type { SearchSuggestionsDataDto } from './searchSuggestionsDataDto';
 
 export interface RecentSearchesResponseDto {
-  /** 최근 검색어 목록 */
-  data: string[];
+  data: SearchSuggestionsDataDto;
   message: string;
 }

@@ -186,38 +186,29 @@ export class SearchController {
   }
 
   @Get("recent")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: "최근 검색어 조회",
-    description: "로그인한 사용자의 최근 검색어 목록을 반환합니다.",
-  })
-  @ApiQuery({
-    name: "limit",
-    required: false,
-    description: "조회할 개수 (기본값: 5)",
-    example: 5,
+    summary: "최근/인기 검색어 조회",
+    description:
+      "로그인 시 최근 검색어와 인기 검색어를, 비로그인 시 인기 검색어만 반환합니다.",
   })
   @SwaggerApiResponse({
     status: 200,
-    description: "최근 검색어 목록",
+    description: "검색어 추천 목록",
     type: RecentSearchesResponseDto,
   })
-  @SwaggerApiResponse({
-    status: 401,
-    description: "인증 필요",
-    type: ErrorResponseDto,
-  })
   async getRecentSearches(
-    @CurrentUser() user: CurrentUserData,
-    @Query("limit") limit?: string,
+    @CurrentUser() user?: CurrentUserData,
   ): Promise<RecentSearchesResponseDto> {
-    const limitNumber = limit ? Math.min(20, Math.max(1, parseInt(limit, 10))) : 5;
-    const searches = await this.searchService.getRecentSearches(user.id, limitNumber);
+    const [recents, populars] = await Promise.all([
+      user ? this.searchService.getRecentSearches(user.id, 5) : [],
+      this.searchService.getPopularSearches(8),
+    ]);
 
     return {
-      data: searches,
-      message: "최근 검색어 조회 성공",
+      data: { recents, populars },
+      message: "검색어 추천 조회 성공",
     };
   }
 

@@ -619,4 +619,20 @@ export class SearchService {
       .map((h) => h.query)
       .filter((q): q is string => q !== null);
   }
+
+  async getPopularSearches(limit: number = 5): Promise<string[]> {
+    const results = await this.prisma.searchHistory.groupBy({
+      by: ["query"],
+      where: {
+        query: { not: null },
+      },
+      _count: { query: true },
+      orderBy: { _count: { query: "desc" } },
+      take: limit,
+    });
+
+    return results
+      .map((r) => r.query)
+      .filter((q): q is string => q !== null);
+  }
 }

@@ -27,7 +27,6 @@ export * from './mobileLogoutResponseDto';
 export * from './profileResponseDto';
 export * from './recentSearchesResponseDto';
 export * from './saveSearchClickDto';
-export * from './searchControllerGetRecentSearchesParams';
 export * from './searchControllerGetSearchSuggestionsParams';
 export * from './searchControllerSearchParams';
 export * from './searchControllerSearchSongByYoutubeUrlParams';

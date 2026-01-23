@@ -1,12 +1,23 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class RecentSearchesResponseDto {
+export class SearchSuggestionsDataDto {
   @ApiProperty({
-    example: ["YOASOBI", "아이묭", "Vaundy"],
+    example: ["YOASOBI", "아이묭"],
     description: "최근 검색어 목록",
   })
-  data: string[];
+  recents: string[];
 
-  @ApiProperty({ example: "최근 검색어 조회 성공" })
+  @ApiProperty({
+    example: ["Vaundy", "YOASOBI", "요루시카"],
+    description: "인기 검색어 목록",
+  })
+  populars: string[];
+}
+
+export class RecentSearchesResponseDto {
+  @ApiProperty({ type: SearchSuggestionsDataDto })
+  data: SearchSuggestionsDataDto;
+
+  @ApiProperty({ example: "검색어 추천 조회 성공" })
   message: string;
 }
