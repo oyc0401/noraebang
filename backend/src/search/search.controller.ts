@@ -1,11 +1,27 @@
-import { BadRequestException, Controller, Get, Query } from "@nestjs/common";
 import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
+import {
+  ApiBearerAuth,
   ApiOperation,
   ApiQuery,
   ApiTags,
   ApiResponse as SwaggerApiResponse,
 } from "@nestjs/swagger";
+import {
+  CurrentUser,
+  type CurrentUserData,
+} from "../auth/decorators/current-user.decorator";
+import { JwtAuthGuard } from "../auth/guards";
 import { ErrorResponseDto } from "../dto";
+import { SaveSearchClickDto } from "./dto/save-search-click.dto";
+import { SaveSearchHistoryDto } from "./dto/save-search-history.dto";
 import { SearchResponseDto } from "./dto/search-response.dto";
 import { SearchSuggestionsQueryDto } from "./dto/search-suggestions-query.dto";
 import { SearchSuggestionsResponseDto } from "./dto/search-suggestions-response.dto";
@@ -153,5 +169,37 @@ export class SearchController {
           ? "DB에서 곡을 찾았습니다"
           : "DB에서 곡을 찾지 못했습니다",
     };
+  }
+
+  @Post("history")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "검색 기록 저장",
+    description: "사용자의 검색어를 저장합니다.",
+  })
+  @SwaggerApiResponse({ status: 201, description: "저장 성공" })
+  @SwaggerApiResponse({ status: 401, description: "인증 필요", type: ErrorResponseDto })
+  async saveSearchHistory(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: SaveSearchHistoryDto,
+  ): Promise<void> {
+    await this.searchService.saveSearchHistory(user.id, dto.query);
+  }
+
+  @Post("click")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "검색 클릭 기록 저장",
+    description: "검색 결과에서 클릭한 아티스트/곡을 저장합니다.",
+  })
+  @SwaggerApiResponse({ status: 201, description: "저장 성공" })
+  @SwaggerApiResponse({ status: 401, description: "인증 필요", type: ErrorResponseDto })
+  async saveSearchClick(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: SaveSearchClickDto,
+  ): Promise<void> {
+    await this.searchService.saveSearchClick(user.id, dto.query, dto.artistId, dto.songId);
   }
 }

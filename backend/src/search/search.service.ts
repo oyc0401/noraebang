@@ -570,4 +570,29 @@ export class SearchService {
       return null;
     }
   }
+
+  async saveSearchHistory(userId: number, query: string): Promise<void> {
+    await this.prisma.searchHistory.create({
+      data: {
+        userId,
+        query: query.trim(),
+      },
+    });
+  }
+
+  async saveSearchClick(
+    userId: number,
+    query: string,
+    artistId?: number,
+    songId?: number,
+  ): Promise<void> {
+    await this.prisma.searchClick.create({
+      data: {
+        userId,
+        query: query.trim(),
+        artistId,
+        songId,
+      },
+    });
+  }
 }

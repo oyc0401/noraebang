@@ -33,6 +33,7 @@ model Artist {
   artistSongs            ArtistSong[]
   tjSongs                ArtistTjSong[]
   youtubeChannels        YoutubeChannel[]
+  searchClicks           SearchClick[]
 
   @@index([spotifyId])
   @@index([homeCatalog])
@@ -66,6 +67,7 @@ model Song {
   songProposes        SongPropose[]
   songSpotifyTracks   SongSpotifyTrack[]
   youtubeVideos       SongYoutubeVideo[]
+  searchClicks        SearchClick[]
 
   @@index([youtubeVideoId])
   @@index([catalog])
@@ -331,13 +333,15 @@ model ArtistTjSong {
 }
 
 model User {
-  id          Int           @id @default(autoincrement())
-  email       String?       @unique
-  password    String?
-  lastLoginAt DateTime      @default(now()) @map("last_login_at")
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
-  sessions    UserSession[]
+  id              Int             @id @default(autoincrement())
+  email           String?         @unique
+  password        String?
+  lastLoginAt     DateTime        @default(now()) @map("last_login_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  sessions        UserSession[]
+  searchHistories SearchHistory[]
+  searchClicks    SearchClick[]
 
   @@map("user")
 }
@@ -393,4 +397,34 @@ enum Provider {
 enum ChannelType {
   MAIN
   TOPIC
+}
+
+model SearchHistory {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  query      String
+  searchedAt DateTime @default(now()) @map("searched_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, searchedAt(sort: Desc)])
+  @@index([query])
+  @@map("search_history")
+}
+
+model SearchClick {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  query     String
+  artistId  Int?     @map("artist_id")
+  songId    Int?     @map("song_id")
+  clickedAt DateTime @default(now()) @map("clicked_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artist    Artist?  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  song      Song?    @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([userId, clickedAt(sort: Desc)])
+  @@index([query])
+  @@index([artistId])
+  @@index([songId])
+  @@map("search_click")
 }
