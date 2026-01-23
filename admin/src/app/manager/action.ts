@@ -29,7 +29,6 @@ const spotifyTrackBaseSelect = {
   musicBrainzTitle: true,
   musicBrainzArtistId: true,
   createdAt: true,
-  songId: true,
   artists: {
     select: {
       spotifyArtist: {
@@ -47,7 +46,10 @@ const spotifyTrackBaseSelect = {
   },
 } satisfies Prisma.SpotifyTrackSelect;
 
-function mapSpotifyTrackSummary(track: any): ManagerSpotifyTrackSummary {
+function mapSpotifyTrackSummary(
+  track: any,
+  songId?: number | null,
+): ManagerSpotifyTrackSummary {
   if (!track) {
     return {
       id: 0,
@@ -78,7 +80,7 @@ function mapSpotifyTrackSummary(track: any): ManagerSpotifyTrackSummary {
       track.createdAt instanceof Date
         ? track.createdAt.toISOString()
         : String(track.createdAt ?? ""),
-    songId: track.songId ?? null,
+    songId: songId ?? null,
     artists:
       track.artists?.flatMap((link: any) => {
         const spotifyArtist = link.spotifyArtist;
@@ -158,9 +160,13 @@ export async function fetchManagerArtistDetail(
                   artist: true,
                 },
               },
-              spotifyTracks: {
-                orderBy: { popularity: "desc" },
-                select: spotifyTrackBaseSelect,
+              songSpotifyTracks: {
+                orderBy: { spotifyTrack: { popularity: "desc" } },
+                select: {
+                  spotifyTrack: {
+                    select: spotifyTrackBaseSelect,
+                  },
+                },
               },
               karaokeSongs: {
                 select: {
@@ -245,7 +251,10 @@ export async function fetchManagerArtistDetail(
         medium: song.thumbnailMedium,
         high: song.thumbnailHigh,
       },
-      spotifyTracks: song.spotifyTracks?.map(mapSpotifyTrackSummary) ?? [],
+      spotifyTracks:
+        song.songSpotifyTracks?.map((sst: any) =>
+          mapSpotifyTrackSummary(sst.spotifyTrack, song.id),
+        ) ?? [],
       tjSong: song.tjSong
         ? {
             id: song.tjSong.id,
@@ -444,9 +453,13 @@ export async function fetchManagerArtistSongs(
               artist: true,
             },
           },
-          spotifyTracks: {
-            orderBy: { popularity: "desc" },
-            select: spotifyTrackBaseSelect,
+          songSpotifyTracks: {
+            orderBy: { spotifyTrack: { popularity: "desc" } },
+            select: {
+              spotifyTrack: {
+                select: spotifyTrackBaseSelect,
+              },
+            },
           },
           karaokeSongs: {
             select: {
@@ -536,7 +549,10 @@ export async function fetchManagerArtistSongs(
         medium: song.thumbnailMedium,
         high: song.thumbnailHigh,
       },
-      spotifyTracks: song.spotifyTracks?.map(mapSpotifyTrackSummary) ?? [],
+      spotifyTracks:
+        song.songSpotifyTracks?.map((sst: any) =>
+          mapSpotifyTrackSummary(sst.spotifyTrack, song.id),
+        ) ?? [],
       tjSong: song.tjSong
         ? {
             id: song.tjSong.id,
@@ -1226,10 +1242,10 @@ export async function fetchManagerArtistYoutubePanel(
           id: true,
           title: true,
           titleKo: true,
-          spotifyTracks: {
-            orderBy: { popularity: "desc" },
+          songSpotifyTracks: {
+            orderBy: { spotifyTrack: { popularity: "desc" } },
             take: 1,
-            select: { popularity: true },
+            select: { spotifyTrack: { select: { popularity: true } } },
           },
         },
       },
@@ -1268,7 +1284,7 @@ export async function fetchManagerArtistYoutubePanel(
       title: mapping.song.title,
       titleKo: mapping.song.titleKo,
       primaryPopularity:
-        mapping.song.spotifyTracks?.[0]?.popularity ?? null,
+        mapping.song.songSpotifyTracks?.[0]?.spotifyTrack?.popularity ?? null,
     });
   }
 
@@ -1443,9 +1459,13 @@ export async function updateSong(input: UpdateSongInput) {
           artist: true,
         },
       },
-      spotifyTracks: {
-        orderBy: { popularity: "desc" },
-        select: spotifyTrackBaseSelect,
+      songSpotifyTracks: {
+        orderBy: { spotifyTrack: { popularity: "desc" } },
+        select: {
+          spotifyTrack: {
+            select: spotifyTrackBaseSelect,
+          },
+        },
       },
       karaokeSongs: {
         select: {
@@ -1491,7 +1511,10 @@ export async function updateSong(input: UpdateSongInput) {
       medium: updatedSong.thumbnailMedium,
       high: updatedSong.thumbnailHigh,
     },
-    spotifyTracks: updatedSong.spotifyTracks?.map(mapSpotifyTrackSummary) ?? [],
+    spotifyTracks:
+      updatedSong.songSpotifyTracks?.map((sst: any) =>
+        mapSpotifyTrackSummary(sst.spotifyTrack, updatedSong.id),
+      ) ?? [],
     tjSong: updatedSong.tjSong
       ? {
           id: updatedSong.tjSong.id,
@@ -1880,9 +1903,13 @@ export async function createSong({
           artist: true,
         },
       },
-      spotifyTracks: {
-        orderBy: { popularity: "desc" },
-        select: spotifyTrackBaseSelect,
+      songSpotifyTracks: {
+        orderBy: { spotifyTrack: { popularity: "desc" } },
+        select: {
+          spotifyTrack: {
+            select: spotifyTrackBaseSelect,
+          },
+        },
       },
       karaokeSongs: {
         select: {
@@ -1946,7 +1973,10 @@ export async function createSong({
       medium: song.thumbnailMedium,
       high: song.thumbnailHigh,
     },
-    spotifyTracks: song.spotifyTracks?.map(mapSpotifyTrackSummary) ?? [],
+    spotifyTracks:
+      song.songSpotifyTracks?.map((sst: any) =>
+        mapSpotifyTrackSummary(sst.spotifyTrack, song.id),
+      ) ?? [],
     tjSong: song.tjSong
       ? {
           id: song.tjSong.id,
@@ -2431,10 +2461,10 @@ export async function refreshSongThumbnail(
   const song = await prisma.song.findUnique({
     where: { id: songId },
     select: {
-      spotifyTracks: {
-        orderBy: { releaseDate: "asc" },
+      songSpotifyTracks: {
+        orderBy: { spotifyTrack: { releaseDate: "asc" } },
         take: 1,
-        select: { thumbnails: true },
+        select: { spotifyTrack: { select: { thumbnails: true } } },
       },
       youtubeVideos: {
         select: {
@@ -2461,9 +2491,9 @@ export async function refreshSongThumbnail(
   let thumbnailHigh: string | null = null;
   let actualSource: "spotify" | "youtube" | null = null;
 
-  if (source === "spotify" && song.spotifyTracks.length > 0) {
+  if (source === "spotify" && song.songSpotifyTracks.length > 0) {
     // 스포티파이 트랙 중 가장 오래된 발매일의 썸네일 가져오기
-    const oldestTrack = song.spotifyTracks[0];
+    const oldestTrack = song.songSpotifyTracks[0]?.spotifyTrack;
 
     if (oldestTrack?.thumbnails?.length) {
       // Spotify 썸네일은 배열로 저장됨 (보통 3개: 640, 300, 64)
