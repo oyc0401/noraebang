@@ -331,16 +331,13 @@ model ArtistTjSong {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String?       @unique
-  password     String?
-  lastLoginAt  DateTime      @default(now()) @map("last_login_at")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  deviceId     String?       @unique @map("device_id")
-  deviceSecret String?       @map("device_secret")
-  sessions     UserSession[]
-  deviceChallenges DeviceChallenge[]
+  id          Int           @id @default(autoincrement())
+  email       String?       @unique
+  password    String?
+  lastLoginAt DateTime      @default(now()) @map("last_login_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  sessions    UserSession[]
 
   @@map("user")
 }
@@ -359,19 +356,6 @@ model UserSession {
   @@map("user_session")
 }
 
-model DeviceChallenge {
-  id        String   @id
-  userId    Int      @map("user_id")
-  deviceId  String   @unique @map("device_id")
-  nonceHash String   @map("nonce_hash")
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
-  usedAt    DateTime? @map("used_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("device_challenge")
-}
 
 model SongPropose {
   id          Int     @id @default(autoincrement())
