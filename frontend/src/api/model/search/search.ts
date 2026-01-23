@@ -28,7 +28,6 @@ import type {
   ErrorResponseDto,
   RecentSearchesResponseDto,
   SaveSearchClickDto,
-  SearchControllerGetRecentSearchesParams,
   SearchControllerGetSearchSuggestionsParams,
   SearchControllerSearchParams,
   SearchControllerSearchSongByYoutubeUrlParams,
@@ -325,18 +324,17 @@ export function useSearchControllerSearchSongByYoutubeUrl<TData = Awaited<Return
 
 
 /**
- * 로그인한 사용자의 최근 검색어 목록을 반환합니다.
- * @summary 최근 검색어 조회
+ * 로그인 시 최근 검색어와 인기 검색어를, 비로그인 시 인기 검색어만 반환합니다.
+ * @summary 최근/인기 검색어 조회
  */
 export const searchControllerGetRecentSearches = (
-    params?: SearchControllerGetRecentSearchesParams,
+    
  signal?: AbortSignal
 ) => {
       
       
       return customFetch<RecentSearchesResponseDto>(
-      {url: `/search/recent`, method: 'GET',
-        params, signal
+      {url: `/search/recent`, method: 'GET', signal
     },
       );
     }
@@ -344,23 +342,23 @@ export const searchControllerGetRecentSearches = (
 
 
 
-export const getSearchControllerGetRecentSearchesQueryKey = (params?: SearchControllerGetRecentSearchesParams,) => {
+export const getSearchControllerGetRecentSearchesQueryKey = () => {
     return [
-    `/search/recent`, ...(params ? [params]: [])
+    `/search/recent`
     ] as const;
     }
 
     
-export const getSearchControllerGetRecentSearchesQueryOptions = <TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = ErrorResponseDto>(params?: SearchControllerGetRecentSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>>, }
+export const getSearchControllerGetRecentSearchesQueryOptions = <TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSearchControllerGetRecentSearchesQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getSearchControllerGetRecentSearchesQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>> = ({ signal }) => searchControllerGetRecentSearches(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>> = ({ signal }) => searchControllerGetRecentSearches(signal);
 
       
 
@@ -370,11 +368,11 @@ const {query: queryOptions} = options ?? {};
 }
 
 export type SearchControllerGetRecentSearchesQueryResult = NonNullable<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>>
-export type SearchControllerGetRecentSearchesQueryError = ErrorResponseDto
+export type SearchControllerGetRecentSearchesQueryError = unknown
 
 
-export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = ErrorResponseDto>(
- params: undefined |  SearchControllerGetRecentSearchesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>> & Pick<
+export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof searchControllerGetRecentSearches>>,
           TError,
@@ -383,8 +381,8 @@ export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = ErrorResponseDto>(
- params?: SearchControllerGetRecentSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>> & Pick<
+export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof searchControllerGetRecentSearches>>,
           TError,
@@ -393,20 +391,20 @@ export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = ErrorResponseDto>(
- params?: SearchControllerGetRecentSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>>, }
+export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 최근 검색어 조회
+ * @summary 최근/인기 검색어 조회
  */
 
-export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = ErrorResponseDto>(
- params?: SearchControllerGetRecentSearchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>>, }
+export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSearchControllerGetRecentSearchesQueryOptions(params,options)
+  const queryOptions = getSearchControllerGetRecentSearchesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

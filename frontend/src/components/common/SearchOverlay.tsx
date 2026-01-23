@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeft, Clock, Search, X } from "lucide-react";
+import { ArrowLeft, Clock, Flame, Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   useSearchControllerGetRecentSearches,
   useSearchControllerGetSearchSuggestions,
@@ -12,15 +12,18 @@ import { SongCard } from "@/components/common/SongCard";
 import { SearchBar } from "@/components/search/SearchBar";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 import { hasIncompleteKorean } from "@/lib/korean";
-import { useAuthStore } from "@/store/authStore";
 import { useSearchStore } from "@/store/searchStore";
+
+type SuggestionItem = {
+  term: string;
+  type: "recent" | "popular";
+};
 
 export function SearchOverlay() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { query, setQuery, clearSearch } = useSearchStore();
-  const { isAuthenticated } = useAuthStore();
   const initialPathname = useRef(pathname);
   const initialSearchParams = useRef(searchParams.toString());
 
@@ -44,17 +47,37 @@ export function SearchOverlay() {
       { query: { enabled: shouldFetch } },
     );
 
-  // 최근 검색어 조회 (로그인 상태이고 검색어가 비어있을 때만)
-  const { data: recentSearches } = useSearchControllerGetRecentSearches(
-    { limit: 5 },
-    { query: { enabled: isAuthenticated && query.length === 0 } },
-  );
+  // 최근/인기 검색어 조회 (검색어가 비어있을 때만)
+  const { data: searchSuggestions } = useSearchControllerGetRecentSearches({
+    query: { enabled: query.length === 0 },
+  });
 
-  const showRecentSearches =
-    query.length === 0 &&
-    isAuthenticated &&
-    recentSearches?.data &&
-    recentSearches.data.length > 0;
+  // 인기 검색어 + 최근 검색어 (총 8개, 인기 최소 3개~최대 8개)
+  const combinedSuggestions = useMemo((): SuggestionItem[] => {
+    const recents = searchSuggestions?.data?.recents ?? [];
+    const populars = searchSuggestions?.data?.populars ?? [];
+
+    const result: SuggestionItem[] = [];
+
+    // 최근검색어 개수 (최대 5개)
+    const recentCount = Math.min(recents.length, 5);
+    // 인기검색어 개수 (최소 2개, 8 - 최근개수)
+    const popularCount = Math.max(2, 8 - recentCount);
+
+    // 인기 검색어 먼저
+    for (const term of populars.slice(0, popularCount)) {
+      result.push({ term, type: "popular" });
+    }
+
+    // 최근 검색어
+    for (const term of recents.slice(0, recentCount)) {
+      result.push({ term, type: "recent" });
+    }
+
+    return result;
+  }, [searchSuggestions]);
+
+  const showSuggestions = query.length === 0 && combinedSuggestions.length > 0;
 
   return (
     <div className="bg-background-dark flex flex-col">
@@ -145,28 +168,28 @@ export function SearchOverlay() {
 
             return null;
           })}
-        {/* 최근 검색어 표시 (검색어가 비어있고 로그인 상태일 때) */}
-        {showRecentSearches && (
-          <>
-            <div className="px-4 py-2 text-sm text-gray-400">최근 검색어</div>
-            {recentSearches.data.map((searchTerm) => (
-              <button
-                key={`recent-${searchTerm}`}
-                type="button"
-                onClick={() => {
-                  setQuery(searchTerm);
-                  router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
-                }}
-                className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
-              >
+        {/* 최근/인기 검색어 표시 (검색어가 비어있을 때) */}
+        {showSuggestions &&
+          combinedSuggestions.map((item) => (
+            <button
+              key={`suggestion-${item.type}-${item.term}`}
+              type="button"
+              onClick={() => {
+                setQuery(item.term);
+                router.push(`/search?q=${encodeURIComponent(item.term)}`);
+              }}
+              className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
+            >
+              {item.type === "recent" ? (
                 <Clock className="size-5 text-gray-400" />
-                <span className="text-white flex-1">{searchTerm}</span>
-              </button>
-            ))}
-          </>
-        )}
-        {/* 검색어 비어있고 로그인 안 됐거나 최근 검색어 없을 때 */}
-        {query.length === 0 && !showRecentSearches && (
+              ) : (
+                <Flame className="size-5 text-gray-400" />
+              )}
+              <span className="text-white flex-1">{item.term}</span>
+            </button>
+          ))}
+        {/* 검색어 비어있고 추천 검색어 없을 때 */}
+        {query.length === 0 && !showSuggestions && (
           <div className="text-center text-gray-400 py-8">
             검색어를 입력해주세요
           </div>
