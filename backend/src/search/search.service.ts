@@ -602,4 +602,21 @@ export class SearchService {
       },
     });
   }
+
+  async getRecentSearches(userId: number, limit: number = 5): Promise<string[]> {
+    const histories = await this.prisma.searchHistory.findMany({
+      where: {
+        userId,
+        query: { not: null },
+      },
+      orderBy: { searchedAt: "desc" },
+      select: { query: true },
+      distinct: ["query"],
+      take: limit,
+    });
+
+    return histories
+      .map((h) => h.query)
+      .filter((q): q is string => q !== null);
+  }
 }
