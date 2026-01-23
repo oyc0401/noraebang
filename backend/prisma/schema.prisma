@@ -402,7 +402,8 @@ enum ChannelType {
 model SearchHistory {
   id         Int      @id @default(autoincrement())
   userId     Int      @map("user_id")
-  query      String
+  query      String?
+  url        String?
   searchedAt DateTime @default(now()) @map("searched_at")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -414,7 +415,8 @@ model SearchHistory {
 model SearchClick {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
-  query     String
+  query     String?
+  url       String?
   artistId  Int?     @map("artist_id")
   songId    Int?     @map("song_id")
   clickedAt DateTime @default(now()) @map("clicked_at")
