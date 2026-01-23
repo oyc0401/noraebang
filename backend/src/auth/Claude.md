@@ -52,13 +52,12 @@ model User {
 }
 
 model UserSession {
-  id                     String   @id
-  userId                 Int      @map("user_id")
-  refreshTokenHash       String   @map("refresh_token_hash")
-  refreshTokenLastUsedAt DateTime? @map("refresh_token_last_used_at")
-  refreshTokenExpiresAt  DateTime @map("refresh_token_expires_at")
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                    String   @id
+  userId                Int      @map("user_id")
+  refreshTokenHash      String   @map("refresh_token_hash")
+  refreshTokenExpiresAt DateTime @map("refresh_token_expires_at")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
