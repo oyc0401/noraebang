@@ -20,6 +20,7 @@ import {
 } from "../auth/decorators/current-user.decorator";
 import { JwtAuthGuard, OptionalJwtAuthGuard } from "../auth/guards";
 import { ErrorResponseDto } from "../dto";
+import { RecentSearchesResponseDto } from "./dto/recent-searches-response.dto";
 import { SaveSearchClickDto } from "./dto/save-search-click.dto";
 import { SearchResponseDto } from "./dto/search-response.dto";
 import { SearchSuggestionsQueryDto } from "./dto/search-suggestions-query.dto";
@@ -181,6 +182,42 @@ export class SearchController {
         songs.length > 0
           ? "DB에서 곡을 찾았습니다"
           : "DB에서 곡을 찾지 못했습니다",
+    };
+  }
+
+  @Get("recent")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "최근 검색어 조회",
+    description: "로그인한 사용자의 최근 검색어 목록을 반환합니다.",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    description: "조회할 개수 (기본값: 5)",
+    example: 5,
+  })
+  @SwaggerApiResponse({
+    status: 200,
+    description: "최근 검색어 목록",
+    type: RecentSearchesResponseDto,
+  })
+  @SwaggerApiResponse({
+    status: 401,
+    description: "인증 필요",
+    type: ErrorResponseDto,
+  })
+  async getRecentSearches(
+    @CurrentUser() user: CurrentUserData,
+    @Query("limit") limit?: string,
+  ): Promise<RecentSearchesResponseDto> {
+    const limitNumber = limit ? Math.min(20, Math.max(1, parseInt(limit, 10))) : 5;
+    const searches = await this.searchService.getRecentSearches(user.id, limitNumber);
+
+    return {
+      data: searches,
+      message: "최근 검색어 조회 성공",
     };
   }
 

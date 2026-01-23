@@ -1,21 +1,26 @@
 "use client";
 
-import { ArrowLeft, Clock, Search } from "lucide-react";
+import { ArrowLeft, Clock, Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { useSearchControllerGetSearchSuggestions } from "@/api/model/search/search";
+import {
+  useSearchControllerGetRecentSearches,
+  useSearchControllerGetSearchSuggestions,
+} from "@/api/model/search/search";
 import { ArtistCard } from "@/components/common/ArtistCard";
 import { SongCard } from "@/components/common/SongCard";
 import { SearchBar } from "@/components/search/SearchBar";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 import { hasIncompleteKorean } from "@/lib/korean";
+import { useAuthStore } from "@/store/authStore";
 import { useSearchStore } from "@/store/searchStore";
 
 export function SearchOverlay() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { query, clearSearch } = useSearchStore();
+  const { query, setQuery, clearSearch } = useSearchStore();
+  const { isAuthenticated } = useAuthStore();
   const initialPathname = useRef(pathname);
   const initialSearchParams = useRef(searchParams.toString());
 
@@ -38,6 +43,18 @@ export function SearchOverlay() {
       { query },
       { query: { enabled: shouldFetch } },
     );
+
+  // 최근 검색어 조회 (로그인 상태이고 검색어가 비어있을 때만)
+  const { data: recentSearches } = useSearchControllerGetRecentSearches(
+    { limit: 5 },
+    { query: { enabled: isAuthenticated && query.length === 0 } },
+  );
+
+  const showRecentSearches =
+    query.length === 0 &&
+    isAuthenticated &&
+    recentSearches?.data &&
+    recentSearches.data.length > 0;
 
   return (
     <div className="bg-background-dark flex flex-col">
@@ -128,10 +145,38 @@ export function SearchOverlay() {
 
             return null;
           })}
+        {/* 최근 검색어 표시 (검색어가 비어있고 로그인 상태일 때) */}
+        {showRecentSearches && (
+          <>
+            <div className="px-4 py-2 text-sm text-gray-400">최근 검색어</div>
+            {recentSearches.data.map((searchTerm) => (
+              <button
+                key={`recent-${searchTerm}`}
+                type="button"
+                onClick={() => {
+                  setQuery(searchTerm);
+                  router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
+                }}
+                className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
+              >
+                <Clock className="size-5 text-gray-400" />
+                <span className="text-white flex-1">{searchTerm}</span>
+              </button>
+            ))}
+          </>
+        )}
+        {/* 검색어 비어있고 로그인 안 됐거나 최근 검색어 없을 때 */}
+        {query.length === 0 && !showRecentSearches && (
+          <div className="text-center text-gray-400 py-8">
+            검색어를 입력해주세요
+          </div>
+        )}
+        {/* 검색 결과가 없을 때 (검색어가 있는 경우) */}
         {!isLoading &&
+          query.length > 0 &&
           (!suggestions?.data.cards || suggestions.data.cards.length === 0) && (
             <div className="text-center text-gray-400 py-8">
-              검색어를 입력해주세요
+              검색 결과가 없습니다
             </div>
           )}
       </main>
