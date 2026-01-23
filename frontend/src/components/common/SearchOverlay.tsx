@@ -52,7 +52,7 @@ export function SearchOverlay() {
     query: { enabled: query.length === 0 },
   });
 
-  // 인기 검색어 + 최근 검색어 (총 8개, 인기 최소 3개~최대 8개)
+  // 인기 검색어 + 최근 검색어 (총 8개, 인기 최소 2개~최대 8개)
   const combinedSuggestions = useMemo((): SuggestionItem[] => {
     const recents = searchSuggestions?.data?.recents ?? [];
     const populars = searchSuggestions?.data?.populars ?? [];
