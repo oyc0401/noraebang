@@ -29,8 +29,12 @@
 - `logout()`: 세션 ID가 있으면 해당 세션만 삭제, 없으면 전체 세션 삭제.
 - 내부 유틸: `generateTokens`, `storeSession`, `hashRefreshToken`.
 
+### 토큰 설정 (`backend/src/auth/constants.ts`)
+- Access 토큰: 15분
+- Refresh 토큰: 30일 (웹), 180일 (모바일)
+
 ### 토큰 전략과 가드
-- `JwtStrategy`: access 토큰만 허용(`payload.type === "access"`). 우선 쿠키에서 토큰을 찾고 없으면 Authorization 헤더를 사용한다.
+- `JwtStrategy`: access 토큰만 허용(`payload.type === "access"`). 우선 쿠키에서 토큰을 찾고 없으면 Authorization 헤더를 사용한다. `ignoreExpiration: false`로 만료된 토큰은 자동 거부.
 - Access/refresh JWT에는 `sessionId`를 함께 실어 보내고, 가드는 `CurrentUser`에 이를 주입한다. `sessionId`가 없는 토큰은 더 이상 허용하지 않는다.
 - `JwtAuthGuard`: 기본 보호용.
 - `OptionalJwtAuthGuard`: 로그인 여부에 따라 선택적으로 정보를 제공할 때 사용 가능하도록 준비.
@@ -70,19 +74,22 @@ model UserSession {
 3. 로그아웃 등으로 `isAuthenticated`가 false가 되면 동일 루틴을 재시도.
 
 ### customFetch (`frontend/src/api/client.ts`)
-- 요청이 401이면 즉시 `attemptRefresh()`를 실행해 토큰 재발급 후 한 번 더 시도한다.
-- 슬라이딩 만료는 서버의 `UserSession.refreshTokenLastUsedAt/ExpiresAt`로 관리해, 클라이언트 로컬 시계/스토리지에 의존하지 않는다.
+- 요청이 401이면 `attemptRecovery()`를 실행:
+  1. `attemptRefresh()` 시도 → 성공하면 원래 요청 재시도
+  2. refresh 실패(401/403)면 `attemptAnonymousLogin()` 시도 → 성공하면 재시도
+  3. 둘 다 인증 실패면 `clearAuth()` → AuthProvider가 재초기화
+  4. 서버 에러(500)면 clearAuth 하지 않음 (기존 토큰 유지, 다음 요청에서 재시도 가능)
 
 ## 왜 이렇게 했나?
 - **웹/모바일 경로 분리**: `x-client-type` 헤더로 분기하던 구조보다 명시적인 라우팅이 안전하고, 정책이 달라도 구현을 재사용할 수 있다.
 - **쿠키 기반**: 클라 코드에서 토큰을 다루지 않아도 되어 보안이 단순해진다. 서버 렌더링(next)과도 자연스럽게 동작.
 - **익명 사용자 분리**: 검색 히스토리, 즐겨찾기 등 향후 기능을 위해 익명 사용자도 고유 ID를 가지게 했다.
 - **모바일 세션 단순화**: deviceSecret/nonce를 없애고, 앱은 익명 로그인 한 번으로 refresh(180일)만 유지하면 된다. refresh 만료 또는 분실 시 기존 계정은 접근할 수 없다.
-- **서버 주도 슬라이딩 만료**: 각 `UserSession`에 `refreshTokenLastUsedAt/ExpiresAt`을 저장하고 갱신해 쿠키/토큰 수명을 연장하므로, 사용자의 로컬 환경이나 다른 세션과 독립적으로 관리된다.
+- **서버 주도 슬라이딩 만료**: access 토큰(15분)이 먼저 만료되면 자동으로 refresh가 호출되고, 이때 access + refresh 토큰이 둘 다 새로 발급된다(토큰 로테이션). refresh 토큰의 만료 시각은 `now + 원래TTL`로 갱신되므로, 사용자가 활동하는 한 세션이 계속 연장된다. 별도의 주기적 갱신 로직 없이 자연스럽게 슬라이딩 만료가 적용된다.
 - **다중 기기 세션 유지**: 세션 ID(UUID v4)를 refresh 토큰에 포함시켜 기기별로 독립적인 로그인 상태를 유지하고, 한 기기에서 로그아웃/탈취가 발생해도 다른 기기에 영향을 주지 않는다.
 - **웹 쿠키 최소 권한**: access 토큰은 `/` 경로, refresh 토큰은 `/auth/refresh` 경로로만 전송해, 불필요한 엔드포인트에 refresh 쿠키가 노출되지 않도록 했다.
 - **Origin 기반 CSRF 방어**: `/auth/refresh`, `/auth/logout` 등 상태 변경 요청은 `WEB_ORIGIN`과 일치하는 Origin/Referer 헤더가 있어야 통과한다.
 - **Refresh 로테이션 및 재사용 탐지**: refresh 호출 시마다 새 토큰을 발급하고 DB 해시를 교체한다. 이전 토큰이 다시 제출되면 매칭되는 세션을 즉시 폐기해 탈취 시도를 차단한다.
 - **Refresh 해시 보호**: `REFRESH_TOKEN_PEPPER` 기반 HMAC-SHA256으로 refresh 토큰을 해시하여 DB만 탈취되더라도 원문을 알아내기 어렵게 한다.
 - **익명 유저 청소 전략**: `/auth/anonymous`, `/auth/mobile/anonymous`에는 필수적으로 rate limit을 걸고, `lastLoginAt`/세션 만료 기준으로 장기간 미사용 익명 계정을 주기적으로 정리한다.
-- **자동 복구**: 사용자가 로그아웃 또는 토큰 만료로 보호된 API 호출이 실패하더라도, 프런트가 즉시 익명 로그인 또는 refresh 로직을 재시도해 UX를 끊김 없이 유지한다.
+- **자동 복구**: API 401 시 refresh 시도 → 실패하면 anonymous login 시도 → 성공 시 원래 요청 재시도. 서버 에러(500)일 때는 기존 토큰을 유지해 계정 유실을 방지한다.

@@ -10,6 +10,4 @@ export interface MobileAuthResponseDto {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
-  /** 신규 기기에 한해 발급되는 deviceSecret */
-  deviceSecret?: string;
 }
