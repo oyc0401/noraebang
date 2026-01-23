@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import type { SongDto } from "@/api/model/models";
 import { searchControllerSearchSongByYoutubeUrl } from "@/api/model/search/search";
 import { KaraokeBadge } from "@/components/common/KaraokeBadge";
+import { useSearchTracking } from "@/hooks/useSearchTracking";
 import AppleMusicIcon from "@/icons/apple-music-filled.svg";
 import SpotifyIcon from "@/icons/spotify-filled.svg";
 import YoutubeMusicIcon from "@/icons/youtube-music-filled.svg";
@@ -17,13 +18,21 @@ import { useSearchStore } from "@/store/searchStore";
 export function LinkPasteCard() {
   const router = useRouter();
   const { setQuery, setSearchActive } = useSearchStore();
+  const { saveSearchClick } = useSearchTracking();
   const [foundSong, setFoundSong] = useState<SongDto | undefined>(undefined);
+  const [foundSongUrl, setFoundSongUrl] = useState<string | undefined>(
+    undefined,
+  );
   const inputRef = useRef<HTMLInputElement>(null);
 
   const youtubeMutation = useMutation({
     mutationFn: async (url: string) => {
       const result = await searchControllerSearchSongByYoutubeUrl({ url });
-      return { songs: result.songs, matchedByVideoId: result.matchedByVideoId, url };
+      return {
+        songs: result.songs,
+        matchedByVideoId: result.matchedByVideoId,
+        url,
+      };
     },
     onSuccess: (data) => {
       const { songs, matchedByVideoId, url } = data;
@@ -31,6 +40,7 @@ export function LinkPasteCard() {
       // 유튜브 ID로 직접 매칭 + 곡 1개일 때만 메인에 표시
       if (matchedByVideoId && songs.length === 1) {
         setFoundSong(songs[0]);
+        setFoundSongUrl(url);
       } else {
         // 검색 쿼리로 찾았거나, 0개/여러 개면 검색 페이지로 이동
         router.push(`/search?url=${encodeURIComponent(url)}`);
@@ -87,6 +97,7 @@ export function LinkPasteCard() {
 
   const handleCardClick = () => {
     if (foundSong && artist?.slug) {
+      saveSearchClick({ url: foundSongUrl, songId: foundSong.id });
       router.push(`/artist/${artist.slug}#${foundSong.id}`);
     }
   };
