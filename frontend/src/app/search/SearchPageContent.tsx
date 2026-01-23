@@ -9,6 +9,7 @@ import {
 import { ArtistCard } from "@/components/common/ArtistCard";
 import { SongCard } from "@/components/common/SongCard";
 import { SearchHeader } from "@/components/search/SearchHeader";
+import { useSearchTracking } from "@/hooks/useSearchTracking";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 import { useSearchStore } from "@/store/searchStore";
 
@@ -18,6 +19,7 @@ export function SearchPageContent() {
   const query = searchParams.get("q") || "";
   const youtubeUrl = searchParams.get("url") || "";
   const { setQuery, clearSearch } = useSearchStore();
+  const { saveSearchClick } = useSearchTracking();
 
   // 일반 검색
   const { data: searchResponse, isLoading: isSearchLoading } =
@@ -80,6 +82,7 @@ export function SearchPageContent() {
                       subtitle={artist.name}
                       onClick={() => {
                         if (artist?.slug) {
+                          saveSearchClick({ query, artistId: artist.id });
                           router.push(`/artist/${artist.slug}`);
                           clearSearch();
                         }
@@ -124,6 +127,11 @@ export function SearchPageContent() {
                     tjNumber={tjKaraoke?.karaokeNo}
                     onClick={() => {
                       if (primaryArtistWithSlug?.slug) {
+                        saveSearchClick({
+                          query: query || undefined,
+                          url: youtubeUrl || undefined,
+                          songId: song.id,
+                        });
                         router.push(
                           `/artist/${primaryArtistWithSlug.slug}#${song.id}`,
                         );
