@@ -94,12 +94,10 @@ export class AuthService {
       throw new UnauthorizedException("Invalid refresh token");
     }
 
-    const ttlSeconds = this.getSessionTtlSeconds(session);
     return this.rotateSessionTokens(
       session.id,
       session.userId,
       session.user.email ?? undefined,
-      ttlSeconds,
     );
   }
 
@@ -241,14 +239,12 @@ export class AuthService {
         where: { id: sessionId },
         update: {
           refreshTokenHash: hashedRefreshToken,
-          refreshTokenLastUsedAt: now,
           refreshTokenExpiresAt: expiresAt,
         },
         create: {
           id: sessionId,
           userId,
           refreshTokenHash: hashedRefreshToken,
-          refreshTokenLastUsedAt: now,
           refreshTokenExpiresAt: expiresAt,
         },
       }),
@@ -257,22 +253,6 @@ export class AuthService {
         data: { lastLoginAt: now },
       }),
     ]);
-  }
-
-  private getSessionTtlSeconds(session: {
-    refreshTokenExpiresAt: Date | null;
-    refreshTokenLastUsedAt?: Date | null;
-  }): number {
-    if (session.refreshTokenExpiresAt && session.refreshTokenLastUsedAt) {
-      const diff =
-        (session.refreshTokenExpiresAt.getTime() -
-          session.refreshTokenLastUsedAt.getTime()) /
-        1000;
-      if (diff > 0) {
-        return Math.floor(diff);
-      }
-    }
-    return REFRESH_TOKEN_EXPIRES_IN;
   }
 
   private hashRefreshToken(token: string): Buffer {
