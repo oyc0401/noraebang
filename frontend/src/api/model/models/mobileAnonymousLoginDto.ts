@@ -7,10 +7,6 @@
  */
 
 export interface MobileAnonymousLoginDto {
-  /** 기기 고유 ID */
-  deviceId: string;
-  /** 클라이언트에서 생성한 nonce. timestamp 등 재사용되지 않는 값 사용 권장 */
-  nonce: string;
-  /** HMAC-SHA256(deviceSecret, nonce)의 16진수 문자열. 기존 기기는 필수 */
-  signature?: string;
+  /** 선택적 기기 고유 ID (통계용) */
+  deviceId?: string;
 }

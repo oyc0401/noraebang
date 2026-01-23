@@ -16,7 +16,7 @@ export function ArtistHeader({ transparent }: ArtistHeaderProps) {
   return (
     <header
       className={cn(
-        "z-20 flex h-14 items-center justify-between pl-2 pr-1.5 transition-colors duration-300",
+        "z-20 flex h-14 items-center justify-between pl-2 pr-1.5 transition-colors duration-100",
         transparent ? "bg-transparent" : "sticky top-0 bg-background-dark/95",
       )}
     >

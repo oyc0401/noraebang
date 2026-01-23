@@ -10,7 +10,7 @@ import type {
   SongListResponseDto,
 } from "@/api/model/models";
 import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
-import { ArtistHeader } from "@/components/artist/ArtistHeader";
+import { ArtistHeader } from "@/app/artist/[slug]/ArtistHeader";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { SongCard } from "@/components/common/SongCard";
 import { formatSongTitle } from "@/lib/formatSongTitle";
@@ -63,8 +63,7 @@ export default function ArtistPageClient({
     }
   }, []);
 
-  const songs =
-    data?.pages.flatMap<SongDto>((page) => page.data ?? []) ?? [];
+  const songs = data?.pages.flatMap<SongDto>((page) => page.data ?? []) ?? [];
 
   // Effect for handling scrolling to a target song from a hash
   useEffect(() => {

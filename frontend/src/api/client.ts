@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/store/authStore";
 import { API_BASE_URL } from "./config";
 
 export { API_BASE_URL };
@@ -63,8 +64,8 @@ export const customFetch = async <T>({
   let response = await fetchRequest();
 
   if (response.status === 401) {
-    const refreshed = await attemptRefresh();
-    if (refreshed) {
+    const recovered = await attemptRecovery();
+    if (recovered) {
       response = await fetchRequest();
     }
   }
@@ -101,7 +102,9 @@ export const customFetch = async <T>({
   }
 };
 
-async function attemptRefresh(): Promise<boolean> {
+type RecoveryResult = "success" | "auth_failed" | "server_error";
+
+async function attemptRefresh(): Promise<RecoveryResult> {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: "POST",
@@ -109,13 +112,70 @@ async function attemptRefresh(): Promise<boolean> {
       credentials: "include",
     });
 
-    if (!response.ok) {
-      return false;
+    if (response.ok) {
+      await response.json().catch(() => ({}));
+      return "success";
     }
 
-    await response.json().catch(() => ({}));
-    return true;
+    // 401/403: 인증 실패 → anonymous login 시도 가능
+    if (response.status === 401 || response.status === 403) {
+      return "auth_failed";
+    }
+
+    // 500 등 서버 에러: 토큰은 유효할 수 있음
+    return "server_error";
   } catch {
+    return "server_error";
+  }
+}
+
+async function attemptAnonymousLogin(): Promise<RecoveryResult> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/anonymous`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (response.ok) {
+      await response.json().catch(() => ({}));
+      return "success";
+    }
+
+    if (response.status === 401 || response.status === 403) {
+      return "auth_failed";
+    }
+
+    return "server_error";
+  } catch {
+    return "server_error";
+  }
+}
+
+async function attemptRecovery(): Promise<boolean> {
+  const refreshResult = await attemptRefresh();
+
+  if (refreshResult === "success") {
+    return true;
+  }
+
+  // 서버 에러면 기존 토큰 유지, anonymous login 시도 안 함
+  if (refreshResult === "server_error") {
     return false;
   }
+
+  // 인증 실패(401/403)일 때만 anonymous login 시도
+  const anonymousResult = await attemptAnonymousLogin();
+
+  if (anonymousResult === "success") {
+    return true;
+  }
+
+  // anonymous login도 인증 실패면 상태 초기화
+  if (anonymousResult === "auth_failed") {
+    useAuthStore.getState().clearAuth();
+  }
+
+  // 서버 에러면 clearAuth 안 함 (다음 요청에서 재시도 가능)
+  return false;
 }

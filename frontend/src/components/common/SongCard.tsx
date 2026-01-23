@@ -51,10 +51,8 @@ export function SongCard({
 
           <p className="text-sm   truncate pt-[1px]">
             <span className="text-gray-400">{subtitle}</span>
-            {tjNumber ? (
+            {tjNumber && (
               <span className="text-[#CE8FED] ml-2">{`TJ - ${tjNumber}`}</span>
-            ) : (
-              <span className="text-[#C1B369] ml-2">{"추천 0"}</span>
             )}
           </p>
         </div>
@@ -65,4 +63,8 @@ export function SongCard({
       </div>
     </button>
   );
+}
+
+function RecommendCount() {
+  return <span className="text-[#C1B369] ml-2">{"추천 0"}</span>;
 }

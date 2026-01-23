@@ -37,7 +37,7 @@ import { customFetch } from '../../client';
 
 
 /**
- * deviceId + 서명 기반으로 토큰 발급
+ * 새 익명 모바일 사용자 생성 및 토큰 발급
  * @summary 앱 익명 로그인
  */
 export const mobileAuthControllerAnonymousLogin = (
