@@ -19,8 +19,6 @@ import type { CurrentUserData } from "./decorators/current-user.decorator";
 import {
   MobileAnonymousLoginDto,
   MobileAuthResponseDto,
-  MobileDeviceChallengeDto,
-  MobileDeviceChallengeResponseDto,
   MobileLogoutResponseDto,
   ProfileResponseDto,
   RefreshTokenDto,
@@ -32,35 +30,21 @@ import { JwtAuthGuard } from "./guards";
 export class MobileAuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post("challenge")
-  @ApiOperation({
-    summary: "앱 기기 nonce 발급",
-    description: "등록된 기기 ID에 대해 1회용 nonce를 발급합니다.",
-  })
-  @ApiResponse({ status: 200, type: MobileDeviceChallengeResponseDto })
-  async requestChallenge(
-    @Body() dto: MobileDeviceChallengeDto,
-  ): Promise<MobileDeviceChallengeResponseDto> {
-    return this.authService.requestMobileChallenge(dto.deviceId);
-  }
-
   @Post("anonymous")
   @ApiOperation({
     summary: "앱 익명 로그인",
-    description: "deviceId + 서명 기반으로 토큰 발급",
+    description: "새 익명 모바일 사용자 생성 및 토큰 발급",
   })
   @ApiResponse({ status: 200, type: MobileAuthResponseDto })
   async anonymousLogin(
     @Body() dto: MobileAnonymousLoginDto,
   ): Promise<MobileAuthResponseDto> {
-    const { tokens, deviceSecret } =
-      await this.authService.anonymousMobileLogin(dto);
+    const { tokens } = await this.authService.anonymousMobileLogin(dto);
 
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       expiresIn: ACCESS_TOKEN_EXPIRES_IN,
-      deviceSecret,
     };
   }
 
