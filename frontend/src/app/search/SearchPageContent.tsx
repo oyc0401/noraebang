@@ -126,6 +126,8 @@ export function SearchPageContent() {
                     )}
                     subtitle={artistForDisplay?.nameKo ?? ""}
                     tjNumber={tjKaraoke?.karaokeNo}
+                    spotify={song.spotify}
+                    youtube={song.youtube}
                     onClick={() => {
                       if (primaryArtistWithSlug?.slug) {
                         saveSearchClick({

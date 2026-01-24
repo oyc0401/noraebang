@@ -1,10 +1,16 @@
 import { create } from "zustand";
+import type {
+  SpotifyTrackInfoDto,
+  YoutubeVideoInfoDto,
+} from "@/api/model/models";
 
 interface SongMenuData {
   id: number;
   title: string;
   artistName: string;
   tjNumber?: string;
+  spotify?: SpotifyTrackInfoDto;
+  youtube?: YoutubeVideoInfoDto;
 }
 
 interface SongMenuState {

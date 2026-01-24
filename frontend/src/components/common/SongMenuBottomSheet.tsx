@@ -2,7 +2,7 @@
 
 import { Pencil, SendHorizonal, X } from "lucide-react";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import SpotifyIcon from "@/icons/spotify-filled.svg";
 import YoutubeMusicIcon from "@/icons/youtube-music-filled.svg";
 import { cn } from "@/lib/cn";
@@ -10,6 +10,28 @@ import { useSongMenuStore } from "@/store/songMenuStore";
 
 export function SongMenuBottomSheet() {
   const { isOpen, song, closeMenu } = useSongMenuStore();
+  const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // 마운트/언마운트 및 애니메이션 관리
+  useEffect(() => {
+    if (isOpen && song) {
+      setMounted(true);
+      // 다음 프레임에서 애니메이션 시작
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setVisible(true);
+        });
+      });
+    } else {
+      setVisible(false);
+      // 애니메이션 완료 후 언마운트
+      const timer = setTimeout(() => {
+        setMounted(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, song]);
 
   // 바텀시트가 열릴 때 스크롤 방지
   useEffect(() => {
@@ -23,11 +45,7 @@ export function SongMenuBottomSheet() {
     };
   }, [isOpen]);
 
-  if (!song) return null;
-
-  const searchQuery = encodeURIComponent(`${song.title} ${song.artistName}`);
-  const spotifyUrl = `https://open.spotify.com/search/${searchQuery}`;
-  const youtubeMusicUrl = `https://music.youtube.com/search?q=${searchQuery}`;
+  if (!mounted || !song) return null;
 
   const hasTjNumber = !!song.tjNumber;
 
@@ -36,8 +54,8 @@ export function SongMenuBottomSheet() {
       {/* 오버레이 */}
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-black/60 transition-opacity duration-300",
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
+          "fixed inset-0 z-40 transition-opacity duration-300",
+          visible ? "opacity-100" : "opacity-0",
         )}
         onClick={closeMenu}
         onKeyDown={(e) => {
@@ -49,7 +67,7 @@ export function SongMenuBottomSheet() {
       <div
         className={cn(
           "fixed inset-x-0 bottom-0 z-50 max-w-lg mx-auto bg-[#1a1a1a] rounded-t-2xl transition-transform duration-300 ease-out",
-          isOpen ? "translate-y-0" : "translate-y-full",
+          visible ? "translate-y-0" : "translate-y-full",
         )}
       >
         {/* 헤더 */}
@@ -68,41 +86,47 @@ export function SongMenuBottomSheet() {
 
         {/* 메뉴 아이템 */}
         <div className="px-3 pb-8">
-          <a
-            href={spotifyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
-            onClick={closeMenu}
-          >
-            <Image
-              src={SpotifyIcon}
-              alt="Spotify"
-              width={28}
-              height={28}
-              className="shrink-0"
-            />
-            <span className="text-white text-base">Spotify에서 듣기</span>
-          </a>
+          {song.spotify && (
+            <a
+              href={`https://open.spotify.com/track/${song.spotify.spotifyId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+              onClick={closeMenu}
+            >
+              <Image
+                src={SpotifyIcon}
+                alt="Spotify"
+                width={28}
+                height={28}
+                className="shrink-0"
+              />
+              <span className="text-white text-base">Spotify에서 듣기</span>
+            </a>
+          )}
 
-          <a
-            href={youtubeMusicUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
-            onClick={closeMenu}
-          >
-            <Image
-              src={YoutubeMusicIcon}
-              alt="YouTube Music"
-              width={28}
-              height={28}
-              className="shrink-0"
-            />
-            <span className="text-white text-base">YouTube Music에서 듣기</span>
-          </a>
+          {song.youtube && (
+            <a
+              href={`https://music.youtube.com/watch?v=${song.youtube.videoId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+              onClick={closeMenu}
+            >
+              <Image
+                src={YoutubeMusicIcon}
+                alt="YouTube Music"
+                width={28}
+                height={28}
+                className="shrink-0"
+              />
+              <span className="text-white text-base">YouTube Music에서 듣기</span>
+            </a>
+          )}
 
-          <div className="h-px bg-white/10 my-2" />
+          {(song.spotify || song.youtube) && (
+            <div className="h-px bg-white/10 my-2" />
+          )}
 
           {hasTjNumber ? (
             <button

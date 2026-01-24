@@ -1,5 +1,9 @@
 import { EllipsisVertical } from "lucide-react";
 import Image from "next/image";
+import type {
+  SpotifyTrackInfoDto,
+  YoutubeVideoInfoDto,
+} from "@/api/model/models";
 import { cn } from "@/lib/cn";
 import { useSongMenuStore } from "@/store/songMenuStore";
 
@@ -10,6 +14,8 @@ interface SongCardProps {
   title: string;
   subtitle: string;
   tjNumber?: string;
+  spotify?: SpotifyTrackInfoDto;
+  youtube?: YoutubeVideoInfoDto;
   isSelected?: boolean;
   onClick?: () => void;
 }
@@ -21,6 +27,8 @@ export function SongCard({
   title,
   subtitle,
   tjNumber,
+  spotify,
+  youtube,
   isSelected,
   onClick,
 }: SongCardProps) {
@@ -34,6 +42,8 @@ export function SongCard({
         title,
         artistName: subtitle,
         tjNumber,
+        spotify,
+        youtube,
       });
     }
   };
