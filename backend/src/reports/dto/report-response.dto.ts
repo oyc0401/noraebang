@@ -29,5 +29,5 @@ export class ReportDto {
 
 export class ReportResponseDto extends ApiResponse<ReportDto> {
   @ApiProperty({ type: ReportDto })
-  data: ReportDto;
+  declare data: ReportDto;
 }

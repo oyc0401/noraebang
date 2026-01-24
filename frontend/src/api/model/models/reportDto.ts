@@ -5,6 +5,7 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
+import type { ReportDtoStatus } from './reportDtoStatus';
 
 export interface ReportDto {
   id: number;
@@ -13,6 +14,6 @@ export interface ReportDto {
   title: string;
   content: string;
   email?: string;
-  status: "PENDING" | "RESOLVED" | "REJECTED";
+  status: ReportDtoStatus;
   createdAt: string;
 }
