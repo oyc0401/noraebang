@@ -146,6 +146,7 @@ export function SearchOverlay() {
               return (
                 <SongCard
                   key={`song-${card.song.id}`}
+                  songId={card.song.id}
                   thumbnail={card.song.thumbnail}
                   title={formatSongTitle(
                     card.song.title,

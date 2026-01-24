@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type PropsWithChildren, Suspense, useState } from "react";
 import { RouteChangeHandler } from "@/components/common/RouteChangeHandler";
+import { SongMenuBottomSheet } from "@/components/common/SongMenuBottomSheet";
 import { AuthProvider } from "./AuthProvider";
 
 export function Providers({ children }: PropsWithChildren) {
@@ -15,6 +16,7 @@ export function Providers({ children }: PropsWithChildren) {
           <RouteChangeHandler />
         </Suspense>
         {children}
+        <SongMenuBottomSheet />
       </AuthProvider>
     </QueryClientProvider>
   );

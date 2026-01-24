@@ -1,9 +1,11 @@
 import { EllipsisVertical } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/cn";
+import { useSongMenuStore } from "@/store/songMenuStore";
 
 interface SongCardProps {
   id?: string;
+  songId?: number;
   thumbnail?: string;
   title: string;
   subtitle: string;
@@ -14,6 +16,7 @@ interface SongCardProps {
 
 export function SongCard({
   id,
+  songId,
   thumbnail,
   title,
   subtitle,
@@ -21,11 +24,32 @@ export function SongCard({
   isSelected,
   onClick,
 }: SongCardProps) {
+  const { openMenu } = useSongMenuStore();
+
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (songId) {
+      openMenu({
+        id: songId,
+        title,
+        artistName: subtitle,
+        tjNumber,
+      });
+    }
+  };
+
   return (
-    <button
-      type="button"
+    // biome-ignore lint/a11y/useSemanticElements: 내부에 버튼이 있어 div 사용 필요
+    <div
       id={id}
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          onClick?.();
+        }
+      }}
       className={cn(
         "w-full flex rounded-sm items-center hover:bg-white/5 cursor-pointer transition-colors text-left px-2 py-2 ",
         isSelected && "bg-white/15",
@@ -57,14 +81,14 @@ export function SongCard({
           </p>
         </div>
 
-        <div className="shrink-0">
+        <button
+          type="button"
+          onClick={handleMenuClick}
+          className="shrink-0 p-2 -mr-2 cursor-pointer hover:bg-white/10 rounded-full transition-colors"
+        >
           <EllipsisVertical className="size-5 text-icon" />
-        </div>
+        </button>
       </div>
-    </button>
+    </div>
   );
-}
-
-function RecommendCount() {
-  return <span className="text-[#C1B369] ml-2">{"추천 0"}</span>;
 }

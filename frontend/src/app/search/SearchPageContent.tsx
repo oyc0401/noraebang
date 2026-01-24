@@ -116,6 +116,7 @@ export function SearchPageContent() {
                 return (
                   <SongCard
                     key={`song-${song.id}`}
+                    songId={song.id}
                     thumbnail={song.thumbnailMedium}
                     title={formatSongTitle(
                       song.title,
@@ -123,7 +124,7 @@ export function SearchPageContent() {
                       song.titleJa,
                       song.titleLatin,
                     )}
-                    subtitle={artistForDisplay.nameKo ?? ""}
+                    subtitle={artistForDisplay?.nameKo ?? ""}
                     tjNumber={tjKaraoke?.karaokeNo}
                     onClick={() => {
                       if (primaryArtistWithSlug?.slug) {
