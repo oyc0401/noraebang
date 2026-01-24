@@ -5,9 +5,11 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   userId?: number;
+  accessTokenExpiresAt?: number;
 
   setAuth: (userId: number) => void;
   setLoading: (loading: boolean) => void;
+  setAccessTokenExpiresAt: (expiresAt: number) => void;
   clearAuth: () => void;
   logout: () => Promise<void>;
 }
@@ -16,6 +18,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: true,
   userId: undefined,
+  accessTokenExpiresAt: undefined,
 
   setAuth: (userId) => {
     set({
@@ -29,11 +32,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: loading });
   },
 
+  setAccessTokenExpiresAt: (expiresAt) => {
+    set({ accessTokenExpiresAt: expiresAt });
+  },
+
   clearAuth: () => {
     set({
       isAuthenticated: false,
       isLoading: false,
       userId: undefined,
+      accessTokenExpiresAt: undefined,
     });
   },
 

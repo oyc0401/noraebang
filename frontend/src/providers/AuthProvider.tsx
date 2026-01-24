@@ -6,7 +6,12 @@ import { ApiError, customFetch } from "@/api/client";
 import type { ProfileResponseDto } from "@/api/model/models";
 import { useAuthStore } from "@/store/authStore";
 
-async function anonymousLogin(): Promise<void> {
+interface AuthResponse {
+  expiresIn: number;
+  success: boolean;
+}
+
+async function anonymousLogin(): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}/auth/anonymous`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -17,7 +22,7 @@ async function anonymousLogin(): Promise<void> {
     throw new Error("Anonymous login failed");
   }
 
-  await response.json().catch(() => ({}));
+  return response.json();
 }
 
 async function fetchProfile(): Promise<ProfileResponseDto> {
@@ -28,7 +33,8 @@ async function fetchProfile(): Promise<ProfileResponseDto> {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, setAuth, setLoading } = useAuthStore();
+  const { isAuthenticated, setAuth, setLoading, setAccessTokenExpiresAt } =
+    useAuthStore();
   const initializing = useRef(false);
 
   useEffect(() => {
@@ -47,7 +53,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
           try {
-            await anonymousLogin();
+            const authResponse = await anonymousLogin();
+            if (authResponse.expiresIn) {
+              const expiresAt = Date.now() + authResponse.expiresIn * 1000;
+              setAccessTokenExpiresAt(expiresAt);
+            }
             const profile = await fetchProfile();
             setAuth(profile.id);
             return;
@@ -64,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth().finally(() => {
       initializing.current = false;
     });
-  }, [isAuthenticated, setAuth, setLoading]);
+  }, [isAuthenticated, setAuth, setLoading, setAccessTokenExpiresAt]);
 
   return <>{children}</>;
 }
