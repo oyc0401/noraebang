@@ -1,7 +1,5 @@
 import { artistsControllerFindBySlug } from "@/api/model/artists/artists";
-import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
 import ArtistPageClient from "./ArtistPageClient";
-import { ARTIST_SONGS_PAGE_SIZE } from "./constants";
 
 export default async function ArtistPage({
   params,
@@ -19,15 +17,5 @@ export default async function ArtistPage({
     );
   }
 
-  const songsResponse = await songsControllerFindByArtistId(artist.data.id, {
-    page: "1",
-    limit: `${ARTIST_SONGS_PAGE_SIZE}`,
-  });
-
-  return (
-    <ArtistPageClient
-      artist={artist.data}
-      initialSongsResponse={songsResponse}
-    />
-  );
+  return <ArtistPageClient artist={artist.data} />;
 }

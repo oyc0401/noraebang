@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import { ArtistDetailsDto, ArtistDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
+import { SongsService } from "../songs/songs.service";
 
 export const ARTIST_SORT_OPTIONS = [
   "id_desc",
@@ -31,7 +32,10 @@ const ARTIST_SORT_ORDER_MAP: Record<
 
 @Injectable()
 export class ArtistsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private songsService: SongsService,
+  ) {}
 
   async findAll(
     sort: ArtistSortOption = DEFAULT_ARTIST_SORT,
@@ -334,7 +338,7 @@ export class ArtistsService {
   }
 
   /**
-   * slug로 아티스트 상세 조회 (YouTube, Spotify 정보 포함)
+   * slug로 아티스트 상세 조회 (YouTube, Spotify 정보 + 곡 목록 포함)
    */
   async findBySlug(slug: string): Promise<ArtistDetailsDto | null> {
     const artist = await this.prisma.artist.findUnique({
@@ -388,6 +392,13 @@ export class ArtistsService {
 
     const spotifyArtist = artist.spotifyArtist;
 
+    // 아티스트의 모든 곡 가져오기 (페이지네이션 없이)
+    const { songs } = await this.songsService.findByArtistId(
+      artist.id,
+      1,
+      10000,
+    );
+
     return {
       id: artist.id,
       name: artist.name,
@@ -426,6 +437,7 @@ export class ArtistsService {
             imageUrl: spotifyArtist.thumbnails[0] ?? undefined,
           }
         : undefined,
+      songs,
     };
   }
 }

@@ -1,98 +1,44 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import type {
-  ArtistDetailsDto,
-  SongDto,
-  SongListResponseDto,
-} from "@/api/model/models";
-import { songsControllerFindByArtistId } from "@/api/model/songs/songs";
+import type { ArtistDetailsDto } from "@/api/model/models";
 import { ArtistHeader } from "@/app/artist/[slug]/ArtistHeader";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { SongCard } from "@/components/common/SongCard";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 import { useSearchStore } from "@/store/searchStore";
-import { ARTIST_SONGS_PAGE_SIZE } from "./constants";
 import { ProfileHeader } from "./ProfileHeader";
 
 const RECOMMENDATION_COUNT = 0;
 
 interface ArtistPageClientProps {
   artist: ArtistDetailsDto;
-  initialSongsResponse: SongListResponseDto;
 }
 
-export default function ArtistPageClient({
-  artist,
-  initialSongsResponse,
-}: ArtistPageClientProps) {
+export default function ArtistPageClient({ artist }: ArtistPageClientProps) {
   const { isSearchActive } = useSearchStore();
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
-  const [targetSongId, setTargetSongId] = useState<string | null>(null);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteQuery({
-      queryKey: ["artist-songs", artist.id],
-      queryFn: ({ pageParam = 0 }) =>
-        songsControllerFindByArtistId(artist.id, {
-          limit: `${ARTIST_SONGS_PAGE_SIZE}`,
-          page: `${pageParam + 1}`,
-        }),
-      getNextPageParam: (lastPage, allPages) => {
-        return lastPage.meta?.hasMore ? allPages.length : undefined;
-      },
-      initialData: {
-        pages: [initialSongsResponse],
-        pageParams: [0],
-      },
-      initialPageParam: 0,
-    });
-
-  const { ref, inView } = useInView();
   const { ref: headerRef, inView: isHeaderVisible } = useInView();
 
-  // Set initial target from hash on component mount
+  const songs = artist.songs ?? [];
+
+  // Set initial target from hash on component mount and scroll to it
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
     if (hash) {
       setSelectedSongId(hash);
-      setTargetSongId(hash);
+      const element = document.getElementById(hash);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+      }
     }
   }, []);
 
-  const songs = data?.pages.flatMap<SongDto>((page) => page.data ?? []) ?? [];
-
-  // Effect for handling scrolling to a target song from a hash
-  useEffect(() => {
-    if (targetSongId) {
-      const songExists = songs.some((s) => s.id.toString() === targetSongId);
-      if (songExists) {
-        // If song is found in the list, scroll to it and clear the target
-        const element = document.getElementById(targetSongId);
-        if (element) {
-          setTimeout(() => {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
-            setTargetSongId(null);
-          }, 100);
-        }
-      } else if (hasNextPage && !isFetchingNextPage) {
-        // If song is not found, fetch the next page
-        fetchNextPage();
-      }
-    }
-  }, [songs, targetSongId, hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  // Effect for standard infinite scrolling when user scrolls to the bottom
-  useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage && !targetSongId) {
-      fetchNextPage();
-    }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage, targetSongId]);
-
-  const showRecommendationButton = !isLoading && songs.length === 0;
+  const showRecommendationButton = songs.length === 0;
 
   if (isSearchActive) {
     return <SearchOverlay />;
@@ -158,10 +104,6 @@ export default function ArtistPageClient({
           </button>
         </div>
       )}
-
-      <div ref={ref} className="">
-        {/* {isFetchingNextPage && <div className=" text-white" />} */}
-      </div>
     </div>
   );
 }
