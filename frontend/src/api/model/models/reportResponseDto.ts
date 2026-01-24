@@ -5,10 +5,14 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-
-import type { ReportDto } from "./reportDto";
+import type { ReportDto } from './reportDto';
+import type { ApiResponseMeta } from './apiResponseMeta';
 
 export interface ReportResponseDto {
+  /** 응답 데이터 */
   data: ReportDto;
+  /** 메시지 */
   message: string;
+  /** 메타데이터 (페이지네이션 등) */
+  meta?: ApiResponseMeta;
 }

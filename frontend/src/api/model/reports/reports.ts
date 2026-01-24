@@ -5,101 +5,90 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-import { useMutation } from "@tanstack/react-query";
+import {
+  useMutation
+} from '@tanstack/react-query';
 import type {
   MutationFunction,
   QueryClient,
   UseMutationOptions,
-  UseMutationResult,
-} from "@tanstack/react-query";
+  UseMutationResult
+} from '@tanstack/react-query';
 
 import type {
   CreateReportDto,
   ErrorResponseDto,
-  ReportResponseDto,
-} from ".././models";
+  ReportResponseDto
+} from '.././models';
 
-import { customFetch } from "../../client";
+import { customFetch } from '../../client';
+
+
+
 
 /**
  * 잘못된 정보에 대한 신고를 접수합니다.
  * @summary 신고 접수
  */
 export const reportsControllerCreate = (
-  createReportDto: CreateReportDto,
-  signal?: AbortSignal,
+    createReportDto: CreateReportDto,
+ signal?: AbortSignal
 ) => {
-  return customFetch<ReportResponseDto>({
-    url: `/reports`,
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    data: createReportDto,
-    signal,
-  });
-};
+      
+      
+      return customFetch<ReportResponseDto>(
+      {url: `/reports`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createReportDto, signal
+    },
+      );
+    }
+  
 
-export const getReportsControllerCreateMutationOptions = <
-  TError = ErrorResponseDto,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof reportsControllerCreate>>,
-    TError,
-    { data: CreateReportDto },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof reportsControllerCreate>>,
-  TError,
-  { data: CreateReportDto },
-  TContext
-> => {
-  const mutationKey = ["reportsControllerCreate"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
 
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof reportsControllerCreate>>,
-    { data: CreateReportDto }
-  > = (props) => {
-    const { data } = props ?? {};
-    return reportsControllerCreate(data);
-  };
+export const getReportsControllerCreateMutationOptions = <TError = ErrorResponseDto,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsControllerCreate>>, TError,{data: CreateReportDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof reportsControllerCreate>>, TError,{data: CreateReportDto}, TContext> => {
 
-  return { mutationFn, ...mutationOptions };
-};
+const mutationKey = ['reportsControllerCreate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
 
-export type ReportsControllerCreateMutationResult = NonNullable<
-  Awaited<ReturnType<typeof reportsControllerCreate>>
->;
-export type ReportsControllerCreateMutationBody = CreateReportDto;
-export type ReportsControllerCreateMutationError = ErrorResponseDto;
+      
 
-/**
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reportsControllerCreate>>, {data: CreateReportDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  reportsControllerCreate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReportsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof reportsControllerCreate>>>
+    export type ReportsControllerCreateMutationBody = CreateReportDto
+    export type ReportsControllerCreateMutationError = ErrorResponseDto
+
+    /**
  * @summary 신고 접수
  */
-export const useReportsControllerCreate = <
-  TError = ErrorResponseDto,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof reportsControllerCreate>>,
-      TError,
-      { data: CreateReportDto },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof reportsControllerCreate>>,
-  TError,
-  { data: CreateReportDto },
-  TContext
-> => {
-  const mutationOptions = getReportsControllerCreateMutationOptions(options);
-  return useMutation(mutationOptions, queryClient);
-};
+export const useReportsControllerCreate = <TError = ErrorResponseDto,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportsControllerCreate>>, TError,{data: CreateReportDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reportsControllerCreate>>,
+        TError,
+        {data: CreateReportDto},
+        TContext
+      > => {
+
+      const mutationOptions = getReportsControllerCreateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
