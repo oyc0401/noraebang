@@ -11,10 +11,13 @@ interface SongCardProps {
   id?: string;
   songId?: number;
   artistId?: number;
+  artistTjName?: string;
   thumbnail?: string;
   title: string;
+  originalTitle: string;
   subtitle: string;
   tjNumber?: string;
+  bestProposeHit?: number;
   spotify?: SpotifyTrackInfoDto;
   youtube?: YoutubeVideoInfoDto;
   isSelected?: boolean;
@@ -25,10 +28,13 @@ export function SongCard({
   id,
   songId,
   artistId,
+  artistTjName,
   thumbnail,
   title,
+  originalTitle,
   subtitle,
   tjNumber,
+  bestProposeHit,
   spotify,
   youtube,
   isSelected,
@@ -42,9 +48,12 @@ export function SongCard({
       openMenu({
         id: songId,
         title,
+        originalTitle,
         artistName: subtitle,
         artistId,
+        artistTjName,
         tjNumber,
+        bestProposeHit,
         spotify,
         youtube,
       });
@@ -90,6 +99,9 @@ export function SongCard({
             <span className="text-gray-400">{subtitle}</span>
             {tjNumber && (
               <span className="text-[#CE8FED] ml-2">{`TJ - ${tjNumber}`}</span>
+            )}
+            {bestProposeHit !== undefined && (
+              <span className="text-[#C1B369] ml-2">{`추천 ${bestProposeHit}`}</span>
             )}
           </p>
         </div>

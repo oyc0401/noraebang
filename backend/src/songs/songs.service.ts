@@ -3,6 +3,15 @@ import { SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 
 
+type SongProposeData = {
+  songSinger: string;
+  songTitle: string;
+  content: string;
+  name: string;
+  hit: number;
+  saveDate: bigint;
+};
+
 type SongDtoData = {
   id: number;
   title: string;
@@ -50,94 +59,119 @@ type SongDtoData = {
       publishedAt: Date | null;
     };
   }[];
+  songProposes: SongProposeData[];
 };
 
 @Injectable()
 export class SongsService {
   constructor(private prisma: PrismaService) {}
 
-  private readonly songDtoSelect = {
-    id: true,
-    title: true,
-    titleKo: true,
-    titleJa: true,
-    titleLatin: true,
-    titleJaPronu: true,
-    titleLatinPronu: true,
-    catalog: true,
-    thumbnailDefault: true,
-    thumbnailMedium: true,
-    thumbnailHigh: true,
-    tjSong: {
-      select: {
-        id: true,
-        title: true,
-        artist: true,
-        lyricist: true,
-        composer: true,
-        publishdate: true,
-        isMR: true,
-        isMV: true,
-        isOver60: true,
+  private get songDtoSelect() {
+    const threeMonthsAgo = BigInt(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
+    return {
+      id: true,
+      title: true,
+      titleKo: true,
+      titleJa: true,
+      titleLatin: true,
+      titleJaPronu: true,
+      titleLatinPronu: true,
+      catalog: true,
+      thumbnailDefault: true,
+      thumbnailMedium: true,
+      thumbnailHigh: true,
+      tjSong: {
+        select: {
+          id: true,
+          title: true,
+          artist: true,
+          lyricist: true,
+          composer: true,
+          publishdate: true,
+          isMR: true,
+          isMV: true,
+          isOver60: true,
+        },
       },
-    },
-    artistSongs: {
-      select: {
-        artistId: true,
-        role: true,
-        artist: {
-          select: {
-            name: true,
-            nameKo: true,
-            slug: true,
+      artistSongs: {
+        select: {
+          artistId: true,
+          role: true,
+          artist: {
+            select: {
+              name: true,
+              nameKo: true,
+              slug: true,
+            },
           },
         },
       },
-    },
-    songSpotifyTracks: {
-      select: {
-        spotifyTrack: {
-          select: {
-            spotifyId: true,
-            name: true,
-            thumbnails: true,
-            popularity: true,
+      songSpotifyTracks: {
+        select: {
+          spotifyTrack: {
+            select: {
+              spotifyId: true,
+              name: true,
+              thumbnails: true,
+              popularity: true,
+            },
           },
         },
-      },
-      orderBy: {
-        spotifyTrack: {
-          popularity: "desc" as const,
-        },
-      },
-      take: 1,
-    },
-    youtubeVideos: {
-      select: {
-        youtubeVideo: {
-          select: {
-            videoId: true,
-            title: true,
-            thumbnailDefault: true,
-            thumbnailMedium: true,
-            thumbnailHigh: true,
-            viewCount: true,
-            publishedAt: true,
+        orderBy: {
+          spotifyTrack: {
+            popularity: "desc" as const,
           },
         },
+        take: 1,
       },
-      orderBy: {
-        youtubeVideo: {
-          viewCount: "desc" as const,
+      youtubeVideos: {
+        select: {
+          youtubeVideo: {
+            select: {
+              videoId: true,
+              title: true,
+              thumbnailDefault: true,
+              thumbnailMedium: true,
+              thumbnailHigh: true,
+              viewCount: true,
+              publishedAt: true,
+            },
+          },
+        },
+        orderBy: {
+          youtubeVideo: {
+            viewCount: "desc" as const,
+          },
+        },
+        take: 1,
+      },
+      songProposes: {
+        where: {
+          saveDate: {
+            gte: threeMonthsAgo,
+          },
+        },
+        orderBy: {
+          hit: "desc" as const,
+        },
+        take: 1,
+        select: {
+          songSinger: true,
+          songTitle: true,
+          content: true,
+          name: true,
+          hit: true,
+          saveDate: true,
         },
       },
-      take: 1,
-    },
-  };
+    };
+  }
 
   private mapToDto(song: SongDtoData): SongDto {
     const spotifyTrack = song.songSpotifyTracks[0]?.spotifyTrack;
     const youtubeVideo = song.youtubeVideos[0]?.youtubeVideo;
+    const bestPropose = song.songProposes[0];
 
     return {
       id: song.id,
@@ -191,6 +225,16 @@ export class SongsService {
             thumbnailDefault: youtubeVideo.thumbnailDefault ?? undefined,
             thumbnailMedium: youtubeVideo.thumbnailMedium ?? undefined,
             thumbnailHigh: youtubeVideo.thumbnailHigh ?? undefined,
+          }
+        : undefined,
+      bestSongPropose: bestPropose
+        ? {
+            songSinger: bestPropose.songSinger,
+            songTitle: bestPropose.songTitle,
+            content: bestPropose.content,
+            name: bestPropose.name,
+            hit: bestPropose.hit,
+            saveDate: Number(bestPropose.saveDate),
           }
         : undefined,
     };

@@ -9,6 +9,7 @@ import type { ArtistSongDto } from './artistSongDto';
 import type { TjSongDto } from './tjSongDto';
 import type { SpotifyTrackInfoDto } from './spotifyTrackInfoDto';
 import type { YoutubeVideoInfoDto } from './youtubeVideoInfoDto';
+import type { BestSongProposeDto } from './bestSongProposeDto';
 
 export interface SongDto {
   id: number;
@@ -28,4 +29,6 @@ export interface SongDto {
   spotify?: SpotifyTrackInfoDto;
   /** YouTube 비디오 정보 */
   youtube?: YoutubeVideoInfoDto;
+  /** 3개월 이내 가장 추천수가 높은 곡 추천 정보 */
+  bestSongPropose?: BestSongProposeDto;
 }

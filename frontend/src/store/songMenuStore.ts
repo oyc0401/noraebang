@@ -7,9 +7,12 @@ import type {
 interface SongMenuData {
   id: number;
   title: string;
+  originalTitle: string;
   artistName: string;
   artistId?: number;
+  artistTjName?: string;
   tjNumber?: string;
+  bestProposeHit?: number;
   spotify?: SpotifyTrackInfoDto;
   youtube?: YoutubeVideoInfoDto;
 }

@@ -69,6 +69,7 @@ export default function ArtistPageClient({ artist }: ArtistPageClientProps) {
                 id={song.id.toString()}
                 songId={song.id}
                 artistId={artist.id}
+                artistTjName={artist.tjName}
                 thumbnail={song.thumbnailMedium}
                 title={formatSongTitle(
                   song.title,
@@ -76,8 +77,10 @@ export default function ArtistPageClient({ artist }: ArtistPageClientProps) {
                   song.titleJa,
                   song.titleLatin,
                 )}
+                originalTitle={song.title}
                 subtitle={song.artists.map((a) => a.name).join(", ")}
                 tjNumber={tjNumber}
+                bestProposeHit={song.bestSongPropose?.hit}
                 spotify={song.spotify}
                 youtube={song.youtube}
                 isSelected={selectedSongId === song.id.toString()}
