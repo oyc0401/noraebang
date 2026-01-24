@@ -34,6 +34,14 @@ export class ApiError extends Error {
   }
 }
 
+const TOKEN_REFRESH_BUFFER_MS = 60 * 1000; // 만료 60초 전에 갱신
+
+function isTokenExpiringSoon(): boolean {
+  const expiresAt = useAuthStore.getState().accessTokenExpiresAt;
+  if (!expiresAt) return false;
+  return Date.now() >= expiresAt - TOKEN_REFRESH_BUFFER_MS;
+}
+
 export const customFetch = async <T>({
   url,
   method,
@@ -42,6 +50,10 @@ export const customFetch = async <T>({
   headers,
   signal,
 }: CustomFetchConfig): Promise<T> => {
+  // 토큰 만료 임박 시 미리 갱신
+  if (isTokenExpiringSoon()) {
+    await attemptRefresh();
+  }
 
   const queryString = params
     ? `?${new URLSearchParams(params as Record<string, string>).toString()}`
@@ -104,6 +116,16 @@ export const customFetch = async <T>({
 
 type RecoveryResult = "success" | "auth_failed" | "server_error";
 
+interface AuthResponse {
+  expiresIn: number;
+  success: boolean;
+}
+
+function updateAccessTokenExpiresAt(expiresIn: number): void {
+  const expiresAt = Date.now() + expiresIn * 1000;
+  useAuthStore.getState().setAccessTokenExpiresAt(expiresAt);
+}
+
 async function attemptRefresh(): Promise<RecoveryResult> {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
@@ -113,7 +135,10 @@ async function attemptRefresh(): Promise<RecoveryResult> {
     });
 
     if (response.ok) {
-      await response.json().catch(() => ({}));
+      const data: AuthResponse = await response.json().catch(() => ({}));
+      if (data.expiresIn) {
+        updateAccessTokenExpiresAt(data.expiresIn);
+      }
       return "success";
     }
 
@@ -138,7 +163,10 @@ async function attemptAnonymousLogin(): Promise<RecoveryResult> {
     });
 
     if (response.ok) {
-      await response.json().catch(() => ({}));
+      const data: AuthResponse = await response.json().catch(() => ({}));
+      if (data.expiresIn) {
+        updateAccessTokenExpiresAt(data.expiresIn);
+      }
       return "success";
     }
 
