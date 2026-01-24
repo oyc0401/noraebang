@@ -167,17 +167,18 @@ export default function AdminTasksPage() {
     "mapProposeSong",
     runMapProposeSongForArtist,
     getRange,
-    false,
   );
   const songTask = useArtistTask(
     "autoFillSongTitles",
     runAutoFillSongTitlesForArtist,
     getRange,
+    false,
   );
   const artistTask = useArtistTask(
     "autoFillArtistNames",
     runAutoFillArtistNamesForArtist,
     getRange,
+    false,
   );
   const youtubeTask = useArtistTask(
     "mapSongYoutubeVideo",
@@ -198,11 +199,13 @@ export default function AdminTasksPage() {
     "updateSongThumbnails",
     runUpdateSongThumbnailsForArtist,
     getRange,
+    false,
   );
   const scoreTask = useArtistTask(
     "updateSongScore",
     runUpdateSongScoreForArtist,
     getRange,
+    false,
   );
   const fetchProposeTask = useArtistTask(
     "fetchProposeForArtist",
@@ -273,85 +276,101 @@ export default function AdminTasksPage() {
           </div>
         </section>
 
-        {/* 전역 작업 (아티스트 범위 무관) */}
-        <section className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
-          <span className="text-sm font-semibold text-green-700">
-            전역 작업 (아티스트 범위 무관)
-          </span>
-        </section>
+        {/* 2분할 레이아웃 */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* 왼쪽: 데이터 수집 */}
+          <div className="space-y-4">
+            {/* new-song-detection 그룹 (전역) */}
+            <GroupHeader
+              title="신곡 감지"
+              color="green"
+              description="new-song-detection"
+            />
+            <GlobalTaskCard
+              title="TJ 최신곡 수집 + Song 연결"
+              description="fetchNewTjSongs: 현재 월 TJ 최신곡을 가져와 TjSong에 저장하고, 아티스트 매칭 후 Song.tjSongId를 연결합니다."
+              task={fetchNewTjSongsTask}
+            />
 
-        <div className="mb-6 space-y-4">
-          <GlobalTaskCard
-            title="TJ 최신곡 수집 + Song 연결"
-            description="fetchNewTjSongs: 현재 월 TJ 최신곡을 가져와 TjSong에 저장하고, 아티스트 매칭 후 Song.tjSongId를 연결합니다."
-            task={fetchNewTjSongsTask}
-          />
-        </div>
+            {/* refresh 그룹 */}
+            <GroupHeader
+              title="데이터 새로고침"
+              color="purple"
+              description="refresh"
+            />
+            <TaskCard
+              title="TJ 신청곡 수집"
+              description="fetchProposeForArtist: 아티스트의 tjName으로 TJ 신청곡을 검색하여 DB에 저장합니다."
+              task={fetchProposeTask}
+            />
+            <TaskCard
+              title="Spotify 트랙 수집"
+              description="fetchSpotifyTracksForArtist: 아티스트의 spotifyId로 모든 앨범/트랙을 가져와 SpotifyTrack에 저장합니다."
+              task={fetchSpotifyTracksTask}
+            />
+            <TaskCard
+              title="YouTube Topic 비디오 수집"
+              description="fetchTopicVideosForArtist: 아티스트의 Topic 채널에서 모든 비디오를 가져와 YoutubeVideo에 저장합니다."
+              task={fetchTopicVideosTask}
+            />
+          </div>
 
-        <div className="space-y-4">
-          <TaskCard
-            title="TJ 신청곡 수집"
-            description="fetchProposeForArtist: 아티스트의 tjName으로 TJ 신청곡을 검색하여 DB에 저장합니다."
-            task={fetchProposeTask}
-          />
+          {/* 오른쪽: 매핑 + 자동채우기 */}
+          <div className="space-y-4">
+            {/* mapping 그룹 */}
+            <GroupHeader
+              title="매핑"
+              color="orange"
+              description="mapping"
+            />
+            <TaskCard
+              title="TJ 신청곡 → 곡 매핑"
+              description="mapProposeSong: 지정 구간의 신청곡을 자동 매핑합니다."
+              task={mapTask}
+            />
+            <TaskCard
+              title="곡 ↔ YouTube 토픽 매핑"
+              description="토픽 채널 영상과 곡을 비교해 SongYoutubeVideo를 자동으로 채웁니다."
+              task={youtubeTask}
+            />
+            <TaskCard
+              title="검색 결과 기반 YouTube 매핑"
+              description="searchUnlinkedSongYoutube 결과를 활용해 곡과 토픽 채널 영상을 연결합니다."
+              task={youtubeSearchTask}
+            />
+            <TaskCard
+              title="곡 ↔ Spotify 그룹 매핑"
+              description="findBestMatch로 곡과 SpotifyTrackGroup을 자동 매핑합니다."
+              task={spotifyTask}
+            />
 
-          <TaskCard
-            title="Spotify 트랙 수집"
-            description="fetchSpotifyTracksForArtist: 아티스트의 spotifyId로 모든 앨범/트랙을 가져와 SpotifyTrack에 저장합니다."
-            task={fetchSpotifyTracksTask}
-          />
-
-          <TaskCard
-            title="YouTube Topic 비디오 수집"
-            description="fetchTopicVideosForArtist: 아티스트의 Topic 채널에서 모든 비디오를 가져와 YoutubeVideo에 저장합니다."
-            task={fetchTopicVideosTask}
-          />
-
-          <TaskCard
-            title="TJ 신청곡 → 곡 매핑"
-            description="mapProposeSong: 지정 구간의 신청곡을 자동 매핑합니다."
-            task={mapTask}
-          />
-
-          <TaskCard
-            title="곡 제목 자동 채우기"
-            description="Spotify/곡 제목 정보를 활용해 titleLatin/titleJa* 필드를 보완합니다."
-            task={songTask}
-          />
-
-          <TaskCard
-            title="아티스트 이름 자동 채우기"
-            description="Spotify/토픽 채널 이름을 활용해 nameLatin/nameJa* 필드를 보완합니다."
-            task={artistTask}
-          />
-
-          <TaskCard
-            title="곡 ↔ YouTube 토픽 매핑"
-            description="토픽 채널 영상과 곡을 비교해 SongYoutubeVideo를 자동으로 채웁니다."
-            task={youtubeTask}
-          />
-          <TaskCard
-            title="검색 결과 기반 YouTube 매핑"
-            description="searchUnlinkedSongYoutube 결과를 활용해 곡과 토픽 채널 영상을 연결합니다."
-            task={youtubeSearchTask}
-          />
-
-          <TaskCard
-            title="곡 ↔ Spotify 그룹 매핑"
-            description="findBestMatch로 곡과 SpotifyTrackGroup을 자동 매핑합니다."
-            task={spotifyTask}
-          />
-
-          <TaskCard
-            title="곡 썸네일 보정"
-            description="Spotify/YouTube 정보를 바탕으로 곡 썸네일을 자동으로 채웁니다."
-            task={thumbTask}
-          />
-          <TaskCard
-            title="곡 점수 산출"
-            description="Spotify 인기, TJ 여부, YouTube 조회수를 조합해 score 컬럼을 계산합니다."
-            task={scoreTask}
-          />
+            {/* auto-fill 그룹 */}
+            <GroupHeader
+              title="자동 채우기"
+              color="cyan"
+              description="auto-fill"
+            />
+            <TaskCard
+              title="곡 제목 자동 채우기"
+              description="Spotify/곡 제목 정보를 활용해 titleLatin/titleJa* 필드를 보완합니다."
+              task={songTask}
+            />
+            <TaskCard
+              title="아티스트 이름 자동 채우기"
+              description="Spotify/토픽 채널 이름을 활용해 nameLatin/nameJa* 필드를 보완합니다."
+              task={artistTask}
+            />
+            <TaskCard
+              title="곡 썸네일 보정"
+              description="Spotify/YouTube 정보를 바탕으로 곡 썸네일을 자동으로 채웁니다."
+              task={thumbTask}
+            />
+            <TaskCard
+              title="곡 점수 산출"
+              description="Spotify 인기, TJ 여부, YouTube 조회수를 조합해 score 컬럼을 계산합니다."
+              task={scoreTask}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -496,5 +515,29 @@ function DryRunToggle({
       />
       Dry-run
     </label>
+  );
+}
+
+const groupColors = {
+  green: "border-green-300 bg-green-50 text-green-700",
+  purple: "border-purple-300 bg-purple-50 text-purple-700",
+  orange: "border-orange-300 bg-orange-50 text-orange-700",
+  cyan: "border-cyan-300 bg-cyan-50 text-cyan-700",
+} as const;
+
+function GroupHeader({
+  title,
+  color,
+  description,
+}: {
+  title: string;
+  color: keyof typeof groupColors;
+  description: string;
+}) {
+  return (
+    <div className={`rounded-lg border px-3 py-2 ${groupColors[color]}`}>
+      <span className="text-sm font-bold">{title}</span>
+      <span className="ml-2 text-xs opacity-70">({description})</span>
+    </div>
   );
 }

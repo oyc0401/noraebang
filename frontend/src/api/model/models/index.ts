@@ -26,6 +26,7 @@ export * from './mobileAnonymousLoginDto';
 export * from './mobileAuthResponseDto';
 export * from './mobileLogoutResponseDto';
 export * from './profileResponseDto';
+export * from './recentPopularSearchDataDto';
 export * from './recentSearchesResponseDto';
 export * from './reportDto';
 export * from './reportDtoStatus';
