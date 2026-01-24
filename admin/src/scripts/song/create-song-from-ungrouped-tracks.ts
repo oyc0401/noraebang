@@ -21,7 +21,7 @@
  */
 
 import "dotenv/config";
-import { createSongFromUnmappedTracks } from "../../lib/admin/new-song/create-song-from-unmapped-tracks";
+import { createSongFromUnmappedTracks } from "../../lib/admin/make-song/create-song-from-spotify-youtube-match";
 
 async function main() {
   const args = process.argv.slice(2);
