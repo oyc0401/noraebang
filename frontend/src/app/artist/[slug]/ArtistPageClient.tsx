@@ -124,6 +124,7 @@ export default function ArtistPageClient({
                 key={song.id}
                 id={song.id.toString()}
                 songId={song.id}
+                artistId={artist.id}
                 thumbnail={song.thumbnailMedium}
                 title={formatSongTitle(
                   song.title,

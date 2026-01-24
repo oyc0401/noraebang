@@ -10,6 +10,7 @@ import { useSongMenuStore } from "@/store/songMenuStore";
 interface SongCardProps {
   id?: string;
   songId?: number;
+  artistId?: number;
   thumbnail?: string;
   title: string;
   subtitle: string;
@@ -23,6 +24,7 @@ interface SongCardProps {
 export function SongCard({
   id,
   songId,
+  artistId,
   thumbnail,
   title,
   subtitle,
@@ -41,6 +43,7 @@ export function SongCard({
         id: songId,
         title,
         artistName: subtitle,
+        artistId,
         tjNumber,
         spotify,
         youtube,

@@ -34,6 +34,7 @@ model Artist {
   tjSongs                ArtistTjSong[]
   youtubeChannels        YoutubeChannel[]
   searchClicks           SearchClick[]
+  reports                Report[]
 
   @@index([spotifyId])
   @@index([homeCatalog])
@@ -69,6 +70,7 @@ model Song {
   songSpotifyTracks   SongSpotifyTrack[]
   youtubeVideos       SongYoutubeVideo[]
   searchClicks        SearchClick[]
+  reports             Report[]
 
   @@index([youtubeVideoId])
   @@index([catalog])
@@ -430,4 +432,30 @@ model SearchClick {
   @@index([artistId])
   @@index([songId])
   @@map("search_click")
+}
+
+model Report {
+  id        Int          @id @default(autoincrement())
+  songId    Int?         @map("song_id")
+  artistId  Int?         @map("artist_id")
+  title     String
+  content   String
+  email     String?
+  status    ReportStatus @default(PENDING)
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+  song      Song?        @relation(fields: [songId], references: [id], onDelete: SetNull)
+  artist    Artist?      @relation(fields: [artistId], references: [id], onDelete: SetNull)
+
+  @@index([songId])
+  @@index([artistId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("report")
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  REJECTED
 }
