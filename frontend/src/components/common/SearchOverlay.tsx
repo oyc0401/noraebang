@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Clock, Flame, Search } from "lucide-react";
+import { ArrowLeft, Clock, Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef } from "react";
 import {
@@ -8,6 +8,7 @@ import {
   useSearchControllerGetSearchSuggestions,
 } from "@/api/model/search/search";
 import { ArtistCard } from "@/components/common/ArtistCard";
+import { SearchTermCard } from "@/components/common/SearchTermCard";
 import { SongCard } from "@/components/common/SongCard";
 import { SearchBar } from "@/components/search/SearchBar";
 import { formatSongTitle } from "@/lib/formatSongTitle";
@@ -151,18 +152,15 @@ export function SearchOverlay() {
           <>
             <div className="p-2 text-gray-400 text-sm">최근 검색어</div>
             {recentSearches.map((term) => (
-              <button
+              <SearchTermCard
                 key={`recent-${term}`}
-                type="button"
+                term={term}
+                type="recent"
                 onClick={() => {
                   setQuery(term);
                   router.push(`/search?q=${encodeURIComponent(term)}`);
                 }}
-                className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
-              >
-                <Clock className="size-5 text-gray-400" />
-                <span className="text-white flex-1">{term}</span>
-              </button>
+              />
             ))}
           </>
         )}
@@ -171,18 +169,15 @@ export function SearchOverlay() {
           <>
             <div className="p-2 text-gray-400 text-sm mt-4">인기 검색어</div>
             {popularSearches.map((term) => (
-              <button
+              <SearchTermCard
                 key={`popular-${term}`}
-                type="button"
+                term={term}
+                type="popular"
                 onClick={() => {
                   setQuery(term);
                   router.push(`/search?q=${encodeURIComponent(term)}`);
                 }}
-                className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
-              >
-                <Flame className="size-5 text-gray-400" />
-                <span className="text-white flex-1">{term}</span>
-              </button>
+              />
             ))}
           </>
         )}

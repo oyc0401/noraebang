@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { customFetch } from "@/api/client";
 
 interface AuthState {
@@ -14,51 +15,62 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: false,
-  isLoading: true,
-  userId: undefined,
-  accessTokenExpiresAt: undefined,
-
-  setAuth: (userId) => {
-    set({
-      isAuthenticated: true,
-      isLoading: false,
-      userId,
-    });
-  },
-
-  setLoading: (loading) => {
-    set({ isLoading: loading });
-  },
-
-  setAccessTokenExpiresAt: (expiresAt) => {
-    set({ accessTokenExpiresAt: expiresAt });
-  },
-
-  clearAuth: () => {
-    set({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,
       userId: undefined,
       accessTokenExpiresAt: undefined,
-    });
-  },
 
-  logout: async () => {
-    try {
-      await customFetch<void>({
-        url: "/auth/logout",
-        method: "POST",
-      });
-    } catch (error) {
-      console.error("Logout request failed:", error);
-    }
+      setAuth: (userId) => {
+        set({
+          isAuthenticated: true,
+          isLoading: false,
+          userId,
+        });
+      },
 
-    set({
-      isAuthenticated: false,
-      isLoading: false,
-      userId: undefined,
-    });
-  },
-}));
+      setLoading: (loading) => {
+        set({ isLoading: loading });
+      },
+
+      setAccessTokenExpiresAt: (expiresAt) => {
+        set({ accessTokenExpiresAt: expiresAt });
+      },
+
+      clearAuth: () => {
+        set({
+          isAuthenticated: false,
+          isLoading: false,
+          userId: undefined,
+          accessTokenExpiresAt: undefined,
+        });
+      },
+
+      logout: async () => {
+        try {
+          await customFetch<void>({
+            url: "/auth/logout",
+            method: "POST",
+          });
+        } catch (error) {
+          console.error("Logout request failed:", error);
+        }
+
+        set({
+          isAuthenticated: false,
+          isLoading: false,
+          userId: undefined,
+          accessTokenExpiresAt: undefined,
+        });
+      },
+    }),
+    {
+      name: "auth-storage",
+      partialize: (state) => ({
+        accessTokenExpiresAt: state.accessTokenExpiresAt,
+      }),
+    },
+  ),
+);

@@ -36,10 +36,29 @@ export class ApiError extends Error {
 
 const TOKEN_REFRESH_BUFFER_MS = 60 * 1000; // 만료 60초 전에 갱신
 
+type RecoveryResult = "success" | "auth_failed" | "server_error";
+
+// 토큰 갱신 중복 방지를 위한 Promise 저장
+let refreshPromise: Promise<RecoveryResult> | null = null;
+
 function isTokenExpiringSoon(): boolean {
   const expiresAt = useAuthStore.getState().accessTokenExpiresAt;
-  if (!expiresAt) return false;
+  // expiresAt이 없으면 만료된 것으로 간주 → refresh 시도
+  if (!expiresAt) return true;
   return Date.now() >= expiresAt - TOKEN_REFRESH_BUFFER_MS;
+}
+
+// 토큰 갱신을 한 번만 실행하고, 다른 요청들은 같은 Promise를 기다림
+async function refreshTokenOnce(): Promise<RecoveryResult> {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = attemptRefresh().finally(() => {
+    refreshPromise = null;
+  });
+
+  return refreshPromise;
 }
 
 export const customFetch = async <T>({
@@ -50,9 +69,9 @@ export const customFetch = async <T>({
   headers,
   signal,
 }: CustomFetchConfig): Promise<T> => {
-  // 토큰 만료 임박 시 미리 갱신
+  // 토큰 만료 임박 시 미리 갱신 (중복 요청 방지)
   if (isTokenExpiringSoon()) {
-    await attemptRefresh();
+    await refreshTokenOnce();
   }
 
   const queryString = params
@@ -113,8 +132,6 @@ export const customFetch = async <T>({
     );
   }
 };
-
-type RecoveryResult = "success" | "auth_failed" | "server_error";
 
 interface AuthResponse {
   expiresIn: number;
