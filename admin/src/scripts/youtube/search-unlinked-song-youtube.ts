@@ -11,7 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdir, writeFile } from "node:fs/promises";
 import { prisma } from "../../lib/prisma.ts";
-import { searchUnlinkedSongYoutube } from "../../lib/admin/search-unlinked-song-youtube.ts";
+import { searchUnlinkedSongYoutube } from "../../lib/admin/mapping/search-unlinked-song-youtube.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = path.join(

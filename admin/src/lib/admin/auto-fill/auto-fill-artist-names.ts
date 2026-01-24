@@ -1,6 +1,6 @@
 import { isKana } from "wanakana";
 
-import { prisma } from "../prisma";
+import { prisma } from "../../prisma";
 
 // autoFillArtistNames는 단일 아티스트에 대해 Spotify/토픽 채널 이름을 활용해 언어별 이름 필드를 자동 보완합니다.
 
@@ -89,7 +89,9 @@ export async function autoFillArtistNames(
     if (!name) return;
     const field = detectField(name);
 
-    const currentValue = (artist as Record<ArtistNameField, string | null>)[field];
+    const currentValue = (artist as Record<ArtistNameField, string | null>)[
+      field
+    ];
     if (currentValue || updateData[field]) return;
 
     updateData[field] = name;

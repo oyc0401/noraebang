@@ -1,9 +1,9 @@
-import { prisma } from "../prisma";
+import { prisma } from "../../prisma";
 import {
   fetchYoutubeVideos,
   searchYoutubeVideos,
   type YoutubeVideoSearchItem,
-} from "../../thirdparty/youtube";
+} from "../../../thirdparty/youtube";
 
 // searchUnlinkedSongYoutube는 특정 아티스트의 Song 중 YouTube에 연결되지 않은 곡을
 // "제목 + 아티스트명" 검색으로 찾아보고, 각 곡별 영상 후보 목록을 반환합니다.

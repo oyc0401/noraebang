@@ -1,13 +1,14 @@
 "use server";
 
-import { autoFillArtistNames } from "@/lib/admin/auto-fill-artist-names";
-import { autoFillSongTitles } from "@/lib/admin/auto-fill-song-titles";
-import { mapProposeSong } from "@/lib/admin/map-propose-song";
-import { mapSongYoutubeVideo } from "@/lib/admin/map-song-youtube-video";
-import { mapSongYoutubeVideoFromSearch } from "@/lib/admin/map-song-youtube-video-from-search";
-import { mapSongSpotifyTracks } from "@/lib/admin/map-song-spotify-tracks";
-import { updateSongThumbnails } from "@/lib/admin/update-song-thumbnails";
-import { updateSongScore } from "@/lib/admin/update-song-score";
+import { autoFillArtistNames } from "@/lib/admin/auto-fill/auto-fill-artist-names";
+import { autoFillSongTitles } from "@/lib/admin/auto-fill/auto-fill-song-titles";
+import { fetchProposeForArtist } from "@/lib/admin/refresh/fetch-propose-for-artist";
+import { mapProposeSong } from "@/lib/admin/mapping/map-propose-song";
+import { mapSongYoutubeVideo } from "@/lib/admin/mapping/map-song-youtube-video";
+import { mapSongYoutubeVideoFromSearch } from "@/lib/admin/mapping/map-song-youtube-video-from-search";
+import { mapSongSpotifyTracks } from "@/lib/admin/mapping/map-song-spotify-tracks";
+import { updateSongThumbnails } from "@/lib/admin/auto-fill/update-song-thumbnails";
+import { updateSongScore } from "@/lib/admin/auto-fill/update-song-score";
 
 export async function runAutoFillSongTitlesForArtist(
   artistId: number,
@@ -71,4 +72,12 @@ export async function runUpdateSongScoreForArtist(
 ): Promise<void> {
   const dryRun = Boolean(options.dryRun);
   await updateSongScore(artistId, { dryRun });
+}
+
+export async function runFetchProposeForArtist(
+  artistId: number,
+  options: { dryRun?: boolean } = {},
+): Promise<void> {
+  const dryRun = Boolean(options.dryRun);
+  await fetchProposeForArtist(artistId, { dryRun });
 }

@@ -1,6 +1,6 @@
 import type { Provider } from "@prisma/client";
-import { prisma } from "../prisma";
-import { calculateSongScore } from "../song-score";
+import { prisma } from "../../prisma";
+import { calculateSongScore } from "../../song-score";
 
 // updateSongScore는 특정 아티스트의 곡 score 필드를 Spotify/TJ/YouTube 지표 기반으로 계산해 저장합니다.
 

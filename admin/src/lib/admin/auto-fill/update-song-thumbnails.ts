@@ -1,4 +1,4 @@
-import { prisma } from "../prisma";
+import { prisma } from "../../prisma";
 
 // updateSongThumbnails는 단일 아티스트의 곡 썸네일을 Spotify/YouTube 정보로 보완합니다.
 

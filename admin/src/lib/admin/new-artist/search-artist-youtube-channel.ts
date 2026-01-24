@@ -3,8 +3,8 @@ import { ChannelType } from "@prisma/client";
 import {
   fetchYoutubeChannel,
   searchYoutubeChannels,
-} from "../../thirdparty/youtube";
-import { prisma } from "../prisma";
+} from "../../../thirdparty/youtube";
+import { prisma } from "../../prisma";
 
 // mapArtistYoutubeChannel은 단일 아티스트의 유튜브 토픽/메인 채널을 검색해 DB에 반영합니다.
 
@@ -256,7 +256,9 @@ async function collectChannelCandidates(
   return candidates;
 }
 
-async function getChannelDetails(channelId: string): Promise<YoutubeChannelDetails> {
+async function getChannelDetails(
+  channelId: string,
+): Promise<YoutubeChannelDetails> {
   const data = await fetchYoutubeChannel({ channelId });
   const channel = data.items?.[0];
   if (!channel) {

@@ -22,7 +22,7 @@ import { prisma } from "../../lib/prisma.ts";
 import {
   mapSongYoutubeVideoFromSearch,
   type MapSongYoutubeVideoFromSearchOptions,
-} from "../../lib/admin/map-song-youtube-video-from-search.ts";
+} from "../../lib/admin/mapping/map-song-youtube-video-from-search.ts";
 
 type ParsedArgs = {
   artistIds: number[];
@@ -61,11 +61,16 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
 
     if (startId > endId) {
-      console.error(`❌ 범위가 올바르지 않습니다. 시작 ID(${startId})가 끝 ID(${endId})보다 큽니다.`);
+      console.error(
+        `❌ 범위가 올바르지 않습니다. 시작 ID(${startId})가 끝 ID(${endId})보다 큽니다.`,
+      );
       process.exit(1);
     }
 
-    artistIds = Array.from({ length: endId - startId + 1 }, (_, idx) => startId + idx);
+    artistIds = Array.from(
+      { length: endId - startId + 1 },
+      (_, idx) => startId + idx,
+    );
   } else {
     const artistId = Number.parseInt(numericArgs[0], 10);
     if (Number.isNaN(artistId)) {
@@ -111,7 +116,9 @@ function readNumberFlag(argv: string[], name: string): number | undefined {
   if (raw == null) return undefined;
   const parsed = Number(raw);
   if (Number.isNaN(parsed)) {
-    console.warn(`⚠️ ${name} 값 "${raw}" 을 숫자로 해석할 수 없습니다. 무시합니다.`);
+    console.warn(
+      `⚠️ ${name} 값 "${raw}" 을 숫자로 해석할 수 없습니다. 무시합니다.`,
+    );
     return undefined;
   }
   return parsed;
@@ -143,7 +150,9 @@ async function main() {
   );
 
   for (const artistId of artistIds) {
-    console.log(`\n==================== [Artist ID ${artistId}] ====================`);
+    console.log(
+      `\n==================== [Artist ID ${artistId}] ====================`,
+    );
     await mapSongYoutubeVideoFromSearch(artistId, options);
   }
 }

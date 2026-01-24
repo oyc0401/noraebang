@@ -1,6 +1,6 @@
-import { prisma } from "../prisma";
-import { searchYoutubeVideos } from "../../thirdparty/youtube";
-import { normalizeTitle } from "../track-title-normalizer";
+import { prisma } from "../../prisma";
+import { searchYoutubeVideos } from "../../../thirdparty/youtube";
+import { normalizeTitle } from "../../track-title-normalizer";
 
 // createSongFromTracksWithYoutubeSearch는 특정 아티스트의 인기도 50 이상인 미연결 SpotifyTrack에 대해
 // 아티스트의 토픽 채널 목록에서 유튜브 검색을 수행하고,

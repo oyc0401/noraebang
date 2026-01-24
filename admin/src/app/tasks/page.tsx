@@ -7,6 +7,7 @@ import { MAX_ARTIST } from "@/lib/admin/z-param";
 import {
   runAutoFillArtistNamesForArtist,
   runAutoFillSongTitlesForArtist,
+  runFetchProposeForArtist,
   runMapProposeSongForArtist,
   runMapSongYoutubeVideoForArtist,
   runMapSongYoutubeVideoFromSearchForArtist,
@@ -157,6 +158,11 @@ export default function AdminTasksPage() {
     runUpdateSongScoreForArtist,
     getRange,
   );
+  const fetchProposeTask = useArtistTask(
+    "fetchProposeForArtist",
+    runFetchProposeForArtist,
+    getRange,
+  );
 
   return (
     <div className="min-h-screen bg-zinc-50 py-4">
@@ -206,6 +212,12 @@ export default function AdminTasksPage() {
         </section>
 
         <div className="space-y-4">
+          <TaskCard
+            title="TJ 신청곡 수집"
+            description="fetchProposeForArtist: 아티스트의 tjName으로 TJ 신청곡을 검색하여 DB에 저장합니다."
+            task={fetchProposeTask}
+          />
+
           <TaskCard
             title="TJ 신청곡 → 곡 매핑"
             description="mapProposeSong: 지정 구간의 신청곡을 자동 매핑합니다."

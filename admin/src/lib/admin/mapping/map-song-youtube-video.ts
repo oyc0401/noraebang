@@ -1,6 +1,6 @@
-import { prisma } from "../prisma";
-import { findBestMatch } from "../song-spotify-matcher";
-import { normalizeTitle } from "../track-title-normalizer";
+import { prisma } from "../../prisma";
+import { findBestMatch } from "../../song-spotify-matcher";
+import { normalizeTitle } from "../../track-title-normalizer";
 
 // mapSongYoutubeVideo는 아티스트의 토픽 채널 영상 중 SongYoutubeVideo에 연결되지 않은 영상을 Song과 매칭합니다.
 // - 영상 제목과 Song의 title/titleKo/titleLatin/titleJa/spotifyTitle/musicBrainzTitle 비교
@@ -105,7 +105,9 @@ export async function mapSongYoutubeVideo(
   }
 
   console.log(`  • Artist: ${artist.name} (${artist.nameKo})`);
-  console.log(`  • Songs: ${songs.length}, Unmapped Videos: ${unmappedVideos.length}`);
+  console.log(
+    `  • Songs: ${songs.length}, Unmapped Videos: ${unmappedVideos.length}`,
+  );
 
   if (songs.length === 0 || unmappedVideos.length === 0) {
     console.log(`  ⏭️ No data to process`);
