@@ -1,6 +1,6 @@
 import { prisma } from "../../prisma";
 import { searchTJPropose } from "../../../thirdparty/tj/searchPropose";
-import { mapPropose } from "../mapping/map-propose-song";
+import { mapSinglePropose } from "../mapping/map-propose-song";
 
 export interface FetchProposeForArtistOptions {
   dryRun?: boolean;
@@ -166,7 +166,7 @@ export async function fetchProposeForArtist(
     if (newProposeIds.length > 0) {
       console.log(`  → 신규 ${newProposeIds.length}건 자동 매칭 시도...`);
       for (const proposeId of newProposeIds) {
-        const matchedSongId = await mapPropose(proposeId, artistId);
+        const matchedSongId = await mapSinglePropose(proposeId, artistId);
         if (matchedSongId) {
           stats.matched++;
         }

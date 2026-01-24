@@ -3,6 +3,8 @@
 import { autoFillArtistNames } from "@/lib/admin/auto-fill/auto-fill-artist-names";
 import { autoFillSongTitles } from "@/lib/admin/auto-fill/auto-fill-song-titles";
 import { fetchProposeForArtist } from "@/lib/admin/refresh/fetch-propose-for-artist";
+import { fetchSpotifyTracksForArtist } from "@/lib/admin/refresh/fetch-spotify-tracks-for-artist";
+import { fetchTopicVideosForArtist } from "@/lib/admin/refresh/fetch-topic-videos-for-artist";
 import { mapProposeSong } from "@/lib/admin/mapping/map-propose-song";
 import { mapSongYoutubeVideo } from "@/lib/admin/mapping/map-song-youtube-video";
 import { mapSongYoutubeVideoFromSearch } from "@/lib/admin/mapping/map-song-youtube-video-from-search";
@@ -80,4 +82,20 @@ export async function runFetchProposeForArtist(
 ): Promise<void> {
   const dryRun = Boolean(options.dryRun);
   await fetchProposeForArtist(artistId, { dryRun });
+}
+
+export async function runFetchSpotifyTracksForArtist(
+  artistId: number,
+  options: { dryRun?: boolean } = {},
+): Promise<void> {
+  const dryRun = Boolean(options.dryRun);
+  await fetchSpotifyTracksForArtist(artistId, { dryRun });
+}
+
+export async function runFetchTopicVideosForArtist(
+  artistId: number,
+  options: { dryRun?: boolean } = {},
+): Promise<void> {
+  const dryRun = Boolean(options.dryRun);
+  await fetchTopicVideosForArtist(artistId, { dryRun });
 }
