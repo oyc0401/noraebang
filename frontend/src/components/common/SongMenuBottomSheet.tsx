@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquarePlus, SendHorizonal, X } from "lucide-react";
+import { MessageSquarePlus, SendHorizonal, ThumbsUp, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import SpotifyIcon from "@/icons/spotify-filled.svg";
@@ -8,6 +8,7 @@ import YoutubeMusicIcon from "@/icons/youtube-music-filled.svg";
 import { cn } from "@/lib/cn";
 import { useReportDialogStore } from "@/store/reportDialogStore";
 import { useSongMenuStore } from "@/store/songMenuStore";
+import { useSongProposeDialogStore } from "@/store/songProposeDialogStore";
 
 export function SongMenuBottomSheet() {
   const { isOpen, song, closeMenu } = useSongMenuStore();
@@ -160,13 +161,33 @@ export function SongMenuBottomSheet() {
             <div className="h-px bg-white/10 my-2" />
           )}
 
-          {!hasTjNumber && (
+          {!hasTjNumber && song.bestProposeHit !== undefined && (
+            <a
+              href={`https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=${encodeURIComponent(song.artistTjName ?? song.artistName)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-4 px-3 py-3 w-full rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+              onClick={closeMenu}
+            >
+              <div className="w-7 h-7 flex items-center justify-center">
+                <ThumbsUp className="size-5 text-gray-400" />
+              </div>
+              <span className="text-white text-base">
+                TJ 노래 추천하기 ({song.bestProposeHit})
+              </span>
+            </a>
+          )}
+
+          {!hasTjNumber && song.bestProposeHit === undefined && (
             <button
               type="button"
               className="flex items-center gap-4 px-3 py-3 w-full rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
               onClick={() => {
-                // TODO: 노래 신청 다이얼로그 열기
                 closeMenu();
+                useSongProposeDialogStore.getState().openDialog({
+                  songTitle: song.originalTitle,
+                  artistName: song.artistTjName ?? song.artistName,
+                });
               }}
             >
               <div className="w-7 h-7 flex items-center justify-center">

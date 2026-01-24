@@ -75,6 +75,26 @@ export class TjSongDto {
   isOver60: boolean;
 }
 
+export class BestSongProposeDto {
+  @ApiProperty({ example: "YOASOBI" })
+  songSinger: string;
+
+  @ApiProperty({ example: "夜に駆ける" })
+  songTitle: string;
+
+  @ApiProperty({ example: "이 곡 정말 좋아요!" })
+  content: string;
+
+  @ApiProperty({ example: "익명" })
+  name: string;
+
+  @ApiProperty({ example: 42, description: "추천 수" })
+  hit: number;
+
+  @ApiProperty({ example: 1705123456789, description: "저장 시간 (Unix timestamp)" })
+  saveDate: number;
+}
+
 export class ArtistSongDto {
   @ApiProperty({ example: 1 })
   artistId: number;
@@ -162,4 +182,11 @@ export class SongDto {
     description: "YouTube 비디오 정보",
   })
   youtube?: YoutubeVideoInfoDto;
+
+  @ApiProperty({
+    type: BestSongProposeDto,
+    required: false,
+    description: "3개월 이내 가장 추천수가 높은 곡 추천 정보",
+  })
+  bestSongPropose?: BestSongProposeDto;
 }

@@ -382,6 +382,7 @@ model SongPropose {
 
   @@index([songId])
   @@index([query])
+  @@index([songId, saveDate, hit])
   @@map("song_propose")
 }
 

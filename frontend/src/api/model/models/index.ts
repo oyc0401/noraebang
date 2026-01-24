@@ -19,6 +19,7 @@ export * from './artistsControllerFindAllDetailsSort';
 export * from './artistsControllerFindAllParams';
 export * from './artistsControllerFindAllSort';
 export * from './authResponseDto';
+export * from './bestSongProposeDto';
 export * from './createReportDto';
 export * from './errorResponseDto';
 export * from './mobileAnonymousLoginDto';
