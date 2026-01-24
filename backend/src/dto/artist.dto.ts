@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { SongDto } from "./song.dto";
 import { SpotifyInfoDto } from "./spotify.dto";
 import { YoutubeInfoDto } from "./youtube.dto";
 
@@ -109,4 +110,7 @@ export class ArtistDetailsDto {
 
   @ApiProperty({ type: SpotifyInfoDto, required: false })
   spotify?: SpotifyInfoDto;
+
+  @ApiProperty({ type: [SongDto], required: false, description: "아티스트의 곡 목록" })
+  songs?: SongDto[];
 }

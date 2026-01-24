@@ -7,6 +7,7 @@
  */
 import type { YoutubeInfoDto } from './youtubeInfoDto';
 import type { SpotifyInfoDto } from './spotifyInfoDto';
+import type { SongDto } from './songDto';
 
 export interface ArtistDetailsDto {
   id: number;
@@ -24,4 +25,6 @@ export interface ArtistDetailsDto {
   tjName?: string;
   youtube?: YoutubeInfoDto;
   spotify?: SpotifyInfoDto;
+  /** 아티스트의 곡 목록 */
+  songs?: SongDto[];
 }
