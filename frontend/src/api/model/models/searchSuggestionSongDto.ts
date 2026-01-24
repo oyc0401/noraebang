@@ -5,7 +5,7 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-import type { KaraokeSongDto } from './karaokeSongDto';
+import type { TjSongDto } from './tjSongDto';
 
 export interface SearchSuggestionSongDto {
   /** 곡 ID */
@@ -22,8 +22,8 @@ export interface SearchSuggestionSongDto {
   artistName: string;
   /** 곡의 대표 아티스트 slug */
   artistSlug?: string;
-  /** 노래방 곡 정보 목록 */
-  karaokeSongs?: KaraokeSongDto[];
+  /** TJ 노래방 곡 정보 */
+  tjSong?: TjSongDto;
   /** 곡 썸네일 */
   thumbnail?: string;
 }

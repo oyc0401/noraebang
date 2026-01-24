@@ -139,10 +139,6 @@ export function SearchOverlay() {
 
             // 곡 카드
             if (card.song) {
-              const tjKaraoke = card.song.karaokeSongs?.find(
-                (k) => k.provider === "TJ",
-              );
-
               return (
                 <SongCard
                   key={`song-${card.song.id}`}
@@ -155,7 +151,7 @@ export function SearchOverlay() {
                     card.song.titleLatin,
                   )}
                   subtitle={card.song.artistName ?? ""}
-                  tjNumber={tjKaraoke?.karaokeNo}
+                  tjNumber={card.song.tjSong?.id}
                   onClick={() => {
                     if (card.song?.artistSlug) {
                       router.push(

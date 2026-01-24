@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { KaraokeSongDto } from "../../dto/song.dto";
+import { TjSongDto } from "../../dto/song.dto";
 
 export class SearchSuggestionSuggestionDto {
   @ApiProperty({ description: "추천 검색어 텍스트", example: "방탄소년단" })
@@ -83,11 +83,11 @@ export class SearchSuggestionSongDto {
   artistSlug?: string;
 
   @ApiProperty({
-    type: [KaraokeSongDto],
+    type: TjSongDto,
     required: false,
-    description: "노래방 곡 정보 목록",
+    description: "TJ 노래방 곡 정보",
   })
-  karaokeSongs?: KaraokeSongDto[];
+  tjSong?: TjSongDto;
 
   @ApiProperty({
     description: "곡 썸네일",

@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Provider } from "@prisma/client";
-import { ArtistDetailsDto, KaraokeSongDto, SongDto } from "../dto";
+import { ArtistDetailsDto, SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { TypesenseService } from "../typesense/typesense.service";
 import { SearchResultDto } from "./dto/search-response.dto";
@@ -14,11 +13,23 @@ type SongWithRelations = {
   titleKo: string | null;
   titleJa: string | null;
   titleLatin: string | null;
+  titleJaPronu: string | null;
+  titleLatinPronu: string | null;
   catalog: string | null;
   thumbnailDefault: string | null;
   thumbnailMedium: string | null;
   thumbnailHigh: string | null;
-  karaokeSongs: { provider: Provider; karaokeNo: string }[];
+  tjSong: {
+    id: string;
+    title: string;
+    artist: string | null;
+    lyricist: string | null;
+    composer: string | null;
+    publishdate: string | null;
+    isMR: boolean;
+    isMV: boolean;
+    isOver60: boolean;
+  } | null;
   artistSongs: {
     artistId: number;
     role: string | null;
@@ -44,8 +55,6 @@ type SongWithRelations = {
     };
   }[];
 };
-
-type TjSongMap = Record<string, { title: string; artist: string | null }>;
 
 type ArtistWithDetails = {
   id: number;
@@ -79,14 +88,23 @@ const SONG_SEARCH_SELECT = {
   titleKo: true,
   titleJa: true,
   titleLatin: true,
+  titleJaPronu: true,
+  titleLatinPronu: true,
   catalog: true,
   thumbnailDefault: true,
   thumbnailMedium: true,
   thumbnailHigh: true,
-  karaokeSongs: {
+  tjSong: {
     select: {
-      provider: true,
-      karaokeNo: true,
+      id: true,
+      title: true,
+      artist: true,
+      lyricist: true,
+      composer: true,
+      publishdate: true,
+      isMR: true,
+      isMV: true,
+      isOver60: true,
     },
   },
   artistSongs: {
@@ -152,32 +170,7 @@ export class SearchService {
     private readonly typesenseService: TypesenseService,
   ) {}
 
-  private async buildTjSongMap(songs: SongWithRelations[]): Promise<TjSongMap> {
-    const tjKaraokeNos = Array.from(
-      new Set(
-        songs
-          .flatMap((song) => song.karaokeSongs)
-          .filter((karaokeSong) => karaokeSong.provider === Provider.TJ)
-          .map((karaokeSong) => karaokeSong.karaokeNo),
-      ),
-    );
-
-    if (!tjKaraokeNos.length) {
-      return {};
-    }
-
-    const tjSongs = await this.prisma.tjSong.findMany({
-      where: { id: { in: tjKaraokeNos } },
-      select: { id: true, title: true, artist: true },
-    });
-
-    return tjSongs.reduce<TjSongMap>((acc, tjSong) => {
-      acc[tjSong.id] = { title: tjSong.title, artist: tjSong.artist ?? null };
-      return acc;
-    }, {});
-  }
-
-  private mapSongToDto(song: SongWithRelations, tjSongMap: TjSongMap): SongDto {
+  private mapSongToDto(song: SongWithRelations): SongDto {
     const spotifyTrack = song.songSpotifyTracks[0]?.spotifyTrack;
     const youtubeVideo = song.youtubeVideos[0]?.youtubeVideo;
 
@@ -187,6 +180,8 @@ export class SearchService {
       titleKo: song.titleKo ?? undefined,
       titleJa: song.titleJa ?? undefined,
       titleLatin: song.titleLatin ?? undefined,
+      titleJaPronu: song.titleJaPronu ?? undefined,
+      titleLatinPronu: song.titleLatinPronu ?? undefined,
       catalog: song.catalog ?? undefined,
       artists: song.artistSongs.map((artistSong) => ({
         artistId: artistSong.artistId,
@@ -195,20 +190,19 @@ export class SearchService {
         role: artistSong.role ?? undefined,
         slug: artistSong.artist.slug ?? undefined,
       })),
-      karaokeSongs: song.karaokeSongs.map((karaokeSong) => {
-        const dto: KaraokeSongDto = {
-          provider: karaokeSong.provider,
-          karaokeNo: karaokeSong.karaokeNo,
-        };
-
-        if (karaokeSong.provider === Provider.TJ) {
-          const details = tjSongMap[karaokeSong.karaokeNo];
-          dto.title = details?.title ?? null;
-          dto.artist = details?.artist ?? null;
-        }
-
-        return dto;
-      }),
+      tjSong: song.tjSong
+        ? {
+            id: song.tjSong.id,
+            title: song.tjSong.title,
+            artist: song.tjSong.artist ?? undefined,
+            lyricist: song.tjSong.lyricist ?? undefined,
+            composer: song.tjSong.composer ?? undefined,
+            publishdate: song.tjSong.publishdate ?? undefined,
+            isMR: song.tjSong.isMR,
+            isMV: song.tjSong.isMV,
+            isOver60: song.tjSong.isOver60,
+          }
+        : undefined,
       thumbnailDefault: song.thumbnailDefault ?? undefined,
       thumbnailMedium: song.thumbnailMedium ?? undefined,
       thumbnailHigh: song.thumbnailHigh ?? undefined,
@@ -291,8 +285,7 @@ export class SearchService {
       (a, b) => (songOrderMap.get(a.id) ?? 0) - (songOrderMap.get(b.id) ?? 0),
     );
 
-    const tjSongMap = await this.buildTjSongMap(sortedSongs);
-    return sortedSongs.map((song) => this.mapSongToDto(song, tjSongMap));
+    return sortedSongs.map((song) => this.mapSongToDto(song));
   }
 
   // 통합 검색 (아티스트 + 곡)
@@ -435,10 +428,9 @@ export class SearchService {
     });
 
     // 곡 결과 매핑
-    const tjSongMap = await this.buildTjSongMap(sortedSongs);
     const songResults: SearchResultDto[] = sortedSongs.map((song) => ({
       type: "song" as const,
-      song: this.mapSongToDto(song, tjSongMap),
+      song: this.mapSongToDto(song),
     }));
 
     // 아티스트 우선, 그 다음 곡
@@ -546,7 +538,6 @@ export class SearchService {
     }
 
     // 곡 카드 추가
-    const tjSongMap = await this.buildTjSongMap(sortedSongs);
     for (const song of sortedSongs) {
       const primaryArtist = song.artistSongs[0]?.artist;
       const artistNames = song.artistSongs.map((as) => as.artist.name).join(", ");
@@ -559,20 +550,19 @@ export class SearchService {
           titleLatin: song.titleLatin ?? undefined,
           artistName: artistNames || "Unknown",
           artistSlug: primaryArtist?.slug ?? undefined,
-          karaokeSongs: song.karaokeSongs.map((karaokeSong) => {
-            const dto: KaraokeSongDto = {
-              provider: karaokeSong.provider,
-              karaokeNo: karaokeSong.karaokeNo,
-            };
-
-            if (karaokeSong.provider === Provider.TJ) {
-              const details = tjSongMap[karaokeSong.karaokeNo];
-              dto.title = details?.title ?? null;
-              dto.artist = details?.artist ?? null;
-            }
-
-            return dto;
-          }),
+          tjSong: song.tjSong
+            ? {
+                id: song.tjSong.id,
+                title: song.tjSong.title,
+                artist: song.tjSong.artist ?? undefined,
+                lyricist: song.tjSong.lyricist ?? undefined,
+                composer: song.tjSong.composer ?? undefined,
+                publishdate: song.tjSong.publishdate ?? undefined,
+                isMR: song.tjSong.isMR,
+                isMV: song.tjSong.isMV,
+                isOver60: song.tjSong.isOver60,
+              }
+            : undefined,
           thumbnail: song.thumbnailMedium ?? song.thumbnailDefault ?? undefined,
         },
       });
@@ -600,10 +590,9 @@ export class SearchService {
 
       if (mappings.length > 0) {
         const songs = mappings.map((m) => m.song);
-        const tjSongMap = await this.buildTjSongMap(songs);
         console.log(`DB발견: ${videoId}, ${songs.length}개`);
         return {
-          songs: songs.map((song) => this.mapSongToDto(song, tjSongMap)),
+          songs: songs.map((song) => this.mapSongToDto(song)),
           matchedByVideoId: true,
         };
       }

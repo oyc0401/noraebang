@@ -32,20 +32,11 @@ export const SongCard = ({ song, isSelected, onClick }: Props) => (
       {song.titleKo && song.titleKo !== song.title && (
         <p className="text-sm text-zinc-400 truncate">{song.title}</p>
       )}
-      <div className="flex gap-2 mt-2 flex-wrap">
-        {song.karaokeSongs
-          ?.filter(
-            (k): k is typeof k & { provider: "TJ" | "KY" } =>
-              k.provider === "TJ" || k.provider === "KY",
-          )
-          .map((k, idx) => (
-            <KaraokeBadge
-              key={`${k.provider}-${k.karaokeNo}-${idx}`}
-              provider={k.provider}
-              number={k.karaokeNo}
-            />
-          ))}
-      </div>
+      {song.tjSong && (
+        <div className="flex gap-2 mt-2 flex-wrap">
+          <KaraokeBadge provider="TJ" number={song.tjSong.id} />
+        </div>
+      )}
     </div>
   </button>
 );
