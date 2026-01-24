@@ -133,6 +133,8 @@ export default function ArtistPageClient({
                 )}
                 subtitle={song.artists.map((a) => a.name).join(", ")}
                 tjNumber={tjNumber}
+                spotify={song.spotify}
+                youtube={song.youtube}
                 isSelected={selectedSongId === song.id.toString()}
                 onClick={() => {
                   const newHash = `#${song.id}`;

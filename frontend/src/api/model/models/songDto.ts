@@ -7,6 +7,8 @@
  */
 import type { ArtistSongDto } from './artistSongDto';
 import type { KaraokeSongDto } from './karaokeSongDto';
+import type { SpotifyTrackInfoDto } from './spotifyTrackInfoDto';
+import type { YoutubeVideoInfoDto } from './youtubeVideoInfoDto';
 
 export interface SongDto {
   id: number;
@@ -20,4 +22,8 @@ export interface SongDto {
   thumbnailDefault?: string;
   thumbnailMedium?: string;
   thumbnailHigh?: string;
+  /** Spotify 트랙 정보 */
+  spotify?: SpotifyTrackInfoDto;
+  /** YouTube 비디오 정보 */
+  youtube?: YoutubeVideoInfoDto;
 }

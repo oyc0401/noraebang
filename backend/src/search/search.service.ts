@@ -24,6 +24,24 @@ type SongWithRelations = {
     role: string | null;
     artist: { name: string; nameKo: string; slug: string | null };
   }[];
+  songSpotifyTracks: {
+    spotifyTrack: {
+      spotifyId: string;
+      name: string;
+      thumbnails: string[];
+      popularity: number | null;
+    };
+  }[];
+  youtubeVideos: {
+    youtubeVideo: {
+      videoId: string;
+      title: string | null;
+      thumbnailDefault: string | null;
+      thumbnailMedium: string | null;
+      thumbnailHigh: string | null;
+      viewCount: bigint | null;
+    };
+  }[];
 };
 
 type TjSongMap = Record<string, { title: string; artist: string | null }>;
@@ -83,6 +101,44 @@ const SONG_SEARCH_SELECT = {
       },
     },
   },
+  songSpotifyTracks: {
+    select: {
+      spotifyTrack: {
+        select: {
+          spotifyId: true,
+          name: true,
+          thumbnails: true,
+          popularity: true,
+        },
+      },
+    },
+    orderBy: {
+      spotifyTrack: {
+        popularity: "desc" as const,
+      },
+    },
+    take: 1,
+  },
+  youtubeVideos: {
+    select: {
+      youtubeVideo: {
+        select: {
+          videoId: true,
+          title: true,
+          thumbnailDefault: true,
+          thumbnailMedium: true,
+          thumbnailHigh: true,
+          viewCount: true,
+        },
+      },
+    },
+    orderBy: {
+      youtubeVideo: {
+        viewCount: "desc" as const,
+      },
+    },
+    take: 1,
+  },
 } as const;
 
 @Injectable()
@@ -120,6 +176,9 @@ export class SearchService {
   }
 
   private mapSongToDto(song: SongWithRelations, tjSongMap: TjSongMap): SongDto {
+    const spotifyTrack = song.songSpotifyTracks[0]?.spotifyTrack;
+    const youtubeVideo = song.youtubeVideos[0]?.youtubeVideo;
+
     return {
       id: song.id,
       title: song.title,
@@ -151,6 +210,22 @@ export class SearchService {
       thumbnailDefault: song.thumbnailDefault ?? undefined,
       thumbnailMedium: song.thumbnailMedium ?? undefined,
       thumbnailHigh: song.thumbnailHigh ?? undefined,
+      spotify: spotifyTrack
+        ? {
+            spotifyId: spotifyTrack.spotifyId,
+            name: spotifyTrack.name,
+            thumbnails: spotifyTrack.thumbnails,
+          }
+        : undefined,
+      youtube: youtubeVideo
+        ? {
+            videoId: youtubeVideo.videoId,
+            title: youtubeVideo.title ?? undefined,
+            thumbnailDefault: youtubeVideo.thumbnailDefault ?? undefined,
+            thumbnailMedium: youtubeVideo.thumbnailMedium ?? undefined,
+            thumbnailHigh: youtubeVideo.thumbnailHigh ?? undefined,
+          }
+        : undefined,
     };
   }
 
