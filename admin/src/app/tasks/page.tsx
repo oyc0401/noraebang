@@ -10,6 +10,7 @@ import {
   runFetchProposeForArtist,
   runFetchSpotifyTracksForArtist,
   runFetchTopicVideosForArtist,
+  runFetchNewTjSongs,
   runMapProposeSongForArtist,
   runMapSongYoutubeVideoForArtist,
   runMapSongYoutubeVideoFromSearchForArtist,
@@ -27,6 +28,49 @@ type RangeParams = {
   startId: string;
   endId: string;
 };
+
+function useGlobalTask(
+  taskName: string,
+  action: (options: { dryRun: boolean }) => Promise<void>,
+  defaultDryRun = true,
+) {
+  const [dryRun, setDryRun] = useState(defaultDryRun);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const run = () => {
+    startTransition(() => {
+      setError(null);
+      setSummary(`실행 중... (${dryRun ? "dry-run" : "실제"})`);
+
+      (async () => {
+        try {
+          await action({ dryRun });
+          console.log(`[${taskName}] 완료`);
+          setSummary("완료");
+        } catch (err) {
+          const message =
+            err instanceof Error
+              ? err.message
+              : "알 수 없는 오류가 발생했습니다.";
+          setError(message);
+          setSummary("실패");
+          console.error(`[${taskName}] 실패: ${message}`);
+        }
+      })();
+    });
+  };
+
+  return {
+    dryRun,
+    setDryRun,
+    summary,
+    error,
+    pending,
+    run,
+  };
+}
 
 function useArtistTask(
   taskName: string,
@@ -176,6 +220,12 @@ export default function AdminTasksPage() {
     getRange,
   );
 
+  // 전역 작업 (아티스트 범위 무관)
+  const fetchNewTjSongsTask = useGlobalTask(
+    "fetchNewTjSongs",
+    runFetchNewTjSongs,
+  );
+
   return (
     <div className="min-h-screen bg-zinc-50 py-4">
       <div className="w-full px-2 sm:px-3">
@@ -222,6 +272,21 @@ export default function AdminTasksPage() {
             </div>
           </div>
         </section>
+
+        {/* 전역 작업 (아티스트 범위 무관) */}
+        <section className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+          <span className="text-sm font-semibold text-green-700">
+            전역 작업 (아티스트 범위 무관)
+          </span>
+        </section>
+
+        <div className="mb-6 space-y-4">
+          <GlobalTaskCard
+            title="TJ 최신곡 수집 + Song 연결"
+            description="fetchNewTjSongs: 현재 월 TJ 최신곡을 가져와 TjSong에 저장하고, 아티스트 매칭 후 Song.tjSongId를 연결합니다."
+            task={fetchNewTjSongsTask}
+          />
+        </div>
 
         <div className="space-y-4">
           <TaskCard
@@ -294,6 +359,49 @@ export default function AdminTasksPage() {
 }
 
 type ArtistTask = ReturnType<typeof useArtistTask>;
+type GlobalTask = ReturnType<typeof useGlobalTask>;
+
+function GlobalTaskCard({
+  title,
+  description,
+  task,
+}: {
+  title: string;
+  description: string;
+  task: GlobalTask;
+}) {
+  return (
+    <section className="rounded-xl border border-green-200 bg-white px-4 py-3 shadow-sm">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="md:w-1/3">
+          <h2 className="text-base font-bold text-zinc-900">{title}</h2>
+          <p className="text-xs text-zinc-500">{description}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <DryRunToggle checked={task.dryRun} onChange={task.setDryRun} />
+        </div>
+        <div className="flex flex-col gap-2 md:w-48">
+          <button
+            type="button"
+            onClick={task.run}
+            disabled={task.pending}
+            className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {task.pending ? "실행 중..." : "실행"}
+          </button>
+          <p className="text-center text-[11px] text-zinc-500">
+            {task.summary ?? "미실행"}
+          </p>
+          {task.error && (
+            <p className="text-center text-xs font-semibold text-red-600">
+              {task.error}
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function TaskCard({
   title,

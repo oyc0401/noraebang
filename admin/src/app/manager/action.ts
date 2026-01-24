@@ -2546,7 +2546,7 @@ export async function refreshSongThumbnail(
 
 // ========== TJ 신청곡 수집/매핑 ==========
 
-import { fetchProposeForArtist } from "@/lib/admin/refresh/fetch-propose-for-artist";
+import { fetchProposeForArtist } from "@/lib/admin/refresh/fetch-refresh-propose";
 import { mapProposeSong } from "@/lib/admin/mapping/map-propose-song";
 
 export async function runFetchProposeForArtist(artistId: number) {

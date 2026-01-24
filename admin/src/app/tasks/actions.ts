@@ -2,9 +2,10 @@
 
 import { autoFillArtistNames } from "@/lib/admin/auto-fill/auto-fill-artist-names";
 import { autoFillSongTitles } from "@/lib/admin/auto-fill/auto-fill-song-titles";
-import { fetchProposeForArtist } from "@/lib/admin/refresh/fetch-propose-for-artist";
-import { fetchSpotifyTracksForArtist } from "@/lib/admin/refresh/fetch-spotify-tracks-for-artist";
-import { fetchTopicVideosForArtist } from "@/lib/admin/refresh/fetch-topic-videos-for-artist";
+import { fetchProposeForArtist } from "@/lib/admin/refresh/fetch-refresh-propose";
+import { fetchSpotifyTracksForArtist } from "@/lib/admin/refresh/fetch-spotify-tracks";
+import { fetchTopicVideosForArtist } from "@/lib/admin/refresh/fetch-youtube-videos";
+import { fetchNewTjSongs } from "@/lib/admin/new-song-detection/fetch-new-tj-songs";
 import { mapProposeSong } from "@/lib/admin/mapping/map-propose-song";
 import { mapSongYoutubeVideo } from "@/lib/admin/mapping/map-song-youtube-video";
 import { mapSongYoutubeVideoFromSearch } from "@/lib/admin/mapping/map-song-youtube-video-from-search";
@@ -98,4 +99,11 @@ export async function runFetchTopicVideosForArtist(
 ): Promise<void> {
   const dryRun = Boolean(options.dryRun);
   await fetchTopicVideosForArtist(artistId, { dryRun });
+}
+
+export async function runFetchNewTjSongs(
+  options: { dryRun?: boolean; yearMonth?: string } = {},
+): Promise<void> {
+  const dryRun = Boolean(options.dryRun);
+  await fetchNewTjSongs({ dryRun, yearMonth: options.yearMonth });
 }
