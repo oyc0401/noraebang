@@ -203,7 +203,7 @@ export class SearchController {
   ): Promise<RecentSearchesResponseDto> {
     const [recents, populars] = await Promise.all([
       user ? this.searchService.getRecentSearches(user.id, 10) : [],
-      this.searchService.getPopularSearches(8),
+      this.searchService.getPopularSearches(10),
     ]);
 
     return {

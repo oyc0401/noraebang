@@ -14,11 +14,6 @@ import { formatSongTitle } from "@/lib/formatSongTitle";
 import { hasIncompleteKorean } from "@/lib/korean";
 import { useSearchStore } from "@/store/searchStore";
 
-type SuggestionItem = {
-  term: string;
-  type: "recent" | "popular";
-};
-
 export function SearchOverlay() {
   const router = useRouter();
   const pathname = usePathname();
@@ -52,32 +47,18 @@ export function SearchOverlay() {
     query: { enabled: query.length === 0 },
   });
 
-  // 인기 검색어 + 최근 검색어 (총 8개, 인기 최소 2개~최대 8개)
-  const combinedSuggestions = useMemo((): SuggestionItem[] => {
-    const recents = searchSuggestions?.data?.recents ?? [];
-    const populars = searchSuggestions?.data?.populars ?? [];
-
-    const result: SuggestionItem[] = [];
-
-    // 최근검색어 개수 (최대 5개)
-    const recentCount = Math.min(recents.length, 5);
-    // 인기검색어 개수 (최소 2개, 8 - 최근개수)
-    const popularCount = Math.max(2, 8 - recentCount);
-
-    // 인기 검색어 먼저
-    for (const term of populars.slice(0, popularCount)) {
-      result.push({ term, type: "popular" });
-    }
-
-    // 최근 검색어
-    for (const term of recents.slice(0, recentCount)) {
-      result.push({ term, type: "recent" });
-    }
-
-    return result;
+  // 최근 검색어 10개, 인기 검색어 10개
+  const recentSearches = useMemo(() => {
+    return (searchSuggestions?.data?.recents ?? []).slice(0, 10);
   }, [searchSuggestions]);
 
-  const showSuggestions = query.length === 0 && combinedSuggestions.length > 0;
+  const popularSearches = useMemo(() => {
+    return (searchSuggestions?.data?.populars ?? []).slice(0, 10);
+  }, [searchSuggestions]);
+
+  const showSuggestions =
+    query.length === 0 &&
+    (recentSearches.length > 0 || popularSearches.length > 0);
 
   return (
     <div className="bg-background-dark flex flex-col">
@@ -165,26 +146,46 @@ export function SearchOverlay() {
 
             return null;
           })}
-        {/* 최근/인기 검색어 표시 (검색어가 비어있을 때) */}
-        {showSuggestions &&
-          combinedSuggestions.map((item) => (
-            <button
-              key={`suggestion-${item.type}-${item.term}`}
-              type="button"
-              onClick={() => {
-                setQuery(item.term);
-                router.push(`/search?q=${encodeURIComponent(item.term)}`);
-              }}
-              className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
-            >
-              {item.type === "recent" ? (
+        {/* 최근 검색어 섹션 (검색어가 비어있을 때) */}
+        {showSuggestions && recentSearches.length > 0 && (
+          <>
+            <div className="p-2 text-gray-400 text-sm">최근 검색어</div>
+            {recentSearches.map((term) => (
+              <button
+                key={`recent-${term}`}
+                type="button"
+                onClick={() => {
+                  setQuery(term);
+                  router.push(`/search?q=${encodeURIComponent(term)}`);
+                }}
+                className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
+              >
                 <Clock className="size-5 text-gray-400" />
-              ) : (
+                <span className="text-white flex-1">{term}</span>
+              </button>
+            ))}
+          </>
+        )}
+        {/* 인기 검색어 섹션 */}
+        {showSuggestions && popularSearches.length > 0 && (
+          <>
+            <div className="p-2 text-gray-400 text-sm mt-4">인기 검색어</div>
+            {popularSearches.map((term) => (
+              <button
+                key={`popular-${term}`}
+                type="button"
+                onClick={() => {
+                  setQuery(term);
+                  router.push(`/search?q=${encodeURIComponent(term)}`);
+                }}
+                className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
+              >
                 <Flame className="size-5 text-gray-400" />
-              )}
-              <span className="text-white flex-1">{item.term}</span>
-            </button>
-          ))}
+                <span className="text-white flex-1">{term}</span>
+              </button>
+            ))}
+          </>
+        )}
         {/* 검색어 비어있고 추천 검색어 없을 때 */}
         {query.length === 0 && !showSuggestions && (
           <div className="text-center text-gray-400 py-8">
