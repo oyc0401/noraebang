@@ -8,6 +8,7 @@ interface SongMenuData {
   id: number;
   title: string;
   artistName: string;
+  artistId?: number;
   tjNumber?: string;
   spotify?: SpotifyTrackInfoDto;
   youtube?: YoutubeVideoInfoDto;

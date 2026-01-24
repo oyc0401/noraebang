@@ -9,6 +9,8 @@
 export interface YoutubeVideoInfoDto {
   videoId: string;
   title?: string;
+  viewCount?: number;
+  publishedYear?: number;
   thumbnailDefault?: string;
   thumbnailMedium?: string;
   thumbnailHigh?: string;

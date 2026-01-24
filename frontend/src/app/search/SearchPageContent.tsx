@@ -117,6 +117,7 @@ export function SearchPageContent() {
                   <SongCard
                     key={`song-${song.id}`}
                     songId={song.id}
+                    artistId={artistForDisplay?.artistId}
                     thumbnail={song.thumbnailMedium}
                     title={formatSongTitle(
                       song.title,

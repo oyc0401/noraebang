@@ -58,6 +58,7 @@ type SongDtoData = {
       thumbnailMedium: string | null;
       thumbnailHigh: string | null;
       viewCount: bigint | null;
+      publishedAt: Date | null;
     };
   }[];
 };
@@ -125,6 +126,7 @@ export class SongsService {
             thumbnailMedium: true,
             thumbnailHigh: true,
             viewCount: true,
+            publishedAt: true,
           },
         },
       },
@@ -210,6 +212,12 @@ export class SongsService {
         ? {
             videoId: youtubeVideo.videoId,
             title: youtubeVideo.title ?? undefined,
+            viewCount: youtubeVideo.viewCount
+              ? Number(youtubeVideo.viewCount)
+              : undefined,
+            publishedYear: youtubeVideo.publishedAt
+              ? youtubeVideo.publishedAt.getFullYear()
+              : undefined,
             thumbnailDefault: youtubeVideo.thumbnailDefault ?? undefined,
             thumbnailMedium: youtubeVideo.thumbnailMedium ?? undefined,
             thumbnailHigh: youtubeVideo.thumbnailHigh ?? undefined,

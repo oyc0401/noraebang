@@ -21,6 +21,12 @@ export class YoutubeVideoInfoDto {
   @ApiProperty({ example: "夜に駆ける", required: false })
   title?: string;
 
+  @ApiProperty({ example: 100000000, required: false })
+  viewCount?: number;
+
+  @ApiProperty({ example: 2020, required: false })
+  publishedYear?: number;
+
   @ApiProperty({
     example: "https://i.ytimg.com/vi/x8VYWazR5mE/default.jpg",
     required: false,

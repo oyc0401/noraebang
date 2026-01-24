@@ -1,11 +1,12 @@
 "use client";
 
-import { Pencil, SendHorizonal, X } from "lucide-react";
+import { MessageSquarePlus, SendHorizonal, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import SpotifyIcon from "@/icons/spotify-filled.svg";
 import YoutubeMusicIcon from "@/icons/youtube-music-filled.svg";
 import { cn } from "@/lib/cn";
+import { useReportDialogStore } from "@/store/reportDialogStore";
 import { useSongMenuStore } from "@/store/songMenuStore";
 
 export function SongMenuBottomSheet() {
@@ -49,6 +50,19 @@ export function SongMenuBottomSheet() {
 
   const hasTjNumber = !!song.tjNumber;
 
+  const formatViewCount = (count: number): string => {
+    if (count >= 100000000) {
+      return `${Math.floor(count / 100000000)}억회`;
+    }
+    if (count >= 10000) {
+      return `${Math.floor(count / 10000)}만회`;
+    }
+    if (count >= 1000) {
+      return `${Math.floor(count / 1000)}천회`;
+    }
+    return `${count}회`;
+  };
+
   return (
     <>
       {/* 오버레이 */}
@@ -91,7 +105,7 @@ export function SongMenuBottomSheet() {
               href={`https://open.spotify.com/track/${song.spotify.spotifyId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+              className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
               onClick={closeMenu}
             >
               <Image
@@ -101,7 +115,14 @@ export function SongMenuBottomSheet() {
                 height={28}
                 className="shrink-0"
               />
-              <span className="text-white text-base">Spotify에서 듣기</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-white text-sm truncate">
+                  {song.spotify.name}
+                </span>
+                <span className="text-gray-400 text-xs truncate">
+                  {song.artistName}
+                </span>
+              </div>
             </a>
           )}
 
@@ -110,7 +131,7 @@ export function SongMenuBottomSheet() {
               href={`https://music.youtube.com/watch?v=${song.youtube.videoId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+              className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
               onClick={closeMenu}
             >
               <Image
@@ -120,7 +141,18 @@ export function SongMenuBottomSheet() {
                 height={28}
                 className="shrink-0"
               />
-              <span className="text-white text-base">YouTube Music에서 듣기</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-white text-sm truncate">
+                  {song.youtube.title ?? song.title}
+                </span>
+                <span className="text-gray-400 text-xs truncate">
+                  {song.artistName}
+                  {song.youtube.viewCount &&
+                    ` · ${formatViewCount(song.youtube.viewCount)}`}
+                  {song.youtube.publishedYear &&
+                    ` · ${song.youtube.publishedYear}년`}
+                </span>
+              </div>
             </a>
           )}
 
@@ -128,21 +160,7 @@ export function SongMenuBottomSheet() {
             <div className="h-px bg-white/10 my-2" />
           )}
 
-          {hasTjNumber ? (
-            <button
-              type="button"
-              className="flex items-center gap-4 px-3 py-3 w-full rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
-              onClick={() => {
-                // TODO: 정보수정 다이얼로그 열기
-                closeMenu();
-              }}
-            >
-              <div className="w-7 h-7 flex items-center justify-center">
-                <Pencil className="size-5 text-gray-400" />
-              </div>
-              <span className="text-white text-base">정보 수정하기</span>
-            </button>
-          ) : (
+          {!hasTjNumber && (
             <button
               type="button"
               className="flex items-center gap-4 px-3 py-3 w-full rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
@@ -157,6 +175,26 @@ export function SongMenuBottomSheet() {
               <span className="text-white text-base">노래 신청하기</span>
             </button>
           )}
+
+          {/* <div className="h-px bg-white/10 my-2" /> */}
+          <button
+            type="button"
+            className="flex items-center gap-4 px-3 py-3 w-full rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+            onClick={() => {
+              closeMenu();
+              useReportDialogStore.getState().openDialog({
+                songId: song.id,
+                songTitle: song.title,
+                artistName: song.artistName,
+                artistId: song.artistId,
+              });
+            }}
+          >
+            <div className="w-7 h-7 flex items-center justify-center">
+              <MessageSquarePlus className="size-5 text-gray-400" />
+            </div>
+            <span className="text-white text-base">정보 개선하기</span>
+          </button>
         </div>
 
         {/* 하단 안전 영역 */}

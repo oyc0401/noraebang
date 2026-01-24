@@ -3,6 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { ArtistsModule } from "./artists/artists.module";
 import { AuthModule } from "./auth/auth.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { ReportsModule } from "./reports/reports.module";
 import { SearchModule } from "./search/search.module";
 import { SongsModule } from "./songs/songs.module";
 import { TypesenseModule } from "./typesense/typesense.module";
@@ -18,6 +19,7 @@ import { TypesenseModule } from "./typesense/typesense.module";
     SearchModule,
     ArtistsModule,
     SongsModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],

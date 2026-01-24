@@ -17,7 +17,6 @@ import { useSearchStore } from "@/store/searchStore";
 
 export function LinkPasteCard() {
   const router = useRouter();
-  const { setQuery, setSearchActive } = useSearchStore();
   const { saveSearchClick } = useSearchTracking();
   const [foundSong, setFoundSong] = useState<SongDto | undefined>(undefined);
   const [foundSongUrl, setFoundSongUrl] = useState<string | undefined>(
@@ -175,19 +174,6 @@ export function LinkPasteCard() {
               className="flex items-center justify-center pr-2 hover:opacity-80 transition-opacity active:scale-95"
             >
               <Image src={SpotifyIcon} alt="Spotify" width={44} height={44} />
-            </a>
-            <a
-              href="https://music.apple.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
-            >
-              <Image
-                src={AppleMusicIcon}
-                alt="Apple Music"
-                width={44}
-                height={44}
-              />
             </a>
           </div>
           <button
