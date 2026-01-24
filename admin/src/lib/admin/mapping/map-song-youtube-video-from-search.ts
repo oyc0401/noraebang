@@ -1,6 +1,6 @@
-import { prisma } from "../prisma";
-import { findBestMatch as findMatch } from "../song-spotify-matcher";
-import { normalizeTitle } from "../track-title-normalizer";
+import { prisma } from "../../prisma";
+import { findBestMatch as findMatch } from "../../song-spotify-matcher";
+import { normalizeTitle } from "../../track-title-normalizer";
 import {
   searchUnlinkedSongYoutube,
   type SearchUnlinkedSongYoutubeOptions,

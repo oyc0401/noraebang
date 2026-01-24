@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import { updateSongThumbnails } from "../../lib/admin/update-song-thumbnails";
+import { updateSongThumbnails } from "../../lib/admin/auto-fill/update-song-thumbnails";
 import { prisma } from "../../lib/prisma";
 
 async function main() {

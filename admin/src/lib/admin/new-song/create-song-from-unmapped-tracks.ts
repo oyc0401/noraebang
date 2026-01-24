@@ -1,6 +1,6 @@
-import { prisma } from "../prisma";
-import { findBestMatch } from "../song-spotify-matcher";
-import { normalizeTitle } from "../track-title-normalizer";
+import { prisma } from "../../prisma";
+import { findBestMatch } from "../../song-spotify-matcher";
+import { normalizeTitle } from "../../track-title-normalizer";
 
 // createSongFromUnmappedTracks는 아티스트의 미연결 SpotifyTrack들 중에서
 // 해당 아티스트의 YoutubeVideo와 매칭되지만 Song이 없는 경우, Song을 생성하고

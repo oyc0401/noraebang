@@ -1,4 +1,4 @@
-import { prisma } from "../prisma";
+import { prisma } from "../../prisma";
 // autoFillSongTitles는 단일 아티스트의 곡에 대해 Spotify 트랙/유튜브 비디오/곡 제목 정보를 기반으로 미채워진 언어별 제목 필드를 자동 보완합니다.
 // 프로세스:
 //   1. 아티스트 곡 목록을 가져와 titleKo/titleJa/titleLatin 현재 값 확인

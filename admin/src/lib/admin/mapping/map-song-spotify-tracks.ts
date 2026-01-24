@@ -1,6 +1,6 @@
-import { prisma } from "../prisma";
-import { findBestMatch } from "../song-spotify-matcher";
-import { normalizeTitle } from "../track-title-normalizer";
+import { prisma } from "../../prisma";
+import { findBestMatch } from "../../song-spotify-matcher";
+import { normalizeTitle } from "../../track-title-normalizer";
 
 // mapSongSpotifyTracks는 특정 아티스트의 스포티파이 트랙(songId 미지정)을 Song과 매칭하여 연결합니다.
 // - songId가 null인 트랙들을 대상으로 매칭 수행
@@ -105,7 +105,12 @@ function generateMappings(data: ArtistData): Mapping[] {
   const normalizedToSong = new Map<string, ArtistData["songs"][number]>();
 
   for (const song of data.songs) {
-    for (const title of [song.title, song.titleKo, song.titleLatin, song.titleJa]) {
+    for (const title of [
+      song.title,
+      song.titleKo,
+      song.titleLatin,
+      song.titleJa,
+    ]) {
       if (title?.trim()) {
         titleToSong.set(title, song);
         normalizedToSong.set(normalizeTitle(title), song);
@@ -121,11 +126,16 @@ function generateMappings(data: ArtistData): Mapping[] {
     // 1순위: musicBrainzTitle로 매칭
     if (track.musicBrainzTitle?.trim()) {
       // O(1) 완전 일치 먼저 시도
-      matchedSong = normalizedToSong.get(normalizeTitle(track.musicBrainzTitle));
+      matchedSong = normalizedToSong.get(
+        normalizeTitle(track.musicBrainzTitle),
+      );
 
       // 실패시 findBestMatch (유사도 비교)
       if (!matchedSong) {
-        const result = findBestMatch(track.musicBrainzTitle, songTitleCandidates);
+        const result = findBestMatch(
+          track.musicBrainzTitle,
+          songTitleCandidates,
+        );
         if (result.answer) {
           matchedSong = titleToSong.get(result.answer);
         }
@@ -243,7 +253,5 @@ export async function mapSongSpotifyTracks(
     dryRun,
   });
 
-  console.log(
-    `  • 결과: applied=${applied}, errors=${errors}`,
-  );
+  console.log(`  • 결과: applied=${applied}, errors=${errors}`);
 }

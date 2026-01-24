@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import { mapSongSpotifyTracks } from "../../../lib/admin/map-song-spotify-tracks";
+import { mapSongSpotifyTracks } from "../../../lib/admin/mapping/map-song-spotify-tracks";
 import { prisma } from "../../../lib/prisma";
 
 function parseArgs() {

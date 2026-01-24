@@ -2546,8 +2546,8 @@ export async function refreshSongThumbnail(
 
 // ========== TJ 신청곡 수집/매핑 ==========
 
-import { fetchProposeForArtist } from "@/lib/admin/fetch-propose-for-artist";
-import { mapProposeSong } from "@/lib/admin/map-propose-song";
+import { fetchProposeForArtist } from "@/lib/admin/refresh/fetch-propose-for-artist";
+import { mapProposeSong } from "@/lib/admin/mapping/map-propose-song";
 
 export async function runFetchProposeForArtist(artistId: number) {
   if (!artistId || Number.isNaN(artistId)) {
@@ -2562,7 +2562,6 @@ export async function runMapProposeSong(artistId: number) {
   }
   return mapProposeSong(artistId);
 }
-
 
 // Song에 연결되지 않은 스포티파이 트랙 가져오기 (orphan tracks)
 export type UnlinkedSpotifyTrack = {
@@ -2607,7 +2606,9 @@ export async function fetchUnlinkedSpotifyTracks(
   });
 
   return artistTracks
-    .filter((record) => record.spotifyTrack && record.spotifyTrack.songs.length === 0)
+    .filter(
+      (record) => record.spotifyTrack && record.spotifyTrack.songs.length === 0,
+    )
     .map((record) => ({
       id: record.spotifyTrack.id,
       name: record.spotifyTrack.name,
