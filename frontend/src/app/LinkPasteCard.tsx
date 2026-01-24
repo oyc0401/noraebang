@@ -84,7 +84,7 @@ export function LinkPasteCard() {
     }
   };
 
-  const tjSong = foundSong?.karaokeSongs?.find((ks) => ks.provider === "TJ");
+  const tjSong = foundSong?.tjSong;
   const artist = foundSong?.artists?.[0];
   const artistName = artist
     ? `${artist.nameKo} (${artist.name})`
@@ -136,7 +136,7 @@ export function LinkPasteCard() {
               <p className="text-sm text-surface-text truncate">{artistName}</p>
               {tjSong && (
                 <div className="mt-1">
-                  <KaraokeBadge provider="TJ" number={tjSong.karaokeNo} />
+                  <KaraokeBadge provider="TJ" number={tjSong.id} />
                 </div>
               )}
             </div>

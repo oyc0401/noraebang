@@ -109,10 +109,6 @@ export function SearchPageContent() {
                 const artistForDisplay =
                   primaryArtistWithSlug ?? fallbackArtist ?? null;
 
-                const tjKaraoke = song.karaokeSongs?.find(
-                  (k) => k.provider === "TJ",
-                );
-
                 return (
                   <SongCard
                     key={`song-${song.id}`}
@@ -126,7 +122,7 @@ export function SearchPageContent() {
                       song.titleLatin,
                     )}
                     subtitle={artistForDisplay?.nameKo ?? ""}
-                    tjNumber={tjKaraoke?.karaokeNo}
+                    tjNumber={song.tjSong?.id}
                     spotify={song.spotify}
                     youtube={song.youtube}
                     onClick={() => {

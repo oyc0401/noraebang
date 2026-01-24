@@ -46,18 +46,33 @@ export class YoutubeVideoInfoDto {
   thumbnailHigh?: string;
 }
 
-export class KaraokeSongDto {
-  @ApiProperty({ example: "TJ" })
-  provider: string;
-
+export class TjSongDto {
   @ApiProperty({ example: "12345" })
-  karaokeNo: string;
+  id: string;
 
-  @ApiProperty({ example: "밤편지", required: false, nullable: true })
-  title?: string | null;
+  @ApiProperty({ example: "밤편지" })
+  title: string;
 
-  @ApiProperty({ example: "아이유", required: false, nullable: true })
-  artist?: string | null;
+  @ApiProperty({ example: "아이유", required: false })
+  artist?: string;
+
+  @ApiProperty({ example: "작사가", required: false })
+  lyricist?: string;
+
+  @ApiProperty({ example: "작곡가", required: false })
+  composer?: string;
+
+  @ApiProperty({ example: "2024-01-01", required: false })
+  publishdate?: string;
+
+  @ApiProperty({ example: false })
+  isMR: boolean;
+
+  @ApiProperty({ example: false })
+  isMV: boolean;
+
+  @ApiProperty({ example: false })
+  isOver60: boolean;
 }
 
 export class ArtistSongDto {
@@ -101,14 +116,20 @@ export class SongDto {
   @ApiProperty({ example: "Yoru ni Kakeru", required: false })
   titleLatin?: string;
 
+  @ApiProperty({ example: "yorunikakeru", required: false })
+  titleJaPronu?: string;
+
+  @ApiProperty({ example: "yorunikakeru", required: false })
+  titleLatinPronu?: string;
+
   @ApiProperty({ example: "JPOP", required: false })
   catalog?: string;
 
   @ApiProperty({ type: [ArtistSongDto] })
   artists: ArtistSongDto[];
 
-  @ApiProperty({ type: [KaraokeSongDto], required: false })
-  karaokeSongs?: KaraokeSongDto[];
+  @ApiProperty({ type: TjSongDto, required: false })
+  tjSong?: TjSongDto;
 
   @ApiProperty({
     example: "https://i.ytimg.com/vi/x8VYWazR5mE/default.jpg",

@@ -96,17 +96,16 @@ export const SearchResults = () => {
                           {result.song.title}
                         </p>
                       )}
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {result.song.karaokeSongs?.map((k, idx) => (
+                    {result.song.tjSong && (
+                      <div className="flex gap-2 mt-2 flex-wrap">
                         <KaraokeBadge
-                          key={`${k.provider}-${k.karaokeNo}-${idx}`}
-                          provider={k.provider as "TJ" | "KY" | "JOYSOUND"}
-                          karaokeNo={k.karaokeNo}
-                          title={k.title}
-                          artist={k.artist}
+                          provider="TJ"
+                          karaokeNo={result.song.tjSong.id}
+                          title={result.song.tjSong.title}
+                          artist={result.song.tjSong.artist}
                         />
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

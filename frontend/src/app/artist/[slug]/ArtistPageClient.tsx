@@ -116,9 +116,7 @@ export default function ArtistPageClient({
       {songs.length > 0 && (
         <div className="flex flex-col pb-10 px-2">
           {songs.map((song) => {
-            const tjNumber = song.karaokeSongs?.find(
-              (k) => k.provider === "TJ",
-            )?.karaokeNo;
+            const tjNumber = song.tjSong?.id;
             return (
               <SongCard
                 key={song.id}

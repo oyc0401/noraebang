@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { ArtistSongDto } from './artistSongDto';
-import type { KaraokeSongDto } from './karaokeSongDto';
+import type { TjSongDto } from './tjSongDto';
 import type { SpotifyTrackInfoDto } from './spotifyTrackInfoDto';
 import type { YoutubeVideoInfoDto } from './youtubeVideoInfoDto';
 
@@ -16,9 +16,11 @@ export interface SongDto {
   titleKo?: string;
   titleJa?: string;
   titleLatin?: string;
+  titleJaPronu?: string;
+  titleLatinPronu?: string;
   catalog?: string;
   artists: ArtistSongDto[];
-  karaokeSongs?: KaraokeSongDto[];
+  tjSong?: TjSongDto;
   thumbnailDefault?: string;
   thumbnailMedium?: string;
   thumbnailHigh?: string;

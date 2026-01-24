@@ -1,30 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { Provider } from "@prisma/client";
-import { KaraokeSongDto, SongDto } from "../dto";
+import { SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 
-type SongWithRelations = {
-  id: number;
-  title: string;
-  titleKo: string | null;
-  catalog: string | null;
-  thumbnailDefault: string | null;
-  thumbnailMedium: string | null;
-  thumbnailHigh: string | null;
-  tjSongId: string | null;
-  karaokeSongs: { provider: Provider; karaokeNo: string }[];
-  artistSongs: {
-    artistId: number;
-    role: string | null;
-    artist: { name: string; nameKo: string; slug: string | null };
-  }[];
-  songSpotifyTracks: {
-    spotifyTrack: {
-      popularity: number | null;
-      releaseDate: string | null;
-    };
-  }[];
-};
 
 type SongDtoData = {
   id: number;
@@ -32,11 +9,23 @@ type SongDtoData = {
   titleKo: string | null;
   titleJa: string | null;
   titleLatin: string | null;
+  titleJaPronu: string | null;
+  titleLatinPronu: string | null;
   catalog: string | null;
   thumbnailDefault: string | null;
   thumbnailMedium: string | null;
   thumbnailHigh: string | null;
-  karaokeSongs: { provider: Provider; karaokeNo: string }[];
+  tjSong: {
+    id: string;
+    title: string;
+    artist: string | null;
+    lyricist: string | null;
+    composer: string | null;
+    publishdate: string | null;
+    isMR: boolean;
+    isMV: boolean;
+    isOver60: boolean;
+  } | null;
   artistSongs: {
     artistId: number;
     role: string | null;
@@ -63,8 +52,6 @@ type SongDtoData = {
   }[];
 };
 
-type TjSongMap = Record<string, { title: string; artist: string | null }>;
-
 @Injectable()
 export class SongsService {
   constructor(private prisma: PrismaService) {}
@@ -75,14 +62,23 @@ export class SongsService {
     titleKo: true,
     titleJa: true,
     titleLatin: true,
+    titleJaPronu: true,
+    titleLatinPronu: true,
     catalog: true,
     thumbnailDefault: true,
     thumbnailMedium: true,
     thumbnailHigh: true,
-    karaokeSongs: {
+    tjSong: {
       select: {
-        provider: true,
-        karaokeNo: true,
+        id: true,
+        title: true,
+        artist: true,
+        lyricist: true,
+        composer: true,
+        publishdate: true,
+        isMR: true,
+        isMV: true,
+        isOver60: true,
       },
     },
     artistSongs: {
@@ -139,34 +135,7 @@ export class SongsService {
     },
   };
 
-  private async buildTjSongMap(
-    songs: { karaokeSongs: { provider: Provider; karaokeNo: string }[] }[],
-  ): Promise<TjSongMap> {
-    const tjKaraokeNos = Array.from(
-      new Set(
-        songs
-          .flatMap((song) => song.karaokeSongs)
-          .filter((karaokeSong) => karaokeSong.provider === Provider.TJ)
-          .map((karaokeSong) => karaokeSong.karaokeNo),
-      ),
-    );
-
-    if (!tjKaraokeNos.length) {
-      return {};
-    }
-
-    const tjSongs = await this.prisma.tjSong.findMany({
-      where: { id: { in: tjKaraokeNos } },
-      select: { id: true, title: true, artist: true },
-    });
-
-    return tjSongs.reduce<TjSongMap>((acc, tjSong) => {
-      acc[tjSong.id] = { title: tjSong.title, artist: tjSong.artist ?? null };
-      return acc;
-    }, {});
-  }
-
-  private mapToDto(song: SongDtoData, tjSongMap: TjSongMap): SongDto {
+  private mapToDto(song: SongDtoData): SongDto {
     const spotifyTrack = song.songSpotifyTracks[0]?.spotifyTrack;
     const youtubeVideo = song.youtubeVideos[0]?.youtubeVideo;
 
@@ -176,6 +145,8 @@ export class SongsService {
       titleKo: song.titleKo ?? undefined,
       titleJa: song.titleJa ?? undefined,
       titleLatin: song.titleLatin ?? undefined,
+      titleJaPronu: song.titleJaPronu ?? undefined,
+      titleLatinPronu: song.titleLatinPronu ?? undefined,
       catalog: song.catalog ?? undefined,
       artists: song.artistSongs.map((as) => ({
         artistId: as.artistId,
@@ -184,20 +155,19 @@ export class SongsService {
         role: as.role ?? undefined,
         slug: as.artist.slug ?? undefined,
       })),
-      karaokeSongs: song.karaokeSongs.map((karaokeSong) => {
-        const dto: KaraokeSongDto = {
-          provider: karaokeSong.provider,
-          karaokeNo: karaokeSong.karaokeNo,
-        };
-
-        if (karaokeSong.provider === Provider.TJ) {
-          const details = tjSongMap[karaokeSong.karaokeNo];
-          dto.title = details?.title ?? null;
-          dto.artist = details?.artist ?? null;
-        }
-
-        return dto;
-      }),
+      tjSong: song.tjSong
+        ? {
+            id: song.tjSong.id,
+            title: song.tjSong.title,
+            artist: song.tjSong.artist ?? undefined,
+            lyricist: song.tjSong.lyricist ?? undefined,
+            composer: song.tjSong.composer ?? undefined,
+            publishdate: song.tjSong.publishdate ?? undefined,
+            isMR: song.tjSong.isMR,
+            isMV: song.tjSong.isMV,
+            isOver60: song.tjSong.isOver60,
+          }
+        : undefined,
       thumbnailDefault: song.thumbnailDefault ?? undefined,
       thumbnailMedium: song.thumbnailMedium ?? undefined,
       thumbnailHigh: song.thumbnailHigh ?? undefined,
@@ -232,8 +202,7 @@ export class SongsService {
       orderBy: { id: "asc" },
     });
 
-    const tjSongMap = await this.buildTjSongMap(songs);
-    return songs.map((song) => this.mapToDto(song, tjSongMap));
+    return songs.map((song) => this.mapToDto(song));
   }
 
   async findById(id: number): Promise<SongDto | null> {
@@ -244,8 +213,7 @@ export class SongsService {
 
     if (!song) return null;
 
-    const tjSongMap = await this.buildTjSongMap([song]);
-    return this.mapToDto(song, tjSongMap);
+    return this.mapToDto(song);
   }
 
   async searchByTitle(query: string): Promise<SongDto[]> {
@@ -266,8 +234,7 @@ export class SongsService {
       orderBy: { id: "asc" },
     });
 
-    const tjSongMap = await this.buildTjSongMap(songs);
-    return songs.map((song) => this.mapToDto(song, tjSongMap));
+    return songs.map((song) => this.mapToDto(song));
   }
 
   async findByArtistId(
@@ -301,9 +268,8 @@ export class SongsService {
       take: limit,
     });
 
-    const tjSongMap = await this.buildTjSongMap(songs);
     return {
-      songs: songs.map((song) => this.mapToDto(song, tjSongMap)),
+      songs: songs.map((song) => this.mapToDto(song)),
       total,
     };
   }
