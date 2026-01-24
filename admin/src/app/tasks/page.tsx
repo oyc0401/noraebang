@@ -8,6 +8,8 @@ import {
   runAutoFillArtistNamesForArtist,
   runAutoFillSongTitlesForArtist,
   runFetchProposeForArtist,
+  runFetchSpotifyTracksForArtist,
+  runFetchTopicVideosForArtist,
   runMapProposeSongForArtist,
   runMapSongYoutubeVideoForArtist,
   runMapSongYoutubeVideoFromSearchForArtist,
@@ -163,6 +165,16 @@ export default function AdminTasksPage() {
     runFetchProposeForArtist,
     getRange,
   );
+  const fetchSpotifyTracksTask = useArtistTask(
+    "fetchSpotifyTracksForArtist",
+    runFetchSpotifyTracksForArtist,
+    getRange,
+  );
+  const fetchTopicVideosTask = useArtistTask(
+    "fetchTopicVideosForArtist",
+    runFetchTopicVideosForArtist,
+    getRange,
+  );
 
   return (
     <div className="min-h-screen bg-zinc-50 py-4">
@@ -216,6 +228,18 @@ export default function AdminTasksPage() {
             title="TJ 신청곡 수집"
             description="fetchProposeForArtist: 아티스트의 tjName으로 TJ 신청곡을 검색하여 DB에 저장합니다."
             task={fetchProposeTask}
+          />
+
+          <TaskCard
+            title="Spotify 트랙 수집"
+            description="fetchSpotifyTracksForArtist: 아티스트의 spotifyId로 모든 앨범/트랙을 가져와 SpotifyTrack에 저장합니다."
+            task={fetchSpotifyTracksTask}
+          />
+
+          <TaskCard
+            title="YouTube Topic 비디오 수집"
+            description="fetchTopicVideosForArtist: 아티스트의 Topic 채널에서 모든 비디오를 가져와 YoutubeVideo에 저장합니다."
+            task={fetchTopicVideosTask}
           />
 
           <TaskCard
