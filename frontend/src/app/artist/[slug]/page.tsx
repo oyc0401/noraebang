@@ -1,6 +1,8 @@
 import { artistsControllerFindBySlug } from "@/api/model/artists/artists";
 import ArtistPageClient from "./ArtistPageClient";
 
+export const revalidate = 60 * 30;
+
 export default async function ArtistPage({
   params,
 }: {
