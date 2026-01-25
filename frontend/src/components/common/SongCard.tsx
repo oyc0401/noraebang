@@ -14,7 +14,7 @@ interface SongCardProps {
   artistTjName?: string;
   thumbnail?: string;
   title: string;
-  originalTitle: string;
+  originalTitle?: string;
   subtitle: string;
   tjNumber?: string;
   bestProposeHit?: number;
@@ -48,7 +48,7 @@ export function SongCard({
       openMenu({
         id: songId,
         title,
-        originalTitle,
+        originalTitle: originalTitle ?? title,
         artistName: subtitle,
         artistId,
         artistTjName,

@@ -54,6 +54,14 @@ type SongWithRelations = {
       publishedAt: Date | null;
     };
   }[];
+  songProposes: {
+    songSinger: string;
+    songTitle: string;
+    content: string;
+    name: string;
+    hit: number;
+    saveDate: bigint;
+  }[];
 };
 
 type ArtistWithDetails = {
@@ -159,6 +167,25 @@ const SONG_SEARCH_SELECT = {
     },
     take: 1,
   },
+  songProposes: {
+    where: {
+      saveDate: {
+        gte: BigInt(Date.now() - 90 * 24 * 60 * 60 * 1000),
+      },
+    },
+    orderBy: {
+      hit: "desc" as const,
+    },
+    take: 1,
+    select: {
+      songSinger: true,
+      songTitle: true,
+      content: true,
+      name: true,
+      hit: true,
+      saveDate: true,
+    },
+  },
 } as const;
 
 @Injectable()
@@ -173,6 +200,7 @@ export class SearchService {
   private mapSongToDto(song: SongWithRelations): SongDto {
     const spotifyTrack = song.songSpotifyTracks[0]?.spotifyTrack;
     const youtubeVideo = song.youtubeVideos[0]?.youtubeVideo;
+    const bestPropose = song.songProposes[0];
 
     return {
       id: song.id,
@@ -226,6 +254,16 @@ export class SearchService {
             thumbnailDefault: youtubeVideo.thumbnailDefault ?? undefined,
             thumbnailMedium: youtubeVideo.thumbnailMedium ?? undefined,
             thumbnailHigh: youtubeVideo.thumbnailHigh ?? undefined,
+          }
+        : undefined,
+      bestSongPropose: bestPropose
+        ? {
+            songSinger: bestPropose.songSinger,
+            songTitle: bestPropose.songTitle,
+            content: bestPropose.content,
+            name: bestPropose.name,
+            hit: bestPropose.hit,
+            saveDate: Number(bestPropose.saveDate),
           }
         : undefined,
     };
@@ -541,6 +579,7 @@ export class SearchService {
     for (const song of sortedSongs) {
       const primaryArtist = song.artistSongs[0]?.artist;
       const artistNames = song.artistSongs.map((as) => as.artist.name).join(", ");
+      const bestPropose = song.songProposes[0];
       cards.push({
         song: {
           id: song.id,
@@ -564,6 +603,16 @@ export class SearchService {
               }
             : undefined,
           thumbnail: song.thumbnailMedium ?? song.thumbnailDefault ?? undefined,
+          bestSongPropose: bestPropose
+            ? {
+                songSinger: bestPropose.songSinger,
+                songTitle: bestPropose.songTitle,
+                content: bestPropose.content,
+                name: bestPropose.name,
+                hit: bestPropose.hit,
+                saveDate: Number(bestPropose.saveDate),
+              }
+            : undefined,
         },
       });
     }

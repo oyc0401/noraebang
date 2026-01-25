@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { TjSongDto } from './tjSongDto';
+import type { BestSongProposeDto } from './bestSongProposeDto';
 
 export interface SearchSuggestionSongDto {
   /** 곡 ID */
@@ -26,4 +27,6 @@ export interface SearchSuggestionSongDto {
   tjSong?: TjSongDto;
   /** 곡 썸네일 */
   thumbnail?: string;
+  /** 3개월 이내 가장 추천수가 높은 곡 추천 정보 */
+  bestSongPropose?: BestSongProposeDto;
 }

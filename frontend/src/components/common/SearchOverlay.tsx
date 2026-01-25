@@ -134,6 +134,7 @@ export function SearchOverlay() {
                   )}
                   subtitle={card.song.artistName ?? ""}
                   tjNumber={card.song.tjSong?.id}
+                  bestProposeHit={card.song.bestSongPropose?.hit}
                   onClick={() => {
                     if (card.song?.artistSlug) {
                       router.push(
