@@ -8,6 +8,7 @@ import {
   useSearchControllerGetSearchSuggestions,
 } from "@/api/model/search/search";
 import { ArtistCard } from "@/components/common/ArtistCard";
+import { SearchOverlayLinkPaste } from "@/components/common/SearchOverlayLinkPaste";
 import { SearchTermCard } from "@/components/common/SearchTermCard";
 import { SongCard } from "@/components/common/SongCard";
 import { SearchBar } from "@/components/search/SearchBar";
@@ -76,6 +77,8 @@ export function SearchOverlay() {
         </div>
       </header>
       <main className="flex-1 flex flex-col w-full mx-auto overflow-y-auto px-2 py-2">
+        {/* 링크 붙여넣기 섹션 (검색어가 비어있을 때) */}
+        {query.length === 0 && <SearchOverlayLinkPaste />}
         {suggestions?.data.cards &&
           suggestions.data.cards.length > 0 &&
           suggestions.data.cards.map((card, index) => {
