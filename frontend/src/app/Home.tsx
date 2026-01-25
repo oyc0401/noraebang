@@ -4,6 +4,7 @@ import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { HomeSearchBar } from "@/app/HomeSearchBar";
 import { LinkPasteCard } from "@/app/LinkPasteCard";
+import { PopularArtistsSection } from "@/app/PopularArtistsSection";
 import { PopularProposeSongsSection } from "@/app/PopularProposeSongsSection";
 import { PopularSongsSection } from "@/app/PopularSongsSection";
 import { RecentSongsSection } from "@/app/RecentSongsSection";
@@ -29,6 +30,7 @@ export function Home() {
         <PopularSongsSection />
         <RecentSongsSection />
         <PopularProposeSongsSection />
+        <PopularArtistsSection />
         <Footer />
       </main>
     </>
