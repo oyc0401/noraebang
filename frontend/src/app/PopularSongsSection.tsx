@@ -13,7 +13,7 @@ export function PopularSongsSection() {
 
   return (
     <SongTileCarousel
-      title="최근에 나온 곡"
+      title="TJ 노래방 신곡"
       songs={songs}
       isLoading={isLoading}
       href="/tj/recent"
