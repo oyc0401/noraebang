@@ -1,9 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import {
-  calculateArtistPopularity,
-  calculateSongPopularity,
-} from "./lib/popularity";
-import { normalizeBasic } from "./lib/text-utils";
+import { normalizeBasic, removePunctuation } from "./lib/text-utils";
 import {
   getNormalizedValues,
   getPronunciationValues,
@@ -57,12 +53,7 @@ export interface TypesenseSongDocument {
 
   tjSongId?: string;
 
-  songPopularity?: number;
-  artistPopularity?: number;
-  spotifyTrackPopularity?: number;
-  artistSpotifyPopularity?: number;
-  artistTjSongCount?: number;
-  hasTjSong?: boolean;
+  songScore?: number;
   updatedAt: number;
 
   q_song_ko_p?: string[];
@@ -78,6 +69,7 @@ export interface TypesenseSongDocument {
   q_song_ja_norm?: string[];
 
   q_song_pronu?: string[];
+  q_song_pronu_norm?: string[];
 
   artist_key?: string[];
 
@@ -94,6 +86,11 @@ function getSongArtists(song: SongWithRelations): SongArtist[] {
 export function transformSongToDocument(
   song: SongWithRelations,
 ): TypesenseSongDocument {
+  const songKo = createQuerySongKo(song);
+  const songLatin = createQuerySongLatin(song);
+  const songJa = createQuerySongJa(song);
+  const songPronu = createQuerySongPronu(song);
+
   return {
     id: song.id.toString(),
     catalog: song.catalog ?? undefined,
@@ -108,29 +105,23 @@ export function transformSongToDocument(
 
     tjSongId: song.tjSong?.id ?? undefined,
 
-    songPopularity: createSongPopularity(song),
-    artistPopularity: calculateArtistPopularity({
-      spotifyPopularity: createArtistSpotifyPopularity(song),
-      tjSongCount: createTjSongCount(song),
-    }),
-    spotifyTrackPopularity: createSpotifyTrackPopularity(song),
-    artistSpotifyPopularity: createArtistSpotifyPopularity(song),
-    artistTjSongCount: createTjSongCount(song),
+    songScore: song.score ?? 0,
     updatedAt: Math.floor(song.updatedAt.getTime() / 1000),
 
-    q_song_ko_p: createQuerySongKoPrimary(song),
+    q_song_ko_p: songKo.p,
     q_song_ko_a: createQuerySongKoAlias(song),
-    q_song_ko_norm: createQuerySongKoNorm(song),
+    q_song_ko_norm: songKo.norm,
 
-    q_song_latin_p: createQuerySongLatinPrimary(song),
+    q_song_latin_p: songLatin.p,
     q_song_latin_a: createQuerySongLatinAlias(song),
-    q_song_latin_norm: createQuerySongLatinNorm(song),
+    q_song_latin_norm: songLatin.norm,
 
-    q_song_ja_p: createQuerySongJaPrimary(song),
+    q_song_ja_p: songJa.p,
     q_song_ja_a: createQuerySongJaAlias(song),
-    q_song_ja_norm: createQuerySongJaNorm(song),
+    q_song_ja_norm: songJa.norm,
 
-    q_song_pronu: createQuerySongPronu(song),
+    q_song_pronu: songPronu.p,
+    q_song_pronu_norm: songPronu.norm,
 
     artist_key: createArtistKey(song),
 
@@ -138,55 +129,62 @@ export function transformSongToDocument(
   };
 }
 
-const createQuerySongKoPrimary = (song: SongWithRelations) => {
-  if (!song.titleKo) return undefined;
-  return getPrimaryValues(song.titleKo);
-};
+interface PNormResult {
+  p?: string[];
+  norm?: string[];
+}
 
-const createQuerySongKoNorm = (song: SongWithRelations) => {
-  if (!song.titleKo) return undefined;
-  return getNormalizedValues(song.titleKo);
-};
+/**
+ * p와 norm을 생성하고, 중복이 있으면 p에서 제거
+ */
+function createPNorm(text: string | undefined | null): PNormResult {
+  if (!text) return {};
+
+  const pValues = getPrimaryValues(text);
+  const normValues = getNormalizedValues(text);
+  const normSet = new Set(normValues);
+
+  // p에서 norm과 중복되는 값 제거
+  const pFiltered = pValues.filter((v) => !normSet.has(v));
+
+  return {
+    p: pFiltered.length > 0 ? pFiltered : undefined,
+    norm: normValues.length > 0 ? normValues : undefined,
+  };
+}
+
+const createQuerySongKo = (song: SongWithRelations) => createPNorm(song.titleKo);
+const createQuerySongLatin = (song: SongWithRelations) => createPNorm(song.titleLatin);
+const createQuerySongJa = (song: SongWithRelations) => createPNorm(song.titleJa);
+
 const createQuerySongKoAlias = (_song: SongWithRelations) => undefined;
-
-const createQuerySongLatinPrimary = (song: SongWithRelations) => {
-  if (!song.titleLatin) return undefined;
-  return getPrimaryValues(song.titleLatin);
-};
-
-const createQuerySongLatinNorm = (song: SongWithRelations) => {
-  if (!song.titleLatin) return undefined;
-  return getNormalizedValues(song.titleLatin);
-};
 const createQuerySongLatinAlias = (_song: SongWithRelations) => undefined;
-
-const createQuerySongJaPrimary = (song: SongWithRelations) => {
-  if (!song.titleJa) return undefined;
-  return getPrimaryValues(song.titleJa);
-};
-
-const createQuerySongJaNorm = (song: SongWithRelations) => {
-  if (!song.titleJa) return undefined;
-  return getNormalizedValues(song.titleJa);
-};
 const createQuerySongJaAlias = (_song: SongWithRelations) => undefined;
 
-const createQuerySongPronu = (song: SongWithRelations) => {
+const createQuerySongPronu = (song: SongWithRelations): PNormResult => {
   const prons = [song.titleJaPronu, song.titleLatinPronu]
     .filter(isPresent)
     .map((value) => value.trim())
     .filter((value) => value.length > 0);
 
-  if (prons.length === 0) return undefined;
+  if (prons.length === 0) return {};
 
-  const results = new Set<string>();
+  const pSet = new Set<string>();
+  const normSet = new Set<string>();
+
   for (const pron of prons) {
-    for (const token of getPronunciationValues(pron)) {
-      results.add(token);
-    }
+    pSet.add(removePunctuation(pron));
+    normSet.add(normalizeBasic(pron));
   }
 
-  return results.size > 0 ? Array.from(results) : undefined;
+  // p에서 norm과 중복되는 값 제거
+  const pFiltered = Array.from(pSet).filter((v) => !normSet.has(v));
+  const normValues = Array.from(normSet);
+
+  return {
+    p: pFiltered.length > 0 ? pFiltered : undefined,
+    norm: normValues.length > 0 ? normValues : undefined,
+  };
 };
 
 /**
@@ -243,51 +241,3 @@ const createQueryComboArtist = (song: SongWithRelations) => {
   return [`${titleKoNorm}${artistKoNorm}`];
 };
 
-/**
- * 인기도 계산
- */
-function createTjSongCount(song: SongWithRelations) {
-  const artists = getSongArtists(song);
-  const counts = artists.map((artist) => artist.tjSongs?.length ?? 0);
-  return counts.length > 0 ? Math.max(...counts) : 0;
-}
-
-function createArtistSpotifyPopularity(song: SongWithRelations) {
-  const artists = getSongArtists(song);
-  const popularities = artists
-    .map((artist) => artist.spotifyArtist?.popularity)
-    .filter(isPresent);
-  return popularities.length > 0 ? Math.max(...popularities) : 0;
-}
-
-function createSpotifyTrackPopularity(song: SongWithRelations) {
-  const popularities =
-    song.songSpotifyTracks
-      ?.map((sst) => sst.spotifyTrack?.popularity)
-      .filter((p): p is number => p !== undefined && p !== null) ?? [];
-  return popularities.length > 0 ? Math.max(...popularities) : 0;
-}
-
-function createSongPopularity(song: SongWithRelations) {
-  if (typeof song.score === "number") {
-    return song.score;
-  }
-
-  const spotifyTrackPopularity = createSpotifyTrackPopularity(song);
-  const artistSpotifyPopularity = createArtistSpotifyPopularity(song);
-  const tjSongCount = createTjSongCount(song);
-
-  const artistPopularity = calculateArtistPopularity({
-    spotifyPopularity: artistSpotifyPopularity,
-    tjSongCount,
-  });
-
-  const hasTjSong = tjSongCount > 0;
-  const songPopularity = calculateSongPopularity({
-    artistPopularity,
-    spotifyTrackPopularity,
-    hasTjSong,
-  });
-
-  return songPopularity;
-}
