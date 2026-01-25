@@ -4,6 +4,7 @@ import {
   getPrimaryValues,
   getJapaneseNormalizedValues,
   getNormalizedValues,
+  getPronunciationValues,
 } from "./transformer-utils";
 
 export type ArtistWithRelations = Awaited<
@@ -134,18 +135,13 @@ const createQueryNameJaKanaNorm = (artist: ArtistWithRelations) => {
   if (!artist.nameJaKana) return undefined;
   return getJapaneseNormalizedValues(artist.nameJaKana);
 };
-
 const createQueryNameJaKanaAlias = (_artist: ArtistWithRelations) => undefined;
 
 const createQueryArtistPron = (artist: ArtistWithRelations) => {
   const pron = artist.nameJaPronu?.trim();
   if (!pron) return undefined;
 
-  const results = new Set<string>();
-  getPrimaryValues(pron)?.forEach((value) => results.add(value));
-  getNormalizedValues(pron)?.forEach((value) => results.add(value));
-
-  return results.size > 0 ? Array.from(results) : undefined;
+  return getPronunciationValues(pron);
 };
 
 /**
