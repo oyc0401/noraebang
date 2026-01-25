@@ -17,6 +17,7 @@ import {
   runUpdateSongThumbnailsForArtist,
   runMapSongSpotifyGroupsForArtist,
   runUpdateSongScoreForArtist,
+  runUpdateArtistThumbnailsForArtist,
 } from "./actions";
 
 type TaskAction = (
@@ -222,6 +223,12 @@ export default function AdminTasksPage() {
     runFetchTopicVideosForArtist,
     getRange,
   );
+  const artistThumbTask = useArtistTask(
+    "updateArtistThumbnails",
+    runUpdateArtistThumbnailsForArtist,
+    getRange,
+    false,
+  );
 
   // 전역 작업 (아티스트 범위 무관)
   const fetchNewTjSongsTask = useGlobalTask(
@@ -359,6 +366,11 @@ export default function AdminTasksPage() {
               title="아티스트 이름 자동 채우기"
               description="Spotify/토픽 채널 이름을 활용해 nameLatin/nameJa* 필드를 보완합니다."
               task={artistTask}
+            />
+            <TaskCard
+              title="아티스트 썸네일 자동 채우기"
+              description="1순위 Spotify, 2순위 YouTube Topic, 3순위 YouTube Main 채널에서 썸네일을 가져옵니다."
+              task={artistThumbTask}
             />
             <TaskCard
               title="곡 썸네일 보정"
