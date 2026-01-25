@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "@/providers/Providers";
+
+const GA_TRACKING_ID = "G-TDX3807K0R";
 
 export const metadata: Metadata = {
   title: "Sing It! - 노래방 번호 검색",
@@ -15,6 +18,18 @@ export default function RootLayout({
   return (
     <html lang="ko" style={{ colorScheme: "dark" }}>
       <head>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_TRACKING_ID}');
+          `}
+        </Script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
