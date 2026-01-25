@@ -443,6 +443,7 @@ model Report {
   content   String
   email     String?
   status    ReportStatus @default(PENDING)
+  adminNote String?      @map("admin_note")
   createdAt DateTime     @default(now()) @map("created_at")
   updatedAt DateTime     @updatedAt @map("updated_at")
   song      Song?        @relation(fields: [songId], references: [id], onDelete: SetNull)
@@ -457,6 +458,7 @@ model Report {
 
 enum ReportStatus {
   PENDING
+  IN_PROGRESS
   RESOLVED
   REJECTED
 }
