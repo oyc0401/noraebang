@@ -1,16 +1,16 @@
 "use client";
 
-import { ArrowLeft, Search } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Search } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useSearchStore } from "@/store/searchStore";
+import { Logo } from "@/components/common/Logo";
 
 interface ArtistHeaderProps {
   transparent?: boolean;
 }
 
 export function ArtistHeader({ transparent }: ArtistHeaderProps) {
-  const router = useRouter();
   const { setSearchActive } = useSearchStore();
 
   return (
@@ -20,14 +20,16 @@ export function ArtistHeader({ transparent }: ArtistHeaderProps) {
         transparent ? "bg-transparent" : "sticky top-0 bg-background-dark/95",
       )}
     >
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="flex size-11 items-center justify-center text-gray-400 transition-colors hover:text-white"
-        aria-label="뒤로가기"
+      <Link
+        href="/"
+        className="flex items-center gap-3 pl-2 text-white transition-opacity hover:opacity-80"
+        aria-label="홈으로 이동"
       >
-        <ArrowLeft className="size-6" />
-      </button>
+        <Logo />
+        <span className="text-lg font-semibold tracking-[-0.015em]">
+          Sing It!
+        </span>
+      </Link>
       <div className="flex items-center">
         <button
           type="button"
