@@ -79,7 +79,7 @@ export function SearchPageContent() {
                       key={`artist-${artist.id}`}
                       thumbnail={artist.thumbnailMedium}
                       title={artist.name}
-                      subtitle={artist.name}
+                      subtitle={artist.nameKo}
                       onClick={() => {
                         if (artist?.slug) {
                           saveSearchClick({ query, artistId: artist.id, source: "search" });
