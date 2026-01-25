@@ -53,7 +53,7 @@ pnpm --filter admin exec prisma generate
 
 
 ## 타입센스 인덱싱하기
-curl -X POST "https://backend-production-eaa8.up.railway.app/typesense/reindex" \
+source backend/.env && curl -X POST "https://backend-production-eaa8.up.railway.app/typesense/reindex" \
 -H "Content-Type: application/json" \
 -H "x-internal-token: $INTERNAL_API_TOKEN" \
 -d '{"target":"all"}'
