@@ -22,7 +22,7 @@ export function Header({ transparent }: HeaderProps) {
     >
       <Link
         href="/"
-        className="flex items-center gap-4 text-white transition-opacity hover:opacity-80"
+        className="flex items-center gap-3 text-white transition-opacity hover:opacity-80"
       >
         <Logo />
         <h1 className="text-lg font-semibold tracking-[-0.015em]">Sing It!</h1>
