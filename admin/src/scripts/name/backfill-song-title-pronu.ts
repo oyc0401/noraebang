@@ -10,9 +10,9 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-// import { hangulize } from "hangulize";
 import { Kanabarum } from "kanabarum";
 import { Pool } from "pg";
+import { latinToKo } from "../pron/latinTokorea";
 
 // pnpm ts-node src/scripts/name/backfill-song-title-pronu.ts --dry-run
 // pnpm ts-node src/scripts/name/backfill-song-title-pronu.ts
@@ -53,7 +53,7 @@ async function main() {
   }
 
   const kanabarum = new Kanabarum();
-  kanabarum.init();
+  await kanabarum.init();
 
   console.log("======================================");
   console.log("Song titleJaPronu & titleLatinPronu Backfill");
@@ -63,16 +63,15 @@ async function main() {
   console.log("📦 Fetching songs...");
   const songs = await prisma.song.findMany({
     where: {
-      titleJaKana: { not: null },
-      // OR: [{ titleJaKana: { not: null } }, { titleLatin: { not: null } }],
+      OR: [{ titleJaKana: { not: null } }, { titleLatin: { not: null } }],
     },
     select: {
       id: true,
       title: true,
       titleJaKana: true,
       titleJaPronu: true,
-      // titleLatin: true,
-      // titleLatinPronu: true,
+      titleLatin: true,
+      titleLatinPronu: true,
     },
     orderBy: { id: "asc" },
   });
@@ -84,8 +83,7 @@ async function main() {
   let skippedLatin = 0;
 
   for (const song of songs) {
-    const updateData: { titleJaPronu?: string /* titleLatinPronu?: string */ } =
-      {};
+    const updateData: { titleJaPronu?: string; titleLatinPronu?: string } = {};
 
     // titleJaKana → titleJaPronu
     const jaSource = song.titleJaKana?.trim();
@@ -113,30 +111,28 @@ async function main() {
       }
     }
 
-    // titleLatin → titleLatinPronu (주석처리됨)
-    // const latinSource = song.titleLatin?.trim();
-    // if (latinSource) {
-    //   const latinConverted = hangulize(latinSource, "eng")
-    //     .replace(/\s+/g, " ")
-    //     .trim();
-    //
-    //   if (latinConverted) {
-    //     const latinExisting = song.titleLatinPronu?.trim() ?? "";
-    //     if (latinExisting.length === 0 || latinExisting !== latinConverted) {
-    //       updateData.titleLatinPronu = latinConverted;
-    //       if (isDryRun) {
-    //         console.log(
-    //           `[DRY-RUN][LATIN] #${song.id} ${song.title}: "${latinSource}" -> "${latinConverted}" (기존: "${latinExisting}")`,
-    //         );
-    //       }
-    //       latinUpdated++;
-    //     } else {
-    //       skippedLatin++;
-    //     }
-    //   } else {
-    //     skippedLatin++;
-    //   }
-    // }
+    // titleLatin → titleLatinPronu (latinToKo 사용)
+    const latinSource = song.titleLatin?.trim();
+    if (latinSource) {
+      const latinConverted = latinToKo(latinSource).replace(/\s+/g, " ").trim();
+
+      if (latinConverted) {
+        const latinExisting = song.titleLatinPronu?.trim() ?? "";
+        if (latinExisting.length === 0 || latinExisting !== latinConverted) {
+          updateData.titleLatinPronu = latinConverted;
+          if (isDryRun) {
+            console.log(
+              `[DRY-RUN][LATIN] #${song.id} ${song.title}: "${latinSource}" -> "${latinConverted}" (기존: "${latinExisting}")`,
+            );
+          }
+          latinUpdated++;
+        } else {
+          skippedLatin++;
+        }
+      } else {
+        skippedLatin++;
+      }
+    }
 
     // 업데이트할 내용이 있으면 DB 업데이트
     if (!isDryRun && Object.keys(updateData).length > 0) {

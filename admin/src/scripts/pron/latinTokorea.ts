@@ -9,11 +9,66 @@ type Cand = { text: string; score: number };
 type CandidatesOptions = { limit?: number };
 
 export function latinToKo(input: string): string {
-  const [best] = latinToKoCandidates(input, { limit: 1 });
-  return best ?? "";
+  // 영어 단어와 비영어 부분을 분리하여 영어만 변환, 특수문자는 보존
+  const tokens = tokenizePreservingSpecialChars(input);
+  const result = tokens
+    .map((token) => {
+      if (token.type === "word") {
+        const [best] = latinToKoCandidatesInternal(token.text, { limit: 1 });
+        return best ?? token.text;
+      }
+      return token.text; // 특수문자/공백 등은 그대로
+    })
+    .join("");
+  return result;
+}
+
+function tokenizePreservingSpecialChars(
+  input: string,
+): Array<{ type: "word" | "other"; text: string }> {
+  const tokens: Array<{ type: "word" | "other"; text: string }> = [];
+  const regex = /([a-zA-Z]+)|([^a-zA-Z]+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(input)) !== null) {
+    if (match[1]) {
+      tokens.push({ type: "word", text: match[1] });
+    } else if (match[2]) {
+      tokens.push({ type: "other", text: match[2] });
+    }
+  }
+  return tokens;
 }
 
 export function latinToKoCandidates(
+  input: string,
+  { limit = 5 }: CandidatesOptions = {},
+): string[] {
+  // 특수문자 보존 버전 - 각 영어 단어를 개별 변환
+  const tokens = tokenizePreservingSpecialChars(input);
+  const wordTokens = tokens.filter((t) => t.type === "word");
+
+  if (wordTokens.length === 0) return [];
+
+  // 모든 단어를 하나의 문자열로 합쳐서 후보 생성
+  const combinedWords = wordTokens.map((t) => t.text).join(" ");
+  const candidates = latinToKoCandidatesInternal(combinedWords, { limit });
+
+  // 특수문자를 포함한 결과 생성
+  return candidates.map((cand) => {
+    const candWords = cand.split(" ");
+    let candIdx = 0;
+    return tokens
+      .map((token) => {
+        if (token.type === "word" && candIdx < candWords.length) {
+          return candWords[candIdx++];
+        }
+        return token.text;
+      })
+      .join("");
+  });
+}
+
+function latinToKoCandidatesInternal(
   input: string,
   { limit = 5 }: CandidatesOptions = {},
 ): string[] {

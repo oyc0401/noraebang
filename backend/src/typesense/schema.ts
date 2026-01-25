@@ -23,6 +23,8 @@ export const songsCollectionSchema: CollectionCreateSchema = {
     { name: "titleJaKanji", type: "string", optional: true, index: false },
     { name: "titleJaKana", type: "string", optional: true, index: false },
     { name: "titleLatin", type: "string", optional: true, index: false },
+    { name: "titleJaPronu", type: "string", optional: true, index: false },
+    { name: "titleLatinPronu", type: "string", optional: true, index: false },
 
     // ===== 아티스트 ID (필터링용) =====
     { name: "artistIds", type: "string[]" },
@@ -78,6 +80,8 @@ export const songsCollectionSchema: CollectionCreateSchema = {
       optional: true,
       infix: true,
     },
+
+    { name: "q_song_pronu", type: "string[]", optional: true },
 
     // ===== 검색 필드: 아티스트명 =====
     { name: "q_artist_ko_p", type: "string[]", optional: true },
