@@ -6,7 +6,7 @@ import { useReportsControllerCreate } from "@/api/model/reports/reports";
 import { cn } from "@/lib/cn";
 import { useReportDialogStore } from "@/store/reportDialogStore";
 
-type SectionKey = "wrongInfo" | "pronunciation" | "alias" | "other";
+type SectionKey = "improvement" | "other";
 
 interface SectionConfig {
   key: SectionKey;
@@ -16,19 +16,10 @@ interface SectionConfig {
 
 const SECTIONS: SectionConfig[] = [
   {
-    key: "wrongInfo",
-    label: "잘못된 정보",
-    placeholder: "잘못된 정보를 알려주세요\n예: TJ 번호가 12345가 아니라 12346입니다",
-  },
-  {
-    key: "pronunciation",
-    label: "발음 기여",
-    placeholder: "발음 정보를 입력해주세요\n예: 夜に駆ける → 요루니 카케루",
-  },
-  {
-    key: "alias",
-    label: "별칭 추가",
-    placeholder: "추가할 별칭을 입력해주세요\n예: 밤을 달리다, 밤으로 달려가",
+    key: "improvement",
+    label: "정보개선",
+    placeholder:
+      "개선이 필요한 정보를 알려주세요\n\n예시:\n• 스포티파이 추가해주세요: https://open.spotify.com/...\n• 한국어 번역 추가해주세요: 역광\n• 아티스트 이름이 잘못되었어요: DAOKO × 米津玄師",
   },
   {
     key: "other",
@@ -43,11 +34,9 @@ export function ReportDialog() {
   const { isOpen, data, closeDialog } = useReportDialogStore();
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [activeSection, setActiveSection] = useState<SectionKey>("wrongInfo");
+  const [activeSection, setActiveSection] = useState<SectionKey>("improvement");
   const [sections, setSections] = useState<SectionState>({
-    wrongInfo: "",
-    pronunciation: "",
-    alias: "",
+    improvement: "",
     other: "",
   });
   const [email, setEmail] = useState("");
@@ -67,9 +56,9 @@ export function ReportDialog() {
       setVisible(false);
       const timer = setTimeout(() => {
         setMounted(false);
-        setSections({ wrongInfo: "", pronunciation: "", alias: "", other: "" });
+        setSections({ improvement: "", other: "" });
         setEmail("");
-        setActiveSection("wrongInfo");
+        setActiveSection("improvement");
       }, 300);
       return () => clearTimeout(timer);
     }
@@ -97,14 +86,8 @@ export function ReportDialog() {
     setIsSubmitting(true);
     try {
       const contentParts: string[] = [];
-      if (sections.wrongInfo.trim()) {
-        contentParts.push(`[잘못된 정보]\n${sections.wrongInfo.trim()}`);
-      }
-      if (sections.pronunciation.trim()) {
-        contentParts.push(`[발음 기여]\n${sections.pronunciation.trim()}`);
-      }
-      if (sections.alias.trim()) {
-        contentParts.push(`[별칭 추가]\n${sections.alias.trim()}`);
+      if (sections.improvement.trim()) {
+        contentParts.push(`[정보개선]\n${sections.improvement.trim()}`);
       }
       if (sections.other.trim()) {
         contentParts.push(`[기타]\n${sections.other.trim()}`);
@@ -200,11 +183,14 @@ export function ReportDialog() {
         {/* 활성 섹션 입력 */}
         <div className="px-5 py-4">
           <textarea
-            rows={5}
+            rows={8}
             placeholder={activeConfig?.placeholder}
             value={sections[activeSection]}
             onChange={(e) =>
-              setSections((prev) => ({ ...prev, [activeSection]: e.target.value }))
+              setSections((prev) => ({
+                ...prev,
+                [activeSection]: e.target.value,
+              }))
             }
             className="w-full px-3 py-2 bg-white/10 rounded-lg text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
