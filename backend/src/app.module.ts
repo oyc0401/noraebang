@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ArtistsModule } from "./artists/artists.module";
 import { AuthModule } from "./auth/auth.module";
+import { CacheModule } from "./cache";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ReportsModule } from "./reports/reports.module";
 import { SearchModule } from "./search/search.module";
@@ -13,6 +14,7 @@ import { TypesenseModule } from "./typesense/typesense.module";
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    CacheModule,
     PrismaModule,
     TypesenseModule,
     AuthModule,
