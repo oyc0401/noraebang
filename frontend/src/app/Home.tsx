@@ -3,6 +3,8 @@
 import { Header } from "@/components/common/Header";
 import { HomeSearchBar } from "@/app/HomeSearchBar";
 import { LinkPasteCard } from "@/app/LinkPasteCard";
+import { PopularProposeSongsSection } from "@/app/PopularProposeSongsSection";
+import { PopularSongsSection } from "@/app/PopularSongsSection";
 import { RecentSongsSection } from "@/app/RecentSongsSection";
 
 export function Home() {
@@ -23,7 +25,9 @@ export function Home() {
         <div className="px-4 py-4">
           <LinkPasteCard />
         </div>
+        <PopularSongsSection />
         <RecentSongsSection />
+        <PopularProposeSongsSection />
       </main>
     </>
   );
