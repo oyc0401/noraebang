@@ -58,9 +58,9 @@ export async function mapSongYoutubeVideo(
       titleKo: true,
       titleLatin: true,
       titleJa: true,
-      spotifyTrackGroup: {
+      songSpotifyTracks: {
         select: {
-          tracks: {
+          spotifyTrack: {
             select: {
               name: true,
               musicBrainzTitle: true,
@@ -123,9 +123,9 @@ export async function mapSongYoutubeVideo(
     const titles = [song.title, song.titleKo, song.titleLatin, song.titleJa];
 
     // spotify/musicBrainz title도 추가
-    song.spotifyTrackGroup?.tracks.forEach((track) => {
-      if (track.name?.trim()) titles.push(track.name);
-      if (track.musicBrainzTitle?.trim()) titles.push(track.musicBrainzTitle);
+    song.songSpotifyTracks.forEach((sst) => {
+      if (sst.spotifyTrack.name?.trim()) titles.push(sst.spotifyTrack.name);
+      if (sst.spotifyTrack.musicBrainzTitle?.trim()) titles.push(sst.spotifyTrack.musicBrainzTitle);
     });
 
     for (const title of titles) {

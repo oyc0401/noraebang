@@ -90,9 +90,9 @@ export function LinkPasteCard() {
     ? `${artist.nameKo} (${artist.name})`
     : "알 수 없음";
   const thumbnail =
-    foundSong?.thumbnailDefault ||
     foundSong?.thumbnailMedium ||
-    foundSong?.thumbnailHigh;
+    foundSong?.thumbnailHigh ||
+    foundSong?.thumbnailDefault;
 
   const handleCardClick = () => {
     if (foundSong && artist?.slug) {

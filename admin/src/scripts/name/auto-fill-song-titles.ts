@@ -105,15 +105,18 @@ async function main() {
       },
     },
     include: {
-      spotifyTrackGroup: {
+      songSpotifyTracks: {
         include: {
-          primaryTrack: {
+          spotifyTrack: {
             select: {
               name: true,
               musicBrainzTitle: true,
+              popularity: true,
             },
           },
         },
+        orderBy: { spotifyTrack: { popularity: "desc" } },
+        take: 1,
       },
     },
   });
@@ -127,11 +130,12 @@ async function main() {
     let selectedTitle: string | null = null;
     let source = "";
 
-    if (song.spotifyTrackGroup?.primaryTrack?.name) {
-      selectedTitle = song.spotifyTrackGroup.primaryTrack.name;
+    const primaryTrack = song.songSpotifyTracks[0]?.spotifyTrack;
+    if (primaryTrack?.name) {
+      selectedTitle = primaryTrack.name;
       source = "spotifyTrackName";
-    } else if (song.spotifyTrackGroup?.primaryTrack?.musicBrainzTitle) {
-      selectedTitle = song.spotifyTrackGroup.primaryTrack.musicBrainzTitle;
+    } else if (primaryTrack?.musicBrainzTitle) {
+      selectedTitle = primaryTrack.musicBrainzTitle;
       source = "spotifyMusicBrainzTitle";
     } else {
       selectedTitle = song.title;

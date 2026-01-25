@@ -143,10 +143,14 @@ export async function getSongsByArtist(artistId: number) {
               artist: true,
             },
           },
-          spotifyTrackGroup: {
+          songSpotifyTracks: {
             include: {
-              primaryTrack: true,
+              spotifyTrack: true,
             },
+            orderBy: {
+              spotifyTrack: { popularity: "desc" },
+            },
+            take: 1,
           },
         },
       },
@@ -167,26 +171,25 @@ export async function getSongsByArtist(artistId: number) {
       name: owner.artist.name,
       nameKo: owner.artist.nameKo,
     })),
-    spotifyGroup: as.song.spotifyTrackGroup
+    spotifyGroup: as.song.songSpotifyTracks.length > 0
       ? {
-          id: as.song.spotifyTrackGroup.id,
-          primaryTrack: as.song.spotifyTrackGroup.primaryTrack
+          primaryTrack: as.song.songSpotifyTracks[0]
             ? {
-                id: as.song.spotifyTrackGroup.primaryTrack.id,
-                spotifyId: as.song.spotifyTrackGroup.primaryTrack.spotifyId,
+                id: as.song.songSpotifyTracks[0].spotifyTrack.id,
+                spotifyId: as.song.songSpotifyTracks[0].spotifyTrack.spotifyId,
                 spotifyUrl:
-                  as.song.spotifyTrackGroup.primaryTrack.spotifyUrl ??
+                  as.song.songSpotifyTracks[0].spotifyTrack.spotifyUrl ??
                   undefined,
-                name: as.song.spotifyTrackGroup.primaryTrack.name,
-                thumbnails: as.song.spotifyTrackGroup.primaryTrack.thumbnails,
+                name: as.song.songSpotifyTracks[0].spotifyTrack.name,
+                thumbnails: as.song.songSpotifyTracks[0].spotifyTrack.thumbnails,
                 releaseDate:
-                  as.song.spotifyTrackGroup.primaryTrack.releaseDate ??
+                  as.song.songSpotifyTracks[0].spotifyTrack.releaseDate ??
                   undefined,
                 durationMs:
-                  as.song.spotifyTrackGroup.primaryTrack.durationMs ??
+                  as.song.songSpotifyTracks[0].spotifyTrack.durationMs ??
                   undefined,
                 popularity:
-                  as.song.spotifyTrackGroup.primaryTrack.popularity ??
+                  as.song.songSpotifyTracks[0].spotifyTrack.popularity ??
                   undefined,
               }
             : undefined,

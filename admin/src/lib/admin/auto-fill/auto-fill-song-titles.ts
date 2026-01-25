@@ -16,13 +16,13 @@ type SongRecord = {
   titleLatin: string | null;
   titleJa: string | null;
   titleKo: string | null;
-  spotifyTrackGroup: {
-    tracks: Array<{
+  songSpotifyTracks: Array<{
+    spotifyTrack: {
       name: string;
       musicBrainzTitle: string | null;
       popularity: number | null;
-    }>;
-  } | null;
+    };
+  }>;
   youtubeVideos: Array<{
     youtubeVideo: {
       title: string | null;
@@ -105,13 +105,13 @@ const collectAllTitles = (song: SongRecord): SelectedTitle[] => {
   add(song.title, "songTitle");
 
   // musicBrainzTitle (가장 정확)
-  for (const track of song.spotifyTrackGroup?.tracks ?? []) {
-    add(track.musicBrainzTitle, "spotifyMusicBrainzTitle");
+  for (const sst of song.songSpotifyTracks) {
+    add(sst.spotifyTrack.musicBrainzTitle, "spotifyMusicBrainzTitle");
   }
 
   // spotify track name
-  for (const track of song.spotifyTrackGroup?.tracks ?? []) {
-    add(track.name, "spotifyTrackName");
+  for (const sst of song.songSpotifyTracks) {
+    add(sst.spotifyTrack.name, "spotifyTrackName");
   }
 
   // youtube video title
@@ -154,17 +154,17 @@ export async function autoFillSongTitles(
       titleLatin: true,
       titleJa: true,
       titleKo: true,
-      spotifyTrackGroup: {
+      songSpotifyTracks: {
         select: {
-          tracks: {
+          spotifyTrack: {
             select: {
               name: true,
               musicBrainzTitle: true,
               popularity: true,
             },
-            orderBy: { popularity: "desc" },
           },
         },
+        orderBy: { spotifyTrack: { popularity: "desc" } },
       },
       youtubeVideos: {
         select: {

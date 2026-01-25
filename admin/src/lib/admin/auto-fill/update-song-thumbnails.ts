@@ -14,12 +14,12 @@ type SongRecord = {
   thumbnailDefault: string | null;
   thumbnailMedium: string | null;
   thumbnailHigh: string | null;
-  spotifyTrackGroup: {
-    tracks: Array<{
+  songSpotifyTracks: Array<{
+    spotifyTrack: {
       releaseDate: string | null;
       thumbnails: string[];
-    }>;
-  } | null;
+    };
+  }>;
   youtubeVideos: Array<{
     youtubeVideo: {
       videoId: string;
@@ -72,8 +72,9 @@ const releaseKey = (releaseDate: string | null) => {
 };
 
 const pickOldestTrackWithThumbs = (
-  tracks: SongRecord["spotifyTrackGroup"]["tracks"],
+  songSpotifyTracks: SongRecord["songSpotifyTracks"],
 ): { thumbnails: string[] } | null => {
+  const tracks = songSpotifyTracks.map((sst) => sst.spotifyTrack);
   if (!tracks?.length) return null;
   const candidates = tracks
     .map((track) => ({
@@ -117,9 +118,9 @@ export async function updateSongThumbnails(
       thumbnailDefault: true,
       thumbnailMedium: true,
       thumbnailHigh: true,
-      spotifyTrackGroup: {
+      songSpotifyTracks: {
         select: {
-          tracks: {
+          spotifyTrack: {
             select: {
               releaseDate: true,
               thumbnails: true,
@@ -170,8 +171,7 @@ export async function updateSongThumbnails(
       thumbnailHigh: song.thumbnailHigh ?? null,
     };
 
-    const tracks = song.spotifyTrackGroup?.tracks ?? [];
-    const oldest = pickOldestTrackWithThumbs(tracks);
+    const oldest = pickOldestTrackWithThumbs(song.songSpotifyTracks ?? []);
 
     if (oldest) {
       const picked = pickSpotifyThumbnails(oldest.thumbnails);
