@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { TjSongDto } from "../../dto/song.dto";
+import { BestSongProposeDto, TjSongDto } from "../../dto/song.dto";
 
 export class SearchSuggestionSuggestionDto {
   @ApiProperty({ description: "추천 검색어 텍스트", example: "방탄소년단" })
@@ -95,6 +95,13 @@ export class SearchSuggestionSongDto {
     example: "https://img.youtube.com/song.jpg",
   })
   thumbnail?: string;
+
+  @ApiProperty({
+    type: BestSongProposeDto,
+    required: false,
+    description: "3개월 이내 가장 추천수가 높은 곡 추천 정보",
+  })
+  bestSongPropose?: BestSongProposeDto;
 }
 
 export class SearchSuggestionPlaylistDto {

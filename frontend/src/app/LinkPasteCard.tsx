@@ -7,11 +7,11 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import type { SongDto } from "@/api/model/models";
 import { searchControllerSearchSongByYoutubeUrl } from "@/api/model/search/search";
-import { KaraokeBadge } from "@/components/common/KaraokeBadge";
 import { useSearchTracking } from "@/hooks/useSearchTracking";
 import AppleMusicIcon from "@/icons/apple-music-filled.svg";
 import SpotifyIcon from "@/icons/spotify-filled.svg";
 import YoutubeMusicIcon from "@/icons/youtube-music-filled.svg";
+import { formatSongTitle } from "@/lib/formatSongTitle";
 import { isYoutubeUrl } from "@/lib/youtube";
 import { useSearchStore } from "@/store/searchStore";
 
@@ -131,14 +131,24 @@ export function LinkPasteCard() {
             )}
             <div className="flex-1 min-w-0">
               <h3 className="text-base font-bold text-white truncate pb-0.5">
-                {foundSong.titleKo || foundSong.title}
+                {formatSongTitle(
+                  foundSong.title,
+                  foundSong.titleKo,
+                  foundSong.titleJa,
+                  foundSong.titleLatin,
+                )}
               </h3>
-              <p className="text-sm text-surface-text truncate">{artistName}</p>
-              {tjSong && (
-                <div className="mt-1">
-                  <KaraokeBadge provider="TJ" number={tjSong.id} />
-                </div>
-              )}
+              <p className="text-sm truncate pt-px">
+                <span className="text-gray-400">{artistName}</span>
+                {tjSong && (
+                  <span className="text-[#CE8FED] ml-2">TJ - {tjSong.id}</span>
+                )}
+                {!tjSong && foundSong.bestSongPropose?.hit !== undefined && (
+                  <span className="text-[#C1B369] ml-2">
+                    추천 {foundSong.bestSongPropose.hit}
+                  </span>
+                )}
+              </p>
             </div>
           </button>
         ) : (

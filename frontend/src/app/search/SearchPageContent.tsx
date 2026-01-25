@@ -123,6 +123,7 @@ export function SearchPageContent() {
                     )}
                     subtitle={artistForDisplay?.nameKo ?? ""}
                     tjNumber={song.tjSong?.id}
+                    bestProposeHit={song.bestSongPropose?.hit}
                     spotify={song.spotify}
                     youtube={song.youtube}
                     onClick={() => {
