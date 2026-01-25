@@ -12,6 +12,7 @@
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "cheerio": "^1.1.2",
+    "cmu-pronouncing-dictionary": "^3.0.0",
     "dotenv": "^16.4.7",
     "kanabarum": "^0.2.2",
     "kuromoji": "^0.1.2",
@@ -53,6 +54,9 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "transformIgnorePatterns": [
+      "/node_modules/.pnpm/(?!cmu-pronouncing-dictionary)"
+    ],
     "testEnvironment": "node"
   }
 }
