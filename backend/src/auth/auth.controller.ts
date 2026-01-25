@@ -38,7 +38,7 @@ export class AuthController {
     private readonly authService: AuthService,
     configService: ConfigService,
   ) {
-    this.allowedOrigin = configService.get<string>("WEB_ORIGIN") ?? undefined;
+    this.allowedOrigin = configService.get<string>("FRONTEND_URL") ?? undefined;
   }
 
   private readonly allowedOrigin?: string;
@@ -111,13 +111,13 @@ export class AuthController {
 
   private readonly accessCookieOptions: CookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
   };
   private readonly refreshCookieOptions: CookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/auth/refresh",
   };
