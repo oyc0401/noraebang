@@ -1,16 +1,15 @@
 "use client";
 
 import { useArtistsControllerFindBySlug } from "@/api/model/artists/artists";
-import { SongListCarousel } from "@/components/common/SongListCarousel";
+import { SongTileCarousel } from "@/components/common/SongTileCarousel";
 
 export function PopularProposeSongsSection() {
   const { data: artistData, isLoading } = useArtistsControllerFindBySlug(
     "aimyon",
   );
 
-  const artist = artistData?.data;
   const songs =
-    artist?.songs
+    artistData?.data.songs
       ?.filter((song) => song.bestSongPropose?.hit !== undefined)
       .sort(
         (a, b) =>
@@ -19,12 +18,11 @@ export function PopularProposeSongsSection() {
       .slice(0, 12) ?? [];
 
   return (
-    <SongListCarousel
+    <SongTileCarousel
       title="TJ 추천수 많은 곡"
       songs={songs}
-      artistId={artist?.id}
-      artistTjName={artist?.tjName}
       isLoading={isLoading}
+      href="/tj/best"
     />
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 import type { SongDto } from "@/api/model/models";
 import { SongCardVertical } from "@/components/common/SongCardVertical";
 import { formatSongTitle } from "@/lib/formatSongTitle";
@@ -8,12 +10,14 @@ interface SongTileCarouselProps {
   title: string;
   songs: SongDto[];
   isLoading?: boolean;
+  href?: string;
 }
 
 export function SongTileCarousel({
   title,
   songs,
   isLoading,
+  href,
 }: SongTileCarouselProps) {
   if (isLoading) {
     return (
@@ -38,25 +42,43 @@ export function SongTileCarousel({
     return null;
   }
 
+  const titleContent = (
+    <div className="flex items-center justify-between mb-3 px-4">
+      <h2 className="text-white text-lg font-bold">{title}</h2>
+      {href && <ChevronRight className="size-5 text-gray-400" />}
+    </div>
+  );
+
   return (
     <div className="py-4">
-      <h2 className="text-white text-lg font-bold mb-3 px-4">{title}</h2>
+      {href ? (
+        <Link href={href} className="block cursor-pointer">
+          {titleContent}
+        </Link>
+      ) : (
+        titleContent
+      )}
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4">
-        {songs.map((song) => (
-          <SongCardVertical
-            key={song.id}
-            thumbnail={song.thumbnailMedium}
-            title={formatSongTitle(
-              song.title,
-              song.titleKo,
-              song.titleJa,
-              song.titleLatin,
-            )}
-            subtitle={song.artists.map((a) => a.name).join(", ")}
-            tjNumber={song.tjSong?.id}
-            bestProposeHit={song.bestSongPropose?.hit}
-          />
-        ))}
+        {songs.map((song) => {
+          const artistSlug = song.artists[0]?.slug;
+          const href = artistSlug ? `/artist/${artistSlug}#${song.id}` : undefined;
+          return (
+            <SongCardVertical
+              key={song.id}
+              thumbnail={song.thumbnailMedium}
+              title={formatSongTitle(
+                song.title,
+                song.titleKo,
+                song.titleJa,
+                song.titleLatin,
+              )}
+              subtitle={song.artists.map((a) => a.name).join(", ")}
+              tjNumber={song.tjSong?.id}
+              bestProposeHit={song.bestSongPropose?.hit}
+              href={href}
+            />
+          );
+        })}
       </div>
     </div>
   );
