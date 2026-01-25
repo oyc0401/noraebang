@@ -3,6 +3,8 @@ import { API_BASE_URL } from "./config";
 
 export { API_BASE_URL };
 
+const isServer = typeof window === "undefined";
+
 interface CustomFetchConfig {
   url: string;
   method: string;
@@ -70,7 +72,7 @@ export const customFetch = async <T>({
   signal,
 }: CustomFetchConfig): Promise<T> => {
   // 토큰 만료 임박 시 미리 갱신 (중복 요청 방지)
-  if (isTokenExpiringSoon()) {
+  if (!isServer && isTokenExpiringSoon()) {
     await refreshTokenOnce();
   }
 
