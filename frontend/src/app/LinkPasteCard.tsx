@@ -96,7 +96,11 @@ export function LinkPasteCard() {
 
   const handleCardClick = () => {
     if (foundSong && artist?.slug) {
-      saveSearchClick({ url: foundSongUrl, songId: foundSong.id });
+      saveSearchClick({
+        url: foundSongUrl,
+        songId: foundSong.id,
+        source: "home_link_paste",
+      });
       router.push(`/artist/${artist.slug}#${foundSong.id}`);
     }
   };

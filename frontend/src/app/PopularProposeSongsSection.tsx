@@ -17,7 +17,7 @@ export function PopularProposeSongsSection() {
       songs={songs}
       isLoading={isLoading}
       href="/tj/best"
-      source="home"
+      source="home_tj_recommendations"
     />
   );
 }

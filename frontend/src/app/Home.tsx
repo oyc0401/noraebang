@@ -1,5 +1,6 @@
 "use client";
 
+import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { HomeSearchBar } from "@/app/HomeSearchBar";
 import { LinkPasteCard } from "@/app/LinkPasteCard";
@@ -28,6 +29,7 @@ export function Home() {
         <PopularSongsSection />
         <RecentSongsSection />
         <PopularProposeSongsSection />
+        <Footer />
       </main>
     </>
   );

@@ -78,7 +78,7 @@ export function SearchPageContent() {
                     <ArtistCard
                       key={`artist-${artist.id}`}
                       thumbnail={artist.thumbnailMedium}
-                      title={artist.nameKo || artist.name}
+                      title={artist.name}
                       subtitle={artist.name}
                       onClick={() => {
                         if (artist?.slug) {
