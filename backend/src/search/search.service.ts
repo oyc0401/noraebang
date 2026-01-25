@@ -5,6 +5,7 @@ import { TypesenseService } from "../typesense/typesense.service";
 import { SearchResultDto } from "./dto/search-response.dto";
 import { SearchSuggestionCardDto } from "./dto/search-suggestions-response.dto";
 import { sanitizeSearchText } from "./utils/sanitize-query.util";
+import { fetchSpotifyOembed } from "../thirdparty/spotify/oembed";
 import { fetchYoutubeOembed } from "../thirdparty/youtube/oembed";
 
 type SongWithRelations = {
@@ -620,13 +621,14 @@ export class SearchService {
     return cards;
   }
 
-  async findSongByYoutubeUrl(url: string): Promise<{
+  async findSongByMusicLink(url: string): Promise<{
     songs: SongDto[];
-    matchedByVideoId: boolean;
+    matchedByExactId: boolean;
   }> {
     const videoId = this.extractYoutubeVideoId(url);
+    const spotifyId = this.extractSpotifyTrackId(url);
 
-    // 1) videoId로 DB 먼저 스캔 (SongYoutubeVideo 매핑) - 일치하는 모든 곡 반환
+    // 1) YouTube videoId로 DB 먼저 스캔
     if (videoId) {
       const mappings = await this.prisma.songYoutubeVideo.findMany({
         where: { youtubeVideoId: videoId },
@@ -639,33 +641,70 @@ export class SearchService {
 
       if (mappings.length > 0) {
         const songs = mappings.map((m) => m.song);
-        console.log(`DB발견: ${videoId}, ${songs.length}개`);
+        this.logger.log(`YouTube DB 발견: ${videoId}, ${songs.length}개`);
         return {
           songs: songs.map((song) => this.mapSongToDto(song)),
-          matchedByVideoId: true,
+          matchedByExactId: true,
         };
       }
     }
 
-    // 2) 없으면 oEmbed → title/authorName으로 Typesense 검색 (모든 결과 반환)
-    const youtube = await fetchYoutubeOembed(url);
-    // 1단계: 공백 제거
-    // 2단계: 특수문자를 공백으로 변환
-    const cleanTitle = youtube.title
+    // 2) Spotify trackId로 DB 스캔
+    if (spotifyId) {
+      const spotifyTrack = await this.prisma.spotifyTrack.findUnique({
+        where: { spotifyId },
+        select: {
+          songs: {
+            select: {
+              song: {
+                select: SONG_SEARCH_SELECT,
+              },
+            },
+          },
+        },
+      });
+
+      if (spotifyTrack && spotifyTrack.songs.length > 0) {
+        const songs = spotifyTrack.songs.map((m) => m.song);
+        this.logger.log(`Spotify DB 발견: ${spotifyId}, ${songs.length}개`);
+        return {
+          songs: songs.map((song) => this.mapSongToDto(song)),
+          matchedByExactId: true,
+        };
+      }
+    }
+
+    // 3) DB에 없으면 oEmbed → title로 Typesense 검색
+    let title: string;
+    let authorName: string | undefined;
+
+    if (spotifyId || this.isSpotifyUrl(url)) {
+      const spotify = await fetchSpotifyOembed(url);
+      // Spotify oEmbed title은 "트랙명 - 아티스트명" 형식
+      title = spotify.title;
+      authorName = undefined; // title에 포함되어 있음
+    } else {
+      const youtube = await fetchYoutubeOembed(url);
+      title = youtube.title;
+      authorName = youtube.author_name;
+    }
+
+    const cleanTitle = title
       .replace(/\s+/g, "")
       .replace(/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?`~\-😀-🙏]/gu, " ")
       .replace(/\s+/g, " ")
       .trim();
-    const cleanAuthor = youtube.author_name
-      .replace(/\s+/g, "")
+    const cleanAuthor = authorName
+      ?.replace(/\s+/g, "")
       .replace(/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?`~\-😀-🙏]/gu, " ")
       .replace(/\s+/g, " ")
       .trim();
+
     const songs = await this.searchSongsByTitleAndArtistName({
       title: cleanTitle,
       authorName: cleanAuthor,
     });
-    return { songs, matchedByVideoId: false };
+    return { songs, matchedByExactId: false };
   }
 
   private extractYoutubeVideoId(input: string): string | null {
@@ -678,17 +717,47 @@ export class SearchService {
         return id ? id : null;
       }
 
-      // youtube.com/watch?v=<id>
-      const v = u.searchParams.get("v");
-      if (v) return v;
+      // youtube.com 또는 music.youtube.com
+      if (u.hostname.includes("youtube.com")) {
+        // watch?v=<id>
+        const v = u.searchParams.get("v");
+        if (v) return v;
 
-      // youtube.com/shorts/<id> or /embed/<id>
-      const m = u.pathname.match(/\/(shorts|embed)\/([a-zA-Z0-9_-]{6,})/);
-      if (m?.[2]) return m[2];
+        // /shorts/<id> or /embed/<id>
+        const m = u.pathname.match(/\/(shorts|embed)\/([a-zA-Z0-9_-]{6,})/);
+        if (m?.[2]) return m[2];
+      }
 
       return null;
     } catch {
       return null;
+    }
+  }
+
+  private extractSpotifyTrackId(input: string): string | null {
+    try {
+      const u = new URL(input);
+
+      if (!u.hostname.includes("spotify.com")) {
+        return null;
+      }
+
+      // /track/<id> 형식
+      const m = u.pathname.match(/\/track\/([a-zA-Z0-9]+)/);
+      if (m?.[1]) return m[1];
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private isSpotifyUrl(input: string): boolean {
+    try {
+      const u = new URL(input);
+      return u.hostname.includes("spotify.com");
+    } catch {
+      return false;
     }
   }
 

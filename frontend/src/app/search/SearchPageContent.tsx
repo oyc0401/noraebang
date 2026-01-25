@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import {
   useSearchControllerSearch,
-  useSearchControllerSearchSongByYoutubeUrl,
+  useSearchControllerSearchSongByMusicLink,
 } from "@/api/model/search/search";
 import { ArtistCard } from "@/components/common/ArtistCard";
 import { SongCard } from "@/components/common/SongCard";
@@ -28,14 +28,14 @@ export function SearchPageContent() {
       { query: { enabled: !!query && !youtubeUrl } },
     );
 
-  // 유튜브 URL 검색
-  const { data: youtubeSearchResponse, isLoading: isYoutubeLoading } =
-    useSearchControllerSearchSongByYoutubeUrl(
+  // 음악 링크 검색
+  const { data: linkSearchResponse, isLoading: isLinkLoading } =
+    useSearchControllerSearchSongByMusicLink(
       { url: youtubeUrl },
       { query: { enabled: !!youtubeUrl } },
     );
 
-  const isLoading = isSearchLoading || isYoutubeLoading;
+  const isLoading = isSearchLoading || isLinkLoading;
 
   useEffect(() => {
     setQuery(query);
@@ -51,7 +51,7 @@ export function SearchPageContent() {
         .map((item) => item.artist);
 
   const songs = youtubeUrl
-    ? youtubeSearchResponse?.songs // 유튜브 URL 검색 결과
+    ? linkSearchResponse?.songs // 유튜브 URL 검색 결과
     : searchResponse?.data
         ?.filter((item) => item.type === "song")
         .map((item) => item.song);

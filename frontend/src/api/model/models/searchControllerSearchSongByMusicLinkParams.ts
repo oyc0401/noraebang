@@ -6,9 +6,9 @@
  * OpenAPI spec version: 1.0
  */
 
-export type SearchControllerSearchSongByYoutubeUrlParams = {
+export type SearchControllerSearchSongByMusicLinkParams = {
 /**
- * YouTube 동영상 URL
+ * YouTube Music 또는 Spotify URL
  */
 url: string;
 };

@@ -6,13 +6,13 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import type { SongDto } from "@/api/model/models";
-import { searchControllerSearchSongByYoutubeUrl } from "@/api/model/search/search";
+import { searchControllerSearchSongByMusicLink } from "@/api/model/search/search";
 import { useSearchTracking } from "@/hooks/useSearchTracking";
 import AppleMusicIcon from "@/icons/apple-music-filled.svg";
 import SpotifyIcon from "@/icons/spotify-filled.svg";
 import YoutubeMusicIcon from "@/icons/youtube-music-filled.svg";
 import { formatSongTitle } from "@/lib/formatSongTitle";
-import { isYoutubeUrl } from "@/lib/youtube";
+import { isMusicUrl } from "@/lib/music-url";
 import { useSearchStore } from "@/store/searchStore";
 
 export function LinkPasteCard() {
@@ -24,9 +24,9 @@ export function LinkPasteCard() {
   );
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const youtubeMutation = useMutation({
+  const linkMutation = useMutation({
     mutationFn: async (url: string) => {
-      const result = await searchControllerSearchSongByYoutubeUrl({ url });
+      const result = await searchControllerSearchSongByMusicLink({ url });
       return {
         songs: result.songs,
         matchedByVideoId: result.matchedByVideoId,
@@ -53,8 +53,8 @@ export function LinkPasteCard() {
       navigator.clipboard
         .readText()
         .then((text) => {
-          if (text.trim() && isYoutubeUrl(text)) {
-            youtubeMutation.mutate(text);
+          if (text.trim() && isMusicUrl(text)) {
+            linkMutation.mutate(text);
           }
         })
         .catch(() => {
@@ -75,9 +75,9 @@ export function LinkPasteCard() {
 
   const handleInputPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData("text");
-    if (text && isYoutubeUrl(text)) {
+    if (text && isMusicUrl(text)) {
       e.preventDefault();
-      youtubeMutation.mutate(text);
+      linkMutation.mutate(text);
       if (inputRef.current) {
         inputRef.current.blur();
       }
@@ -193,12 +193,12 @@ export function LinkPasteCard() {
           <button
             type="button"
             onClick={handlePaste}
-            disabled={youtubeMutation.isPending}
+            disabled={linkMutation.isPending}
             className="flex min-w-30 cursor-pointer items-center justify-center rounded-full h-11 px-5 bg-primary hover:bg-primary/90 transition-colors text-white gap-2 text-sm font-bold leading-normal shadow-lg shadow-primary/25 active:scale-95 duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Link className="size-4" />
             <span>
-              {youtubeMutation.isPending ? (
+              {linkMutation.isPending ? (
                 "검색 중..."
               ) : (
                 <>
