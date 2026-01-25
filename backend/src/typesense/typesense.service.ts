@@ -68,16 +68,12 @@ export class TypesenseService implements OnModuleInit {
         q: preprocessedQuery,
         query_by: [
           "q_name_ko_p",
-          "q_name_ko_a",
           "q_name_ko_norm",
           "q_name_latin_p",
-          "q_name_latin_a",
           "q_name_latin_norm",
           "q_name_ja_kanji_p",
-          "q_name_ja_kanji_a",
           "q_name_ja_kanji_norm",
           "q_name_ja_kana_p",
-          "q_name_ja_kana_a",
           "q_name_ja_kana_norm",
           "q_artist_pron",
         ].join(","),
@@ -94,45 +90,93 @@ export class TypesenseService implements OnModuleInit {
     params: TypesenseSearchParams,
   ): Promise<SearchResponse<TypesenseSongDocument>> {
     const { query, page = 1, perPage = 20 } = params;
-    const preprocessedQuery = preprocessSearchQuery(query);
 
-    const songQueryFields = [
-      "q_song_ko_p",
-      "q_song_ko_a",
+    const originalQuery = (query ?? "").trim();
+    const preprocessedQuery = preprocessSearchQuery(originalQuery).trim();
+
+    // q가 비었으면 인기순 목록(또는 최신순)을 리턴하도록 처리
+    // Typesense는 q="*" 로 전체 문서 조회 가능 (필터와 함께 자주 씀). :contentReference[oaicite:2]{index=2}
+    const q1 = preprocessedQuery.length > 0 ? preprocessedQuery : "*";
+
+    // ✅ 실제 문서에 존재하는 필드만 사용 (현재 예시 문서 기준)
+    // 우선순위: combo > 제목 norm > 발음 norm > 제목 원문 > 발음 원문 > artist
+    const queryByFields = [
+      "q_combo_a",
       "q_song_ko_norm",
-      "q_song_latin_p",
-      "q_song_latin_a",
-      "q_song_latin_norm",
-      "q_song_ja_p",
-      "q_song_ja_a",
       "q_song_ja_norm",
+      "q_song_latin_norm",
+      "q_song_pronu_norm",
+      "q_song_latin_p",
       "q_song_pronu",
       "artist_key",
-      "q_combo_a",
     ];
 
+    // weights는 “상대 가중치”이고 0~127 범위. :contentReference[oaicite:3]{index=3}
+    // (주의: _text_match 숫자 자체가 weights로 변하지 않을 수 있어도, 랭킹에는 반영됩니다.) :contentReference[oaicite:4]{index=4}
+    const queryByWeights = [
+      127, // q_combo_a
+      90, // ko_norm
+      90, // ja_norm
+      80, // latin_norm
+      80, // pron_norm
+      60, // latin_p (공백 포함 exact를 살리고 싶으면 남겨둠)
+      55, // pron (공백 포함 발음)
+      45, // artist_key
+    ];
+
+    // 공백/붙임 검색 보강: split_join_tokens=fallback 권장 :contentReference[oaicite:5]{index=5}
+    // exact match 우대는 기본적으로 중요(특히 p 필드) :contentReference[oaicite:6]{index=6}
+    const baseSearchParams = {
+      query_by: queryByFields.join(","),
+      query_by_weights: queryByWeights.join(","),
+      split_join_tokens: "fallback" as const,
+      prioritize_exact_match: true,
+      sort_by: "_text_match(buckets: 10):desc,songScore:desc",
+      page,
+      per_page: perPage,
+    };
+
     console.log("🔍 [Typesense] 검색 요청:", {
-      originalQuery: query,
+      originalQuery,
       preprocessedQuery,
+      q1,
+      query_by: baseSearchParams.query_by,
+      query_by_weights: baseSearchParams.query_by_weights,
     });
 
-    const result = await this.client
-      .collections<TypesenseSongDocument>("songs")
-      .documents()
-      .search({
-        q: preprocessedQuery,
-        query_by: songQueryFields.join(","),
-        sort_by: "_text_match:desc,songPopularity:desc",
-        page,
-        per_page: perPage,
-      });
+    const doSearch = (q: string) =>
+      this.client
+        .collections<TypesenseSongDocument>("songs")
+        .documents()
+        .search({
+          q,
+          ...baseSearchParams,
+        });
+
+    // 1차: 전처리된 쿼리
+    let result = await doSearch(q1);
+
+    // 2차 fallback: 전처리가 오히려 손해인 케이스 방어
+    // (q="*"인 경우에는 fallback 불필요)
+    if (
+      q1 !== "*" &&
+      (result.found ?? 0) === 0 &&
+      originalQuery.length > 0 &&
+      originalQuery !== preprocessedQuery
+    ) {
+      console.log("🔁 [Typesense] 0건 fallback 검색:", { q: originalQuery });
+      result = await doSearch(originalQuery);
+    }
 
     console.log(
       `🔍 [Typesense] 검색 결과: ${result.hits?.length ?? 0}개, found: ${result.found}`,
     );
     if (result.hits && result.hits.length > 0) {
       console.log(
-        `   첫 3개 ID: ${result.hits.slice(0, 3).map((h) => h.document.id).join(", ")}`,
+        `   첫 3개 ID: ${result.hits
+          .slice(0, 3)
+          .map((h) => h.document.id)
+          .join(", ")}`,
       );
     }
 
