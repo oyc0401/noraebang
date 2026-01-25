@@ -268,6 +268,37 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Link>
+
+          <Link
+            href="/statistics"
+            className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+          >
+            <div className="flex items-center gap-4">
+              <div className="rounded-lg bg-cyan-100 p-3 dark:bg-cyan-900/30">
+                <svg
+                  className="h-6 w-6 text-cyan-600 dark:text-cyan-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
+                  검색 통계
+                </h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  SearchHistory & SearchClick 데이터 분석
+                </p>
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
     </div>
