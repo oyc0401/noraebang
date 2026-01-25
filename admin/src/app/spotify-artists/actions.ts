@@ -6,18 +6,26 @@ import { prisma } from "@/lib/prisma";
 export async function getArtistsWithDuplicateSpotifyId(
   offset = 0,
   limit = 500,
+  catalog?: string | null,
 ) {
-  // 중복된 spotifyId를 가진 아티스트들 찾기
-  const duplicateSpotifyIds = await prisma.$queryRaw<
-    { spotify_id: string; count: bigint }[]
-  >`
-    SELECT spotify_id, COUNT(*)::bigint as count
-    FROM artist
-    WHERE spotify_id IS NOT NULL
-    GROUP BY spotify_id
-    HAVING COUNT(*) > 1
-    ORDER BY COUNT(*) DESC, spotify_id ASC
-  `;
+  // 중복된 spotifyId를 가진 아티스트들 찾기 (카탈로그 필터 적용)
+  const duplicateSpotifyIds = catalog
+    ? await prisma.$queryRaw<{ spotify_id: string; count: bigint }[]>`
+        SELECT spotify_id, COUNT(*)::bigint as count
+        FROM artist
+        WHERE spotify_id IS NOT NULL AND home_catalog = ${catalog}
+        GROUP BY spotify_id
+        HAVING COUNT(*) > 1
+        ORDER BY COUNT(*) DESC, spotify_id ASC
+      `
+    : await prisma.$queryRaw<{ spotify_id: string; count: bigint }[]>`
+        SELECT spotify_id, COUNT(*)::bigint as count
+        FROM artist
+        WHERE spotify_id IS NOT NULL
+        GROUP BY spotify_id
+        HAVING COUNT(*) > 1
+        ORDER BY COUNT(*) DESC, spotify_id ASC
+      `;
 
   const spotifyIds = duplicateSpotifyIds.map((row) => row.spotify_id);
 
@@ -27,6 +35,7 @@ export async function getArtistsWithDuplicateSpotifyId(
       spotifyId: {
         in: spotifyIds,
       },
+      ...(catalog ? { homeCatalog: catalog } : {}),
     },
     include: {
       spotifyArtist: true,

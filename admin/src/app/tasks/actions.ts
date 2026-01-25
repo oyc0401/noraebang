@@ -1,5 +1,6 @@
 "use server";
 
+import { prisma } from "@/lib/prisma";
 import { autoFillArtistNames } from "@/lib/admin/auto-fill/auto-fill-artist-names";
 import { autoFillSongTitles } from "@/lib/admin/auto-fill/auto-fill-song-titles";
 import { fetchProposeForArtist } from "@/lib/admin/refresh/fetch-refresh-propose";
@@ -115,4 +116,20 @@ export async function runUpdateArtistThumbnailsForArtist(
 ): Promise<void> {
   const dryRun = Boolean(options.dryRun);
   await updateArtistThumbnails(artistId, { dryRun });
+}
+
+export async function getFilteredArtistIds(
+  startId: number,
+  endId: number,
+  catalog: string | null,
+): Promise<number[]> {
+  const artists = await prisma.artist.findMany({
+    where: {
+      id: { gte: startId, lte: endId },
+      ...(catalog ? { homeCatalog: catalog } : {}),
+    },
+    select: { id: true },
+    orderBy: { id: "asc" },
+  });
+  return artists.map((a) => a.id);
 }

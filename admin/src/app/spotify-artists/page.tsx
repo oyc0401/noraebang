@@ -13,12 +13,19 @@ import {
 
 type Artist = Awaited<ReturnType<typeof getArtistsWithDuplicateSpotifyId>>[number];
 
+const CATALOG_OPTIONS = [
+  { value: "", label: "전체" },
+  { value: "JPOP", label: "JPOP" },
+  { value: "KPOP", label: "KPOP" },
+];
+
 export default function SpotifyArtistsPage() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
+  const [catalog, setCatalog] = useState("JPOP");
 
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const [relatedArtists, setRelatedArtists] = useState<Artist[]>([]);
@@ -47,7 +54,11 @@ export default function SpotifyArtistsPage() {
 
     try {
       const currentOffset = reset ? 0 : offset;
-      const newArtists = await getArtistsWithDuplicateSpotifyId(currentOffset, 500);
+      const newArtists = await getArtistsWithDuplicateSpotifyId(
+        currentOffset,
+        500,
+        catalog || null,
+      );
 
       if (reset) {
         setArtists(newArtists);
@@ -63,12 +74,12 @@ export default function SpotifyArtistsPage() {
     } finally {
       setLoading(false);
     }
-  }, [offset]);
+  }, [offset, catalog]);
 
-  // 초기 로드
+  // 초기 로드 및 카탈로그 변경 시 재로드
   useEffect(() => {
     loadArtists(true);
-  }, []);
+  }, [catalog]);
 
   // 무한 스크롤
   useEffect(() => {
@@ -284,11 +295,25 @@ export default function SpotifyArtistsPage() {
               />
             </svg>
           </Link>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold">스포티파이 아티스트 중복 관리</h1>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
               같은 Spotify ID를 가진 아티스트들을 관리합니다
             </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">카탈로그:</span>
+            <select
+              value={catalog}
+              onChange={(e) => setCatalog(e.target.value)}
+              className="cursor-pointer rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+            >
+              {CATALOG_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
