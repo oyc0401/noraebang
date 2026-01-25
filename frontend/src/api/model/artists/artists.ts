@@ -22,7 +22,7 @@ import type {
 
 import type {
   ArtistDetailResponseDto,
-  ArtistDetailsListResponseDto,
+  ArtistListResponseDto,
   ArtistsControllerFindMostViewedParams,
   ErrorResponseDto
 } from '.././models';
@@ -42,7 +42,7 @@ export const artistsControllerFindMostViewed = (
 ) => {
       
       
-      return customFetch<ArtistDetailsListResponseDto>(
+      return customFetch<ArtistListResponseDto>(
       {url: `/artists`, method: 'GET',
         params, signal
     },

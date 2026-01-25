@@ -5,11 +5,11 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
-import type { ArtistDetailsDto } from './artistDetailsDto';
+import type { ArtistDto } from './artistDto';
 import type { ApiResponseMeta } from './apiResponseMeta';
 
-export interface ArtistDetailsListResponseDto {
-  data: ArtistDetailsDto[];
+export interface ArtistListResponseDto {
+  data: ArtistDto[];
   message?: string;
   meta?: ApiResponseMeta;
 }
