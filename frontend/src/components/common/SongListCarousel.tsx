@@ -1,5 +1,8 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { SongDto } from "@/api/model/models";
 import { SongCard } from "@/components/common/SongCard";
 import { formatSongTitle } from "@/lib/formatSongTitle";
@@ -10,6 +13,7 @@ interface SongListCarouselProps {
   artistId?: number;
   artistTjName?: string;
   isLoading?: boolean;
+  href?: string;
 }
 
 export function SongListCarousel({
@@ -18,7 +22,10 @@ export function SongListCarousel({
   artistId,
   artistTjName,
   isLoading,
+  href,
 }: SongListCarouselProps) {
+  const router = useRouter();
+
   // 4개씩 그룹으로 나누기
   const songPages: SongDto[][] = [];
   for (let i = 0; i < songs.length; i += 4) {
@@ -48,36 +55,57 @@ export function SongListCarousel({
     return null;
   }
 
+  const titleContent = (
+    <div className="flex items-center justify-between mb-3 px-4">
+      <h2 className="text-white text-lg font-bold">{title}</h2>
+      {href && <ChevronRight className="size-5 text-gray-400" />}
+    </div>
+  );
+
   return (
     <div className="py-4">
-      <h2 className="text-white text-lg font-bold mb-3 px-4">{title}</h2>
+      {href ? (
+        <Link href={href} className="block cursor-pointer">
+          {titleContent}
+        </Link>
+      ) : (
+        titleContent
+      )}
       <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory">
         {songPages.map((pageSongs, pageIndex) => (
           <div
             key={pageIndex}
             className="w-[90%] shrink-0 snap-start flex flex-col pl-2"
           >
-            {pageSongs.map((song) => (
-              <SongCard
-                key={song.id}
-                songId={song.id}
-                artistId={artistId}
-                artistTjName={artistTjName}
-                thumbnail={song.thumbnailMedium}
-                title={formatSongTitle(
-                  song.title,
-                  song.titleKo,
-                  song.titleJa,
-                  song.titleLatin,
-                )}
-                originalTitle={song.title}
-                subtitle={song.artists.map((a) => a.name).join(", ")}
-                tjNumber={song.tjSong?.id}
-                bestProposeHit={song.bestSongPropose?.hit}
-                spotify={song.spotify}
-                youtube={song.youtube}
-              />
-            ))}
+            {pageSongs.map((song) => {
+              const artistSlug = song.artists[0]?.slug;
+              return (
+                <SongCard
+                  key={song.id}
+                  songId={song.id}
+                  artistId={artistId}
+                  artistTjName={artistTjName}
+                  thumbnail={song.thumbnailMedium}
+                  title={formatSongTitle(
+                    song.title,
+                    song.titleKo,
+                    song.titleJa,
+                    song.titleLatin,
+                  )}
+                  originalTitle={song.title}
+                  subtitle={song.artists.map((a) => a.name).join(", ")}
+                  tjNumber={song.tjSong?.id}
+                  bestProposeHit={song.bestSongPropose?.hit}
+                  spotify={song.spotify}
+                  youtube={song.youtube}
+                  onClick={
+                    artistSlug
+                      ? () => router.push(`/artist/${artistSlug}#${song.id}`)
+                      : undefined
+                  }
+                />
+              );
+            })}
           </div>
         ))}
       </div>

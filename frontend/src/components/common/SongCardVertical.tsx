@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 interface SongCardVerticalProps {
   thumbnail?: string;
@@ -6,6 +7,7 @@ interface SongCardVerticalProps {
   subtitle: string;
   tjNumber?: string;
   bestProposeHit?: number;
+  href?: string;
 }
 
 export function SongCardVertical({
@@ -14,8 +16,9 @@ export function SongCardVertical({
   subtitle,
   tjNumber,
   bestProposeHit,
+  href,
 }: SongCardVerticalProps) {
-  return (
+  const content = (
     <div className="w-[140px] shrink-0">
       <div className="relative aspect-square w-full rounded-md bg-gray-700 overflow-hidden">
         {thumbnail && (
@@ -43,4 +46,14 @@ export function SongCardVertical({
       </div>
     </div>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 }

@@ -13,11 +13,12 @@ export function RecentSongsSection() {
 
   return (
     <SongListCarousel
-      title="최근에 나온 곡"
+      title="인기있는 곡"
       songs={songs}
       artistId={artist?.id}
       artistTjName={artist?.tjName}
       isLoading={isLoading}
+      href="/popular/song"
     />
   );
 }
