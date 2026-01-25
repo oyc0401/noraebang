@@ -62,6 +62,7 @@ model Song {
   titleJaPronu        String?            @map("title_ja_pronu")
   titleLatinPronu     String?            @map("title_latin_pronu")
   score               Float?             @map("score")
+  visible             Boolean            @default(false)
   artistSongs         ArtistSong[]
   karaokeSongs        KaraokeSong[]
   tjSong              TjSong?            @relation(fields: [tjSongId], references: [id])
