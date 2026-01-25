@@ -58,6 +58,8 @@ export type ManagerArtistSongDetail = {
   titleLatin?: string | null;
   titleJa?: string | null;
   titleJaKana?: string | null;
+  titleJaPronu?: string | null;
+  titleLatinPronu?: string | null;
   catalog?: string | null;
   hasYoutube: boolean;
   youtubeVideoId?: string | null;

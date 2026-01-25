@@ -50,6 +50,8 @@ export function SongEditDialog() {
   const [titleLatin, setTitleLatin] = useState("");
   const [titleJaKana, setTitleJaKana] = useState("");
   const [titleJa, setTitleJa] = useState("");
+  const [titleJaPronu, setTitleJaPronu] = useState("");
+  const [titleLatinPronu, setTitleLatinPronu] = useState("");
   const [catalog, setCatalog] = useState("");
 
   // 아티스트 상태
@@ -103,6 +105,8 @@ export function SongEditDialog() {
     setTitleLatin(song.titleLatin ?? "");
     setTitleJaKana(song.titleJaKana ?? "");
     setTitleJa(song.titleJa ?? "");
+    setTitleJaPronu(song.titleJaPronu ?? "");
+    setTitleLatinPronu(song.titleLatinPronu ?? "");
     setCatalog(song.catalog ?? "");
     setCurrentThumbnail(
       song.thumbnails?.medium ?? song.thumbnails?.default ?? null,
@@ -209,6 +213,8 @@ export function SongEditDialog() {
         titleLatin,
         titleJaKana,
         titleJa,
+        titleJaPronu,
+        titleLatinPronu,
         catalog,
       });
 
@@ -576,6 +582,26 @@ export function SongEditDialog() {
                     value={titleJaKana}
                     onChange={(e) => setTitleJaKana(e.target.value)}
                     className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+                    disabled={isSaving}
+                  />
+                </Field>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field label="Title (JA Pronu) 일본어 발음">
+                  <input
+                    value={titleJaPronu}
+                    onChange={(e) => setTitleJaPronu(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+                    placeholder="예: 요루니카케루"
+                    disabled={isSaving}
+                  />
+                </Field>
+                <Field label="Title (Latin Pronu) 영어 발음">
+                  <input
+                    value={titleLatinPronu}
+                    onChange={(e) => setTitleLatinPronu(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 outline-none focus:border-blue-300"
+                    placeholder="예: 프리텐더"
                     disabled={isSaving}
                   />
                 </Field>

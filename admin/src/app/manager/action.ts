@@ -440,6 +440,8 @@ export async function fetchManagerArtistSongs(
           titleLatin: true,
           titleJa: true,
           titleJaKana: true,
+          titleJaPronu: true,
+          titleLatinPronu: true,
 
           catalog: true,
           youtubeVideoId: true,
@@ -533,6 +535,8 @@ export async function fetchManagerArtistSongs(
       titleLatin: song.titleLatin,
       titleJa: song.titleJa,
       titleJaKana: song.titleJaKana,
+      titleJaPronu: song.titleJaPronu,
+      titleLatinPronu: song.titleLatinPronu,
 
       catalog: song.catalog,
       hasYoutube: sortedVideos.length > 0,
@@ -1414,6 +1418,8 @@ export type UpdateSongInput = {
   titleLatin?: string;
   titleJa?: string | null;
   titleJaKana?: string | null;
+  titleJaPronu?: string | null;
+  titleLatinPronu?: string | null;
   catalog?: string;
   youtubeVideoId?: string;
 };
@@ -1431,6 +1437,8 @@ export async function updateSong(input: UpdateSongInput) {
     titleLatin: data.titleLatin?.trim() || null,
     titleJa: data.titleJa?.trim() || null,
     titleJaKana: data.titleJaKana?.trim() || null,
+    titleJaPronu: data.titleJaPronu?.trim() || null,
+    titleLatinPronu: data.titleLatinPronu?.trim() || null,
 
     catalog: data.catalog?.trim() || null,
     youtubeVideoId: data.youtubeVideoId?.trim() || null,
@@ -1446,6 +1454,8 @@ export async function updateSong(input: UpdateSongInput) {
       titleLatin: true,
       titleJa: true,
       titleJaKana: true,
+      titleJaPronu: true,
+      titleLatinPronu: true,
 
       catalog: true,
       youtubeVideoId: true,
@@ -1502,6 +1512,8 @@ export async function updateSong(input: UpdateSongInput) {
     titleLatin: updatedSong.titleLatin,
     titleJa: updatedSong.titleJa,
     titleJaKana: updatedSong.titleJaKana,
+    titleJaPronu: updatedSong.titleJaPronu,
+    titleLatinPronu: updatedSong.titleLatinPronu,
 
     catalog: updatedSong.catalog,
     hasYoutube: Boolean(updatedSong.youtubeVideoId),
@@ -1890,6 +1902,8 @@ export async function createSong({
       titleLatin: true,
       titleJa: true,
       titleJaKana: true,
+      titleJaPronu: true,
+      titleLatinPronu: true,
 
       catalog: true,
       youtubeVideoId: true,
@@ -1957,6 +1971,8 @@ export async function createSong({
     titleLatin: song.titleLatin,
     titleJa: song.titleJa,
     titleJaKana: song.titleJaKana,
+    titleJaPronu: song.titleJaPronu,
+    titleLatinPronu: song.titleLatinPronu,
 
     catalog: song.catalog,
     hasYoutube: sortedVideos.length > 0,

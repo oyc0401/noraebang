@@ -1,7 +1,8 @@
 /**
  * Song 제목 한글 발음 채우기 스크립트
  *
- * - titleJaKana → titleJaPronu: kanabarum 라이브러리 사용 (일본어 가나 → 한글)
+ * - titleJa/titleJaKana → titleJaPronu: kanabarum 라이브러리 사용 (일본어 → 한글)
+ *   - titleJaKana 우선, 없으면 titleJa 사용 (한자 포함 가능)
  * - titleLatin → titleLatinPronu: hangulize 라이브러리 사용 (영어/로마자 → 한글)
  *
  * 항상 --dry-run 모드로 결과를 검토한 뒤 실제 업데이트하세요.
@@ -63,11 +64,16 @@ async function main() {
   console.log("📦 Fetching songs...");
   const songs = await prisma.song.findMany({
     where: {
-      OR: [{ titleJaKana: { not: null } }, { titleLatin: { not: null } }],
+      OR: [
+        { titleJa: { not: null } },
+        { titleJaKana: { not: null } },
+        { titleLatin: { not: null } },
+      ],
     },
     select: {
       id: true,
       title: true,
+      titleJa: true,
       titleJaKana: true,
       titleJaPronu: true,
       titleLatin: true,
@@ -85,8 +91,8 @@ async function main() {
   for (const song of songs) {
     const updateData: { titleJaPronu?: string; titleLatinPronu?: string } = {};
 
-    // titleJaKana → titleJaPronu
-    const jaSource = song.titleJaKana?.trim();
+    // titleJaKana → titleJaPronu (없으면 titleJa 사용)
+    const jaSource = song.titleJaKana?.trim() || song.titleJa?.trim();
     if (jaSource) {
       const jaConverted = kanabarum
         .kanaToHangul(jaSource)
