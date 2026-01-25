@@ -12,6 +12,7 @@ import { mapSongYoutubeVideoFromSearch } from "@/lib/admin/mapping/map-song-yout
 import { mapSongSpotifyTracks } from "@/lib/admin/mapping/map-song-spotify-tracks";
 import { updateSongThumbnails } from "@/lib/admin/auto-fill/update-song-thumbnails";
 import { updateSongScore } from "@/lib/admin/auto-fill/update-song-score";
+import { updateArtistThumbnails } from "@/lib/admin/auto-fill/update-artist-thumbnails";
 
 export async function runAutoFillSongTitlesForArtist(
   artistId: number,
@@ -106,4 +107,12 @@ export async function runFetchNewTjSongs(
 ): Promise<void> {
   const dryRun = Boolean(options.dryRun);
   await fetchNewTjSongs({ dryRun, yearMonth: options.yearMonth });
+}
+
+export async function runUpdateArtistThumbnailsForArtist(
+  artistId: number,
+  options: { dryRun?: boolean } = {},
+): Promise<void> {
+  const dryRun = Boolean(options.dryRun);
+  await updateArtistThumbnails(artistId, { dryRun });
 }
