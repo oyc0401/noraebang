@@ -3,6 +3,7 @@
 import { Header } from "@/components/common/Header";
 import { HomeSearchBar } from "@/app/HomeSearchBar";
 import { LinkPasteCard } from "@/app/LinkPasteCard";
+import { RecentSongsSection } from "@/app/RecentSongsSection";
 
 export function Home() {
   return (
@@ -22,6 +23,7 @@ export function Home() {
         <div className="px-4 py-4">
           <LinkPasteCard />
         </div>
+        <RecentSongsSection />
       </main>
     </>
   );
