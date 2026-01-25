@@ -4,13 +4,18 @@ import { useArtistsControllerFindBySlug } from "@/api/model/artists/artists";
 import { SongCard } from "@/components/common/SongCard";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 
-export function RecentSongsSection() {
+export function PopularProposeSongsSection() {
   const { data: artistData, isLoading } = useArtistsControllerFindBySlug(
     "aimyon",
   );
 
   const artist = artistData?.data;
-  const songs = artist?.songs?.slice(0, 12) ?? [];
+  // 추천수 기준 정렬 후 12개
+  const songs =
+    artist?.songs
+      ?.filter((song) => song.bestSongPropose?.hit !== undefined)
+      .sort((a, b) => (b.bestSongPropose?.hit ?? 0) - (a.bestSongPropose?.hit ?? 0))
+      .slice(0, 12) ?? [];
 
   // 4개씩 그룹으로 나누기
   const songPages: typeof songs[] = [];
@@ -22,7 +27,7 @@ export function RecentSongsSection() {
     return (
       <div className="py-4">
         <h2 className="text-white text-lg font-bold mb-3 px-4">
-          최근에 나온 곡
+          TJ 추천수 많은 곡
         </h2>
         <div className="flex flex-col gap-1 px-2">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -45,7 +50,9 @@ export function RecentSongsSection() {
 
   return (
     <div className="py-4">
-      <h2 className="text-white text-lg font-bold mb-3 px-4">최근에 나온 곡</h2>
+      <h2 className="text-white text-lg font-bold mb-3 px-4">
+        TJ 추천수 많은 곡
+      </h2>
       <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory">
         {songPages.map((pageSongs, pageIndex) => (
           <div
