@@ -83,9 +83,9 @@ async function fetchArtistData(artistId: number) {
       title: true,
       titleKo: true,
       titleLatin: true,
-      spotifyTrackGroup: {
+      songSpotifyTracks: {
         select: {
-          tracks: {
+          spotifyTrack: {
             select: {
               name: true,
               musicBrainzTitle: true,
@@ -123,12 +123,10 @@ async function fetchArtistData(artistId: number) {
     const spotifyTitles: string[] = [];
     const musicBrainzTitles: string[] = [];
 
-    if (song.spotifyTrackGroup) {
-      for (const track of song.spotifyTrackGroup.tracks) {
-        if (track.name) spotifyTitles.push(track.name);
-        if (track.musicBrainzTitle)
-          musicBrainzTitles.push(track.musicBrainzTitle);
-      }
+    for (const sst of song.songSpotifyTracks) {
+      if (sst.spotifyTrack.name) spotifyTitles.push(sst.spotifyTrack.name);
+      if (sst.spotifyTrack.musicBrainzTitle)
+        musicBrainzTitles.push(sst.spotifyTrack.musicBrainzTitle);
     }
 
     return {

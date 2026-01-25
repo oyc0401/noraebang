@@ -83,14 +83,17 @@ async function fetchSongsForArtist(artistId: number): Promise<SongWithTitles[]> 
       id: true,
       title: true,
       titleKo: true,
-      spotifyTrackGroup: {
+      songSpotifyTracks: {
         select: {
-          primaryTrack: {
+          spotifyTrack: {
             select: {
               name: true,
+              popularity: true,
             },
           },
         },
+        orderBy: { spotifyTrack: { popularity: "desc" } },
+        take: 1,
       },
     },
   });
@@ -99,7 +102,7 @@ async function fetchSongsForArtist(artistId: number): Promise<SongWithTitles[]> 
     id: song.id,
     title: song.title,
     titleKo: song.titleKo,
-    primarySpotifyTrackName: song.spotifyTrackGroup?.primaryTrack?.name ?? null,
+    primarySpotifyTrackName: song.songSpotifyTracks[0]?.spotifyTrack?.name ?? null,
   }));
 }
 
