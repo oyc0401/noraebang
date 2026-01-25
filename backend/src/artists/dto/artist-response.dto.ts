@@ -1,9 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { ApiResponseMeta, ArtistDetailsDto } from "../../dto";
+import { ApiResponseMeta, ArtistDetailsDto, ArtistDto } from "../../dto";
 
-export class ArtistDetailsListResponseDto {
-  @ApiProperty({ type: [ArtistDetailsDto] })
-  data: ArtistDetailsDto[];
+export class ArtistListResponseDto {
+  @ApiProperty({ type: [ArtistDto] })
+  data: ArtistDto[];
 
   @ApiProperty({ example: null, required: false })
   message?: string;
