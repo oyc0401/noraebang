@@ -18,6 +18,7 @@ import {
   runMapSongSpotifyGroupsForArtist,
   runUpdateSongScoreForArtist,
   runUpdateArtistThumbnailsForArtist,
+  getFilteredArtistIds,
 } from "./actions";
 
 type TaskAction = (
@@ -25,9 +26,10 @@ type TaskAction = (
   options: { dryRun: boolean },
 ) => Promise<void>;
 
-type RangeParams = {
+type FilterParams = {
   startId: string;
   endId: string;
+  catalog: string;
 };
 
 function useGlobalTask(
@@ -76,7 +78,7 @@ function useGlobalTask(
 function useArtistTask(
   taskName: string,
   action: TaskAction,
-  getRange: () => RangeParams,
+  getFilter: () => FilterParams,
   defaultDryRun = true,
 ) {
   const [dryRun, setDryRun] = useState(defaultDryRun);
@@ -86,7 +88,7 @@ function useArtistTask(
   const cancelRef = useRef(false);
 
   const run = () => {
-    const { startId, endId } = getRange();
+    const { startId, endId, catalog } = getFilter();
     const start = Number(startId);
     const end = Number(endId);
     if (!Number.isFinite(start) || !Number.isFinite(end) || start <= 0) {
@@ -100,23 +102,35 @@ function useArtistTask(
 
     startTransition(() => {
       setError(null);
-      setSummary(
-        `실행 시작 (ID ${start}~${end}, ${dryRun ? "dry-run" : "실제"})`,
-      );
+      setSummary("아티스트 목록 조회 중...");
       cancelRef.current = false;
-      const total = end - start + 1;
 
       (async () => {
+        const artistIds = await getFilteredArtistIds(
+          start,
+          end,
+          catalog || null,
+        );
+
+        if (artistIds.length === 0) {
+          setSummary("조건에 맞는 아티스트가 없습니다.");
+          return;
+        }
+
+        const total = artistIds.length;
+        setSummary(
+          `실행 시작 (${total}명, ${dryRun ? "dry-run" : "실제"})`,
+        );
+
         let success = 0;
         let cancelled = false;
-        for (let artistId = start; artistId <= end; artistId++) {
+        for (let i = 0; i < artistIds.length; i++) {
           if (cancelRef.current) {
             cancelled = true;
             break;
           }
-          setSummary(
-            `Artist #${artistId} 처리 중... (${artistId - start + 1}/${total})`,
-          );
+          const artistId = artistIds[i];
+          setSummary(`Artist #${artistId} 처리 중... (${i + 1}/${total})`);
           try {
             await action(artistId, { dryRun });
             console.log(`[${taskName}] Artist #${artistId} 완료`);
@@ -156,77 +170,84 @@ function useArtistTask(
   };
 }
 
+const CATALOG_OPTIONS = [
+  { value: "", label: "전체" },
+  { value: "JPOP", label: "JPOP" },
+  { value: "KPOP", label: "KPOP" },
+];
+
 export default function AdminTasksPage() {
   // 공용 범위 상태
-  const [startId, setStartId] = useState("1");
-  const [endId, setEndId] = useState(String(MAX_ARTIST));
+  const [startId, setStartId] = useState("273");
+  const [endId, setEndId] = useState("15175");
   const [singleMode, setSingleMode] = useState(false);
+  const [catalog, setCatalog] = useState("JPOP");
 
-  const getRange = () => ({ startId, endId });
+  const getFilter = () => ({ startId, endId, catalog });
 
   const mapTask = useArtistTask(
     "mapProposeSong",
     runMapProposeSongForArtist,
-    getRange,
+    getFilter,
   );
   const songTask = useArtistTask(
     "autoFillSongTitles",
     runAutoFillSongTitlesForArtist,
-    getRange,
+    getFilter,
     false,
   );
   const artistTask = useArtistTask(
     "autoFillArtistNames",
     runAutoFillArtistNamesForArtist,
-    getRange,
+    getFilter,
     false,
   );
   const youtubeTask = useArtistTask(
     "mapSongYoutubeVideo",
     runMapSongYoutubeVideoForArtist,
-    getRange,
+    getFilter,
   );
   const youtubeSearchTask = useArtistTask(
     "mapSongYoutubeVideoFromSearch",
     runMapSongYoutubeVideoFromSearchForArtist,
-    getRange,
+    getFilter,
   );
   const spotifyTask = useArtistTask(
     "mapSongSpotifyGroups",
     runMapSongSpotifyGroupsForArtist,
-    getRange,
+    getFilter,
   );
   const thumbTask = useArtistTask(
     "updateSongThumbnails",
     runUpdateSongThumbnailsForArtist,
-    getRange,
+    getFilter,
     false,
   );
   const scoreTask = useArtistTask(
     "updateSongScore",
     runUpdateSongScoreForArtist,
-    getRange,
+    getFilter,
     false,
   );
   const fetchProposeTask = useArtistTask(
     "fetchProposeForArtist",
     runFetchProposeForArtist,
-    getRange,
+    getFilter,
   );
   const fetchSpotifyTracksTask = useArtistTask(
     "fetchSpotifyTracksForArtist",
     runFetchSpotifyTracksForArtist,
-    getRange,
+    getFilter,
   );
   const fetchTopicVideosTask = useArtistTask(
     "fetchTopicVideosForArtist",
     runFetchTopicVideosForArtist,
-    getRange,
+    getFilter,
   );
   const artistThumbTask = useArtistTask(
     "updateArtistThumbnails",
     runUpdateArtistThumbnailsForArtist,
-    getRange,
+    getFilter,
     false,
   );
 
@@ -279,6 +300,20 @@ export default function AdminTasksPage() {
                 />
                 단일
               </label>
+              <div className="flex flex-col">
+                <label className="text-[11px] font-semibold text-zinc-500">카탈로그</label>
+                <select
+                  value={catalog}
+                  onChange={(e) => setCatalog(e.target.value)}
+                  className="mt-1 h-[34px] cursor-pointer rounded-lg border border-zinc-200 px-3 text-sm focus:border-blue-400 focus:outline-none"
+                >
+                  {CATALOG_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </section>
