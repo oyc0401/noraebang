@@ -42,6 +42,7 @@
     "hanja": "^1.1.5",
     "kuroshiro": "^1.2.0",
     "kuroshiro-analyzer-kuromoji": "^1.1.0",
+    "lru-cache": "^11.2.4",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.16.3",
