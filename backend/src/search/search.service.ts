@@ -712,6 +712,7 @@ export class SearchService {
     url?: string,
     artistId?: number,
     songId?: number,
+    source?: string,
   ): Promise<void> {
     await this.prisma.searchClick.create({
       data: {
@@ -720,6 +721,7 @@ export class SearchService {
         url: url?.trim(),
         artistId,
         songId,
+        source: source?.trim(),
       },
     });
   }

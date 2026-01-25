@@ -2,8 +2,10 @@
 
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { SongDto } from "@/api/model/models";
 import { SongCardVertical } from "@/components/common/SongCardVertical";
+import { useSearchTracking } from "@/hooks/useSearchTracking";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 
 interface SongTileCarouselProps {
@@ -11,6 +13,7 @@ interface SongTileCarouselProps {
   songs: SongDto[];
   isLoading?: boolean;
   href?: string;
+  source?: string;
 }
 
 export function SongTileCarousel({
@@ -18,7 +21,10 @@ export function SongTileCarousel({
   songs,
   isLoading,
   href,
+  source,
 }: SongTileCarouselProps) {
+  const router = useRouter();
+  const { saveSearchClick } = useSearchTracking();
   if (isLoading) {
     return (
       <div className="py-4">
@@ -61,7 +67,6 @@ export function SongTileCarousel({
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4">
         {songs.map((song) => {
           const artistSlug = song.artists[0]?.slug;
-          const href = artistSlug ? `/artist/${artistSlug}#${song.id}` : undefined;
           return (
             <SongCardVertical
               key={song.id}
@@ -75,7 +80,16 @@ export function SongTileCarousel({
               subtitle={song.artists.map((a) => a.name).join(", ")}
               tjNumber={song.tjSong?.id}
               bestProposeHit={song.bestSongPropose?.hit}
-              href={href}
+              onClick={
+                artistSlug
+                  ? () => {
+                      if (source) {
+                        saveSearchClick({ songId: song.id, source });
+                      }
+                      router.push(`/artist/${artistSlug}#${song.id}`);
+                    }
+                  : undefined
+              }
             />
           );
         })}

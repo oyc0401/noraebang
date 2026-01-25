@@ -32,4 +32,14 @@ export class SaveSearchClickDto {
   @IsOptional()
   @IsInt()
   songId?: number;
+
+  @ApiProperty({
+    description: "클릭 출처 (search, autocomplete, home, popular_song, tj_recent, tj_best 등)",
+    example: "search",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  source?: string;
 }

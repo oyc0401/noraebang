@@ -12,6 +12,7 @@ import { SearchOverlayLinkPaste } from "@/components/common/SearchOverlayLinkPas
 import { SearchTermCard } from "@/components/common/SearchTermCard";
 import { SongCard } from "@/components/common/SongCard";
 import { SearchBar } from "@/components/search/SearchBar";
+import { useSearchTracking } from "@/hooks/useSearchTracking";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 import { hasIncompleteKorean } from "@/lib/korean";
 import { useSearchStore } from "@/store/searchStore";
@@ -21,6 +22,7 @@ export function SearchOverlay() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { query, setQuery, clearSearch } = useSearchStore();
+  const { saveSearchClick } = useSearchTracking();
   const initialPathname = useRef(pathname);
   const initialSearchParams = useRef(searchParams.toString());
 
@@ -115,6 +117,11 @@ export function SearchOverlay() {
                   subtitle={card.artist.title}
                   onClick={() => {
                     if (card.artist?.slug) {
+                      saveSearchClick({
+                        query: query || undefined,
+                        artistId: card.artist.id,
+                        source: "autocomplete",
+                      });
                       router.push(`/artist/${card.artist.slug}`);
                     }
                   }}
@@ -140,6 +147,11 @@ export function SearchOverlay() {
                   bestProposeHit={card.song.bestSongPropose?.hit}
                   onClick={() => {
                     if (card.song?.artistSlug) {
+                      saveSearchClick({
+                        query: query || undefined,
+                        songId: card.song.id,
+                        source: "autocomplete",
+                      });
                       router.push(
                         `/artist/${card.song.artistSlug}#${card.song.id}`,
                       );

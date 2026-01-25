@@ -225,6 +225,6 @@ export class SearchController {
     @CurrentUser() user: CurrentUserData,
     @Body() dto: SaveSearchClickDto,
   ): Promise<void> {
-    await this.searchService.saveSearchClick(user.id, dto.query, dto.url, dto.artistId, dto.songId);
+    await this.searchService.saveSearchClick(user.id, dto.query, dto.url, dto.artistId, dto.songId, dto.source);
   }
 }

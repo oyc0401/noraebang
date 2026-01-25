@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 
 interface SongCardVerticalProps {
   thumbnail?: string;
@@ -7,7 +6,7 @@ interface SongCardVerticalProps {
   subtitle: string;
   tjNumber?: string;
   bestProposeHit?: number;
-  href?: string;
+  onClick?: () => void;
 }
 
 export function SongCardVertical({
@@ -16,10 +15,21 @@ export function SongCardVertical({
   subtitle,
   tjNumber,
   bestProposeHit,
-  href,
+  onClick,
 }: SongCardVerticalProps) {
-  const content = (
-    <div className="w-[140px] shrink-0">
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: 카드 전체가 클릭 가능 영역
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          onClick?.();
+        }
+      }}
+      className="w-[140px] shrink-0 cursor-pointer"
+    >
       <div className="relative aspect-square w-full rounded-md bg-gray-700 overflow-hidden">
         {thumbnail && (
           <Image
@@ -46,14 +56,4 @@ export function SongCardVertical({
       </div>
     </div>
   );
-
-  if (href) {
-    return (
-      <Link href={href} className="block">
-        {content}
-      </Link>
-    );
-  }
-
-  return content;
 }

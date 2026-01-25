@@ -6,6 +6,7 @@ interface SaveSearchClickParams {
   url?: string;
   artistId?: number;
   songId?: number;
+  source?: string;
 }
 
 export function useSearchTracking() {

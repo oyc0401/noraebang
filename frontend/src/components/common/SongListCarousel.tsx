@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { SongDto } from "@/api/model/models";
 import { SongCard } from "@/components/common/SongCard";
+import { useSearchTracking } from "@/hooks/useSearchTracking";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 
 interface SongListCarouselProps {
@@ -14,6 +15,7 @@ interface SongListCarouselProps {
   artistTjName?: string;
   isLoading?: boolean;
   href?: string;
+  source?: string;
 }
 
 export function SongListCarousel({
@@ -23,8 +25,10 @@ export function SongListCarousel({
   artistTjName,
   isLoading,
   href,
+  source,
 }: SongListCarouselProps) {
   const router = useRouter();
+  const { saveSearchClick } = useSearchTracking();
 
   // 4개씩 그룹으로 나누기
   const songPages: SongDto[][] = [];
@@ -100,7 +104,12 @@ export function SongListCarousel({
                   youtube={song.youtube}
                   onClick={
                     artistSlug
-                      ? () => router.push(`/artist/${artistSlug}#${song.id}`)
+                      ? () => {
+                          if (source) {
+                            saveSearchClick({ songId: song.id, source });
+                          }
+                          router.push(`/artist/${artistSlug}#${song.id}`);
+                        }
                       : undefined
                   }
                 />

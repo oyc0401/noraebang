@@ -423,6 +423,7 @@ model SearchClick {
   url       String?
   artistId  Int?     @map("artist_id")
   songId    Int?     @map("song_id")
+  source    String?
   clickedAt DateTime @default(now()) @map("clicked_at")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   artist    Artist?  @relation(fields: [artistId], references: [id], onDelete: Cascade)
@@ -432,6 +433,7 @@ model SearchClick {
   @@index([query])
   @@index([artistId])
   @@index([songId])
+  @@index([source])
   @@map("search_click")
 }
 
@@ -462,3 +464,4 @@ enum ReportStatus {
   RESOLVED
   REJECTED
 }
+
