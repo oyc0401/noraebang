@@ -96,7 +96,7 @@ async function main() {
   }
 
   const content = generateFileContent(merged);
-  const outputPath = path.join(__dirname, "customDictionary.ts");
+  const outputPath = path.join(__dirname, "dictionary.ts");
 
   if (isDryRun) {
     console.log("🔍 [DRY-RUN] 생성될 파일 미리보기 (처음 30줄):\n");
