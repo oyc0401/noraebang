@@ -17,6 +17,7 @@ export function PopularSongsSection() {
       songs={songs}
       isLoading={isLoading}
       href="/tj/recent"
+      source="home"
     />
   );
 }

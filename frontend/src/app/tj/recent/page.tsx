@@ -1,14 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useSongsControllerFindBySort } from "@/api/model/songs/songs";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { SongCard } from "@/components/common/SongCard";
+import { useSearchTracking } from "@/hooks/useSearchTracking";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 import { useSearchStore } from "@/store/searchStore";
 
 export default function TjRecentPage() {
+  const router = useRouter();
   const { isSearchActive } = useSearchStore();
+  const { saveSearchClick } = useSearchTracking();
   const { data, isLoading } = useSongsControllerFindBySort({
     sort: "recent",
     limit: "100",
@@ -38,25 +42,36 @@ export default function TjRecentPage() {
           </div>
         ) : (
           <div className="flex flex-col">
-            {songs.map((song) => (
-              <SongCard
-                key={song.id}
-                songId={song.id}
-                thumbnail={song.thumbnailMedium}
-                title={formatSongTitle(
-                  song.title,
-                  song.titleKo,
-                  song.titleJa,
-                  song.titleLatin,
-                )}
-                originalTitle={song.title}
-                subtitle={song.artists.map((a) => a.name).join(", ")}
-                tjNumber={song.tjSong?.id}
-                bestProposeHit={song.bestSongPropose?.hit}
-                spotify={song.spotify}
-                youtube={song.youtube}
-              />
-            ))}
+            {songs.map((song) => {
+              const artistSlug = song.artists[0]?.slug;
+              return (
+                <SongCard
+                  key={song.id}
+                  songId={song.id}
+                  thumbnail={song.thumbnailMedium}
+                  title={formatSongTitle(
+                    song.title,
+                    song.titleKo,
+                    song.titleJa,
+                    song.titleLatin,
+                  )}
+                  originalTitle={song.title}
+                  subtitle={song.artists.map((a) => a.name).join(", ")}
+                  tjNumber={song.tjSong?.id}
+                  bestProposeHit={song.bestSongPropose?.hit}
+                  spotify={song.spotify}
+                  youtube={song.youtube}
+                  onClick={
+                    artistSlug
+                      ? () => {
+                          saveSearchClick({ songId: song.id, source: "tj_recent" });
+                          router.push(`/artist/${artistSlug}#${song.id}`);
+                        }
+                      : undefined
+                  }
+                />
+              );
+            })}
           </div>
         )}
       </main>

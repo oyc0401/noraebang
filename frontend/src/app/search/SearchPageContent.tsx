@@ -82,7 +82,7 @@ export function SearchPageContent() {
                       subtitle={artist.name}
                       onClick={() => {
                         if (artist?.slug) {
-                          saveSearchClick({ query, artistId: artist.id });
+                          saveSearchClick({ query, artistId: artist.id, source: "search" });
                           router.push(`/artist/${artist.slug}`);
                           clearSearch();
                         }
@@ -132,6 +132,7 @@ export function SearchPageContent() {
                           query: query || undefined,
                           url: youtubeUrl || undefined,
                           songId: song.id,
+                          source: "search",
                         });
                         router.push(
                           `/artist/${primaryArtistWithSlug.slug}#${song.id}`,

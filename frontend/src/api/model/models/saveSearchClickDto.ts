@@ -15,4 +15,6 @@ export interface SaveSearchClickDto {
   artistId?: number;
   /** 클릭한 곡 ID */
   songId?: number;
+  /** 클릭 출처 (search, autocomplete, home, popular_song, tj_recent, tj_best 등) */
+  source?: string;
 }
