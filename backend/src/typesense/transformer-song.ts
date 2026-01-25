@@ -55,6 +55,8 @@ export interface TypesenseSongDocument {
   titleJaKanji?: string;
   titleJaKana?: string;
   titleLatin?: string;
+  titleJaPronu?: string;
+  titleLatinPronu?: string;
 
   artistIds: string[];
 
@@ -83,6 +85,8 @@ export interface TypesenseSongDocument {
   q_song_ja_kana_p?: string[];
   q_song_ja_kana_a?: string[];
   q_song_ja_kana_norm?: string[];
+
+  q_song_pronu?: string[];
 
   q_artist_ko_p?: string[];
   q_artist_ko_a?: string[];
@@ -123,6 +127,8 @@ export function transformSongToDocument(
     titleJaKanji: song.titleJaKanji ?? undefined,
     titleJaKana: song.titleJaKana ?? undefined,
     titleLatin: song.titleLatin ?? undefined,
+    titleJaPronu: song.titleJaPronu ?? undefined,
+    titleLatinPronu: song.titleLatinPronu ?? undefined,
 
     artistIds: getSongArtists(song).map((a) => a.id.toString()),
 
@@ -153,6 +159,8 @@ export function transformSongToDocument(
     q_song_ja_kana_p: createQuerySongJaKanaPrimary(song),
     q_song_ja_kana_a: createQuerySongJaKanaAlias(song),
     q_song_ja_kana_norm: createQuerySongJaKanaNorm(song),
+
+    q_song_pronu: createQuerySongPronu(song),
 
     q_artist_ko_p: createQueryArtistKoPrimary(song),
     q_artist_ko_a: createQueryArtistKoAlias(song),
@@ -219,6 +227,24 @@ const createQuerySongJaKanaNorm = (song: SongWithRelations) => {
   return getJapaneseNormalizedValues(song.titleJaKana);
 };
 const createQuerySongJaKanaAlias = (_song: SongWithRelations) => undefined;
+
+const createQuerySongPronu = (song: SongWithRelations) => {
+  const prons = [song.titleJaPronu, song.titleLatinPronu]
+    .filter(isPresent)
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+
+  if (prons.length === 0) return undefined;
+
+  const results = new Set<string>();
+  for (const pron of prons) {
+    for (const token of getPronunciationValues(pron)) {
+      results.add(token);
+    }
+  }
+
+  return results.size > 0 ? Array.from(results) : undefined;
+};
 
 const createQueryArtistKoPrimary = (song: SongWithRelations) => {
   const artists = getSongArtists(song);
