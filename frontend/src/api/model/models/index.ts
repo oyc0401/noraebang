@@ -30,7 +30,7 @@ export * from './reportResponseDto';
 export * from './saveSearchClickDto';
 export * from './searchControllerGetSearchSuggestionsParams';
 export * from './searchControllerSearchParams';
-export * from './searchControllerSearchSongByYoutubeUrlParams';
+export * from './searchControllerSearchSongByMusicLinkParams';
 export * from './searchResponseDto';
 export * from './searchResponseDtoMeta';
 export * from './searchResultDto';

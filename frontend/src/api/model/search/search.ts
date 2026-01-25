@@ -30,7 +30,7 @@ import type {
   SaveSearchClickDto,
   SearchControllerGetSearchSuggestionsParams,
   SearchControllerSearchParams,
-  SearchControllerSearchSongByYoutubeUrlParams,
+  SearchControllerSearchSongByMusicLinkParams,
   SearchResponseDto,
   SearchSuggestionsResponseDto,
   YoutubeSongSearchResponseDto
@@ -230,17 +230,17 @@ export function useSearchControllerGetSearchSuggestions<TData = Awaited<ReturnTy
 
 
 /**
- * YouTube 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다. DB에서 곡을 찾지 못한 경우 유튜브 정보를 반환합니다.
- * @summary 유튜브 URL로 단일곡 검색
+ * YouTube Music, Spotify 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다.
+ * @summary 음악 링크로 곡 검색
  */
-export const searchControllerSearchSongByYoutubeUrl = (
-    params: SearchControllerSearchSongByYoutubeUrlParams,
+export const searchControllerSearchSongByMusicLink = (
+    params: SearchControllerSearchSongByMusicLinkParams,
  signal?: AbortSignal
 ) => {
       
       
       return customFetch<YoutubeSongSearchResponseDto>(
-      {url: `/search/youtube`, method: 'GET',
+      {url: `/search/link`, method: 'GET',
         params, signal
     },
       );
@@ -249,69 +249,69 @@ export const searchControllerSearchSongByYoutubeUrl = (
 
 
 
-export const getSearchControllerSearchSongByYoutubeUrlQueryKey = (params?: SearchControllerSearchSongByYoutubeUrlParams,) => {
+export const getSearchControllerSearchSongByMusicLinkQueryKey = (params?: SearchControllerSearchSongByMusicLinkParams,) => {
     return [
-    `/search/youtube`, ...(params ? [params]: [])
+    `/search/link`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getSearchControllerSearchSongByYoutubeUrlQueryOptions = <TData = Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError = ErrorResponseDto>(params: SearchControllerSearchSongByYoutubeUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError, TData>>, }
+export const getSearchControllerSearchSongByMusicLinkQueryOptions = <TData = Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError = ErrorResponseDto>(params: SearchControllerSearchSongByMusicLinkParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSearchControllerSearchSongByYoutubeUrlQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getSearchControllerSearchSongByMusicLinkQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>> = ({ signal }) => searchControllerSearchSongByYoutubeUrl(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>> = ({ signal }) => searchControllerSearchSongByMusicLink(params, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type SearchControllerSearchSongByYoutubeUrlQueryResult = NonNullable<Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>>
-export type SearchControllerSearchSongByYoutubeUrlQueryError = ErrorResponseDto
+export type SearchControllerSearchSongByMusicLinkQueryResult = NonNullable<Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>>
+export type SearchControllerSearchSongByMusicLinkQueryError = ErrorResponseDto
 
 
-export function useSearchControllerSearchSongByYoutubeUrl<TData = Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError = ErrorResponseDto>(
- params: SearchControllerSearchSongByYoutubeUrlParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError, TData>> & Pick<
+export function useSearchControllerSearchSongByMusicLink<TData = Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError = ErrorResponseDto>(
+ params: SearchControllerSearchSongByMusicLinkParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>,
+          Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>,
           TError,
-          Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>
+          Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchControllerSearchSongByYoutubeUrl<TData = Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError = ErrorResponseDto>(
- params: SearchControllerSearchSongByYoutubeUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError, TData>> & Pick<
+export function useSearchControllerSearchSongByMusicLink<TData = Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError = ErrorResponseDto>(
+ params: SearchControllerSearchSongByMusicLinkParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>,
+          Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>,
           TError,
-          Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>
+          Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchControllerSearchSongByYoutubeUrl<TData = Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError = ErrorResponseDto>(
- params: SearchControllerSearchSongByYoutubeUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError, TData>>, }
+export function useSearchControllerSearchSongByMusicLink<TData = Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError = ErrorResponseDto>(
+ params: SearchControllerSearchSongByMusicLinkParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary 유튜브 URL로 단일곡 검색
+ * @summary 음악 링크로 곡 검색
  */
 
-export function useSearchControllerSearchSongByYoutubeUrl<TData = Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError = ErrorResponseDto>(
- params: SearchControllerSearchSongByYoutubeUrlParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByYoutubeUrl>>, TError, TData>>, }
+export function useSearchControllerSearchSongByMusicLink<TData = Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError = ErrorResponseDto>(
+ params: SearchControllerSearchSongByMusicLinkParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerSearchSongByMusicLink>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSearchControllerSearchSongByYoutubeUrlQueryOptions(params,options)
+  const queryOptions = getSearchControllerSearchSongByMusicLinkQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

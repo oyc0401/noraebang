@@ -136,17 +136,17 @@ export class SearchController {
     };
   }
 
-  @Get("youtube")
+  @Get("link")
   @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({
-    summary: "유튜브 URL로 단일곡 검색",
+    summary: "음악 링크로 곡 검색",
     description:
-      "YouTube 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다. DB에서 곡을 찾지 못한 경우 유튜브 정보를 반환합니다.",
+      "YouTube Music, Spotify 링크에서 제목을 추출하고 가장 일치하는 곡 정보를 반환합니다.",
   })
-  @ApiQuery({ name: "url", description: "YouTube 동영상 URL" })
+  @ApiQuery({ name: "url", description: "YouTube Music 또는 Spotify URL" })
   @SwaggerApiResponse({
     status: 200,
-    description: "YouTube 정보와 매칭된 곡 데이터 또는 유튜브 정보만",
+    description: "매칭된 곡 데이터",
     type: YoutubeSongSearchResponseDto,
   })
   @SwaggerApiResponse({
@@ -159,7 +159,7 @@ export class SearchController {
     description: "서버 오류",
     type: ErrorResponseDto,
   })
-  async searchSongByYoutubeUrl(
+  async searchSongByMusicLink(
     @Query("url") url: string,
     @CurrentUser() user?: CurrentUserData,
   ): Promise<YoutubeSongSearchResponseDto> {
@@ -167,8 +167,8 @@ export class SearchController {
       throw new BadRequestException("URL parameter is required");
     }
 
-    const { songs, matchedByVideoId } =
-      await this.searchService.findSongByYoutubeUrl(url);
+    const { songs, matchedByExactId } =
+      await this.searchService.findSongByMusicLink(url);
 
     // 로그인 유저이면 검색 기록 저장
     if (user?.id) {
@@ -177,7 +177,7 @@ export class SearchController {
 
     return {
       songs,
-      matchedByVideoId,
+      matchedByVideoId: matchedByExactId,
       message:
         songs.length > 0
           ? "DB에서 곡을 찾았습니다"
