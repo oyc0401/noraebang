@@ -1,6 +1,6 @@
 "use client";
 
-import { useArtistsControllerFindBySlug } from "@/api/model/artists/artists";
+import { useSongsControllerFindBySort } from "@/api/model/songs/songs";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { SongCard } from "@/components/common/SongCard";
@@ -9,12 +9,12 @@ import { useSearchStore } from "@/store/searchStore";
 
 export default function TjRecentPage() {
   const { isSearchActive } = useSearchStore();
-  const { data: artistData, isLoading } = useArtistsControllerFindBySlug(
-    "aimyon",
-  );
+  const { data, isLoading } = useSongsControllerFindBySort({
+    sort: "recent",
+    limit: "100",
+  });
 
-  const artist = artistData?.data;
-  const songs = artist?.songs ?? [];
+  const songs = data?.data ?? [];
 
   if (isSearchActive) {
     return <SearchOverlay />;
@@ -42,8 +42,6 @@ export default function TjRecentPage() {
               <SongCard
                 key={song.id}
                 songId={song.id}
-                artistId={artist?.id}
-                artistTjName={artist?.tjName}
                 thumbnail={song.thumbnailMedium}
                 title={formatSongTitle(
                   song.title,
