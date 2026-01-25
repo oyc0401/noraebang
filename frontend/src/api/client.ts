@@ -96,7 +96,7 @@ export const customFetch = async <T>({
 
   let response = await fetchRequest();
 
-  if (response.status === 401) {
+  if (!isServer && response.status === 401) {
     const recovered = await attemptRecovery();
     if (recovered) {
       response = await fetchRequest();

@@ -2,6 +2,7 @@ import { artistsControllerFindBySlug } from "@/api/model/artists/artists";
 import ArtistPageClient from "./ArtistPageClient";
 
 export const revalidate = 1800;
+export const dynamic = "force-static";
 
 export default async function ArtistPage({
   params,
