@@ -121,7 +121,7 @@ export function SearchPageContent() {
                       song.titleJa,
                       song.titleLatin,
                     )}
-                    subtitle={artistForDisplay?.nameKo ?? ""}
+                    subtitle={song.artists?.map((a) => a.name).join(", ") ?? ""}
                     tjNumber={song.tjSong?.id}
                     bestProposeHit={song.bestSongPropose?.hit}
                     spotify={song.spotify}
