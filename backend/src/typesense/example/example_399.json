@@ -1,0 +1,51 @@
+{
+  "id": "399",
+  "catalog": "JPOP",
+  "titleKo": "잔기",
+  "titleJa": "残機",
+  "titleLatin": "Time Left",
+  "titleJaPronu": "장키",
+  "titleLatinPronu": "타임 레프트",
+  "artistIds": [
+    "4"
+  ],
+  "tjSongId": "68806",
+  "songPopularity": 142.3,
+  "artistPopularity": 68,
+  "spotifyTrackPopularity": 60,
+  "artistSpotifyPopularity": 68,
+  "artistTjSongCount": 0,
+  "updatedAt": 1769379578,
+  "q_song_ko_p": [
+    "잔기"
+  ],
+  "q_song_ko_norm": [
+    "잔기"
+  ],
+  "q_song_latin_p": [
+    "Time Left"
+  ],
+  "q_song_latin_norm": [
+    "TimeLeft"
+  ],
+  "q_song_ja_p": [
+    "残機"
+  ],
+  "q_song_ja_norm": [
+    "残機"
+  ],
+  "q_song_pronu": [
+    "장키",
+    "타임 레프트",
+    "타임레프트"
+  ],
+  "artist_key": [
+    "계속한밤중이면좋을텐데",
+    "ZUTOMAYO",
+    "ずっと真夜中でいいのに",
+    "즛토마요나카데이이노니"
+  ],
+  "q_combo_a": [
+    "잔기계속한밤중이면좋을텐데。"
+  ]
+}

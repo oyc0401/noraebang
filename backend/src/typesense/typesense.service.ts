@@ -2,7 +2,6 @@ import { Injectable, type OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Client } from "typesense";
 import type { SearchResponse } from "typesense/lib/Typesense/Documents";
-import type { OperationMode } from "typesense/lib/Typesense/Types";
 import { preprocessSearchQuery } from "./lib/query-preprocessor";
 import type { TypesenseSongDocument } from "./transformer-song";
 import type { TypesenseArtistDocument } from "./transformer-artist";
@@ -104,47 +103,17 @@ export class TypesenseService implements OnModuleInit {
       "q_song_latin_p",
       "q_song_latin_a",
       "q_song_latin_norm",
-      "q_song_ja_kanji_p",
-      "q_song_ja_kanji_a",
-      "q_song_ja_kanji_norm",
-      "q_song_ja_kana_p",
-      "q_song_ja_kana_a",
-      "q_song_ja_kana_norm",
+      "q_song_ja_p",
+      "q_song_ja_a",
+      "q_song_ja_norm",
       "q_song_pronu",
-      "q_artist_ko_p",
-      "q_artist_ko_a",
-      "q_artist_ko_norm",
-      "q_artist_latin_p",
-      "q_artist_latin_a",
-      "q_artist_latin_norm",
-      "q_artist_ja_kanji_p",
-      "q_artist_ja_kanji_a",
-      "q_artist_ja_kanji_norm",
-      "q_artist_ja_kana_p",
-      "q_artist_ja_kana_a",
-      "q_artist_ja_kana_norm",
-      "q_artist_pron",
+      "artist_key",
       "q_combo_a",
     ];
-
-    const normFields = new Set<string>([
-      "q_song_ko_norm",
-      "q_song_latin_norm",
-      "q_song_ja_kanji_norm",
-      "q_song_ja_kana_norm",
-      "q_artist_ko_norm",
-      "q_artist_latin_norm",
-      "q_artist_ja_kanji_norm",
-      "q_artist_ja_kana_norm",
-    ]);
-    const infixModes: OperationMode[] = songQueryFields.map((field) =>
-      normFields.has(field) ? "always" : "off",
-    );
 
     console.log("🔍 [Typesense] 검색 요청:", {
       originalQuery: query,
       preprocessedQuery,
-      infixCount: infixModes.filter((m) => m === "always").length,
     });
 
     const result = await this.client
@@ -154,7 +123,6 @@ export class TypesenseService implements OnModuleInit {
         q: preprocessedQuery,
         query_by: songQueryFields.join(","),
         sort_by: "_text_match:desc,songPopularity:desc",
-        infix: infixModes,
         page,
         per_page: perPage,
       });

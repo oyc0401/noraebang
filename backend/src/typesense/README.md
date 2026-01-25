@@ -45,7 +45,7 @@ pnpm ts-node src/typesense/scripts/index-songs.ts
 
 ### 기본 컬럼 → q_* 필드
 
-- `_p` (primary) 필드는 **원본 문자열 + 특수문자를 공백으로 바꾸고(이어진 공백 1칸, 양끝 공백 제거) 정리한 버전**을 함께 저장합니다. 예) `"Good bye-bye"` → `["Good bye-bye", "Good bye bye"]`
+- `_p` (primary) 필드는 **특수문자를 공백으로 바꾸고(이어진 공백 1칸, 양끝 공백 제거) 정리한 버전**을 저장합니다. 예) `"Good bye-bye"` → `["Good bye bye"]`
 - `_norm` 필드는 위 공백 정리 버전에서 공백을 완전히 제거한 토큰을 저장합니다. 예) `"Goodbyebye"`
 - 일본어 필드는 히라가나/가타카나 변환을 자동으로 추가합니다.
 - 더 이상 별칭(SongAlias/ArtistAlias)을 Typesense에 넣지 않습니다. 운영 데이터를 정제된 기본 컬럼만 사용합니다.
@@ -71,10 +71,7 @@ artistKo = "요아소비"
     "q_song_ko_norm",
     "q_song_latin_p",
     "q_song_latin_norm",
-    "q_artist_ko_p",
-    "q_artist_ko_norm",
-    "q_artist_latin_p",
-    "q_artist_latin_norm",
+    "artist_key",
     "q_combo_a"
   ].join(","),
   sort_by: "_text_match:desc,popularity:desc,updatedAt:desc"

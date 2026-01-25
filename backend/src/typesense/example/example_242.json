@@ -1,0 +1,39 @@
+{
+  "id": "242",
+  "catalog": "JPOP",
+  "titleKo": "심심풀이",
+  "titleJa": "退屈しのぎ",
+  "titleJaPronu": "타이쿠츠시노기",
+  "artistIds": [
+    "225"
+  ],
+  "songPopularity": 51.29,
+  "artistPopularity": 51,
+  "spotifyTrackPopularity": 36,
+  "artistSpotifyPopularity": 51,
+  "artistTjSongCount": 0,
+  "updatedAt": 1769379578,
+  "q_song_ko_p": [
+    "심심풀이"
+  ],
+  "q_song_ko_norm": [
+    "심심풀이"
+  ],
+  "q_song_ja_p": [
+    "退屈しのぎ"
+  ],
+  "q_song_ja_norm": [
+    "退屈しのぎ"
+  ],
+  "q_song_pronu": [
+    "타이쿠츠시노기"
+  ],
+  "artist_key": [
+    "키노코테이코쿠",
+    "Kinokoteikoku",
+    "きのこ帝国"
+  ],
+  "q_combo_a": [
+    "심심풀이키노코테이코쿠"
+  ]
+}
