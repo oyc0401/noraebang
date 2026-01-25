@@ -1,34 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import type { Prisma } from "@prisma/client";
 import { ArtistDetailsDto, ArtistDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 import { SongsService } from "../songs/songs.service";
-
-export const ARTIST_SORT_OPTIONS = [
-  "id_desc",
-  "name_asc",
-  "name_desc",
-  "subscriber_desc",
-  "subscriber_asc",
-  "song_count_asc",
-  "song_count_desc",
-] as const;
-
-export type ArtistSortOption = (typeof ARTIST_SORT_OPTIONS)[number];
-export const DEFAULT_ARTIST_SORT: ArtistSortOption = "id_desc";
-
-const ARTIST_SORT_ORDER_MAP: Record<
-  ArtistSortOption,
-  Prisma.ArtistOrderByWithRelationInput[]
-> = {
-  id_desc: [{ id: "desc" }],
-  name_asc: [{ name: "asc" }, { id: "desc" }],
-  name_desc: [{ name: "desc" }, { id: "desc" }],
-  subscriber_desc: [{ id: "desc" }], // 애플리케이션 레벨에서 정렬
-  subscriber_asc: [{ id: "desc" }], // 애플리케이션 레벨에서 정렬
-  song_count_asc: [{ artistSongs: { _count: "asc" } }, { id: "desc" }],
-  song_count_desc: [{ artistSongs: { _count: "desc" } }, { id: "desc" }],
-};
 
 @Injectable()
 export class ArtistsService {
@@ -37,22 +10,36 @@ export class ArtistsService {
     private songsService: SongsService,
   ) {}
 
-  async findAll(
-    sort: ArtistSortOption = DEFAULT_ARTIST_SORT,
+  /**
+   * 가장 많이 클릭된 아티스트 조회 (SearchClick 기반)
+   * ArtistDetailsDto 배열 반환 (youtube, spotify, songCount 포함)
+   */
+  async findMostViewed(
     page: number = 1,
     limit: number = 20,
-  ): Promise<{ artists: ArtistDto[]; total: number }> {
+  ): Promise<{ artists: ArtistDetailsDto[]; total: number }> {
     const skip = (page - 1) * limit;
-    const slugFilter: Prisma.ArtistWhereInput = { slug: { not: null } };
 
-    // 전체 개수 조회
-    const total = await this.prisma.artist.count({ where: slugFilter });
+    // SearchClick에서 artistId별로 클릭 수 집계
+    const clickCounts = await this.prisma.searchClick.groupBy({
+      by: ["artistId"],
+      where: { artistId: { not: null } },
+      _count: { artistId: true },
+      orderBy: { _count: { artistId: "desc" } },
+    });
 
-    // 구독자순 정렬의 경우 전체를 가져와서 정렬 후 페이지네이션
-    const isSubscriberSort =
-      sort === "subscriber_desc" || sort === "subscriber_asc";
+    const total = clickCounts.length;
+    const paginatedClicks = clickCounts.slice(skip, skip + limit);
+    const artistIds = paginatedClicks
+      .map((c) => c.artistId)
+      .filter((id): id is number => id !== null);
+
+    if (artistIds.length === 0) {
+      return { artists: [], total };
+    }
 
     const artists = await this.prisma.artist.findMany({
+      where: { id: { in: artistIds } },
       select: {
         id: true,
         name: true,
@@ -63,116 +50,6 @@ export class ArtistsService {
         thumbnailMedium: true,
         thumbnailHigh: true,
         tjName: true,
-        youtubeChannels: {
-          where: {
-            type: "MAIN",
-          },
-          select: {
-            subscriberCount: true,
-          },
-          orderBy: {
-            subscriberCount: "desc",
-          },
-          take: 1,
-        },
-      },
-      where: slugFilter,
-      orderBy: ARTIST_SORT_ORDER_MAP[sort],
-      // 구독자순 정렬이면 전체 가져오기, 아니면 페이지네이션 적용
-      ...(isSubscriberSort ? {} : { take: limit, skip }),
-    });
-
-    const mappedArtists = artists.map((artist) => ({
-      id: artist.id,
-      name: artist.name,
-      nameKo: artist.nameKo,
-      slug: artist.slug ?? undefined,
-      homeCatalog: artist.homeCatalog ?? undefined,
-      thumbnailDefault: artist.thumbnailDefault ?? undefined,
-      thumbnailMedium: artist.thumbnailMedium ?? undefined,
-      thumbnailHigh: artist.thumbnailHigh ?? undefined,
-      tjName: artist.tjName ?? undefined,
-      _subscriberCount: artist.youtubeChannels[0]?.subscriberCount,
-    }));
-
-    // 구독자 수로 정렬하는 경우 애플리케이션 레벨에서 정렬 후 페이지네이션
-    if (sort === "subscriber_desc") {
-      const sorted = mappedArtists.sort((a, b) => {
-        const aCount = a._subscriberCount ?? null;
-        const bCount = b._subscriberCount ?? null;
-
-        if (aCount === null && bCount === null) {
-          return b.id - a.id;
-        }
-        if (aCount === null) return 1;
-        if (bCount === null) return -1;
-
-        if (bCount !== aCount) return bCount - aCount;
-        return b.id - a.id;
-      });
-
-      return {
-        artists: sorted
-          .slice(skip, skip + limit)
-          .map(({ _subscriberCount, ...artist }) => artist),
-        total,
-      };
-    }
-
-    if (sort === "subscriber_asc") {
-      const sorted = mappedArtists.sort((a, b) => {
-        const aCount = a._subscriberCount ?? null;
-        const bCount = b._subscriberCount ?? null;
-
-        if (aCount === null && bCount === null) {
-          return b.id - a.id;
-        }
-        if (aCount === null) return 1;
-        if (bCount === null) return -1;
-
-        if (aCount !== bCount) return aCount - bCount;
-        return b.id - a.id;
-      });
-
-      return {
-        artists: sorted
-          .slice(skip, skip + limit)
-          .map(({ _subscriberCount, ...artist }) => artist),
-        total,
-      };
-    }
-
-    return {
-      artists: mappedArtists.map(({ _subscriberCount, ...artist }) => artist),
-      total,
-    };
-  }
-
-  async findAllDetails(
-    sort: ArtistSortOption = DEFAULT_ARTIST_SORT,
-    page: number = 1,
-    limit: number = 20,
-  ): Promise<{ artists: ArtistDetailsDto[]; total: number }> {
-    const skip = (page - 1) * limit;
-    const slugFilter: Prisma.ArtistWhereInput = { slug: { not: null } };
-
-    // 전체 개수 조회
-    const total = await this.prisma.artist.count({ where: slugFilter });
-
-    // 구독자순 정렬의 경우 전체를 가져와서 정렬 후 페이지네이션
-    const isSubscriberSort =
-      sort === "subscriber_desc" || sort === "subscriber_asc";
-
-    const artists = await this.prisma.artist.findMany({
-      select: {
-        id: true,
-        name: true,
-        nameKo: true,
-        slug: true,
-        homeCatalog: true,
-        thumbnailDefault: true,
-        thumbnailMedium: true,
-        thumbnailHigh: true,
         youtubeChannels: {
           select: {
             type: true,
@@ -204,13 +81,15 @@ export class ArtistsService {
           },
         },
       },
-      where: slugFilter,
-      orderBy: ARTIST_SORT_ORDER_MAP[sort],
-      // 구독자순 정렬이면 전체 가져오기, 아니면 페이지네이션 적용
-      ...(isSubscriberSort ? {} : { take: limit, skip }),
     });
 
-    const mappedArtists = artists.map((artist) => {
+    // 원래 순서대로 정렬 (클릭 수 순)
+    const artistMap = new Map(artists.map((a) => [a.id, a]));
+    const orderedArtists = artistIds
+      .map((id) => artistMap.get(id))
+      .filter((a): a is NonNullable<typeof a> => a !== undefined);
+
+    const mappedArtists: ArtistDetailsDto[] = orderedArtists.map((artist) => {
       const mainChannel =
         artist.youtubeChannels.find((ch) => ch.type === "MAIN") ??
         artist.youtubeChannels.find((ch) => ch.type === "TOPIC");
@@ -226,6 +105,7 @@ export class ArtistsService {
         thumbnailDefault: artist.thumbnailDefault ?? undefined,
         thumbnailMedium: artist.thumbnailMedium ?? undefined,
         thumbnailHigh: artist.thumbnailHigh ?? undefined,
+        tjName: artist.tjName ?? undefined,
         songCount: artist._count.artistSongs,
         youtube: mainChannel
           ? {
@@ -256,49 +136,6 @@ export class ArtistsService {
           : undefined,
       };
     });
-
-    // 구독자 수로 정렬하는 경우 애플리케이션 레벨에서 정렬 후 페이지네이션
-    if (sort === "subscriber_desc") {
-      const sorted = mappedArtists.sort((a, b) => {
-        const aCount = a.youtube?.subscriberCount ?? null;
-        const bCount = b.youtube?.subscriberCount ?? null;
-
-        if (aCount === null && bCount === null) {
-          return b.id - a.id;
-        }
-        if (aCount === null) return 1;
-        if (bCount === null) return -1;
-
-        if (bCount !== aCount) return bCount - aCount;
-        return b.id - a.id;
-      });
-
-      return {
-        artists: sorted.slice(skip, skip + limit),
-        total,
-      };
-    }
-
-    if (sort === "subscriber_asc") {
-      const sorted = mappedArtists.sort((a, b) => {
-        const aCount = a.youtube?.subscriberCount ?? null;
-        const bCount = b.youtube?.subscriberCount ?? null;
-
-        if (aCount === null && bCount === null) {
-          return b.id - a.id;
-        }
-        if (aCount === null) return 1;
-        if (bCount === null) return -1;
-
-        if (aCount !== bCount) return aCount - bCount;
-        return b.id - a.id;
-      });
-
-      return {
-        artists: sorted.slice(skip, skip + limit),
-        total,
-      };
-    }
 
     return {
       artists: mappedArtists,

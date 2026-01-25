@@ -1,21 +1,15 @@
 "use client";
 
-import { useArtistsControllerFindBySlug } from "@/api/model/artists/artists";
+import { useSongsControllerFindBySort } from "@/api/model/songs/songs";
 import { SongTileCarousel } from "@/components/common/SongTileCarousel";
 
 export function PopularProposeSongsSection() {
-  const { data: artistData, isLoading } = useArtistsControllerFindBySlug(
-    "aimyon",
-  );
+  const { data, isLoading } = useSongsControllerFindBySort({
+    sort: "tj_recommend",
+    limit: "12",
+  });
 
-  const songs =
-    artistData?.data.songs
-      ?.filter((song) => song.bestSongPropose?.hit !== undefined)
-      .sort(
-        (a, b) =>
-          (b.bestSongPropose?.hit ?? 0) - (a.bestSongPropose?.hit ?? 0),
-      )
-      .slice(0, 12) ?? [];
+  const songs = data?.data ?? [];
 
   return (
     <SongTileCarousel

@@ -39,7 +39,7 @@ export function SongCardVertical({
         <p className="text-xs text-gray-400 truncate mt-0.5">{subtitle}</p>
         <div className="flex items-center gap-2 mt-1 text-xs">
           {tjNumber && <span className="text-[#CE8FED]">TJ {tjNumber}</span>}
-          {bestProposeHit !== undefined && (
+          {!tjNumber && bestProposeHit !== undefined && (
             <span className="text-[#C1B369]">추천 {bestProposeHit}</span>
           )}
         </div>

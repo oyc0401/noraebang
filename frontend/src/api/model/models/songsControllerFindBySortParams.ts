@@ -5,8 +5,13 @@
  * 노래방 검색 서비스 API 문서
  * OpenAPI spec version: 1.0
  */
+import type { SongsControllerFindBySortSort } from './songsControllerFindBySortSort';
 
-export type SongsControllerFindByArtistIdParams = {
+export type SongsControllerFindBySortParams = {
+/**
+ * 정렬 기준 (기본값: recent)
+ */
+sort?: SongsControllerFindBySortSort;
 /**
  * 페이지 번호 (기본값: 1)
  */

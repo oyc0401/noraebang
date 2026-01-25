@@ -1,22 +1,20 @@
 "use client";
 
-import { useArtistsControllerFindBySlug } from "@/api/model/artists/artists";
+import { useSongsControllerFindBySort } from "@/api/model/songs/songs";
 import { SongListCarousel } from "@/components/common/SongListCarousel";
 
 export function RecentSongsSection() {
-  const { data: artistData, isLoading } = useArtistsControllerFindBySlug(
-    "aimyon",
-  );
+  const { data, isLoading } = useSongsControllerFindBySort({
+    sort: "popular",
+    limit: "12",
+  });
 
-  const artist = artistData?.data;
-  const songs = artist?.songs?.slice(0, 12) ?? [];
+  const songs = data?.data ?? [];
 
   return (
     <SongListCarousel
       title="인기있는 곡"
       songs={songs}
-      artistId={artist?.id}
-      artistTjName={artist?.tjName}
       isLoading={isLoading}
       href="/popular/song"
     />

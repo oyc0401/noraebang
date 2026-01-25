@@ -19,19 +19,36 @@ import {
   SongDetailResponseDto,
   SongListResponseDto,
 } from "./dto/song-response.dto";
-import { SongsService } from "./songs.service";
+import {
+  DEFAULT_SONG_SORT,
+  SONG_SORT_OPTIONS,
+  SongSortOption,
+  SongsService,
+} from "./songs.service";
+
+const isSongSortOption = (value?: string): value is SongSortOption =>
+  !!value && SONG_SORT_OPTIONS.includes(value as SongSortOption);
 
 @ApiTags("Songs")
 @Controller("songs")
 export class SongsController {
   constructor(private readonly songsService: SongsService) {}
 
-  @Get("artist/:artistId")
+  @Get()
   @ApiOperation({
-    summary: "특정 아티스트의 곡 조회",
-    description: "아티스트 ID로 해당 아티스트의 곡 목록을 조회합니다.",
+    summary: "곡 목록 조회 (정렬 옵션)",
+    description:
+      "정렬 옵션에 따라 곡 목록을 조회합니다.\n" +
+      "- recent: 최근에 나온 곡 (TJ 발매일자 최신순)\n" +
+      "- popular: 인기있는 곡 (SearchClick 많은 순)\n" +
+      "- tj_recommend: TJ 추천수 많은 순 (3개월 이내 SongPropose hit 순)",
   })
-  @ApiParam({ name: "artistId", description: "아티스트 ID" })
+  @ApiQuery({
+    name: "sort",
+    required: false,
+    enum: SONG_SORT_OPTIONS,
+    description: "정렬 기준 (기본값: recent)",
+  })
   @ApiQuery({
     name: "page",
     required: false,
@@ -54,21 +71,22 @@ export class SongsController {
     description: "서버 오류",
     type: ErrorResponseDto,
   })
-  async findByArtistId(
-    @Param("artistId", ParseIntPipe) artistId: number,
+  async findBySort(
+    @Query("sort") sort?: string,
     @Query("page") page?: string,
     @Query("limit") limit?: string,
   ): Promise<SongListResponseDto> {
+    const sortOption = isSongSortOption(sort) ? sort : DEFAULT_SONG_SORT;
     const pageNumber = page ? Math.max(1, parseInt(page, 10)) : 1;
     const limitNumber = limit ? Math.max(1, parseInt(limit, 10)) : 20;
 
-    const { songs, total } = await this.songsService.findByArtistId(
-      artistId,
+    const { songs, total } = await this.songsService.findBySort(
+      sortOption,
       pageNumber,
       limitNumber,
     );
 
-    return ApiResponse.success(songs, "아티스트 곡 목록 조회 성공", {
+    return ApiResponse.success(songs, "곡 목록 조회 성공", {
       total,
       page: pageNumber,
       limit: limitNumber,
