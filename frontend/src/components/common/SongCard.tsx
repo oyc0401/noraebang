@@ -100,7 +100,7 @@ export function SongCard({
             {tjNumber && (
               <span className="text-[#CE8FED] ml-2">{`TJ - ${tjNumber}`}</span>
             )}
-            {bestProposeHit !== undefined && (
+            {!tjNumber && bestProposeHit !== undefined && (
               <span className="text-[#C1B369] ml-2">{`추천 ${bestProposeHit}`}</span>
             )}
           </p>
