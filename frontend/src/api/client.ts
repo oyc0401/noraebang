@@ -91,7 +91,7 @@ export const customFetch = async <T>({
         ...headers,
       },
       body: data ? JSON.stringify(data) : undefined,
-      credentials: "include",
+      credentials: isServer ? "omit" : "include",
     });
 
   let response = await fetchRequest();
