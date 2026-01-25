@@ -12,12 +12,12 @@ export class ArtistsService {
 
   /**
    * 가장 많이 클릭된 아티스트 조회 (SearchClick 기반)
-   * ArtistDetailsDto 배열 반환 (youtube, spotify, songCount 포함)
+   * ArtistDto 배열 반환 (youtube, spotify, songCount 포함)
    */
   async findMostViewed(
     page: number = 1,
     limit: number = 20,
-  ): Promise<{ artists: ArtistDetailsDto[]; total: number }> {
+  ): Promise<{ artists: ArtistDto[]; total: number }> {
     const skip = (page - 1) * limit;
 
     // SearchClick에서 artistId별로 클릭 수 집계
@@ -89,7 +89,7 @@ export class ArtistsService {
       .map((id) => artistMap.get(id))
       .filter((a): a is NonNullable<typeof a> => a !== undefined);
 
-    const mappedArtists: ArtistDetailsDto[] = orderedArtists.map((artist) => {
+    const mappedArtists: ArtistDto[] = orderedArtists.map((artist) => {
       const mainChannel =
         artist.youtubeChannels.find((ch) => ch.type === "MAIN") ??
         artist.youtubeChannels.find((ch) => ch.type === "TOPIC");
@@ -156,10 +156,44 @@ export class ArtistsService {
         thumbnailMedium: true,
         thumbnailHigh: true,
         tjName: true,
+        youtubeChannels: {
+          select: {
+            type: true,
+            channelId: true,
+            title: true,
+            description: true,
+            customUrl: true,
+            subscriberCount: true,
+            videoCount: true,
+            thumbnailDefault: true,
+            thumbnailMedium: true,
+            thumbnailHigh: true,
+          },
+        },
+        spotifyArtist: {
+          select: {
+            spotifyId: true,
+            spotifyUrl: true,
+            name: true,
+            popularity: true,
+            followers: true,
+            genres: true,
+            thumbnails: true,
+          },
+        },
+        _count: {
+          select: { artistSongs: true },
+        },
       },
     });
 
     if (!artist) return null;
+
+    const mainChannel =
+      artist.youtubeChannels.find((ch) => ch.type === "MAIN") ??
+      artist.youtubeChannels.find((ch) => ch.type === "TOPIC");
+
+    const spotifyArtist = artist.spotifyArtist;
 
     return {
       id: artist.id,
@@ -171,6 +205,34 @@ export class ArtistsService {
       thumbnailMedium: artist.thumbnailMedium ?? undefined,
       thumbnailHigh: artist.thumbnailHigh ?? undefined,
       tjName: artist.tjName ?? undefined,
+      songCount: artist._count.artistSongs,
+      youtube: mainChannel
+        ? {
+            channelId: mainChannel.channelId,
+            title: mainChannel.title ?? undefined,
+            description: mainChannel.description ?? undefined,
+            customUrl: mainChannel.customUrl ?? undefined,
+            subscriberCount: mainChannel.subscriberCount ?? undefined,
+            videoCount: mainChannel.videoCount ?? undefined,
+            thumbnailDefault: mainChannel.thumbnailDefault ?? undefined,
+            thumbnailMedium: mainChannel.thumbnailMedium ?? undefined,
+            thumbnailHigh: mainChannel.thumbnailHigh ?? undefined,
+          }
+        : undefined,
+      spotify: spotifyArtist
+        ? {
+            spotifyId: spotifyArtist.spotifyId,
+            spotifyUrl: spotifyArtist.spotifyUrl ?? undefined,
+            name: spotifyArtist.name,
+            popularity: spotifyArtist.popularity ?? undefined,
+            followers: spotifyArtist.followers ?? undefined,
+            genres:
+              spotifyArtist.genres.length > 0
+                ? spotifyArtist.genres
+                : undefined,
+            imageUrl: spotifyArtist.thumbnails[0] ?? undefined,
+          }
+        : undefined,
     };
   }
 

@@ -17,7 +17,7 @@ import { ApiResponse } from "../dto/api-response.dto";
 import { ArtistsService } from "./artists.service";
 import {
   ArtistDetailResponseDto,
-  ArtistDetailsListResponseDto,
+  ArtistListResponseDto,
 } from "./dto/artist-response.dto";
 
 @ApiTags("Artists")
@@ -46,7 +46,7 @@ export class ArtistsController {
   @SwaggerApiResponse({
     status: 200,
     description: "가장 많이 시청한 아티스트 목록",
-    type: ArtistDetailsListResponseDto,
+    type: ArtistListResponseDto,
   })
   @SwaggerApiResponse({
     status: 500,
@@ -56,7 +56,7 @@ export class ArtistsController {
   async findMostViewed(
     @Query("page") page?: string,
     @Query("limit") limit?: string,
-  ): Promise<ArtistDetailsListResponseDto> {
+  ): Promise<ArtistListResponseDto> {
     const pageNumber = page ? Math.max(1, parseInt(page, 10)) : 1;
     const limitNumber = limit ? Math.max(1, parseInt(limit, 10)) : 20;
 
