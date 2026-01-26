@@ -203,6 +203,13 @@ function buildWhereClause(params: ManagerQueryParams): Prisma.ArtistWhereInput {
           },
         });
         break;
+      case "noYoutubeTopic":
+        clauses.push({
+          youtubeChannels: {
+            none: { type: "TOPIC" },
+          },
+        });
+        break;
       default:
         break;
     }
