@@ -14,4 +14,6 @@ export interface YoutubeVideoInfoDto {
   thumbnailDefault?: string;
   thumbnailMedium?: string;
   thumbnailHigh?: string;
+  /** YouTube 채널 이름 */
+  channelName?: string;
 }

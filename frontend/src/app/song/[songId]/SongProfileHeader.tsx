@@ -30,7 +30,8 @@ export function SongProfileHeader({ song }: SongProfileHeaderProps) {
     song.titleLatin,
   );
 
-  const mainArtist = song.artists.find((a) => a.role === "MAIN") ?? song.artists[0];
+  const mainArtist =
+    song.artists.find((a) => a.role === "MAIN") ?? song.artists[0];
   const artistDisplayName = mainArtist
     ? mainArtist.nameKo || mainArtist.name
     : song.artists.map((a) => a.nameKo || a.name).join(", ");
@@ -63,7 +64,7 @@ export function SongProfileHeader({ song }: SongProfileHeaderProps) {
       )}
 
       {/* 아래쪽 그라데이션 + 블러 오버레이 */}
-      <div className="absolute inset-x-0 top-0 -bottom-px bg-gradient-to-t from-background-dark via-background-dark/60 to-transparent" />
+      <div className="absolute inset-x-0 top-0 -bottom-px bg-gradient-to-t from-background-dark via-background-dark/60 via-35% to-transparent" />
 
       {/* 곡 정보 */}
       <div className="absolute bottom-6 left-6 right-6">
@@ -82,13 +83,15 @@ export function SongProfileHeader({ song }: SongProfileHeaderProps) {
         )}
 
         {/* YouTube 조회수 및 발매년도 */}
-        {song.youtube && (song.youtube.viewCount || song.youtube.publishedYear) && (
-          <p className="text-sm text-white/50 mt-1">
-            {song.youtube.viewCount && formatViewCount(song.youtube.viewCount)}
-            {song.youtube.viewCount && song.youtube.publishedYear && " · "}
-            {song.youtube.publishedYear && `${song.youtube.publishedYear}년`}
-          </p>
-        )}
+        {song.youtube &&
+          (song.youtube.viewCount || song.youtube.publishedYear) && (
+            <p className="text-sm text-white/50 mt-1">
+              {song.youtube.viewCount &&
+                formatViewCount(song.youtube.viewCount)}
+              {song.youtube.viewCount && song.youtube.publishedYear && " · "}
+              {song.youtube.publishedYear && `${song.youtube.publishedYear}년`}
+            </p>
+          )}
 
         {/* 외부 링크 버튼 */}
         {(youtubeUrl || spotifyUrl) && (

@@ -61,6 +61,11 @@ type SongDtoData = {
       name: string;
       thumbnails: string[];
       popularity: number | null;
+      artists: {
+        spotifyArtist: {
+          name: string;
+        };
+      }[];
     };
   }[];
   youtubeVideos: {
@@ -72,6 +77,11 @@ type SongDtoData = {
       thumbnailHigh: string | null;
       viewCount: bigint | null;
       publishedAt: Date | null;
+      channels: {
+        youtubeChannel: {
+          title: string | null;
+        };
+      }[];
     };
   }[];
   songProposes: SongProposeData[];
@@ -133,6 +143,16 @@ export class SongsService {
               name: true,
               thumbnails: true,
               popularity: true,
+              artists: {
+                select: {
+                  spotifyArtist: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+                take: 1,
+              },
             },
           },
         },
@@ -154,6 +174,16 @@ export class SongsService {
               thumbnailHigh: true,
               viewCount: true,
               publishedAt: true,
+              channels: {
+                select: {
+                  youtubeChannel: {
+                    select: {
+                      title: true,
+                    },
+                  },
+                },
+                take: 1,
+              },
             },
           },
         },
@@ -238,6 +268,16 @@ export class SongsService {
               name: true,
               thumbnails: true,
               popularity: true,
+              artists: {
+                select: {
+                  spotifyArtist: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+                take: 1,
+              },
             },
           },
         },
@@ -258,6 +298,16 @@ export class SongsService {
               thumbnailHigh: true,
               viewCount: true,
               publishedAt: true,
+              channels: {
+                select: {
+                  youtubeChannel: {
+                    select: {
+                      title: true,
+                    },
+                  },
+                },
+                take: 1,
+              },
             },
           },
         },
@@ -330,6 +380,8 @@ export class SongsService {
             spotifyId: spotifyTrack.spotifyId,
             name: spotifyTrack.name,
             thumbnails: spotifyTrack.thumbnails,
+            popularity: spotifyTrack.popularity ?? undefined,
+            artistName: spotifyTrack.artists[0]?.spotifyArtist.name,
           }
         : undefined,
       youtube: youtubeVideo
@@ -345,6 +397,9 @@ export class SongsService {
             thumbnailDefault: youtubeVideo.thumbnailDefault ?? undefined,
             thumbnailMedium: youtubeVideo.thumbnailMedium ?? undefined,
             thumbnailHigh: youtubeVideo.thumbnailHigh ?? undefined,
+            channelName: youtubeVideo.channels[0]?.youtubeChannel.title
+              ?.replace(/ - Topic$/, "")
+              ?? undefined,
           }
         : undefined,
       bestSongPropose: bestPropose
@@ -367,6 +422,8 @@ export class SongsService {
               spotifyId: st.spotifyTrack.spotifyId,
               name: st.spotifyTrack.name,
               thumbnails: st.spotifyTrack.thumbnails,
+              popularity: st.spotifyTrack.popularity ?? undefined,
+              artistName: st.spotifyTrack.artists[0]?.spotifyArtist.name,
             }))
           : undefined;
 
@@ -384,6 +441,9 @@ export class SongsService {
               thumbnailDefault: yv.youtubeVideo.thumbnailDefault ?? undefined,
               thumbnailMedium: yv.youtubeVideo.thumbnailMedium ?? undefined,
               thumbnailHigh: yv.youtubeVideo.thumbnailHigh ?? undefined,
+              channelName: yv.youtubeVideo.channels[0]?.youtubeChannel.title
+                ?.replace(/ - Topic$/, "")
+                ?? undefined,
             }))
           : undefined;
 

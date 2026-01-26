@@ -11,4 +11,8 @@ export interface SpotifyTrackInfoDto {
   name: string;
   /** Spotify 트랙 썸네일 배열 */
   thumbnails: string[];
+  /** Spotify 인기도 (0-100) */
+  popularity?: number;
+  /** Spotify 아티스트 이름 */
+  artistName?: string;
 }

@@ -12,6 +12,12 @@ export class SpotifyTrackInfoDto {
     description: "Spotify 트랙 썸네일 배열",
   })
   thumbnails: string[];
+
+  @ApiProperty({ example: 85, required: false, description: "Spotify 인기도 (0-100)" })
+  popularity?: number;
+
+  @ApiProperty({ example: "YOASOBI", required: false, description: "Spotify 아티스트 이름" })
+  artistName?: string;
 }
 
 export class YoutubeVideoInfoDto {
@@ -44,6 +50,9 @@ export class YoutubeVideoInfoDto {
     required: false,
   })
   thumbnailHigh?: string;
+
+  @ApiProperty({ example: "YOASOBI", required: false, description: "YouTube 채널 이름" })
+  channelName?: string;
 }
 
 export class TjSongDto {
