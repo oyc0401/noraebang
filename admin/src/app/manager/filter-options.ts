@@ -37,6 +37,12 @@ export const artistFilterOptions: ArtistFilterDefinition[] = [
     label: "스포티파이 인기 상위 20%",
     predicate: (artist) => (artist?.popularity ?? 0) >= 80,
   },
+  {
+    id: "noYoutubeTopic",
+    label: "유튜브 토픽 없는 아티스트",
+    description: "TOPIC 타입 채널이 없는 아티스트",
+    predicate: () => true, // 서버 필터링만 사용
+  },
 ];
 
 export type ArtistFilterId = (typeof artistFilterOptions)[number]["id"];
