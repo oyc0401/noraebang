@@ -30,11 +30,14 @@ export function SongProfileHeader({ song }: SongProfileHeaderProps) {
     song.titleLatin,
   );
 
-  const mainArtist =
-    song.artists.find((a) => a.role === "MAIN") ?? song.artists[0];
-  const artistDisplayName = mainArtist
-    ? mainArtist.nameKo || mainArtist.name
-    : song.artists.map((a) => a.nameKo || a.name).join(", ");
+  const hasArtists = song.artists && song.artists.length > 0;
+  const mainArtist = hasArtists
+    ? (song.artists.find((a) => a.role === "MAIN") ?? song.artists[0])
+    : undefined;
+  // artists가 있으면 artist 이름, 없으면 tjSong.artist 사용
+  const artistDisplayName = hasArtists
+    ? (mainArtist ? mainArtist.nameKo || mainArtist.name : song.artists.map((a) => a.nameKo || a.name).join(", "))
+    : (song.tjSong?.artist ?? "");
 
   const formatViewCount = (count: number): string => {
     if (count >= 100000000) {
@@ -71,9 +74,9 @@ export function SongProfileHeader({ song }: SongProfileHeaderProps) {
         <h1 className="text-[28px] font-bold leading-tight tracking-tight text-white">
           {formattedTitle}
         </h1>
-        {mainArtist ? (
+        {mainArtist?.slug ? (
           <Link
-            href={`/artist/${mainArtist.slug ?? mainArtist.artistId}`}
+            href={`/artist/${mainArtist.slug}`}
             className="text-md text-white/70 hover:text-white transition-colors"
           >
             {artistDisplayName}

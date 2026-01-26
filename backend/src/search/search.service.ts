@@ -320,9 +320,12 @@ export class SearchService {
     }
 
     const songOrderMap = new Map(songIds.map((id, index) => [id, index]));
-    const sortedSongs = songs.sort(
-      (a, b) => (songOrderMap.get(a.id) ?? 0) - (songOrderMap.get(b.id) ?? 0),
-    );
+    // artist도 없고 tjSong도 없는 곡은 제외
+    const sortedSongs = songs
+      .filter((song) => song.artistSongs.length > 0 || !!song.tjSong)
+      .sort(
+        (a, b) => (songOrderMap.get(a.id) ?? 0) - (songOrderMap.get(b.id) ?? 0),
+      );
 
     return sortedSongs.map((song) => this.mapSongToDto(song));
   }
@@ -466,11 +469,13 @@ export class SearchService {
       };
     });
 
-    // 곡 결과 매핑
-    const songResults: SearchResultDto[] = sortedSongs.map((song) => ({
-      type: "song" as const,
-      song: this.mapSongToDto(song),
-    }));
+    // 곡 결과 매핑 (artist도 없고 tjSong도 없는 곡은 제외)
+    const songResults: SearchResultDto[] = sortedSongs
+      .filter((song) => song.artistSongs.length > 0 || !!song.tjSong)
+      .map((song) => ({
+        type: "song" as const,
+        song: this.mapSongToDto(song),
+      }));
 
     // 아티스트 우선, 그 다음 곡
     const allResults = [...artistResults, ...songResults];
@@ -576,10 +581,23 @@ export class SearchService {
       });
     }
 
-    // 곡 카드 추가
+    // 곡 카드 추가 (artist도 없고 tjSong도 없는 곡은 제외)
     for (const song of sortedSongs) {
+      const hasArtists = song.artistSongs.length > 0;
+      const hasTjSong = !!song.tjSong;
+
+      // artist도 없고 tjSong도 없으면 표시하지 않음
+      if (!hasArtists && !hasTjSong) {
+        continue;
+      }
+
       const primaryArtist = song.artistSongs[0]?.artist;
-      const artistNames = song.artistSongs.map((as) => as.artist.name).join(", ");
+      // artists가 있으면 artist 이름 사용, 없으면 tjSong.artist 사용
+      const artistNames = hasArtists
+        ? song.artistSongs.map((as) => as.artist.name).join(", ")
+        : song.tjSong?.artist ?? "";
+      // artists가 있고 slug가 있는 경우에만 artistSlug 반환
+      const artistSlug = hasArtists ? (primaryArtist?.slug ?? undefined) : undefined;
       const bestPropose = song.songProposes[0];
       cards.push({
         song: {
@@ -589,7 +607,7 @@ export class SearchService {
           titleJa: song.titleJa ?? undefined,
           titleLatin: song.titleLatin ?? undefined,
           artistName: artistNames || "Unknown",
-          artistSlug: primaryArtist?.slug ?? undefined,
+          artistSlug,
           tjSong: song.tjSong
             ? {
                 id: song.tjSong.id,
@@ -640,7 +658,10 @@ export class SearchService {
       });
 
       if (mappings.length > 0) {
-        const songs = mappings.map((m) => m.song);
+        // artist도 없고 tjSong도 없는 곡은 제외
+        const songs = mappings
+          .map((m) => m.song)
+          .filter((song) => song.artistSongs.length > 0 || !!song.tjSong);
         this.logger.log(`YouTube DB 발견: ${videoId}, ${songs.length}개`);
         return {
           songs: songs.map((song) => this.mapSongToDto(song)),
@@ -665,7 +686,10 @@ export class SearchService {
       });
 
       if (spotifyTrack && spotifyTrack.songs.length > 0) {
-        const songs = spotifyTrack.songs.map((m) => m.song);
+        // artist도 없고 tjSong도 없는 곡은 제외
+        const songs = spotifyTrack.songs
+          .map((m) => m.song)
+          .filter((song) => song.artistSongs.length > 0 || !!song.tjSong);
         this.logger.log(`Spotify DB 발견: ${spotifyId}, ${songs.length}개`);
         return {
           songs: songs.map((song) => this.mapSongToDto(song)),
