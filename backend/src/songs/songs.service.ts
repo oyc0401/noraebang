@@ -186,12 +186,114 @@ export class SongsService {
     };
   }
 
-  private mapToDto(song: SongDtoData): SongDto {
+  /**
+   * 단일 곡 조회용 select (모든 연결 데이터 포함)
+   */
+  private get songDetailSelect() {
+    const threeMonthsAgo = BigInt(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
+    return {
+      id: true,
+      title: true,
+      titleKo: true,
+      titleJa: true,
+      titleLatin: true,
+      titleJaPronu: true,
+      titleLatinPronu: true,
+      catalog: true,
+      thumbnailDefault: true,
+      thumbnailMedium: true,
+      thumbnailHigh: true,
+      tjSong: {
+        select: {
+          id: true,
+          title: true,
+          artist: true,
+          lyricist: true,
+          composer: true,
+          publishdate: true,
+          isMR: true,
+          isMV: true,
+          isOver60: true,
+        },
+      },
+      artistSongs: {
+        select: {
+          artistId: true,
+          role: true,
+          artist: {
+            select: {
+              name: true,
+              nameKo: true,
+              slug: true,
+            },
+          },
+        },
+      },
+      songSpotifyTracks: {
+        select: {
+          spotifyTrack: {
+            select: {
+              spotifyId: true,
+              name: true,
+              thumbnails: true,
+              popularity: true,
+            },
+          },
+        },
+        orderBy: {
+          spotifyTrack: {
+            popularity: "desc" as const,
+          },
+        },
+      },
+      youtubeVideos: {
+        select: {
+          youtubeVideo: {
+            select: {
+              videoId: true,
+              title: true,
+              thumbnailDefault: true,
+              thumbnailMedium: true,
+              thumbnailHigh: true,
+              viewCount: true,
+              publishedAt: true,
+            },
+          },
+        },
+        orderBy: {
+          youtubeVideo: {
+            viewCount: "desc" as const,
+          },
+        },
+      },
+      songProposes: {
+        where: {
+          saveDate: {
+            gte: threeMonthsAgo,
+          },
+        },
+        orderBy: {
+          hit: "desc" as const,
+        },
+        select: {
+          songSinger: true,
+          songTitle: true,
+          content: true,
+          name: true,
+          hit: true,
+          saveDate: true,
+        },
+      },
+    };
+  }
+
+  private mapToDto(song: SongDtoData, includeAllRelations = false): SongDto {
     const spotifyTrack = song.songSpotifyTracks[0]?.spotifyTrack;
     const youtubeVideo = song.youtubeVideos[0]?.youtubeVideo;
     const bestPropose = song.songProposes[0];
 
-    return {
+    const baseDto: SongDto = {
       id: song.id,
       title: song.title,
       titleKo: song.titleKo ?? undefined,
@@ -256,6 +358,49 @@ export class SongsService {
           }
         : undefined,
     };
+
+    // 상세 조회 시 모든 연결 데이터 배열 포함
+    if (includeAllRelations) {
+      baseDto.spotifyTracks =
+        song.songSpotifyTracks.length > 0
+          ? song.songSpotifyTracks.map((st) => ({
+              spotifyId: st.spotifyTrack.spotifyId,
+              name: st.spotifyTrack.name,
+              thumbnails: st.spotifyTrack.thumbnails,
+            }))
+          : undefined;
+
+      baseDto.youtubeVideos =
+        song.youtubeVideos.length > 0
+          ? song.youtubeVideos.map((yv) => ({
+              videoId: yv.youtubeVideo.videoId,
+              title: yv.youtubeVideo.title ?? undefined,
+              viewCount: yv.youtubeVideo.viewCount
+                ? Number(yv.youtubeVideo.viewCount)
+                : undefined,
+              publishedYear: yv.youtubeVideo.publishedAt
+                ? yv.youtubeVideo.publishedAt.getFullYear()
+                : undefined,
+              thumbnailDefault: yv.youtubeVideo.thumbnailDefault ?? undefined,
+              thumbnailMedium: yv.youtubeVideo.thumbnailMedium ?? undefined,
+              thumbnailHigh: yv.youtubeVideo.thumbnailHigh ?? undefined,
+            }))
+          : undefined;
+
+      baseDto.songProposes =
+        song.songProposes.length > 0
+          ? song.songProposes.map((sp) => ({
+              songSinger: sp.songSinger,
+              songTitle: sp.songTitle,
+              content: sp.content,
+              name: sp.name,
+              hit: sp.hit,
+              saveDate: Number(sp.saveDate),
+            }))
+          : undefined;
+    }
+
+    return baseDto;
   }
 
   /**
@@ -288,12 +433,12 @@ export class SongsService {
   async findById(id: number): Promise<SongDto | null> {
     const song = await this.prisma.song.findUnique({
       where: { id },
-      select: this.songDtoSelect,
+      select: this.songDetailSelect,
     });
 
     if (!song) return null;
 
-    return this.mapToDto(song);
+    return this.mapToDto(song, true);
   }
 
   async searchByTitle(query: string): Promise<SongDto[]> {
