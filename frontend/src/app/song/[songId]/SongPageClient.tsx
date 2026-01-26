@@ -8,14 +8,12 @@ import {
   ThumbsUp,
   ChevronDown,
   ChevronUp,
-  ExternalLink,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { SongDto } from "@/api/model/models";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { formatSongTitle } from "@/lib/formatSongTitle";
-import { cn } from "@/lib/cn";
 import { useSearchStore } from "@/store/searchStore";
 import { useReportDialogStore } from "@/store/reportDialogStore";
 import { useSongProposeDialogStore } from "@/store/songProposeDialogStore";
@@ -58,7 +56,7 @@ export default function SongPageClient({ song }: SongPageClientProps) {
     return `${count}`;
   };
 
-  // 상세 정보가 있는지 확인 (발음, TJ 정보)
+  // 상세 정보가 있는지 확인 (발음, TJ 정보, 추천수)
   const hasDetailInfo =
     song.titleJaPronu ||
     song.titleLatinPronu ||
@@ -66,7 +64,8 @@ export default function SongPageClient({ song }: SongPageClientProps) {
     song.tjSong?.artist ||
     song.tjSong?.publishdate ||
     song.tjSong?.lyricist ||
-    song.tjSong?.composer;
+    song.tjSong?.composer ||
+    song.bestSongPropose;
 
   if (isSearchActive) {
     return <SearchOverlay />;
@@ -194,71 +193,102 @@ export default function SongPageClient({ song }: SongPageClientProps) {
                 <span className="text-gray-300">{song.tjSong.composer}</span>
               </>
             )}
+            {song.bestSongPropose && (
+              <>
+                <span className="text-gray-500">추천수</span>
+                <span className="text-[#C1B369]">{song.bestSongPropose.hit}</span>
+              </>
+            )}
           </div>
         )}
       </div>
 
-      {/* 스트리밍 서비스 */}
-      {((song.youtubeVideos && song.youtubeVideos.length > 0) ||
-        (song.spotifyTracks && song.spotifyTracks.length > 0)) && (
-        <div className="px-5 py-4">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            스트리밍
-          </h3>
-          <div className="flex flex-col gap-1">
-            {/* YouTube Music */}
-            {song.youtubeVideos?.map((video) => (
+      {/* YouTube Music 섹션 */}
+      {song.youtubeVideos && song.youtubeVideos.length > 0 && (
+        <div className="py-4">
+          <div className="flex items-center gap-2 mb-3 px-5">
+            <Image
+              src={YoutubeMusicIcon}
+              alt="YouTube Music"
+              width={20}
+              height={20}
+            />
+            <h3 className="text-white text-sm font-semibold">YouTube Music</h3>
+          </div>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5">
+            {song.youtubeVideos.map((video) => (
               <a
                 key={video.videoId}
                 href={`https://music.youtube.com/watch?v=${video.videoId}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors group"
+                className="w-[140px] shrink-0 cursor-pointer group"
               >
-                <Image
-                  src={YoutubeMusicIcon}
-                  alt="YouTube Music"
-                  width={24}
-                  height={24}
-                  className="shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <span className="text-white text-sm truncate block">
-                    {video.title ?? formattedTitle}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-500 text-xs shrink-0">
-                  {video.viewCount && (
-                    <span>{formatViewCount(video.viewCount)}</span>
+                <div className="relative aspect-square w-full rounded-md bg-gray-700 overflow-hidden">
+                  {video.thumbnailMedium && (
+                    <Image
+                      src={video.thumbnailMedium}
+                      alt={video.title ?? formattedTitle}
+                      fill
+                      sizes="140px"
+                      className="object-cover group-hover:scale-105 transition-transform"
+                      unoptimized
+                    />
                   )}
-                  {video.publishedYear && <span>{video.publishedYear}</span>}
-                  <ExternalLink className="size-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="mt-2">
+                  <p className="text-sm font-medium text-white line-clamp-2 leading-tight">
+                    {video.title ?? formattedTitle}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate mt-0.5">
+                    {video.channelName ?? mainArtist?.name}
+                    {video.viewCount && ` · ${formatViewCount(video.viewCount)}`}
+                    {video.publishedYear && ` · ${video.publishedYear}`}
+                  </p>
                 </div>
               </a>
             ))}
+          </div>
+        </div>
+      )}
 
-            {/* Spotify */}
-            {song.spotifyTracks?.map((track) => (
+      {/* Spotify 섹션 */}
+      {song.spotifyTracks && song.spotifyTracks.length > 0 && (
+        <div className="py-4">
+          <div className="flex items-center gap-2 mb-3 px-5">
+            <Image src={SpotifyIcon} alt="Spotify" width={20} height={20} />
+            <h3 className="text-white text-sm font-semibold">Spotify</h3>
+          </div>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5">
+            {song.spotifyTracks.map((track) => (
               <a
                 key={track.spotifyId}
                 href={`https://open.spotify.com/track/${track.spotifyId}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors group"
+                className="w-[140px] shrink-0 cursor-pointer group"
               >
-                <Image
-                  src={SpotifyIcon}
-                  alt="Spotify"
-                  width={24}
-                  height={24}
-                  className="shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <span className="text-white text-sm truncate block">
-                    {track.name}
-                  </span>
+                <div className="relative aspect-square w-full rounded-md bg-gray-700 overflow-hidden">
+                  {track.thumbnails[0] && (
+                    <Image
+                      src={track.thumbnails[0]}
+                      alt={track.name}
+                      fill
+                      sizes="140px"
+                      className="object-cover group-hover:scale-105 transition-transform"
+                      unoptimized
+                    />
+                  )}
                 </div>
-                <ExternalLink className="size-3.5 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                <div className="mt-2">
+                  <p className="text-sm font-medium text-white line-clamp-2 leading-tight">
+                    {track.name}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate mt-0.5">
+                    {track.artistName ?? mainArtist?.name}
+                    {track.popularity !== undefined && ` · 인기 ${track.popularity}`}
+                  </p>
+                </div>
               </a>
             ))}
           </div>
@@ -281,9 +311,12 @@ export default function SongPageClient({ song }: SongPageClientProps) {
                 `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
 
               return (
-                <div
+                <a
                   key={`${propose.songTitle}-${propose.saveDate}-${index}`}
-                  className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5"
+                  href={`https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=${encodeURIComponent(mainArtist?.name ?? "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-white text-sm">{propose.name}</span>
@@ -294,7 +327,7 @@ export default function SongPageClient({ song }: SongPageClientProps) {
                   <span className="text-gray-500 text-xs">
                     {formatDate(startDate)} ~ {formatDate(endDate)}
                   </span>
-                </div>
+                </a>
               );
             })}
           </div>
