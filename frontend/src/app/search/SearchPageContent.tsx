@@ -102,12 +102,18 @@ export function SearchPageContent() {
                   return null;
                 }
 
+                const hasArtists = song.artists && song.artists.length > 0;
                 const primaryArtistWithSlug = song.artists?.find(
                   (artist) => !!artist.slug,
                 );
                 const fallbackArtist = song.artists?.[0];
                 const artistForDisplay =
                   primaryArtistWithSlug ?? fallbackArtist ?? null;
+
+                // artists가 있으면 artist 이름, 없으면 tjSong.artist 사용
+                const artistDisplayName = hasArtists
+                  ? song.artists?.map((a) => a.name).join(", ") ?? ""
+                  : song.tjSong?.artist ?? "";
 
                 return (
                   <SongCard
@@ -121,7 +127,7 @@ export function SearchPageContent() {
                       song.titleJa,
                       song.titleLatin,
                     )}
-                    subtitle={song.artists?.map((a) => a.name).join(", ") ?? ""}
+                    subtitle={artistDisplayName}
                     tjNumber={song.tjSong?.id}
                     bestProposeHit={song.bestSongPropose?.hit}
                     spotify={song.spotify}

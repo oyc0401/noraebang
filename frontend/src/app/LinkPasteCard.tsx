@@ -85,23 +85,30 @@ export function LinkPasteCard() {
   };
 
   const tjSong = foundSong?.tjSong;
-  const artist = foundSong?.artists?.[0];
-  const artistName = artist
+  const hasArtists = foundSong?.artists && foundSong.artists.length > 0;
+  const artist = hasArtists ? foundSong.artists[0] : undefined;
+  // artists가 있으면 artist 이름, 없으면 tjSong.artist 사용
+  const artistName = hasArtists && artist
     ? `${artist.nameKo} (${artist.name})`
-    : "알 수 없음";
+    : (tjSong?.artist ?? "알 수 없음");
   const thumbnail =
     foundSong?.thumbnailMedium ||
     foundSong?.thumbnailHigh ||
     foundSong?.thumbnailDefault;
 
   const handleCardClick = () => {
-    if (foundSong && artist?.slug) {
+    if (foundSong) {
       saveSearchClick({
         url: foundSongUrl,
         songId: foundSong.id,
         source: "home_link_paste",
       });
-      router.push(`/artist/${artist.slug}#${foundSong.id}`);
+      // artist slug가 있으면 아티스트 페이지로, 없으면 곡 페이지로 이동
+      if (artist?.slug) {
+        router.push(`/artist/${artist.slug}#${foundSong.id}`);
+      } else {
+        router.push(`/song/${foundSong.id}`);
+      }
     }
   };
 

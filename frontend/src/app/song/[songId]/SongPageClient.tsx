@@ -31,10 +31,18 @@ export default function SongPageClient({ song }: SongPageClientProps) {
   const { ref: headerRef, inView: isHeaderVisible } = useInView();
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  const mainArtist =
-    song.artists.find((a) => a.role === "MAIN") ?? song.artists[0];
-  const featArtists = song.artists.filter((a) => a.role === "FEATURING");
+  const hasArtists = song.artists && song.artists.length > 0;
+  const mainArtist = hasArtists
+    ? (song.artists.find((a) => a.role === "MAIN") ?? song.artists[0])
+    : undefined;
+  const featArtists = hasArtists
+    ? song.artists.filter((a) => a.role === "FEATURING")
+    : [];
   const hasTjNumber = !!song.tjSong?.id;
+  // artists가 있으면 artist 이름, 없으면 tjSong.artist 사용
+  const artistDisplayName = mainArtist
+    ? (mainArtist.nameKo || mainArtist.name)
+    : (song.tjSong?.artist ?? "");
 
   const formattedTitle = formatSongTitle(
     song.title,
@@ -84,23 +92,36 @@ export default function SongPageClient({ song }: SongPageClientProps) {
         {/* 아티스트 + TJ 번호 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-wrap">
-            {mainArtist && (
+            {mainArtist?.slug ? (
               <Link
-                href={`/artist/${mainArtist.slug ?? mainArtist.artistId}`}
+                href={`/artist/${mainArtist.slug}`}
                 className="text-white text-sm font-medium hover:text-primary transition-colors"
               >
                 {mainArtist.nameKo || mainArtist.name}
               </Link>
+            ) : (
+              <span className="text-white text-sm font-medium">
+                {artistDisplayName}
+              </span>
             )}
-            {featArtists.map((artist) => (
-              <Link
-                key={artist.artistId}
-                href={`/artist/${artist.slug ?? artist.artistId}`}
-                className="text-gray-400 text-sm hover:text-primary transition-colors"
-              >
-                feat. {artist.nameKo || artist.name}
-              </Link>
-            ))}
+            {featArtists.map((artist) =>
+              artist.slug ? (
+                <Link
+                  key={artist.artistId}
+                  href={`/artist/${artist.slug}`}
+                  className="text-gray-400 text-sm hover:text-primary transition-colors"
+                >
+                  feat. {artist.nameKo || artist.name}
+                </Link>
+              ) : (
+                <span
+                  key={artist.artistId}
+                  className="text-gray-400 text-sm"
+                >
+                  feat. {artist.nameKo || artist.name}
+                </span>
+              )
+            )}
           </div>
           {hasTjNumber && (
             <span className="text-[#CE8FED] text-sm font-semibold shrink-0">
@@ -241,7 +262,7 @@ export default function SongPageClient({ song }: SongPageClientProps) {
                     {video.title ?? formattedTitle}
                   </p>
                   <p className="text-xs text-gray-400 truncate mt-0.5">
-                    {video.channelName ?? mainArtist?.name}
+                    {video.channelName ?? artistDisplayName}
                     {video.viewCount && ` · ${formatViewCount(video.viewCount)}`}
                     {video.publishedYear && ` · ${video.publishedYear}`}
                   </p>
@@ -285,7 +306,7 @@ export default function SongPageClient({ song }: SongPageClientProps) {
                     {track.name}
                   </p>
                   <p className="text-xs text-gray-400 truncate mt-0.5">
-                    {track.artistName ?? mainArtist?.name}
+                    {track.artistName ?? artistDisplayName}
                     {track.popularity !== undefined && ` · 인기 ${track.popularity}`}
                   </p>
                 </div>
@@ -313,7 +334,7 @@ export default function SongPageClient({ song }: SongPageClientProps) {
               return (
                 <a
                   key={`${propose.songTitle}-${propose.saveDate}-${index}`}
-                  href={`https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=${encodeURIComponent(mainArtist?.name ?? "")}`}
+                  href={`https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=${encodeURIComponent(artistDisplayName)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition-colors"
@@ -342,7 +363,7 @@ export default function SongPageClient({ song }: SongPageClientProps) {
         {/* TJ 추천하기 */}
         {!hasTjNumber && song.bestSongPropose && (
           <a
-            href={`https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=${encodeURIComponent(mainArtist?.name ?? "")}`}
+            href={`https://www.tjmedia.com/song/accompaniment_apply?pageNo=1&dt_code=30&singer=${encodeURIComponent(artistDisplayName)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-3 py-3 w-full rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
@@ -363,7 +384,7 @@ export default function SongPageClient({ song }: SongPageClientProps) {
             onClick={() => {
               useSongProposeDialogStore.getState().openDialog({
                 songTitle: song.title,
-                artistName: mainArtist?.name ?? "",
+                artistName: artistDisplayName,
               });
             }}
           >
@@ -380,7 +401,7 @@ export default function SongPageClient({ song }: SongPageClientProps) {
             useReportDialogStore.getState().openDialog({
               songId: song.id,
               songTitle: formattedTitle,
-              artistName: mainArtist?.nameKo ?? mainArtist?.name ?? "",
+              artistName: artistDisplayName,
               artistId: mainArtist?.artistId,
             });
           }}
