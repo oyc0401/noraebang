@@ -25,10 +25,16 @@ export interface SongDto {
   thumbnailDefault?: string;
   thumbnailMedium?: string;
   thumbnailHigh?: string;
-  /** Spotify 트랙 정보 */
+  /** Spotify 트랙 정보 (가장 인기 있는 트랙) */
   spotify?: SpotifyTrackInfoDto;
-  /** YouTube 비디오 정보 */
+  /** 연결된 모든 Spotify 트랙 목록 */
+  spotifyTracks?: SpotifyTrackInfoDto[];
+  /** YouTube 비디오 정보 (가장 조회수 높은 비디오) */
   youtube?: YoutubeVideoInfoDto;
+  /** 연결된 모든 YouTube 비디오 목록 */
+  youtubeVideos?: YoutubeVideoInfoDto[];
   /** 3개월 이내 가장 추천수가 높은 곡 추천 정보 */
   bestSongPropose?: BestSongProposeDto;
+  /** 3개월 이내 모든 곡 추천 목록 */
+  songProposes?: BestSongProposeDto[];
 }
