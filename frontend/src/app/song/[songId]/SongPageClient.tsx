@@ -109,29 +109,6 @@ export default function SongPageClient({ song }: SongPageClientProps) {
             </span>
           )}
         </div>
-
-        {/* TJ 기능 뱃지 */}
-        {song.tjSong &&
-          (song.tjSong.isMR || song.tjSong.isMV || song.tjSong.isOver60) && (
-            <div className="flex gap-1.5 mt-2">
-              {song.tjSong.isMR && (
-                <span className="px-2 py-0.5 bg-white/10 rounded text-xs text-gray-300">
-                  MR
-                </span>
-              )}
-              {song.tjSong.isMV && (
-                <span className="px-2 py-0.5 bg-white/10 rounded text-xs text-gray-300">
-                  MV
-                </span>
-              )}
-              {song.tjSong.isOver60 && (
-                <span className="px-2 py-0.5 bg-white/10 rounded text-xs text-gray-300">
-                  60분+
-                </span>
-              )}
-            </div>
-          )}
-
         {/* 제목 정보 (항상 표시) */}
         {(song.title !== formattedTitle || song.titleKo || song.titleLatin) && (
           <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
@@ -251,7 +228,9 @@ export default function SongPageClient({ song }: SongPageClientProps) {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-500 text-xs shrink-0">
-                  {video.viewCount && <span>{formatViewCount(video.viewCount)}</span>}
+                  {video.viewCount && (
+                    <span>{formatViewCount(video.viewCount)}</span>
+                  )}
                   {video.publishedYear && <span>{video.publishedYear}</span>}
                   <ExternalLink className="size-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
@@ -295,7 +274,9 @@ export default function SongPageClient({ song }: SongPageClientProps) {
           <div className="flex flex-col gap-2">
             {song.songProposes.map((propose, index) => {
               const startDate = new Date(propose.saveDate);
-              const endDate = new Date(propose.saveDate + 90 * 24 * 60 * 60 * 1000);
+              const endDate = new Date(
+                propose.saveDate + 90 * 24 * 60 * 60 * 1000,
+              );
               const formatDate = (d: Date) =>
                 `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
 
@@ -334,9 +315,7 @@ export default function SongPageClient({ song }: SongPageClientProps) {
             className="flex items-center gap-3 px-3 py-3 w-full rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
           >
             <ThumbsUp className="size-5 text-gray-500" />
-            <span className="text-gray-300 text-sm">
-              TJ 노래 추천하기
-            </span>
+            <span className="text-gray-300 text-sm">TJ 노래 추천하기</span>
             <span className="text-[#C1B369] text-sm ml-auto">
               {song.bestSongPropose.hit}
             </span>

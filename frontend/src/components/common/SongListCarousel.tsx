@@ -81,10 +81,8 @@ export function SongListCarousel({
             key={pageIndex}
             className="w-[90%] shrink-0 snap-start flex flex-col pl-2"
           >
-            {pageSongs.map((song) => {
-              const artistSlug = song.artists[0]?.slug;
-              return (
-                <SongCard
+            {pageSongs.map((song) => (
+              <SongCard
                   key={song.id}
                   songId={song.id}
                   artistId={artistId}
@@ -102,19 +100,14 @@ export function SongListCarousel({
                   bestProposeHit={song.bestSongPropose?.hit}
                   spotify={song.spotify}
                   youtube={song.youtube}
-                  onClick={
-                    artistSlug
-                      ? () => {
-                          if (source) {
-                            saveSearchClick({ songId: song.id, source });
-                          }
-                          router.push(`/artist/${artistSlug}#${song.id}`);
-                        }
-                      : undefined
-                  }
+                  onClick={() => {
+                    if (source) {
+                      saveSearchClick({ songId: song.id, source });
+                    }
+                    router.push(`/song/${song.id}`);
+                  }}
                 />
-              );
-            })}
+              ))}
           </div>
         ))}
       </div>

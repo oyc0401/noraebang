@@ -146,15 +146,13 @@ export function SearchOverlay() {
                   tjNumber={card.song.tjSong?.id}
                   bestProposeHit={card.song.bestSongPropose?.hit}
                   onClick={() => {
-                    if (card.song?.artistSlug) {
+                    if (card.song) {
                       saveSearchClick({
                         query: query || undefined,
                         songId: card.song.id,
                         source: "autocomplete",
                       });
-                      router.push(
-                        `/artist/${card.song.artistSlug}#${card.song.id}`,
-                      );
+                      router.push(`/song/${card.song.id}`);
                     }
                   }}
                 />
