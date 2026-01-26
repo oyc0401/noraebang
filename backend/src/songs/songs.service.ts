@@ -487,7 +487,10 @@ export class SongsService {
       orderBy: { id: "asc" },
     });
 
-    return songs.map((song) => this.mapToDto(song));
+    // artist도 없고 tjSong도 없는 곡은 제외
+    return songs
+      .filter((song) => song.artistSongs.length > 0 || !!song.tjSong)
+      .map((song) => this.mapToDto(song));
   }
 
   async findById(id: number): Promise<SongDto | null> {
@@ -497,6 +500,11 @@ export class SongsService {
     });
 
     if (!song) return null;
+
+    // artist도 없고 tjSong도 없는 곡은 표시하지 않음
+    if (song.artistSongs.length === 0 && !song.tjSong) {
+      return null;
+    }
 
     return this.mapToDto(song, true);
   }
@@ -519,7 +527,10 @@ export class SongsService {
       orderBy: { id: "asc" },
     });
 
-    return songs.map((song) => this.mapToDto(song));
+    // artist도 없고 tjSong도 없는 곡은 제외
+    return songs
+      .filter((song) => song.artistSongs.length > 0 || !!song.tjSong)
+      .map((song) => this.mapToDto(song));
   }
 
   async findByArtistId(
@@ -592,7 +603,7 @@ export class SongsService {
 
   /**
    * 최근에 나온 곡 (TJ 발매일자가 최근인 곡)
-   * slug가 있는 아티스트의 곡만 포함, 캐싱 적용
+   * tjSong이 있는 곡 (artist 유무 상관없이), 캐싱 적용
    */
   private async findRecent(
     skip: number,
@@ -604,17 +615,12 @@ export class SongsService {
     let cached = this.cache.get<SortedIdsCache>("songs:sort", cacheKey);
 
     if (!cached) {
-      // Raw SQL로 정렬된 ID 목록 조회
+      // Raw SQL로 정렬된 ID 목록 조회 (tjSong이 있으면 artist 없어도 OK)
       const results = await this.prisma.$queryRaw<{ id: number }[]>(Prisma.sql`
         SELECT s.id
         FROM song s
         INNER JOIN tj_song tj ON tj.id = s.tj_song_id
         WHERE tj.publishdate IS NOT NULL
-          AND EXISTS (
-            SELECT 1 FROM artist_song asng
-            INNER JOIN artist a ON a.id = asng.artist_id
-            WHERE asng.song_id = s.id AND a.slug IS NOT NULL
-          )
         ORDER BY tj.publishdate DESC, s.id DESC
       `);
 
@@ -636,7 +642,7 @@ export class SongsService {
 
   /**
    * 인기있는 곡 (SearchClick이 가장 많은 노래순)
-   * slug가 있는 아티스트의 곡만 포함, 캐싱 적용
+   * artist가 있거나 tjSong이 있는 곡만 포함, 캐싱 적용
    */
   private async findPopular(
     skip: number,
@@ -648,7 +654,7 @@ export class SongsService {
     let cached = this.cache.get<SortedIdsCache>("songs:sort", cacheKey);
 
     if (!cached) {
-      // Raw SQL로 집계 + 정렬
+      // Raw SQL로 집계 + 정렬 (artist가 있거나 tjSong이 있는 곡)
       const results = await this.prisma.$queryRaw<
         { song_id: number; click_count: bigint }[]
       >(Prisma.sql`
@@ -656,10 +662,9 @@ export class SongsService {
         FROM search_click sc
         INNER JOIN song s ON s.id = sc.song_id
         WHERE sc.song_id IS NOT NULL
-          AND EXISTS (
-            SELECT 1 FROM artist_song asng
-            INNER JOIN artist a ON a.id = asng.artist_id
-            WHERE asng.song_id = s.id AND a.slug IS NOT NULL
+          AND (
+            EXISTS (SELECT 1 FROM artist_song asng WHERE asng.song_id = s.id)
+            OR s.tj_song_id IS NOT NULL
           )
         GROUP BY sc.song_id
         ORDER BY click_count DESC
@@ -683,7 +688,7 @@ export class SongsService {
 
   /**
    * TJ 추천수 많은순 (SongPropose hit수가 가장 많고, 3개월 이내 생성된 곡)
-   * tjSong이 없고, slug가 있는 아티스트의 곡만 포함, 캐싱 적용
+   * tjSong이 없고, artist가 있는 곡만 포함, 캐싱 적용
    */
   private async findTjRecommend(
     skip: number,
@@ -697,7 +702,7 @@ export class SongsService {
     if (!cached) {
       const threeMonthsAgo = BigInt(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
-      // Raw SQL로 집계 + 정렬 (실제 DB 컬럼명 사용: po_hit, save_date)
+      // Raw SQL로 집계 + 정렬 (tjSong 없고 artist 있는 곡, slug 조건 제거)
       const results = await this.prisma.$queryRaw<
         { song_id: number; max_hit: number }[]
       >(Prisma.sql`
@@ -707,11 +712,7 @@ export class SongsService {
         WHERE sp.song_id IS NOT NULL
           AND sp.save_date >= ${threeMonthsAgo}
           AND s.tj_song_id IS NULL
-          AND EXISTS (
-            SELECT 1 FROM artist_song asng
-            INNER JOIN artist a ON a.id = asng.artist_id
-            WHERE asng.song_id = s.id AND a.slug IS NOT NULL
-          )
+          AND EXISTS (SELECT 1 FROM artist_song asng WHERE asng.song_id = s.id)
         GROUP BY sp.song_id
         ORDER BY max_hit DESC
       `);

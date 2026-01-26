@@ -79,15 +79,22 @@ export class TypesenseIndexingService {
     const maxArtistId = options?.maxArtistId ?? 300;
 
     this.logger.log("Fetching songs from database...");
+    // artist가 있거나 tjSong이 있는 곡만 인덱싱 (둘 다 없는 곡은 제외)
     const songs = await this.prisma.song.findMany({
       where: {
-        artistSongs: {
-          some: {
-            artistId: {
-              lte: maxArtistId,
+        OR: [
+          // artist가 있는 곡
+          {
+            artistSongs: {
+              some: {},
             },
           },
-        },
+          // artist가 없지만 tjSong이 있는 곡
+          {
+            artistSongs: { none: {} },
+            tjSong: { isNot: null },
+          },
+        ],
       },
       include: {
         artistSongs: {
@@ -105,7 +112,7 @@ export class TypesenseIndexingService {
           },
         },
         tjSong: {
-          select: { id: true },
+          select: { id: true, artist: true },
         },
         songSpotifyTracks: {
           include: {

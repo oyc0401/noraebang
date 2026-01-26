@@ -29,6 +29,7 @@ export type SongWithRelations = Awaited<
   }>;
   tjSong?: {
     id: string;
+    artist?: string | null;
   };
   songSpotifyTracks?: Array<{
     spotifyTrack: {
@@ -189,39 +190,47 @@ const createQuerySongPronu = (song: SongWithRelations): PNormResult => {
 
 /**
  * artist_key: artistKoNorm, artistLatinNorm, artistJaNorm, artistPron을 합친 배열
+ * artist가 없으면 tjSong.artist 사용
  */
 const createArtistKey = (song: SongWithRelations) => {
   const artists = getSongArtists(song);
   const results = new Set<string>();
 
-  for (const artist of artists) {
-    // artistKoNorm
-    for (const val of getNormalizedValues(artist.nameKo)) {
-      results.add(val);
-    }
-
-    // artistLatinNorm
-    if (artist.nameLatin) {
-      for (const val of getNormalizedValues(artist.nameLatin)) {
+  if (artists.length > 0) {
+    for (const artist of artists) {
+      // artistKoNorm
+      for (const val of getNormalizedValues(artist.nameKo)) {
         results.add(val);
       }
-    }
 
-    // artistJaNorm
-    if (artist.nameJa) {
-      for (const val of getNormalizedValues(artist.nameJa)) {
-        results.add(val);
-      }
-    }
-
-    // artistPron
-    if (artist.nameJaPronu) {
-      const trimmed = artist.nameJaPronu.trim();
-      if (trimmed.length > 0) {
-        for (const val of getPronunciationValues(trimmed)) {
+      // artistLatinNorm
+      if (artist.nameLatin) {
+        for (const val of getNormalizedValues(artist.nameLatin)) {
           results.add(val);
         }
       }
+
+      // artistJaNorm
+      if (artist.nameJa) {
+        for (const val of getNormalizedValues(artist.nameJa)) {
+          results.add(val);
+        }
+      }
+
+      // artistPron
+      if (artist.nameJaPronu) {
+        const trimmed = artist.nameJaPronu.trim();
+        if (trimmed.length > 0) {
+          for (const val of getPronunciationValues(trimmed)) {
+            results.add(val);
+          }
+        }
+      }
+    }
+  } else if (song.tjSong?.artist) {
+    // artist가 없으면 tjSong.artist 사용
+    for (const val of getNormalizedValues(song.tjSong.artist)) {
+      results.add(val);
     }
   }
 
@@ -231,9 +240,12 @@ const createArtistKey = (song: SongWithRelations) => {
 const createQueryComboArtist = (song: SongWithRelations) => {
   const mainArtist = getSongArtists(song)[0];
   const titleKoNorm = song.titleKo ? normalizeBasic(song.titleKo) : undefined;
+  // artist가 있으면 artist.nameKo, 없으면 tjSong.artist 사용
   const artistKoNorm = mainArtist?.nameKo
     ? normalizeBasic(mainArtist.nameKo)
-    : undefined;
+    : song.tjSong?.artist
+      ? normalizeBasic(song.tjSong.artist)
+      : undefined;
 
   if (!titleKoNorm || !artistKoNorm) {
     return undefined;
