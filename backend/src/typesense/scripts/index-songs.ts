@@ -10,7 +10,7 @@
 //
 // 주의:
 // - 기존 songs Collection을 삭제하고 새로 만듭니다
-// - 현재는 artistId < 300인 아티스트의 곡만 인덱싱합니다
+// - artist가 있거나 tjSong이 있는 모든 곡을 인덱싱합니다 (둘 다 없는 곡은 제외)
 // - 인덱싱 시간은 데이터 양에 따라 다릅니다 (100개 = ~1초)
 
 import "dotenv/config";
@@ -43,17 +43,23 @@ async function main() {
   console.log("Step 1: Recreating collection...");
   await recreateCollection(client, songsCollectionSchema);
 
-  // 3. DB에서 데이터 가져오기 (artistId < 300만)
+  // 3. DB에서 데이터 가져오기 (artist가 있거나 tjSong이 있는 곡)
   console.log("\nStep 2: Fetching songs from database...");
   const songs = await prisma.song.findMany({
     where: {
-      artistSongs: {
-        some: {
-          artistId: {
-            lt: 300,
+      OR: [
+        // artist가 있는 곡
+        {
+          artistSongs: {
+            some: {},
           },
         },
-      },
+        // artist가 없지만 tjSong이 있는 곡
+        {
+          artistSongs: { none: {} },
+          tjSong: { isNot: null },
+        },
+      ],
     },
     include: {
       artistSongs: {
@@ -73,7 +79,7 @@ async function main() {
         },
       },
       tjSong: {
-        select: { id: true },
+        select: { id: true, artist: true },
       },
       songSpotifyTracks: {
         include: {

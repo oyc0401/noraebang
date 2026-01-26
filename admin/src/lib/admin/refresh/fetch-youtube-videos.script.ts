@@ -21,7 +21,7 @@ import { fetchTopicVideosForArtist } from "./fetch-youtube-videos";
 
 const DEFAULT_START_ID = 346;
 const DEFAULT_END_ID = 425;
-const DEFAULT_CATALOG = "JPOP";
+const DEFAULT_CATALOG = null;
 
 interface ScriptOptions {
   startId: number;
@@ -100,7 +100,7 @@ async function main() {
   );
   console.log(` - 모드: ${options.dryRun ? "DRY-RUN (DB 미반영)" : "실행"}`);
 
-  const artists = await prisma.artist.findMany({
+  const artistsWithChannels = await prisma.artist.findMany({
     where: {
       id: { gte: options.startId, lte: options.endId },
       ...(options.catalog ? { homeCatalog: options.catalog } : {}),
@@ -109,18 +109,37 @@ async function main() {
       id: true,
       name: true,
       nameKo: true,
+      youtubeChannels: {
+        select: {
+          _count: {
+            select: { videos: true },
+          },
+        },
+      },
     },
     orderBy: { id: "asc" },
   });
 
+  // 유튜브 비디오가 0개인 채널을 가진 아티스트만 필터링
+  const artists = artistsWithChannels.filter((artist) => {
+    // 채널이 없거나, 모든 채널의 비디오 합이 0인 경우
+    const totalVideos = artist.youtubeChannels.reduce(
+      (sum, channel) => sum + channel._count.videos,
+      0,
+    );
+    return totalVideos === 0;
+  });
+
+  console.log(
+    `\n범위 내 아티스트: ${artistsWithChannels.length}명 → 비디오 0개인 아티스트: ${artists.length}명`,
+  );
+
   if (artists.length === 0) {
-    console.log("⚠️  조건에 맞는 아티스트가 없습니다.");
+    console.log("⚠️  비디오가 없는 아티스트가 없습니다.");
     return;
   }
 
-  console.log(
-    `\n총 ${artists.length}명의 아티스트가 선택되었습니다. 순차 처리합니다.\n`,
-  );
+  console.log(`순차 처리를 시작합니다.\n`);
 
   const failures: Array<{ artist: ArtistSummary; error: string }> = [];
 
