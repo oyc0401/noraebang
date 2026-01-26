@@ -127,18 +127,14 @@ export function SearchPageContent() {
                     spotify={song.spotify}
                     youtube={song.youtube}
                     onClick={() => {
-                      if (primaryArtistWithSlug?.slug) {
-                        saveSearchClick({
-                          query: query || undefined,
-                          url: youtubeUrl || undefined,
-                          songId: song.id,
-                          source: "search",
-                        });
-                        router.push(
-                          `/artist/${primaryArtistWithSlug.slug}#${song.id}`,
-                        );
-                        clearSearch();
-                      }
+                      saveSearchClick({
+                        query: query || undefined,
+                        url: youtubeUrl || undefined,
+                        songId: song.id,
+                        source: "search",
+                      });
+                      router.push(`/song/${song.id}`);
+                      clearSearch();
                     }}
                   />
                 );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import type { ArtistDetailsDto } from "@/api/model/models";
@@ -17,6 +18,7 @@ interface ArtistPageClientProps {
 }
 
 export default function ArtistPageClient({ artist }: ArtistPageClientProps) {
+  const router = useRouter();
   const { isSearchActive } = useSearchStore();
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
 
@@ -61,37 +63,32 @@ export default function ArtistPageClient({ artist }: ArtistPageClientProps) {
 
       {songs.length > 0 && (
         <div className="flex flex-col pb-10 px-2">
-          {songs.map((song) => {
-            const tjNumber = song.tjSong?.id;
-            return (
-              <SongCard
-                key={song.id}
-                id={song.id.toString()}
-                songId={song.id}
-                artistId={artist.id}
-                artistTjName={artist.tjName}
-                thumbnail={song.thumbnailMedium}
-                title={formatSongTitle(
-                  song.title,
-                  song.titleKo,
-                  song.titleJa,
-                  song.titleLatin,
-                )}
-                originalTitle={song.title}
-                subtitle={song.artists.map((a) => a.name).join(", ")}
-                tjNumber={tjNumber}
-                bestProposeHit={song.bestSongPropose?.hit}
-                spotify={song.spotify}
-                youtube={song.youtube}
-                isSelected={selectedSongId === song.id.toString()}
-                onClick={() => {
-                  const newHash = `#${song.id}`;
-                  window.history.replaceState(null, "", newHash);
-                  setSelectedSongId(song.id.toString());
-                }}
-              />
-            );
-          })}
+          {songs.map((song) => (
+            <SongCard
+              key={song.id}
+              id={song.id.toString()}
+              songId={song.id}
+              artistId={artist.id}
+              artistTjName={artist.tjName}
+              thumbnail={song.thumbnailMedium}
+              title={formatSongTitle(
+                song.title,
+                song.titleKo,
+                song.titleJa,
+                song.titleLatin,
+              )}
+              originalTitle={song.title}
+              subtitle={song.artists.map((a) => a.name).join(", ")}
+              tjNumber={song.tjSong?.id}
+              bestProposeHit={song.bestSongPropose?.hit}
+              spotify={song.spotify}
+              youtube={song.youtube}
+              isSelected={selectedSongId === song.id.toString()}
+              onClick={() => {
+                router.push(`/song/${song.id}`);
+              }}
+            />
+          ))}
         </div>
       )}
 

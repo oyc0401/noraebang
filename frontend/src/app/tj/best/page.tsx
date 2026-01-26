@@ -42,10 +42,8 @@ export default function TjBestPage() {
           </div>
         ) : (
           <div className="flex flex-col">
-            {songs.map((song) => {
-              const artistSlug = song.artists[0]?.slug;
-              return (
-                <SongCard
+            {songs.map((song) => (
+              <SongCard
                   key={song.id}
                   songId={song.id}
                   thumbnail={song.thumbnailMedium}
@@ -61,17 +59,12 @@ export default function TjBestPage() {
                   bestProposeHit={song.bestSongPropose?.hit}
                   spotify={song.spotify}
                   youtube={song.youtube}
-                  onClick={
-                    artistSlug
-                      ? () => {
-                          saveSearchClick({ songId: song.id, source: "tj_best" });
-                          router.push(`/artist/${artistSlug}#${song.id}`);
-                        }
-                      : undefined
-                  }
+                  onClick={() => {
+                    saveSearchClick({ songId: song.id, source: "tj_best" });
+                    router.push(`/song/${song.id}`);
+                  }}
                 />
-              );
-            })}
+              ))}
           </div>
         )}
       </main>

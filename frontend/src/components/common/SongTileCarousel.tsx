@@ -65,10 +65,8 @@ export function SongTileCarousel({
         titleContent
       )}
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4">
-        {songs.map((song) => {
-          const artistSlug = song.artists[0]?.slug;
-          return (
-            <SongCardVertical
+        {songs.map((song) => (
+          <SongCardVertical
               key={song.id}
               thumbnail={song.thumbnailMedium}
               title={formatSongTitle(
@@ -80,19 +78,14 @@ export function SongTileCarousel({
               subtitle={song.artists.map((a) => a.name).join(", ")}
               tjNumber={song.tjSong?.id}
               bestProposeHit={song.bestSongPropose?.hit}
-              onClick={
-                artistSlug
-                  ? () => {
-                      if (source) {
-                        saveSearchClick({ songId: song.id, source });
-                      }
-                      router.push(`/artist/${artistSlug}#${song.id}`);
-                    }
-                  : undefined
-              }
+              onClick={() => {
+                if (source) {
+                  saveSearchClick({ songId: song.id, source });
+                }
+                router.push(`/song/${song.id}`);
+              }}
             />
-          );
-        })}
+          ))}
       </div>
     </div>
   );
