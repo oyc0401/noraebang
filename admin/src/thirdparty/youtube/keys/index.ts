@@ -1,5 +1,14 @@
 import { YOUTUBE_KEYS } from "./keys.ts";
 
+// 쿼터 초과 에러인지 확인
+function isQuotaError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    return msg.includes("quota") || msg.includes("exceeded");
+  }
+  return false;
+}
+
 export class YoutubeKeyManager {
   private readonly keys: string[];
   private index = 0;
@@ -15,8 +24,17 @@ export class YoutubeKeyManager {
     return this.keys[this.index];
   }
 
+  getKeyCount() {
+    return this.keys.length;
+  }
+
+  getCurrentKeyIndex() {
+    return this.index;
+  }
+
   rotateKey() {
     this.index = (this.index + 1) % this.keys.length;
+    console.log(`🔄 YouTube API 키 로테이션: 키 ${this.index + 1}/${this.keys.length}로 전환`);
     return this.getCurrentKey();
   }
 
@@ -30,7 +48,8 @@ export class YoutubeKeyManager {
       try {
         return await task(this.getCurrentKey());
       } catch (error) {
-        const shouldRotate = onError ? onError(error) : true;
+        // onError가 제공되면 사용, 없으면 쿼터 에러일 때만 로테이션
+        const shouldRotate = onError ? onError(error) : isQuotaError(error);
         tried.add(currentIndex);
         if (!shouldRotate || tried.size >= this.keys.length) {
           throw error;
