@@ -20,9 +20,15 @@ export interface PlaylistVideoItem {
   thumbnailMaxres?: string;
 }
 
+export interface FetchPlaylistVideosOptions {
+  maxVideos?: number;
+}
+
 export async function fetchPlaylistVideos(
   playlistId: string,
+  options: FetchPlaylistVideosOptions = {},
 ): Promise<PlaylistVideoItem[]> {
+  const { maxVideos } = options;
   const keyManager = getYoutubeKeyManager();
   const videos: PlaylistVideoItem[] = [];
   let pageToken: string | undefined;
@@ -74,6 +80,11 @@ export async function fetchPlaylistVideos(
     }
 
     pageToken = result.nextPageToken;
+
+    // maxVideos 도달 시 중단
+    if (maxVideos && videos.length >= maxVideos) {
+      break;
+    }
 
     // Rate limit 방지
     if (pageToken) {

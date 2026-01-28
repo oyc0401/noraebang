@@ -65,14 +65,22 @@ async function processChannel(
     );
   }
 
-  const videoCount = (channel.statistics as any)?.videoCount;
+  const videoCount = (channel.statistics as any)?.videoCount
+    ? parseInt((channel.statistics as any).videoCount, 10)
+    : 0;
+  const VIDEO_LIMIT = 1000;
+  const isLargeChannel = videoCount > VIDEO_LIMIT;
+
   console.log(
-    `     비디오 수 (API): ${videoCount ? parseInt(videoCount, 10).toLocaleString() : "알 수 없음"}`,
+    `     비디오 수 (API): ${videoCount ? videoCount.toLocaleString() : "알 수 없음"}${isLargeChannel ? ` (→ ${VIDEO_LIMIT}개 제한)` : ""}`,
   );
 
-  // 2. 모든 비디오 가져오기
+  // 2. 비디오 가져오기 (1000개 초과 시 제한)
   console.log(`     → 비디오 목록 가져오는 중...`);
-  const playlistVideos = await fetchPlaylistVideos(uploadsPlaylistId);
+  const playlistVideos = await fetchPlaylistVideos(
+    uploadsPlaylistId,
+    isLargeChannel ? { maxVideos: VIDEO_LIMIT } : {},
+  );
 
   if (playlistVideos.length === 0) {
     console.log(`     ⚠️ 비디오 없음`);

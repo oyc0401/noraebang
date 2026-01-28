@@ -82,6 +82,7 @@ async function youtubeFetch(path: string, params: Record<string, string>) {
 
     return data;
   });
+  // KeyManager가 자동으로 쿼터 초과 에러 감지하여 다음 키로 로테이션
 }
 
 async function getChannelInfo(channelId: string): Promise<ChannelInfo> {
@@ -271,7 +272,18 @@ async function processChannel(youtubeChannel: {
   );
 
   // 2. 모든 비디오 가져오기
-  const videos = await getAllVideosFromPlaylist(channelInfo.uploadsPlaylistId);
+  console.log("     → 비디오 목록 가져오는 중...");
+  let videos: VideoInfo[];
+  try {
+    videos = await getAllVideosFromPlaylist(channelInfo.uploadsPlaylistId);
+  } catch (error: any) {
+    // 플레이리스트를 찾을 수 없는 경우 (빈 채널 등)
+    if (error.message?.includes("playlistId") || error.message?.includes("not found")) {
+      console.log(`   ⏭️ 플레이리스트 없음, 스킵`);
+      return { videos: 0, linked: 0 };
+    }
+    throw error; // 다른 에러는 다시 throw
+  }
 
   if (videos.length === 0) {
     console.log(`   ⚠️ 비디오 없음`);
