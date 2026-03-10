@@ -621,6 +621,7 @@ export class SongsService {
         FROM song s
         INNER JOIN tj_song tj ON tj.id = s.tj_song_id
         WHERE tj.publishdate IS NOT NULL
+          AND s.catalog = 'JPOP'
         ORDER BY tj.publishdate DESC, s.id DESC
       `);
 
