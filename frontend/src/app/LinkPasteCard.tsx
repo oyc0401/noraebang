@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import type { SongDto } from "@/api/model/models";
 import { searchControllerSearchSongByMusicLink } from "@/api/model/search/search";
-import { useSearchTracking } from "@/hooks/useSearchTracking";
 import AppleMusicIcon from "@/icons/apple-music-filled.svg";
 import SpotifyIcon from "@/icons/spotify-filled.svg";
 import YoutubeMusicIcon from "@/icons/youtube-music-filled.svg";
@@ -17,7 +16,6 @@ import { useSearchStore } from "@/store/searchStore";
 
 export function LinkPasteCard() {
   const router = useRouter();
-  const { saveSearchClick } = useSearchTracking();
   const [foundSong, setFoundSong] = useState<SongDto | undefined>(undefined);
   const [foundSongUrl, setFoundSongUrl] = useState<string | undefined>(
     undefined,
@@ -98,12 +96,6 @@ export function LinkPasteCard() {
 
   const handleCardClick = () => {
     if (foundSong) {
-      saveSearchClick({
-        url: foundSongUrl,
-        songId: foundSong.id,
-        source: "home_link_paste",
-      });
-      // artist slug가 있으면 아티스트 페이지로, 없으면 곡 페이지로 이동
       if (artist?.slug) {
         router.push(`/artist/${artist.slug}#${foundSong.id}`);
       } else {

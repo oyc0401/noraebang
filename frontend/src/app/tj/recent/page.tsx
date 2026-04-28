@@ -5,14 +5,12 @@ import { useSongsControllerFindBySort } from "@/api/model/songs/songs";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SearchOverlay } from "@/components/common/SearchOverlay";
 import { SongCard } from "@/components/common/SongCard";
-import { useSearchTracking } from "@/hooks/useSearchTracking";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 import { useSearchStore } from "@/store/searchStore";
 
 export default function TjRecentPage() {
   const router = useRouter();
   const { isSearchActive } = useSearchStore();
-  const { saveSearchClick } = useSearchTracking();
   const { data, isLoading } = useSongsControllerFindBySort({
     sort: "recent",
     limit: "100",
@@ -60,7 +58,6 @@ export default function TjRecentPage() {
                   spotify={song.spotify}
                   youtube={song.youtube}
                   onClick={() => {
-                    saveSearchClick({ songId: song.id, source: "tj_recent" });
                     router.push(`/song/${song.id}`);
                   }}
                 />

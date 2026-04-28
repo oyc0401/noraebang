@@ -4,9 +4,7 @@ import { Footer } from "@/components/common/Footer";
 import { Header } from "@/components/common/Header";
 import { HomeSearchBar } from "@/app/HomeSearchBar";
 import { LinkPasteCard } from "@/app/LinkPasteCard";
-import { PopularProposeSongsSection } from "@/app/PopularProposeSongsSection";
 import { PopularSongsSection } from "@/app/PopularSongsSection";
-import { RecentSongsSection } from "@/app/RecentSongsSection";
 
 export function Home() {
   return (
@@ -27,8 +25,6 @@ export function Home() {
           <LinkPasteCard />
         </div>
         <PopularSongsSection />
-        <RecentSongsSection />
-        <PopularProposeSongsSection />
         <Footer />
       </main>
     </>

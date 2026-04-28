@@ -9,8 +9,8 @@ import {
 import { ArtistCard } from "@/components/common/ArtistCard";
 import { SongCard } from "@/components/common/SongCard";
 import { SearchHeader } from "@/components/search/SearchHeader";
-import { useSearchTracking } from "@/hooks/useSearchTracking";
 import { formatSongTitle } from "@/lib/formatSongTitle";
+import { saveRecentSearch } from "@/lib/recentSearches";
 import { useSearchStore } from "@/store/searchStore";
 
 export function SearchPageContent() {
@@ -19,7 +19,6 @@ export function SearchPageContent() {
   const query = searchParams.get("q") || "";
   const youtubeUrl = searchParams.get("url") || "";
   const { setQuery, clearSearch } = useSearchStore();
-  const { saveSearchClick } = useSearchTracking();
 
   // 일반 검색
   const { data: searchResponse, isLoading: isSearchLoading } =
@@ -82,7 +81,7 @@ export function SearchPageContent() {
                       subtitle={artist.nameKo}
                       onClick={() => {
                         if (artist?.slug) {
-                          saveSearchClick({ query, artistId: artist.id, source: "search" });
+                          if (query) saveRecentSearch(query);
                           router.push(`/artist/${artist.slug}`);
                           clearSearch();
                         }
@@ -133,12 +132,7 @@ export function SearchPageContent() {
                     spotify={song.spotify}
                     youtube={song.youtube}
                     onClick={() => {
-                      saveSearchClick({
-                        query: query || undefined,
-                        url: youtubeUrl || undefined,
-                        songId: song.id,
-                        source: "search",
-                      });
+                      if (query) saveRecentSearch(query);
                       router.push(`/song/${song.id}`);
                       clearSearch();
                     }}

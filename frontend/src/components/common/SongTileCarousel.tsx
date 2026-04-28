@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { SongDto } from "@/api/model/models";
 import { SongCardVertical } from "@/components/common/SongCardVertical";
-import { useSearchTracking } from "@/hooks/useSearchTracking";
 import { formatSongTitle } from "@/lib/formatSongTitle";
 
 interface SongTileCarouselProps {
@@ -13,7 +12,6 @@ interface SongTileCarouselProps {
   songs: SongDto[];
   isLoading?: boolean;
   href?: string;
-  source?: string;
 }
 
 export function SongTileCarousel({
@@ -21,10 +19,8 @@ export function SongTileCarousel({
   songs,
   isLoading,
   href,
-  source,
 }: SongTileCarouselProps) {
   const router = useRouter();
-  const { saveSearchClick } = useSearchTracking();
   if (isLoading) {
     return (
       <div className="py-4">
@@ -79,9 +75,6 @@ export function SongTileCarousel({
               tjNumber={song.tjSong?.id}
               bestProposeHit={song.bestSongPropose?.hit}
               onClick={() => {
-                if (source) {
-                  saveSearchClick({ songId: song.id, source });
-                }
                 router.push(`/song/${song.id}`);
               }}
             />

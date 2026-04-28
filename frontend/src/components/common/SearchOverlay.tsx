@@ -1,10 +1,9 @@
 "use client";
 
-import { ArrowLeft, Clock, Search } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
-  useSearchControllerGetRecentSearches,
   useSearchControllerGetSearchSuggestions,
 } from "@/api/model/search/search";
 import { ArtistCard } from "@/components/common/ArtistCard";
@@ -12,8 +11,9 @@ import { SearchOverlayLinkPaste } from "@/components/common/SearchOverlayLinkPas
 import { SearchTermCard } from "@/components/common/SearchTermCard";
 import { SongCard } from "@/components/common/SongCard";
 import { SearchBar } from "@/components/search/SearchBar";
-import { useSearchTracking } from "@/hooks/useSearchTracking";
+import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { formatSongTitle } from "@/lib/formatSongTitle";
+import { saveRecentSearch } from "@/lib/recentSearches";
 import { hasIncompleteKorean } from "@/lib/korean";
 import { useSearchStore } from "@/store/searchStore";
 
@@ -22,7 +22,7 @@ export function SearchOverlay() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { query, setQuery, clearSearch } = useSearchStore();
-  const { saveSearchClick } = useSearchTracking();
+  const { recentSearches, deleteRecentSearch } = useRecentSearches();
   const initialPathname = useRef(pathname);
   const initialSearchParams = useRef(searchParams.toString());
 
@@ -46,23 +46,7 @@ export function SearchOverlay() {
       { query: { enabled: shouldFetch } },
     );
 
-  // 최근/인기 검색어 조회 (검색어가 비어있을 때만)
-  const { data: searchSuggestions } = useSearchControllerGetRecentSearches({
-    query: { enabled: query.length === 0 },
-  });
-
-  // 최근 검색어 10개, 인기 검색어 10개
-  const recentSearches = useMemo(() => {
-    return (searchSuggestions?.data?.recents ?? []).slice(0, 10);
-  }, [searchSuggestions]);
-
-  const popularSearches = useMemo(() => {
-    return (searchSuggestions?.data?.populars ?? []).slice(0, 10);
-  }, [searchSuggestions]);
-
-  const showSuggestions =
-    query.length === 0 &&
-    (recentSearches.length > 0 || popularSearches.length > 0);
+  const showRecentSearches = query.length === 0 && recentSearches.length > 0;
 
   return (
     <div className="bg-background-dark flex flex-col">
@@ -97,11 +81,6 @@ export function SearchOverlay() {
                   }}
                   className="w-full p-4 rounded-lg bg-surface-dark hover:bg-white/5 cursor-pointer transition-colors text-left flex items-center gap-3"
                 >
-                  {card.suggestion.source === "recent" ? (
-                    <Clock className="size-5 text-gray-400" />
-                  ) : (
-                    <Search className="size-5 text-gray-400" />
-                  )}
                   <span className="text-white">{card.suggestion.title}</span>
                 </button>
               );
@@ -117,11 +96,7 @@ export function SearchOverlay() {
                   subtitle={card.artist.title}
                   onClick={() => {
                     if (card.artist?.slug) {
-                      saveSearchClick({
-                        query: query || undefined,
-                        artistId: card.artist.id,
-                        source: "autocomplete",
-                      });
+                      if (query) saveRecentSearch(query);
                       router.push(`/artist/${card.artist.slug}`);
                     }
                   }}
@@ -147,11 +122,7 @@ export function SearchOverlay() {
                   bestProposeHit={card.song.bestSongPropose?.hit}
                   onClick={() => {
                     if (card.song) {
-                      saveSearchClick({
-                        query: query || undefined,
-                        songId: card.song.id,
-                        source: "autocomplete",
-                      });
+                      if (query) saveRecentSearch(query);
                       router.push(`/song/${card.song.id}`);
                     }
                   }}
@@ -162,41 +133,33 @@ export function SearchOverlay() {
             return null;
           })}
         {/* 최근 검색어 섹션 (검색어가 비어있을 때) */}
-        {showSuggestions && recentSearches.length > 0 && (
+        {showRecentSearches && (
           <>
             <div className="p-2 text-gray-400 text-sm">최근 검색어</div>
             {recentSearches.map((term) => (
-              <SearchTermCard
-                key={`recent-${term}`}
-                term={term}
-                type="recent"
-                onClick={() => {
-                  setQuery(term);
-                  router.push(`/search?q=${encodeURIComponent(term)}`);
-                }}
-              />
+              <div key={`recent-${term}`} className="flex items-center">
+                <div className="flex-1">
+                  <SearchTermCard
+                    term={term}
+                    onClick={() => {
+                      setQuery(term);
+                      router.push(`/search?q=${encodeURIComponent(term)}`);
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => deleteRecentSearch(term)}
+                  className="p-2 text-gray-500 hover:text-gray-300 cursor-pointer transition-colors shrink-0"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
             ))}
           </>
         )}
-        {/* 인기 검색어 섹션 */}
-        {showSuggestions && popularSearches.length > 0 && (
-          <>
-            <div className="p-2 text-gray-400 text-sm mt-4">인기 검색어</div>
-            {popularSearches.map((term) => (
-              <SearchTermCard
-                key={`popular-${term}`}
-                term={term}
-                type="popular"
-                onClick={() => {
-                  setQuery(term);
-                  router.push(`/search?q=${encodeURIComponent(term)}`);
-                }}
-              />
-            ))}
-          </>
-        )}
-        {/* 검색어 비어있고 추천 검색어 없을 때 */}
-        {query.length === 0 && !showSuggestions && (
+        {/* 검색어 비어있고 최근 검색어 없을 때 */}
+        {query.length === 0 && !showRecentSearches && (
           <div className="text-center text-gray-400 py-8">
             검색어를 입력해주세요
           </div>

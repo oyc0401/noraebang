@@ -6,28 +6,22 @@
  * OpenAPI spec version: 1.0
  */
 import {
-  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
-  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
-  UseMutationOptions,
-  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   ErrorResponseDto,
-  RecentSearchesResponseDto,
-  SaveSearchClickDto,
   SearchControllerGetSearchSuggestionsParams,
   SearchControllerSearchParams,
   SearchControllerSearchSongByMusicLinkParams,
@@ -323,162 +317,4 @@ export function useSearchControllerSearchSongByMusicLink<TData = Awaited<ReturnT
 
 
 
-/**
- * 로그인 시 최근 검색어와 인기 검색어를, 비로그인 시 인기 검색어만 반환합니다.
- * @summary 최근/인기 검색어 조회
- */
-export const searchControllerGetRecentSearches = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customFetch<RecentSearchesResponseDto>(
-      {url: `/search/recent`, method: 'GET', signal
-    },
-      );
-    }
-  
 
-
-
-export const getSearchControllerGetRecentSearchesQueryKey = () => {
-    return [
-    `/search/recent`
-    ] as const;
-    }
-
-    
-export const getSearchControllerGetRecentSearchesQueryOptions = <TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSearchControllerGetRecentSearchesQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>> = ({ signal }) => searchControllerGetRecentSearches(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SearchControllerGetRecentSearchesQueryResult = NonNullable<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>>
-export type SearchControllerGetRecentSearchesQueryError = unknown
-
-
-export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof searchControllerGetRecentSearches>>,
-          TError,
-          Awaited<ReturnType<typeof searchControllerGetRecentSearches>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof searchControllerGetRecentSearches>>,
-          TError,
-          Awaited<ReturnType<typeof searchControllerGetRecentSearches>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 최근/인기 검색어 조회
- */
-
-export function useSearchControllerGetRecentSearches<TData = Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchControllerGetRecentSearches>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSearchControllerGetRecentSearchesQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * 검색 결과에서 클릭한 아티스트/곡을 저장합니다.
- * @summary 검색 클릭 기록 저장
- */
-export const searchControllerSaveSearchClick = (
-    saveSearchClickDto: SaveSearchClickDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customFetch<void>(
-      {url: `/search/click`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: saveSearchClickDto, signal
-    },
-      );
-    }
-  
-
-
-export const getSearchControllerSaveSearchClickMutationOptions = <TError = ErrorResponseDto,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchControllerSaveSearchClick>>, TError,{data: SaveSearchClickDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof searchControllerSaveSearchClick>>, TError,{data: SaveSearchClickDto}, TContext> => {
-
-const mutationKey = ['searchControllerSaveSearchClick'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof searchControllerSaveSearchClick>>, {data: SaveSearchClickDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  searchControllerSaveSearchClick(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SearchControllerSaveSearchClickMutationResult = NonNullable<Awaited<ReturnType<typeof searchControllerSaveSearchClick>>>
-    export type SearchControllerSaveSearchClickMutationBody = SaveSearchClickDto
-    export type SearchControllerSaveSearchClickMutationError = ErrorResponseDto
-
-    /**
- * @summary 검색 클릭 기록 저장
- */
-export const useSearchControllerSaveSearchClick = <TError = ErrorResponseDto,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchControllerSaveSearchClick>>, TError,{data: SaveSearchClickDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof searchControllerSaveSearchClick>>,
-        TError,
-        {data: SaveSearchClickDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSearchControllerSaveSearchClickMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
