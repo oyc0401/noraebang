@@ -36,14 +36,6 @@ export class AuthService {
 
   private readonly refreshTokenPepper: Buffer;
 
-  async anonymousLogin(): Promise<AuthTokens> {
-    const user = await this.prisma.user.create({
-      data: {},
-    });
-
-    return this.createSessionAndTokens(user.id, user.email ?? undefined);
-  }
-
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
     let payload: JwtPayload;
     try {
