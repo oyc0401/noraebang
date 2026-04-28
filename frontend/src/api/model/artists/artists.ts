@@ -22,106 +22,10 @@ import type {
 
 import type {
   ArtistDetailResponseDto,
-  ArtistListResponseDto,
-  ArtistsControllerFindMostViewedParams,
   ErrorResponseDto
 } from '.././models';
 
 import { customFetch } from '../../client';
-
-
-
-
-/**
- * SearchClick 기반으로 가장 많이 클릭된 아티스트 목록을 반환합니다. (YouTube, Spotify 정보 포함)
- * @summary 가장 많이 시청한 아티스트 조회
- */
-export const artistsControllerFindMostViewed = (
-    params?: ArtistsControllerFindMostViewedParams,
- signal?: AbortSignal
-) => {
-      
-      
-      return customFetch<ArtistListResponseDto>(
-      {url: `/artists`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-  
-
-
-
-export const getArtistsControllerFindMostViewedQueryKey = (params?: ArtistsControllerFindMostViewedParams,) => {
-    return [
-    `/artists`, ...(params ? [params]: [])
-    ] as const;
-    }
-
-    
-export const getArtistsControllerFindMostViewedQueryOptions = <TData = Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError = ErrorResponseDto>(params?: ArtistsControllerFindMostViewedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getArtistsControllerFindMostViewedQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof artistsControllerFindMostViewed>>> = ({ signal }) => artistsControllerFindMostViewed(params, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ArtistsControllerFindMostViewedQueryResult = NonNullable<Awaited<ReturnType<typeof artistsControllerFindMostViewed>>>
-export type ArtistsControllerFindMostViewedQueryError = ErrorResponseDto
-
-
-export function useArtistsControllerFindMostViewed<TData = Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError = ErrorResponseDto>(
- params: undefined |  ArtistsControllerFindMostViewedParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artistsControllerFindMostViewed>>,
-          TError,
-          Awaited<ReturnType<typeof artistsControllerFindMostViewed>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtistsControllerFindMostViewed<TData = Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError = ErrorResponseDto>(
- params?: ArtistsControllerFindMostViewedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artistsControllerFindMostViewed>>,
-          TError,
-          Awaited<ReturnType<typeof artistsControllerFindMostViewed>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtistsControllerFindMostViewed<TData = Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError = ErrorResponseDto>(
- params?: ArtistsControllerFindMostViewedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary 가장 많이 시청한 아티스트 조회
- */
-
-export function useArtistsControllerFindMostViewed<TData = Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError = ErrorResponseDto>(
- params?: ArtistsControllerFindMostViewedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artistsControllerFindMostViewed>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getArtistsControllerFindMostViewedQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
 
 
 

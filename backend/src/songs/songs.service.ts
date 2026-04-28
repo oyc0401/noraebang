@@ -6,7 +6,6 @@ import { PrismaService } from "../prisma/prisma.service";
 
 export const SONG_SORT_OPTIONS = [
   "recent",
-  "popular",
   "tj_recommend",
 ] as const;
 
@@ -594,8 +593,6 @@ export class SongsService {
     switch (sort) {
       case "recent":
         return this.findRecent(skip, limit);
-      case "popular":
-        return this.findPopular(skip, limit);
       case "tj_recommend":
         return this.findTjRecommend(skip, limit);
     }
@@ -627,52 +624,6 @@ export class SongsService {
 
       cached = {
         sortedSongIds: results.map((r) => r.id),
-        total: results.length,
-      };
-      this.cache.set("songs:sort", cacheKey, cached);
-    }
-
-    const { sortedSongIds, total } = cached;
-    const paginatedIds = sortedSongIds.slice(skip, skip + limit);
-
-    return {
-      songs: await this.fetchSongsByIds(paginatedIds),
-      total,
-    };
-  }
-
-  /**
-   * 인기있는 곡 (SearchClick이 가장 많은 노래순)
-   * artist가 있거나 tjSong이 있는 곡만 포함, 캐싱 적용
-   */
-  private async findPopular(
-    skip: number,
-    limit: number,
-  ): Promise<{ songs: SongDto[]; total: number }> {
-    const cacheKey = "popular";
-
-    // 캐시에서 정렬된 songId 목록 가져오기
-    let cached = this.cache.get<SortedIdsCache>("songs:sort", cacheKey);
-
-    if (!cached) {
-      // Raw SQL로 집계 + 정렬 (artist가 있거나 tjSong이 있는 곡)
-      const results = await this.prisma.$queryRaw<
-        { song_id: number; click_count: bigint }[]
-      >(Prisma.sql`
-        SELECT sc.song_id, COUNT(*) as click_count
-        FROM search_click sc
-        INNER JOIN song s ON s.id = sc.song_id
-        WHERE sc.song_id IS NOT NULL
-          AND (
-            EXISTS (SELECT 1 FROM artist_song asng WHERE asng.song_id = s.id)
-            OR s.tj_song_id IS NOT NULL
-          )
-        GROUP BY sc.song_id
-        ORDER BY click_count DESC
-      `);
-
-      cached = {
-        sortedSongIds: results.map((r) => r.song_id),
         total: results.length,
       };
       this.cache.set("songs:sort", cacheKey, cached);
