@@ -6,7 +6,6 @@ import { PrismaService } from "../prisma/prisma.service";
 
 export const SONG_SORT_OPTIONS = [
   "recent",
-  "tj_recommend",
 ] as const;
 
 export type SongSortOption = (typeof SONG_SORT_OPTIONS)[number];
@@ -577,12 +576,6 @@ export class SongsService {
     return result;
   }
 
-  /**
-   * 정렬 옵션에 따라 곡 목록 조회 (캐싱 적용)
-   * - recent: TJ 발매일자가 최근인 곡
-   * - popular: SearchClick이 가장 많은 곡
-   * - tj_recommend: SongPropose hit수가 가장 많고, 3개월 이내 생성된 곡
-   */
   async findBySort(
     sort: SongSortOption,
     page: number = 1,
@@ -593,8 +586,6 @@ export class SongsService {
     switch (sort) {
       case "recent":
         return this.findRecent(skip, limit);
-      case "tj_recommend":
-        return this.findTjRecommend(skip, limit);
     }
   }
 
@@ -638,50 +629,4 @@ export class SongsService {
     };
   }
 
-  /**
-   * TJ 추천수 많은순 (SongPropose hit수가 가장 많고, 3개월 이내 생성된 곡)
-   * tjSong이 없고, artist가 있는 곡만 포함, 캐싱 적용
-   */
-  private async findTjRecommend(
-    skip: number,
-    limit: number,
-  ): Promise<{ songs: SongDto[]; total: number }> {
-    const cacheKey = "tj_recommend";
-
-    // 캐시에서 정렬된 songId 목록 가져오기
-    let cached = this.cache.get<SortedIdsCache>("songs:sort", cacheKey);
-
-    if (!cached) {
-      const threeMonthsAgo = BigInt(Date.now() - 90 * 24 * 60 * 60 * 1000);
-
-      // Raw SQL로 집계 + 정렬 (tjSong 없고 artist 있는 곡, slug 조건 제거)
-      const results = await this.prisma.$queryRaw<
-        { song_id: number; max_hit: number }[]
-      >(Prisma.sql`
-        SELECT sp.song_id, MAX(sp.po_hit) as max_hit
-        FROM song_propose sp
-        INNER JOIN song s ON s.id = sp.song_id
-        WHERE sp.song_id IS NOT NULL
-          AND sp.save_date >= ${threeMonthsAgo}
-          AND s.tj_song_id IS NULL
-          AND EXISTS (SELECT 1 FROM artist_song asng WHERE asng.song_id = s.id)
-        GROUP BY sp.song_id
-        ORDER BY max_hit DESC
-      `);
-
-      cached = {
-        sortedSongIds: results.map((r) => r.song_id),
-        total: results.length,
-      };
-      this.cache.set("songs:sort", cacheKey, cached);
-    }
-
-    const { sortedSongIds, total } = cached;
-    const paginatedIds = sortedSongIds.slice(skip, skip + limit);
-
-    return {
-      songs: await this.fetchSongsByIds(paginatedIds),
-      total,
-    };
-  }
 }

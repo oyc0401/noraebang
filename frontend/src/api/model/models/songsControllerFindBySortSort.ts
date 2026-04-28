@@ -12,5 +12,4 @@ export type SongsControllerFindBySortSort = typeof SongsControllerFindBySortSort
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SongsControllerFindBySortSort = {
   recent: 'recent',
-  tj_recommend: 'tj_recommend',
 } as const;

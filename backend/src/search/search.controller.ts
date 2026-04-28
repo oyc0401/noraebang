@@ -1,14 +1,11 @@
 import {
   BadRequestException,
-  Body,
   Controller,
   Get,
-  Post,
   Query,
   UseGuards,
 } from "@nestjs/common";
 import {
-  ApiBearerAuth,
   ApiOperation,
   ApiQuery,
   ApiTags,
@@ -18,10 +15,8 @@ import {
   CurrentUser,
   type CurrentUserData,
 } from "../auth/decorators/current-user.decorator";
-import { JwtAuthGuard, OptionalJwtAuthGuard } from "../auth/guards";
+import { OptionalJwtAuthGuard } from "../auth/guards";
 import { ErrorResponseDto } from "../dto";
-import { RecentSearchesResponseDto } from "./dto/recent-searches-response.dto";
-import { SaveSearchClickDto } from "./dto/save-search-click.dto";
 import { SearchResponseDto } from "./dto/search-response.dto";
 import { SearchSuggestionsQueryDto } from "./dto/search-suggestions-query.dto";
 import { SearchSuggestionsResponseDto } from "./dto/search-suggestions-response.dto";
@@ -185,46 +180,4 @@ export class SearchController {
     };
   }
 
-  @Get("recent")
-  @UseGuards(OptionalJwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: "최근/인기 검색어 조회",
-    description:
-      "로그인 시 최근 검색어와 인기 검색어를, 비로그인 시 인기 검색어만 반환합니다.",
-  })
-  @SwaggerApiResponse({
-    status: 200,
-    description: "검색어 추천 목록",
-    type: RecentSearchesResponseDto,
-  })
-  async getRecentSearches(
-    @CurrentUser() user?: CurrentUserData,
-  ): Promise<RecentSearchesResponseDto> {
-    const [recents, populars] = await Promise.all([
-      user ? this.searchService.getRecentSearches(user.id, 10) : [],
-      this.searchService.getPopularSearches(10),
-    ]);
-
-    return {
-      data: { recents, populars },
-      message: "검색어 추천 조회 성공",
-    };
-  }
-
-  @Post("click")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: "검색 클릭 기록 저장",
-    description: "검색 결과에서 클릭한 아티스트/곡을 저장합니다.",
-  })
-  @SwaggerApiResponse({ status: 201, description: "저장 성공" })
-  @SwaggerApiResponse({ status: 401, description: "인증 필요", type: ErrorResponseDto })
-  async saveSearchClick(
-    @CurrentUser() user: CurrentUserData,
-    @Body() dto: SaveSearchClickDto,
-  ): Promise<void> {
-    await this.searchService.saveSearchClick(user.id, dto.query, dto.url, dto.artistId, dto.songId, dto.source);
-  }
 }

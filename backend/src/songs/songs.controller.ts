@@ -39,8 +39,7 @@ export class SongsController {
     summary: "곡 목록 조회 (정렬 옵션)",
     description:
       "정렬 옵션에 따라 곡 목록을 조회합니다.\n" +
-      "- recent: 최근에 나온 곡 (TJ 발매일자 최신순)\n" +
-      "- tj_recommend: TJ 추천수 많은 순 (3개월 이내 SongPropose hit 순)",
+      "- recent: 최근에 나온 곡 (TJ 발매일자 최신순)",
   })
   @ApiQuery({
     name: "sort",
