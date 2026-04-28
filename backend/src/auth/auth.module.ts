@@ -3,7 +3,6 @@ import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { PrismaModule } from "../prisma/prisma.module";
-import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { MobileAuthController } from "./mobile-auth.controller";
 import { JwtStrategy } from "./strategies/jwt.strategy";
@@ -20,7 +19,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
       }),
     }),
   ],
-  controllers: [AuthController, MobileAuthController],
+  controllers: [MobileAuthController],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService, JwtStrategy],
 })
