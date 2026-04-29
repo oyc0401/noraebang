@@ -1,6 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
-import { CacheService } from "../cache";
 import { SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -8,11 +6,6 @@ export const SONG_SORT_OPTIONS = ["recent"] as const;
 
 export type SongSortOption = (typeof SONG_SORT_OPTIONS)[number];
 export const DEFAULT_SONG_SORT: SongSortOption = "recent";
-
-type SortedIdsCache = {
-  sortedSongIds: number[];
-  total: number;
-};
 
 type SongProposeData = {
   songSinger: string;
@@ -85,10 +78,7 @@ type SongDtoData = {
 
 @Injectable()
 export class SongsService {
-  constructor(
-    private prisma: PrismaService,
-    private cache: CacheService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   private get songDtoSelect() {
     const threeMonthsAgo = BigInt(Date.now() - 90 * 24 * 60 * 60 * 1000);
@@ -538,14 +528,6 @@ export class SongsService {
     page: number = 1,
     limit: number = 20,
   ): Promise<{ songs: SongDto[]; total: number }> {
-    const cacheKey = `${artistId}:${page}:${limit}:TJ`;
-
-    const cached = this.cache.get<{ songs: SongDto[]; total: number }>(
-      "songs:artist",
-      cacheKey,
-    );
-    if (cached) return cached;
-
     const skip = (page - 1) * limit;
 
     const whereClause = {
@@ -564,9 +546,7 @@ export class SongsService {
     });
 
     if (total === 0) {
-      const result = { songs: [], total };
-      this.cache.set("songs:artist", cacheKey, result);
-      return result;
+      return { songs: [], total };
     }
 
     const songs = await this.prisma.song.findMany({
@@ -577,13 +557,10 @@ export class SongsService {
       take: limit,
     });
 
-    const result = {
+    return {
       songs: songs.map((song) => this.mapToDto(song)),
       total,
     };
-
-    this.cache.set("songs:artist", cacheKey, result);
-    return result;
   }
 
   async findBySort(
@@ -601,40 +578,39 @@ export class SongsService {
 
   /**
    * 최근에 나온 곡 (TJ 발매일자가 최근인 곡)
-   * tjSong이 있는 곡 (artist 유무 상관없이), 캐싱 적용
+   * tjSong이 있는 곡 (artist 유무 상관없이)
    */
   private async findRecent(
     skip: number,
     limit: number,
   ): Promise<{ songs: SongDto[]; total: number }> {
-    const cacheKey = "recent";
+    const whereClause = {
+      catalog: "JPOP",
+      tjSongId: {
+        not: null,
+      },
+      tjSong: {
+        publishdate: {
+          not: null,
+        },
+      },
+    };
 
-    // 캐시에서 정렬된 songId 목록 가져오기
-    let cached = this.cache.get<SortedIdsCache>("songs:sort", cacheKey);
-
-    if (!cached) {
-      // Raw SQL로 정렬된 ID 목록 조회 (tjSong이 있으면 artist 없어도 OK)
-      const results = await this.prisma.$queryRaw<{ id: number }[]>(Prisma.sql`
-        SELECT s.id
-        FROM song s
-        INNER JOIN tj_song tj ON tj.id = s.tj_song_id
-        WHERE tj.publishdate IS NOT NULL
-          AND s.catalog = 'JPOP'
-        ORDER BY tj.publishdate DESC, s.id DESC
-      `);
-
-      cached = {
-        sortedSongIds: results.map((r) => r.id),
-        total: results.length,
-      };
-      this.cache.set("songs:sort", cacheKey, cached);
-    }
-
-    const { sortedSongIds, total } = cached;
-    const paginatedIds = sortedSongIds.slice(skip, skip + limit);
+    const [songs, total] = await Promise.all([
+      this.prisma.song.findMany({
+        where: whereClause,
+        select: this.songDtoSelect,
+        orderBy: [{ tjSong: { publishdate: "desc" } }, { id: "desc" }],
+        skip,
+        take: limit,
+      }),
+      this.prisma.song.count({
+        where: whereClause,
+      }),
+    ]);
 
     return {
-      songs: await this.fetchSongsByIds(paginatedIds),
+      songs: songs.map((song) => this.mapToDto(song)),
       total,
     };
   }
