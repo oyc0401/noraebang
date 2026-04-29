@@ -554,10 +554,8 @@ export class SongsService {
           artistId,
         },
       },
-      karaokeSongs: {
-        some: {
-          provider: "TJ" as const,
-        },
+      tjSongId: {
+        not: null,
       },
     };
 
