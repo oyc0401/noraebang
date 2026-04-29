@@ -10,7 +10,7 @@
 //
 // 주의:
 // - 기존 songs Collection을 삭제하고 새로 만듭니다
-// - artist가 있거나 tjSong이 있는 모든 곡을 인덱싱합니다 (둘 다 없는 곡은 제외)
+// - JPOP이면서 TJ 노래방 번호가 연결된 곡만 인덱싱합니다
 // - 인덱싱 시간은 데이터 양에 따라 다릅니다 (100개 = ~1초)
 
 import "dotenv/config";
@@ -43,23 +43,12 @@ async function main() {
   console.log("Step 1: Recreating collection...");
   await recreateCollection(client, songsCollectionSchema);
 
-  // 3. DB에서 데이터 가져오기 (artist가 있거나 tjSong이 있는 곡)
+  // 3. DB에서 데이터 가져오기 (JPOP + TJ 노래방 번호가 연결된 곡)
   console.log("\nStep 2: Fetching songs from database...");
   const songs = await prisma.song.findMany({
     where: {
-      OR: [
-        // artist가 있는 곡
-        {
-          artistSongs: {
-            some: {},
-          },
-        },
-        // artist가 없지만 tjSong이 있는 곡
-        {
-          artistSongs: { none: {} },
-          tjSong: { isNot: null },
-        },
-      ],
+      catalog: "JPOP",
+      tjSongId: { not: null },
     },
     include: {
       artistSongs: {
