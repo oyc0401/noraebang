@@ -35,7 +35,6 @@ import { customFetch } from '../../client';
 /**
  * 정렬 옵션에 따라 곡 목록을 조회합니다.
 - recent: 최근에 나온 곡 (TJ 발매일자 최신순)
-- popular: 인기있는 곡 (SearchClick 많은 순)
  * @summary 곡 목록 조회 (정렬 옵션)
  */
 export const songsControllerFindBySort = (
