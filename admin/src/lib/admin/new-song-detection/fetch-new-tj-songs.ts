@@ -608,7 +608,7 @@ export async function fetchNewTjSongs(
 
   try {
     // 1. TJ API에서 곡 목록 가져오기
-    const tjSongs = await fetchTjSongsByMonth("202603");
+    const tjSongs = await fetchTjSongsByMonth(yearMonth);
     stats.fetched = tjSongs.length;
 
     if (tjSongs.length === 0 && !includeExistingUnlinked) {
