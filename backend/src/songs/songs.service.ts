@@ -4,9 +4,7 @@ import { CacheService } from "../cache";
 import { SongDto } from "../dto";
 import { PrismaService } from "../prisma/prisma.service";
 
-export const SONG_SORT_OPTIONS = [
-  "recent",
-] as const;
+export const SONG_SORT_OPTIONS = ["recent"] as const;
 
 export type SongSortOption = (typeof SONG_SORT_OPTIONS)[number];
 export const DEFAULT_SONG_SORT: SongSortOption = "recent";
@@ -395,9 +393,11 @@ export class SongsService {
             thumbnailDefault: youtubeVideo.thumbnailDefault ?? undefined,
             thumbnailMedium: youtubeVideo.thumbnailMedium ?? undefined,
             thumbnailHigh: youtubeVideo.thumbnailHigh ?? undefined,
-            channelName: youtubeVideo.channels[0]?.youtubeChannel.title
-              ?.replace(/ - Topic$/, "")
-              ?? undefined,
+            channelName:
+              youtubeVideo.channels[0]?.youtubeChannel.title?.replace(
+                / - Topic$/,
+                "",
+              ) ?? undefined,
           }
         : undefined,
       bestSongPropose: bestPropose
@@ -439,9 +439,11 @@ export class SongsService {
               thumbnailDefault: yv.youtubeVideo.thumbnailDefault ?? undefined,
               thumbnailMedium: yv.youtubeVideo.thumbnailMedium ?? undefined,
               thumbnailHigh: yv.youtubeVideo.thumbnailHigh ?? undefined,
-              channelName: yv.youtubeVideo.channels[0]?.youtubeChannel.title
-                ?.replace(/ - Topic$/, "")
-                ?? undefined,
+              channelName:
+                yv.youtubeVideo.channels[0]?.youtubeChannel.title?.replace(
+                  / - Topic$/,
+                  "",
+                ) ?? undefined,
             }))
           : undefined;
 
@@ -536,7 +538,8 @@ export class SongsService {
     page: number = 1,
     limit: number = 20,
   ): Promise<{ songs: SongDto[]; total: number }> {
-    const cacheKey = `${artistId}:${page}:${limit}`;
+    const cacheKey = `${artistId}:${page}:${limit}:TJ`;
+
     const cached = this.cache.get<{ songs: SongDto[]; total: number }>(
       "songs:artist",
       cacheKey,
@@ -544,15 +547,23 @@ export class SongsService {
     if (cached) return cached;
 
     const skip = (page - 1) * limit;
+
     const whereClause = {
       artistSongs: {
         some: {
           artistId,
         },
       },
+      karaokeSongs: {
+        some: {
+          provider: "TJ" as const,
+        },
+      },
     };
 
-    const total = await this.prisma.song.count({ where: whereClause });
+    const total = await this.prisma.song.count({
+      where: whereClause,
+    });
 
     if (total === 0) {
       const result = { songs: [], total };
@@ -572,6 +583,7 @@ export class SongsService {
       songs: songs.map((song) => this.mapToDto(song)),
       total,
     };
+
     this.cache.set("songs:artist", cacheKey, result);
     return result;
   }
@@ -628,5 +640,4 @@ export class SongsService {
       total,
     };
   }
-
 }

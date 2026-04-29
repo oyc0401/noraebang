@@ -20,9 +20,7 @@ import { ArtistDetailsDto, ErrorResponseDto } from "../dto";
 import { ApiResponse } from "../dto/api-response.dto";
 import { SearchService } from "../search/search.service";
 import { ArtistsService } from "./artists.service";
-import {
-  ArtistDetailResponseDto,
-} from "./dto/artist-response.dto";
+import { ArtistDetailResponseDto } from "./dto/artist-response.dto";
 
 @ApiTags("Artists")
 @Controller("artists")
@@ -67,12 +65,12 @@ export class ArtistsController {
       throw new NotFoundException("Artist not found");
     }
 
-    // 로그인 유저일 때 SearchClick 기록
-    if (user?.id) {
-      this.searchService
-        .saveSearchClick(user.id, undefined, undefined, artist.id, undefined, "artist_page")
-        .catch(() => {});
-    }
+    // // 로그인 유저일 때 SearchClick 기록
+    // if (user?.id) {
+    //   this.searchService
+    //     .saveSearchClick(user.id, undefined, undefined, artist.id, undefined, "artist_page")
+    //     .catch(() => {});
+    // }
 
     return ApiResponse.success(artist, "아티스트 정보 조회 성공");
   }

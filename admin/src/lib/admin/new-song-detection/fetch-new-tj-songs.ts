@@ -356,7 +356,9 @@ export async function fetchNewTjSongs(
     if (dryRun) {
       // dry run: 미리보기만
       for (const song of tjSongs.slice(0, 5)) {
-        console.log(`     - [${song.karaokeNo}] ${song.title} / ${song.artist}`);
+        console.log(
+          `     - [${song.karaokeNo}] ${song.title} / ${song.artist}`,
+        );
       }
       if (tjSongs.length > 5) {
         console.log(`     ... 외 ${tjSongs.length - 5}개`);
@@ -461,7 +463,9 @@ export async function fetchNewTjSongs(
 
     // TjSong은 있지만 Song 연결이 없는 목록 출력
     if (unlinkedTjSongs.length > 0) {
-      console.log(`\n  === Song 미연결 TjSong (${unlinkedTjSongs.length}개) ===`);
+      console.log(
+        `\n  === Song 미연결 TjSong (${unlinkedTjSongs.length}개) ===`,
+      );
       for (const tj of unlinkedTjSongs) {
         console.log(`  ⚠️ [${tj.id}] "${tj.title}" / ${tj.artist}`);
       }
