@@ -27,7 +27,7 @@ async function main() {
 
   const knownArtists = await prisma.artist.findMany({
     where: { homeCatalog: { not: null } },
-    select: { name: true, tjName: true, homeCatalog: true },
+    select: { name: true, nameJa: true, tjName: true, homeCatalog: true },
   });
 
   let updated = 0;

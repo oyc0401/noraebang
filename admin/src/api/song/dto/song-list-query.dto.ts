@@ -2,7 +2,8 @@ import { ApiPropertyOptional } from "@nestjs/swagger";
 
 export type SongSortBy = "title" | "tjNumber" | "artist";
 export type SortOrder = "asc" | "desc";
-export type SongCatalogFilter = "JPOP" | "KPOP";
+export type SongCatalogFilter = "JPOP" | "KPOP" | "NONE";
+export type SongStatusFilter = "song" | "queueOnly" | "none";
 
 export class SongListQueryDto {
   @ApiPropertyOptional({ example: "アイドル" })
@@ -17,8 +18,11 @@ export class SongListQueryDto {
   @ApiPropertyOptional({ example: "99999" })
   maxNumber?: string;
 
-  @ApiPropertyOptional({ enum: ["JPOP", "KPOP"] })
+  @ApiPropertyOptional({ enum: ["JPOP", "KPOP", "NONE"] })
   catalog?: SongCatalogFilter;
+
+  @ApiPropertyOptional({ enum: ["song", "queueOnly", "none"] })
+  status?: SongStatusFilter;
 
   @ApiPropertyOptional({ enum: ["title", "tjNumber", "artist"] })
   sortBy?: SongSortBy;

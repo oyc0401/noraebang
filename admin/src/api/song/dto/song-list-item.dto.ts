@@ -15,4 +15,10 @@ export class SongListItemDto {
 
   @ApiProperty({ required: false, example: "2026-06-22" })
   publishdate?: string;
+
+  @ApiProperty({ example: true })
+  isCreatedAsSong: boolean;
+
+  @ApiProperty({ example: false })
+  isInQueue: boolean;
 }

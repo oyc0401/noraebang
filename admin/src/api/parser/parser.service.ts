@@ -165,7 +165,7 @@ export class ParserService {
   ): Promise<Catalog | null> {
     const knownArtists = await this.prisma.artist.findMany({
       where: { homeCatalog: { not: null } },
-      select: { name: true, tjName: true, homeCatalog: true },
+      select: { name: true, nameJa: true, tjName: true, homeCatalog: true },
     });
 
     const byArtist = findCatalogByKnownArtist(artist, knownArtists);

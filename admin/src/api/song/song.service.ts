@@ -5,6 +5,7 @@ import {
   type SongCatalogFilter,
   type SongListQueryDto,
   type SongSortBy,
+  type SongStatusFilter,
   type SortOrder,
 } from "./dto/song-list-query.dto";
 import { SongListResponseDto } from "./dto/song-list-response.dto";
@@ -15,6 +16,8 @@ type SongRow = {
   artist?: string;
   catalog?: string;
   publishdate?: string;
+  is_created_as_song: boolean;
+  is_in_queue: boolean;
 };
 
 type CountRow = {
@@ -33,12 +36,14 @@ export class SongService {
     const sortBy = parseSortBy(query.sortBy);
     const sortOrder = parseSortOrder(query.sortOrder);
     const catalog = parseCatalog(query.catalog);
+    const status = parseStatus(query.status);
     const whereSql = buildWhereSql({
       title: query.title,
       artist: query.artist,
       minNumber,
       maxNumber,
       catalog,
+      status,
     });
     const orderSql = buildOrderSql(sortBy, sortOrder);
 
@@ -48,9 +53,12 @@ export class SongService {
         t.title,
         t.artist,
         s.catalog,
-        t.publishdate
+        t.publishdate,
+        s.id is not null as is_created_as_song,
+        q.id is not null as is_in_queue
       from tj_song t
       left join song s on s.tj_song_id = t.id
+      left join song_queue q on q.tj_number = t.id
       where ${whereSql}
       ${orderSql}
       limit ${limit}
@@ -60,6 +68,7 @@ export class SongService {
       select count(*)::bigint as total
       from tj_song t
       left join song s on s.tj_song_id = t.id
+      left join song_queue q on q.tj_number = t.id
       where ${whereSql}
     `;
     const total = Number(countRows[0]?.total ?? 0);
@@ -72,6 +81,8 @@ export class SongService {
         artist: row.artist ?? undefined,
         catalog: row.catalog ?? undefined,
         publishdate: row.publishdate ?? undefined,
+        isCreatedAsSong: row.is_created_as_song,
+        isInQueue: row.is_in_queue,
       })),
       nextOffset,
       hasMore: nextOffset < total,
@@ -86,12 +97,14 @@ function buildWhereSql({
   minNumber,
   maxNumber,
   catalog,
+  status,
 }: {
   title?: string;
   artist?: string;
   minNumber: number;
   maxNumber: number;
   catalog?: SongCatalogFilter;
+  status?: SongStatusFilter;
 }) {
   const filters: Prisma.Sql[] = [
     Prisma.sql`t.id ~ '^[0-9]+$'`,
@@ -152,8 +165,22 @@ function buildWhereSql({
     `);
   }
 
-  if (catalog) {
+  if (catalog === "NONE") {
+    filters.push(Prisma.sql`s.catalog is null`);
+  } else if (catalog) {
     filters.push(Prisma.sql`s.catalog = ${catalog}`);
+  }
+
+  if (status === "song") {
+    filters.push(Prisma.sql`s.id is not null`);
+  }
+
+  if (status === "queueOnly") {
+    filters.push(Prisma.sql`s.id is null and q.id is not null`);
+  }
+
+  if (status === "none") {
+    filters.push(Prisma.sql`s.id is null and q.id is null`);
   }
 
   return Prisma.join(filters, " and ");
@@ -205,7 +232,15 @@ function parseSortOrder(value: string | undefined): SortOrder {
 }
 
 function parseCatalog(value: string | undefined): SongCatalogFilter | undefined {
-  if (value === "JPOP" || value === "KPOP") {
+  if (value === "JPOP" || value === "KPOP" || value === "NONE") {
+    return value;
+  }
+
+  return undefined;
+}
+
+function parseStatus(value: string | undefined): SongStatusFilter | undefined {
+  if (value === "song" || value === "queueOnly" || value === "none") {
     return value;
   }
 

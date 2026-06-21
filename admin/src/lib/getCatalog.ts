@@ -2,6 +2,7 @@ export type Catalog = "JPOP" | "KPOP";
 
 export type KnownArtist = {
   name: string | null;
+  nameJa: string | null;
   tjName: string | null;
   homeCatalog: string | null;
 };
@@ -41,14 +42,36 @@ export function findCatalogByKnownArtist(
     return null;
   }
 
+  const normalizedArtist = normalizeName(artist);
   const matched = knownArtists.find((known) =>
-    [known.name, known.tjName].some(
-      (knownName) =>
-        knownName && knownName.length > 1 && artist.includes(knownName),
+    [known.name, known.nameJa, known.tjName].some((knownName) =>
+      isArtistMatch(knownName, normalizedArtist),
     ),
   );
 
   return (matched?.homeCatalog as Catalog | null) ?? null;
+}
+
+function normalizeName(name: string) {
+  return name.replace(/\s/g, "").toLowerCase();
+}
+
+function isArtistMatch(name: string | null, normalizedArtist: string) {
+  if (!name || name.length <= 1) {
+    return false;
+  }
+
+  const normalizedName = normalizeName(name);
+
+  if (hasCjkOrHangul(normalizedName)) {
+    return normalizedArtist.includes(normalizedName);
+  }
+
+  return normalizedArtist === normalizedName;
+}
+
+function hasCjkOrHangul(value: string) {
+  return /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/.test(value);
 }
 
 function isStrongJpopNumberRange(tjNumber: string | number | undefined) {

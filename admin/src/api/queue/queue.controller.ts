@@ -1,5 +1,6 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Query } from "@nestjs/common";
 import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { SongQueueListQueryDto } from "./dto/song-queue-list-query.dto";
 import { SongQueueListResponseDto } from "./dto/song-queue-list-response.dto";
 import { QueueService } from "./queue.service";
 
@@ -13,7 +14,9 @@ export class QueueController {
     description: "List song queue items",
     type: SongQueueListResponseDto,
   })
-  findAll(): Promise<SongQueueListResponseDto> {
-    return this.queueService.findAll();
+  findAll(
+    @Query() query: SongQueueListQueryDto,
+  ): Promise<SongQueueListResponseDto> {
+    return this.queueService.findAll(query);
   }
 }

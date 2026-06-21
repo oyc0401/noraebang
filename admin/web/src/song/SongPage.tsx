@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 type SortBy = "title" | "tjNumber" | "artist";
 type SortOrder = "asc" | "desc";
 type CatalogFilter = "" | "JPOP" | "KPOP";
+type StatusFilter = "" | "song" | "queueOnly" | "none";
 
 type SongItem = {
   tjNumber: string;
@@ -10,6 +11,8 @@ type SongItem = {
   artist?: string;
   catalog?: string;
   publishdate?: string;
+  isCreatedAsSong: boolean;
+  isInQueue: boolean;
 };
 
 type SongListResponse = {
@@ -25,6 +28,7 @@ type SongFilters = {
   minNumber: string;
   maxNumber: string;
   catalog: CatalogFilter;
+  status: StatusFilter;
   sortBy: SortBy;
   sortOrder: SortOrder;
 };
@@ -35,6 +39,7 @@ const defaultFilters: SongFilters = {
   minNumber: "0",
   maxNumber: "99999",
   catalog: "",
+  status: "",
   sortBy: "tjNumber",
   sortOrder: "asc",
 };
@@ -42,8 +47,9 @@ const defaultFilters: SongFilters = {
 const pageSize = 60;
 
 export function SongPage() {
-  const [draftFilters, setDraftFilters] = useState<SongFilters>(defaultFilters);
-  const [filters, setFilters] = useState<SongFilters>(defaultFilters);
+  const initialFilters = parseFiltersFromUrl();
+  const [draftFilters, setDraftFilters] = useState<SongFilters>(initialFilters);
+  const [filters, setFilters] = useState<SongFilters>(initialFilters);
   const [songs, setSongs] = useState<SongItem[]>([]);
   const [nextOffset, setNextOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -118,11 +124,13 @@ export function SongPage() {
 
   function applyFilters() {
     setFilters(draftFilters);
+    writeFiltersToUrl(draftFilters);
   }
 
   function resetFilters() {
     setDraftFilters(defaultFilters);
     setFilters(defaultFilters);
+    writeFiltersToUrl(defaultFilters);
   }
 
   function updateDraftFilter<K extends keyof SongFilters>(
@@ -219,6 +227,21 @@ export function SongPage() {
             </select>
           </label>
           <label className="block">
+            <span className="text-sm text-gray-700">상태</span>
+            <select
+              className="mt-1 w-full cursor-pointer border border-gray-300 px-2 py-1.5"
+              value={draftFilters.status}
+              onChange={(event) =>
+                updateDraftFilter("status", parseStatusFilter(event.target.value))
+              }
+            >
+              <option value="">모두</option>
+              <option value="song">Song에 있음</option>
+              <option value="queueOnly">Song에 없음 + 큐에 있음</option>
+              <option value="none">Song에도 없고 큐에도 없음</option>
+            </select>
+          </label>
+          <label className="block">
             <span className="text-sm text-gray-700">정렬 방향</span>
             <select
               className="mt-1 w-full cursor-pointer border border-gray-300 px-2 py-1.5"
@@ -280,6 +303,12 @@ export function SongPage() {
               <th className="border border-gray-300 p-2.5 text-left" scope="col">
                 등록일
               </th>
+              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                Song 여부
+              </th>
+              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                큐 여부
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -295,6 +324,12 @@ export function SongPage() {
                 </td>
                 <td className="border border-gray-300 p-2.5">
                   {song.publishdate ?? "-"}
+                </td>
+                <td className="border border-gray-300 p-2.5">
+                  {song.isCreatedAsSong ? "생성됨" : "미생성"}
+                </td>
+                <td className="border border-gray-300 p-2.5">
+                  {song.isInQueue ? "큐에 있음" : "-"}
                 </td>
               </tr>
             ))}
@@ -341,6 +376,10 @@ async function fetchSongs(
     params.set("catalog", filters.catalog);
   }
 
+  if (filters.status) {
+    params.set("status", filters.status);
+  }
+
   const response = await fetch(`/api/song?${params.toString()}`);
 
   if (!response.ok) {
@@ -359,6 +398,14 @@ function parseCatalogFilter(value: string): CatalogFilter {
   return "";
 }
 
+function parseStatusFilter(value: string): StatusFilter {
+  if (value === "song" || value === "queueOnly" || value === "none") {
+    return value;
+  }
+
+  return "";
+}
+
 function parseSortBy(value: string): SortBy {
   if (value === "title" || value === "artist" || value === "tjNumber") {
     return value;
@@ -369,4 +416,60 @@ function parseSortBy(value: string): SortBy {
 
 function parseSortOrder(value: string): SortOrder {
   return value === "desc" ? "desc" : "asc";
+}
+
+function parseFiltersFromUrl(): SongFilters {
+  const params = new URLSearchParams(window.location.search);
+
+  return {
+    title: params.get("title") ?? defaultFilters.title,
+    artist: params.get("artist") ?? defaultFilters.artist,
+    minNumber: params.get("minNumber") ?? defaultFilters.minNumber,
+    maxNumber: params.get("maxNumber") ?? defaultFilters.maxNumber,
+    catalog: parseCatalogFilter(params.get("catalog") ?? ""),
+    status: parseStatusFilter(params.get("status") ?? ""),
+    sortBy: parseSortBy(params.get("sortBy") ?? ""),
+    sortOrder: parseSortOrder(params.get("sortOrder") ?? ""),
+  };
+}
+
+function writeFiltersToUrl(filters: SongFilters) {
+  const params = new URLSearchParams();
+
+  if (filters.title.trim()) {
+    params.set("title", filters.title.trim());
+  }
+
+  if (filters.artist.trim()) {
+    params.set("artist", filters.artist.trim());
+  }
+
+  if (filters.minNumber !== defaultFilters.minNumber) {
+    params.set("minNumber", filters.minNumber);
+  }
+
+  if (filters.maxNumber !== defaultFilters.maxNumber) {
+    params.set("maxNumber", filters.maxNumber);
+  }
+
+  if (filters.catalog) {
+    params.set("catalog", filters.catalog);
+  }
+
+  if (filters.status) {
+    params.set("status", filters.status);
+  }
+
+  if (filters.sortBy !== defaultFilters.sortBy) {
+    params.set("sortBy", filters.sortBy);
+  }
+
+  if (filters.sortOrder !== defaultFilters.sortOrder) {
+    params.set("sortOrder", filters.sortOrder);
+  }
+
+  const query = params.toString();
+  const nextUrl = query ? `/admin/song?${query}` : "/admin/song";
+
+  window.history.replaceState(null, "", nextUrl);
 }
