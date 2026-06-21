@@ -6,24 +6,21 @@
   "workspaces": [
     "server",
     "admin",
-    "frontend",
-    "manager"
+    "frontend"
   ],
   "scripts": {
     "dev:server": "pnpm --filter server start:dev",
     "dev:admin": "pnpm --filter admin start:dev",
     "dev:frontend": "pnpm --filter frontend dev",
-    "dev:manager": "pnpm --filter manager dev",
-    "dev:frontend-only": "concurrently \"pnpm run dev:frontend\" \"pnpm run dev:manager\"",
-    "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:admin\" \"pnpm run dev:frontend\" \"pnpm run dev:manager\"",
+    "dev:frontend-only": "pnpm run dev:frontend",
+    "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:admin\" \"pnpm run dev:frontend\"",
     "build:server": "pnpm --filter server build",
     "build:admin": "pnpm --filter admin build",
     "build:frontend": "pnpm --filter frontend build",
-    "build:manager": "pnpm --filter manager build",
     "build": "pnpm run build:server && pnpm run build:admin && pnpm run build:frontend",
-    "generate": "pnpm --filter server exec prisma generate && pnpm --filter manager exec prisma generate",
+    "generate": "pnpm run generate:server && pnpm run generate:admin",
     "generate:server": "pnpm --filter server exec prisma generate",
-    "generate:manager": "pnpm --filter manager exec prisma generate",
+    "generate:admin": "pnpm --filter admin exec prisma generate",
     "lint": "biome check .",
     "format": "biome check --write ."
   },

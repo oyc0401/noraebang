@@ -1,12 +1,42 @@
-import { createServer } from "node:http";
+import { NestFactory } from "@nestjs/core";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { AppModule } from "./app.module";
 
-const port = 3003;
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
 
-const server = createServer((_, response) => {
-  response.writeHead(200, {
-    "content-type": "application/json; charset=utf-8",
+  const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "http://localhost:3000",
+  ].filter(Boolean);
+
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
+    credentials: true,
   });
-  response.end(JSON.stringify({ service: "jpop-admin", status: "ok" }));
-});
 
-server.listen(port, "0.0.0.0");
+  const config = new DocumentBuilder()
+    .setTitle("JPOP Admin API")
+    .setDescription("JPOP admin backend API")
+    .setVersion("1.0")
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup("api", app, document);
+
+  await app.listen(process.env.PORT ?? 3002, "0.0.0.0");
+}
+
+void bootstrap();
