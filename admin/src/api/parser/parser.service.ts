@@ -1,9 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import {
-  Catalog,
-  findCatalogByKnownArtist,
-  getCatalog,
-} from "../../lib/getCatalog";
+import { Catalog, getCatalog } from "../../lib/getCatalog";
+import { JpopTjArtistIndex } from "../../lib/jpopTjArtistIndex";
 import { PrismaService } from "../../prisma/prisma.service";
 import {
   fetchTjNewSongsByYearMonth,
@@ -44,6 +41,7 @@ type ParserJobResponse =
 export class ParserService {
   private recentJob: Promise<RecentParserResult> | null = null;
   private searchJob: Promise<SearchParserResult> | null = null;
+  private jpopTjArtistIndex: Promise<JpopTjArtistIndex> | null = null;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -156,21 +154,29 @@ export class ParserService {
     });
   }
 
-  // 가나/한글이 없는 제목(예: 일본 엔카 가수가 한자만 쓰는 경우)을 위해
-  // 이미 home_catalog가 등록된 Artist 데이터를 우선 대조한다.
+  // 이미 생성된 JPOP Song의 TJ artist 문자열을 먼저 대조한다.
   private async resolveCatalog(
     title: string,
     artist: string | null,
     tjNumber: string,
   ): Promise<Catalog | null> {
-    const knownArtists = await this.prisma.artist.findMany({
-      where: { homeCatalog: { not: null } },
-      select: { name: true, nameJa: true, tjName: true, homeCatalog: true },
-    });
+    const jpopArtistId = (
+      await this.getJpopTjArtistIndex()
+    ).findJpopArtistId(artist);
 
-    const byArtist = findCatalogByKnownArtist(artist, knownArtists);
+    if (jpopArtistId !== null) {
+      return "JPOP";
+    }
 
-    return byArtist ?? getCatalog(title, artist, tjNumber);
+    return getCatalog(title, artist, tjNumber);
+  }
+
+  private getJpopTjArtistIndex(): Promise<JpopTjArtistIndex> {
+    if (!this.jpopTjArtistIndex) {
+      this.jpopTjArtistIndex = JpopTjArtistIndex.create(this.prisma);
+    }
+
+    return this.jpopTjArtistIndex;
   }
 
   async parseRecent(yearMonth: string | number): Promise<RecentParserResult> {

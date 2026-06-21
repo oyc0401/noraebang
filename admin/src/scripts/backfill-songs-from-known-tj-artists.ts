@@ -1,21 +1,17 @@
 import "dotenv/config";
 // Usage: cd admin && pnpm ts-node src/scripts/backfill-songs-from-known-tj-artists.ts
 // Apply: cd admin && pnpm ts-node src/scripts/backfill-songs-from-known-tj-artists.ts --apply
-// 기존 Artist의 name/tjName/nameJa가 tj_song.artist에 포함되는 미생성 TJ 곡을 큐 매니저로 넣는다.
+// 기존 JPOP Song의 TJ artist와 같은 미생성 TJ 곡을 큐 매니저로 넣는다.
 
 import { ParserService } from "../api/parser/parser.service";
+import { JpopTjArtistIndex } from "../lib/jpopTjArtistIndex";
 import { PrismaService } from "../prisma/prisma.service";
-
-type KnownArtist = {
-  id: number;
-  names: string[];
-};
 
 type Candidate = {
   tjNumber: string;
   title: string;
   artist: string;
-  matchedArtists: KnownArtist[];
+  matchedArtistId: number;
 };
 
 const shouldApply = process.argv.includes("--apply");
@@ -23,7 +19,7 @@ const prisma = new PrismaService();
 const parserService = new ParserService(prisma);
 
 async function main() {
-  const knownArtists = await getKnownArtists();
+  const jpopTjArtistIndex = await JpopTjArtistIndex.create(prisma);
   const tjSongs = await prisma.tjSong.findMany({
     where: {
       artist: { not: null },
@@ -50,9 +46,9 @@ async function main() {
       continue;
     }
 
-    const matchedArtists = findMatchedArtists(artist, knownArtists);
+    const matchedArtistId = jpopTjArtistIndex.findJpopArtistId(artist);
 
-    if (matchedArtists.length === 0) {
+    if (matchedArtistId === null) {
       if (skippedSamples.length < 20) {
         skippedSamples.push({
           tjNumber: tjSong.id,
@@ -68,7 +64,7 @@ async function main() {
       tjNumber: tjSong.id,
       title: tjSong.title,
       artist,
-      matchedArtists,
+      matchedArtistId,
     });
   }
 
@@ -90,12 +86,8 @@ async function main() {
     console.log("후보 샘플:");
 
     for (const candidate of candidates.slice(0, 30)) {
-      const artistNames = candidate.matchedArtists
-        .flatMap((artist) => artist.names)
-        .slice(0, 3)
-        .join(", ");
       console.log(
-        `- ${candidate.tjNumber}: ${candidate.title} / ${candidate.artist} / ${artistNames}`,
+        `- ${candidate.tjNumber}: ${candidate.title} / ${candidate.artist} / artistId=${candidate.matchedArtistId}`,
       );
     }
   }
@@ -107,60 +99,6 @@ async function main() {
       console.log(`- ${sample.tjNumber}: ${sample.title} / ${sample.artist}`);
     }
   }
-}
-
-async function getKnownArtists(): Promise<KnownArtist[]> {
-  const artists = await prisma.artist.findMany({
-    where: {
-      homeCatalog: { not: null },
-    },
-    select: {
-      id: true,
-      name: true,
-      nameJa: true,
-      tjName: true,
-    },
-    orderBy: { id: "asc" },
-  });
-
-  return artists
-    .map((artist) => ({
-      id: artist.id,
-      names: Array.from(
-        new Set(
-          [artist.name, artist.nameJa, artist.tjName]
-            .map((name) => name?.trim())
-            .filter((name): name is string => Boolean(name && name.length >= 2)),
-        ),
-      ),
-    }))
-    .filter((artist) => artist.names.length > 0);
-}
-
-function findMatchedArtists(artistText: string, knownArtists: KnownArtist[]) {
-  const normalizedArtistText = normalizeName(artistText);
-
-  return knownArtists.filter((artist) =>
-    artist.names.some((name) => isArtistMatch(name, normalizedArtistText)),
-  );
-}
-
-function normalizeName(name: string) {
-  return name.replace(/\s/g, "").toLowerCase();
-}
-
-function isArtistMatch(name: string, normalizedArtistText: string) {
-  const normalizedName = normalizeName(name);
-
-  if (hasCjkOrHangul(normalizedName)) {
-    return normalizedArtistText.includes(normalizedName);
-  }
-
-  return normalizedArtistText === normalizedName;
-}
-
-function hasCjkOrHangul(value: string) {
-  return /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/.test(value);
 }
 
 main()
