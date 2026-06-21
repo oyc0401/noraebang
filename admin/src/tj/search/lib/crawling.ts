@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import type { TjSongInfo } from "./types";
+import type { TjSongInfo } from "../../types";
 
 export function parseTjSongList(html: string): TjSongInfo[] {
   const $ = cheerio.load(html);

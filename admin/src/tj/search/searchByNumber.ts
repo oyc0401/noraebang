@@ -1,10 +1,8 @@
-import { fetchTjSearchPage } from "./http";
-import { parseTjSongList } from "./parse-tj-song-list";
-import type { TjSongInfo } from "./types";
+import { fetchTjSearchPage } from "./lib/userAgent";
+import { parseTjSongList } from "./lib/crawling";
+import type { TjSongInfo } from "../types";
 
-export async function getTjSongByNumber(
-  songNumber: string,
-): Promise<TjSongInfo> {
+export async function searchByNumber(songNumber: string): Promise<TjSongInfo> {
   const html = await fetchTjSearchPage(
     new URLSearchParams({
       nationType: "",

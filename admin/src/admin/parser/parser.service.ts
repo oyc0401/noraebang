@@ -2,8 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { getCatalog } from "../../lib/getCatalog";
 import { PrismaService } from "../../prisma/prisma.service";
 import {
+  fetchTjNewSongsByYearMonth,
   getTjSongByArtist,
-  TjService,
   type TjSongData,
   type TjSongInfo,
 } from "../../tj";
@@ -35,7 +35,6 @@ type ParserJobResponse =
 
 @Injectable()
 export class ParserService {
-  private readonly tjService = new TjService();
   private recentJob: Promise<RecentParserResult> | null = null;
   private searchJob: Promise<SearchParserResult> | null = null;
 
@@ -132,7 +131,7 @@ export class ParserService {
 
   async parseRecent(yearMonth: string | number): Promise<RecentParserResult> {
     const searchYm = yearMonth.toString();
-    const songs = await this.tjService.fetchSongsFromYearMonth(searchYm);
+    const songs = await fetchTjNewSongsByYearMonth(searchYm);
     const result: RecentParserResult = {
       fetched: songs.length,
       created: 0,

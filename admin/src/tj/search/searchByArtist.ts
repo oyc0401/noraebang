@@ -1,9 +1,6 @@
-import { fetchTjSearchPage } from "./http";
-import {
-  getTjSearchTotalPages,
-  parseTjSongList,
-} from "./parse-tj-song-list";
-import type { TjSongInfo } from "./types";
+import { fetchTjSearchPage } from "./lib/userAgent";
+import { getTjSearchTotalPages, parseTjSongList } from "./lib/crawling";
+import type { TjSongInfo } from "../types";
 
 async function fetchTjPageByArtist(
   artistName: string,
@@ -22,7 +19,7 @@ async function fetchTjPageByArtist(
   );
 }
 
-export async function getTjSongByArtist(
+export async function searchByArtist(
   artistName: string,
 ): Promise<TjSongInfo[]> {
   const firstPageHtml = await fetchTjPageByArtist(artistName, 1);
