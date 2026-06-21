@@ -148,7 +148,7 @@ export default function ManagerHome() {
                 <StatusRow label="Next.js" value="16.1.0" />
                 <StatusRow label="React" value="19.2.3" />
                 <StatusRow label="스타일" value="Tailwind v4" />
-                <StatusRow label="포트" value="3003" />
+                <StatusRow label="포트" value="3002" />
               </div>
             </aside>
           </div>

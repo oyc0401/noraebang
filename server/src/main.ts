@@ -7,7 +7,9 @@ async function bootstrap() {
 
   const allowedOrigins = [
     process.env.FRONTEND_URL,
+    process.env.MANAGER_URL,
     "http://localhost:3000",
+    "http://localhost:3002",
   ].filter(Boolean);
 
   app.enableCors({
@@ -36,7 +38,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api", app, document);
 
-  await app.listen(process.env.PORT ?? 3002, "0.0.0.0");
+  await app.listen(process.env.PORT ?? 3001, "0.0.0.0");
 }
 
 void bootstrap();
