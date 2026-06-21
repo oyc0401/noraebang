@@ -3,4 +3,5 @@ packages:
   - 'server'
   - 'frontend'
   - 'admin'
+  - 'manager'
   - 'mcp-server'

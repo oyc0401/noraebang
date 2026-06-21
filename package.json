@@ -7,19 +7,22 @@
     "backend",
     "server",
     "frontend",
-    "admin"
+    "admin",
+    "manager"
   ],
   "scripts": {
     "dev:backend": "npm run start:dev --workspace=backend",
     "dev:server": "npm run start:dev --workspace=server",
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:admin": "npm run dev --workspace=admin",
+    "dev:manager": "npm run dev --workspace=manager",
     "dev:frontend-only": "concurrently \"npm run dev:frontend\" \"npm run dev:admin\"",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:admin\"",
     "build:backend": "npm run build --workspace=backend",
     "build:server": "npm run build --workspace=server",
     "build:frontend": "npm run build --workspace=frontend",
     "build:admin": "npm run build --workspace=admin",
+    "build:manager": "npm run build --workspace=manager",
     "build": "npm run build:backend && npm run build:frontend",
     "generate": "pnpm --filter backend exec prisma generate && pnpm --filter admin exec prisma generate",
     "generate:server": "pnpm --filter server exec prisma generate",
