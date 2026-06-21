@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 type SortBy = "title" | "tjNumber" | "artist";
 type SortOrder = "asc" | "desc";
-type CatalogFilter = "" | "JPOP" | "KPOP";
+type CatalogFilter = "" | "JPOP" | "KPOP" | "POP" | "CPOP" | "NONE";
 type StatusFilter = "" | "song" | "queueOnly" | "none";
 
 type SongItem = {
@@ -145,7 +145,10 @@ export function SongPage() {
 
   return (
     <main className="max-w-7xl p-6 text-gray-950">
-      <a className="cursor-pointer text-sm text-gray-600 underline" href="/admin">
+      <a
+        className="cursor-pointer text-sm text-gray-600 underline"
+        href="/admin"
+      >
         Admin
       </a>
       <h1 className="mt-3 text-2xl font-semibold">전체 곡</h1>
@@ -164,7 +167,9 @@ export function SongPage() {
               className="mt-1 w-full border border-gray-300 px-2 py-1.5"
               placeholder="원제/한글/일본어/로마자"
               value={draftFilters.title}
-              onChange={(event) => updateDraftFilter("title", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("title", event.target.value)
+              }
             />
           </label>
           <label className="block">
@@ -173,7 +178,9 @@ export function SongPage() {
               className="mt-1 w-full border border-gray-300 px-2 py-1.5"
               placeholder="TJ 가수명/다국어 아티스트명"
               value={draftFilters.artist}
-              onChange={(event) => updateDraftFilter("artist", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("artist", event.target.value)
+              }
             />
           </label>
           <label className="block">
@@ -204,12 +211,18 @@ export function SongPage() {
               className="mt-1 w-full cursor-pointer border border-gray-300 px-2 py-1.5"
               value={draftFilters.catalog}
               onChange={(event) =>
-                updateDraftFilter("catalog", parseCatalogFilter(event.target.value))
+                updateDraftFilter(
+                  "catalog",
+                  parseCatalogFilter(event.target.value),
+                )
               }
             >
-              <option value="">전체</option>
+              <option value="">모두</option>
               <option value="JPOP">JPOP</option>
               <option value="KPOP">KPOP</option>
+              <option value="POP">POP</option>
+              <option value="CPOP">CPOP</option>
+              <option value="NONE">없음</option>
             </select>
           </label>
           <label className="block">
@@ -232,7 +245,10 @@ export function SongPage() {
               className="mt-1 w-full cursor-pointer border border-gray-300 px-2 py-1.5"
               value={draftFilters.status}
               onChange={(event) =>
-                updateDraftFilter("status", parseStatusFilter(event.target.value))
+                updateDraftFilter(
+                  "status",
+                  parseStatusFilter(event.target.value),
+                )
               }
             >
               <option value="">모두</option>
@@ -247,7 +263,10 @@ export function SongPage() {
               className="mt-1 w-full cursor-pointer border border-gray-300 px-2 py-1.5"
               value={draftFilters.sortOrder}
               onChange={(event) =>
-                updateDraftFilter("sortOrder", parseSortOrder(event.target.value))
+                updateDraftFilter(
+                  "sortOrder",
+                  parseSortOrder(event.target.value),
+                )
               }
             >
               <option value="asc">오름차순</option>
@@ -288,33 +307,59 @@ export function SongPage() {
         <table className="mt-3 w-full border-collapse">
           <thead>
             <tr>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+              <th
+                className="border border-gray-300 p-2.5 text-left"
+                scope="col"
+              >
                 노래방번호
               </th>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+              <th
+                className="border border-gray-300 p-2.5 text-left"
+                scope="col"
+              >
                 이름
               </th>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+              <th
+                className="border border-gray-300 p-2.5 text-left"
+                scope="col"
+              >
                 가수
               </th>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+              <th
+                className="border border-gray-300 p-2.5 text-left"
+                scope="col"
+              >
                 카탈로그
               </th>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+              <th
+                className="border border-gray-300 p-2.5 text-left"
+                scope="col"
+              >
                 등록일
               </th>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+              <th
+                className="border border-gray-300 p-2.5 text-left"
+                scope="col"
+              >
                 Song 여부
               </th>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+              <th
+                className="border border-gray-300 p-2.5 text-left"
+                scope="col"
+              >
                 큐 여부
               </th>
             </tr>
           </thead>
           <tbody>
             {songs.map((song) => (
-              <tr key={song.tjNumber}>
-                <td className="border border-gray-300 p-2.5">{song.tjNumber}</td>
+              <tr
+                className={getCatalogRowClassName(song.catalog)}
+                key={song.tjNumber}
+              >
+                <td className="border border-gray-300 p-2.5">
+                  {song.tjNumber}
+                </td>
                 <td className="border border-gray-300 p-2.5">{song.title}</td>
                 <td className="border border-gray-300 p-2.5">
                   {song.artist ?? "-"}
@@ -391,7 +436,13 @@ async function fetchSongs(
 }
 
 function parseCatalogFilter(value: string): CatalogFilter {
-  if (value === "JPOP" || value === "KPOP") {
+  if (
+    value === "JPOP" ||
+    value === "KPOP" ||
+    value === "POP" ||
+    value === "CPOP" ||
+    value === "NONE"
+  ) {
     return value;
   }
 
@@ -416,6 +467,28 @@ function parseSortBy(value: string): SortBy {
 
 function parseSortOrder(value: string): SortOrder {
   return value === "desc" ? "desc" : "asc";
+}
+
+function getCatalogRowClassName(catalog?: string): string {
+  const normalizedCatalog = catalog?.toUpperCase();
+
+  if (normalizedCatalog === "JPOP") {
+    return "bg-red-50";
+  }
+
+  if (normalizedCatalog === "KPOP") {
+    return "bg-blue-50";
+  }
+
+  if (normalizedCatalog === "POP") {
+    return "bg-green-50";
+  }
+
+  if (normalizedCatalog === "CPOP") {
+    return "bg-yellow-50";
+  }
+
+  return "";
 }
 
 function parseFiltersFromUrl(): SongFilters {

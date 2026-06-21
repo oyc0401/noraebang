@@ -1,6 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
+import { RemoveSongQueueItemsResponseDto } from "./dto/remove-song-queue-items-response.dto";
 import {
   type SongQueueCatalogFilter,
   type SongQueueListQueryDto,
@@ -30,7 +31,10 @@ export class QueueService {
           title: { contains: trimmedTitle, mode: Prisma.QueryMode.insensitive },
         }),
         ...(trimmedArtist && {
-          artist: { contains: trimmedArtist, mode: Prisma.QueryMode.insensitive },
+          artist: {
+            contains: trimmedArtist,
+            mode: Prisma.QueryMode.insensitive,
+          },
         }),
         ...(catalog === "NONE" && { catalog: null }),
         ...(catalog && catalog !== "NONE" && { catalog }),
@@ -58,6 +62,34 @@ export class QueueService {
         createdAt: item.createdAt,
       })),
     };
+  }
+
+  async removeItems(
+    tjNumbers: unknown,
+  ): Promise<RemoveSongQueueItemsResponseDto> {
+    if (!Array.isArray(tjNumbers)) {
+      throw new BadRequestException("tjNumbers must be an array.");
+    }
+
+    const uniqueTjNumbers = Array.from(
+      new Set(
+        tjNumbers
+          .map((tjNumber) => String(tjNumber).trim())
+          .filter((tjNumber) => tjNumber.length > 0),
+      ),
+    );
+
+    if (uniqueTjNumbers.length === 0) {
+      throw new BadRequestException("tjNumbers is empty.");
+    }
+
+    const result = await this.prisma.songQueue.deleteMany({
+      where: {
+        tjNumber: { in: uniqueTjNumbers },
+      },
+    });
+
+    return { deletedCount: result.count };
   }
 }
 
@@ -117,7 +149,13 @@ function parseBoundedInteger(
 function parseCatalog(
   value: string | undefined,
 ): SongQueueCatalogFilter | undefined {
-  if (value === "JPOP" || value === "KPOP" || value === "NONE") {
+  if (
+    value === "JPOP" ||
+    value === "KPOP" ||
+    value === "POP" ||
+    value === "CPOP" ||
+    value === "NONE"
+  ) {
     return value;
   }
 

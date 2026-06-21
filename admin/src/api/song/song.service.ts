@@ -231,8 +231,16 @@ function parseSortOrder(value: string | undefined): SortOrder {
   return value === "desc" ? "desc" : "asc";
 }
 
-function parseCatalog(value: string | undefined): SongCatalogFilter | undefined {
-  if (value === "JPOP" || value === "KPOP" || value === "NONE") {
+function parseCatalog(
+  value: string | undefined,
+): SongCatalogFilter | undefined {
+  if (
+    value === "JPOP" ||
+    value === "KPOP" ||
+    value === "POP" ||
+    value === "CPOP" ||
+    value === "NONE"
+  ) {
     return value;
   }
 
