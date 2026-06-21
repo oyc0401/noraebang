@@ -6,3 +6,116 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Artist {
+  id                     Int          @id @default(autoincrement())
+  name                   String
+  createdAt              DateTime     @default(now()) @map("created_at")
+  updatedAt              DateTime     @updatedAt @map("updated_at")
+  nameKo                 String       @map("name_ko")
+  slug                   String?      @unique
+  thumbnailDefault       String?      @map("thumbnail_default")
+  thumbnailHigh          String?      @map("thumbnail_high")
+  thumbnailMedium        String?      @map("thumbnail_medium")
+  homeCatalog            String?      @map("home_catalog")
+  spotifyId              String?      @map("spotify_id")
+  nameJaKana             String?      @map("name_ja_kana")
+  nameJaKanji            String?      @map("name_ja_kanji")
+  nameLatin              String?      @map("name_latin")
+  nameJaPronu            String?      @map("name_ja_pronu")
+  tjName                 String?      @map("tj_name")
+  tjNameJa               String?      @map("tj_name_ja")
+  spotifyTracksFetchedAt DateTime?    @map("spotify_tracks_fetched_at")
+  youtubeTracksFetchedAt DateTime?    @map("youtube_tracks_fetched_at")
+  tjProposeFetchedAt     DateTime?    @map("tj_propose_fetched_at")
+  nameJa                 String?      @map("name_ja")
+  youtube_channel        String?      @map("youtube_channel")
+  youtube_topic_channel  String?      @map("youtube_topic_channel")
+  artistSongs            ArtistSong[]
+
+  @@index([spotifyId])
+  @@index([homeCatalog])
+  @@map("artist")
+}
+
+model Song {
+  id                  Int          @id @default(autoincrement())
+  title               String
+  titleKo             String?      @map("title_ko")
+  titleJa             String?      @map("title_ja")
+  titleJaPronu        String?      @map("title_ja_pronu")
+  titleJaKana         String?      @map("title_ja_kana")
+  titleJaKanji        String?      @map("title_ja_kanji")
+  titleLatin          String?      @map("title_latin")
+  titleLatinPronu     String?      @map("title_latin_pronu")
+  youtubeVideoId      String?      @map("youtube_video_id")
+  youtubeFetchedAt    DateTime?    @map("youtube_fetched_at")
+
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  thumbnailDefault    String?      @map("thumbnail_default")
+  thumbnailHigh       String?      @map("thumbnail_high")
+  thumbnailMedium     String?      @map("thumbnail_medium")
+
+  catalog             String?
+
+  spotifyTrackGroupId Int?         @map("spotify_track_group_id")
+  tjSongId            String?      @unique @map("tj_song_id")
+  
+  score               Float?       @map("score")
+ 
+  visible             Boolean      @default(false)
+  artistSongs         ArtistSong[]
+  tjSong              TjSong?      @relation(fields: [tjSongId], references: [id])
+
+  @@index([youtubeVideoId])
+  @@index([catalog])
+  @@index([spotifyTrackGroupId])
+  @@index([tjSongId])
+  @@map("song")
+}
+
+model ArtistSong {
+  id        Int      @id @default(autoincrement())
+  artistId  Int      @map("artist_id")
+  songId    Int      @map("song_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([artistId, songId])
+  @@index([songId])
+  @@index([artistId])
+  @@map("artist_song")
+}
+
+model TjSong {
+  id           String   @id
+  title        String // 제목
+  artist       String? // 가수
+  lyricist     String? // 작사기
+  composer     String? // 작곡가
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  thumbnailImg String?  @map("thumbnail_img") // 썸네일
+  publishdate  String?  @map("publishdate") // TJ측 등록 시간
+  isMR         Boolean  @default(false) @map("is_mr") // MR 여부
+  isMV         Boolean  @default(false) @map("is_mv") // MV 여부
+  isOver60     Boolean  @default(false) @map("is_over_60") // 60이상기기 여부
+  youtubeLink  String?  @map("youtube_link")
+  song         Song?
+
+  @@map("tj_song")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  email       String?  @unique
+  password    String?
+  lastLoginAt DateTime @default(now()) @map("last_login_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("user")
+}
