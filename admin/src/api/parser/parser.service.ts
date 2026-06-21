@@ -5,10 +5,11 @@ import {
   fetchTjNewSongsByYearMonth,
   getLastExecutedAt,
   getTjSongByArtist,
+  recordExecution,
   type TjSongData,
   type TjSongInfo,
 } from "../../tj";
-import { SearchParserLogResponseDto } from "./dto/search-parser-log-response.dto";
+import { ParserLogResponseDto } from "./dto/parser-log-response.dto";
 
 type RecentParserResult = {
   fetched: number;
@@ -43,7 +44,7 @@ export class ParserService {
   constructor(private readonly prisma: PrismaService) {}
 
   async runRecentParser(
-    yearMonth = this.getCurrentYearMonth(),
+    yearMonth = this.getPreviousYearMonth(),
   ): Promise<ParserJobResponse> {
     if (this.recentJob) {
       return {
@@ -51,6 +52,8 @@ export class ParserService {
         message: "recent parser is already running.",
       };
     }
+
+    await recordExecution("recentParser");
 
     const job = this.parseRecent(yearMonth);
     this.recentJob = job;
@@ -98,7 +101,13 @@ export class ParserService {
     };
   }
 
-  async getSearchParserLog(): Promise<SearchParserLogResponseDto> {
+  async getRecentParserLog(): Promise<ParserLogResponseDto> {
+    return {
+      lastExecutedAt: await getLastExecutedAt("recentParser"),
+    };
+  }
+
+  async getSearchParserLog(): Promise<ParserLogResponseDto> {
     return {
       lastExecutedAt: await getLastExecutedAt("searchByArtist"),
     };
@@ -273,8 +282,11 @@ export class ParserService {
     return !existing;
   }
 
-  private getCurrentYearMonth(): string {
+  private getPreviousYearMonth(): string {
     const now = new Date();
-    return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const month = now.getMonth() === 0 ? 12 : now.getMonth();
+
+    return `${year}${String(month).padStart(2, "0")}`;
   }
 }

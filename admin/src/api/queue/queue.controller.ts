@@ -4,7 +4,7 @@ import { SongQueueListResponseDto } from "./dto/song-queue-list-response.dto";
 import { QueueService } from "./queue.service";
 
 @ApiTags("queue")
-@Controller("queue")
+@Controller("api/queue")
 export class QueueController {
   constructor(private readonly queueService: QueueService) {}
 

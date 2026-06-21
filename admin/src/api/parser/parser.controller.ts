@@ -1,10 +1,10 @@
 import { Controller, Get, Post } from "@nestjs/common";
 import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
-import { SearchParserLogResponseDto } from "./dto/search-parser-log-response.dto";
+import { ParserLogResponseDto } from "./dto/parser-log-response.dto";
 import { ParserService } from "./parser.service";
 
 @ApiTags("parser")
-@Controller("parser")
+@Controller("api/parser")
 export class ParserController {
   constructor(private readonly parserService: ParserService) {}
 
@@ -20,12 +20,21 @@ export class ParserController {
     return this.parserService.runSearchParser();
   }
 
+  @Get("recent/log")
+  @ApiOkResponse({
+    description: "Get recent TJ song parser log",
+    type: ParserLogResponseDto,
+  })
+  getRecentParserLog(): Promise<ParserLogResponseDto> {
+    return this.parserService.getRecentParserLog();
+  }
+
   @Get("search/log")
   @ApiOkResponse({
     description: "Get TJ artist search parser log",
-    type: SearchParserLogResponseDto,
+    type: ParserLogResponseDto,
   })
-  getSearchParserLog(): Promise<SearchParserLogResponseDto> {
+  getSearchParserLog(): Promise<ParserLogResponseDto> {
     return this.parserService.getSearchParserLog();
   }
 }

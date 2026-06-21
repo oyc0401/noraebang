@@ -11,7 +11,7 @@ export default defineConfig({
   server: {
     port: 5174,
     proxy: {
-      "/parser": "http://localhost:3002",
+      "/api": "http://localhost:3002",
     },
   },
 });
