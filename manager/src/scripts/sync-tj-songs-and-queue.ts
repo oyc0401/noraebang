@@ -3,8 +3,11 @@
 
 import { config } from "dotenv";
 import { Pool } from "pg";
-import { getTjSongByArtist, TjService } from "../thirdparty/tj";
-import type { TjSongData, TjSongInfo } from "../thirdparty/tj";
+import {
+  getTjSongByArtist,
+  TjService,
+} from "../../../server/src/thirdparty/tj";
+import type { TjSongData, TjSongInfo } from "../../../server/src/thirdparty/tj";
 
 config({ override: true, quiet: true });
 
@@ -227,9 +230,7 @@ async function main() {
   try {
     const knownIds = await fetchExistingTjSongIds(pool);
 
-    console.log(
-      `TJ 누적 API 조회 시작: searchYm=${FULL_SCAN_FROM_YEAR_MONTH}`,
-    );
+    console.log(`TJ 누적 API 조회 시작: searchYm=${FULL_SCAN_FROM_YEAR_MONTH}`);
     const apiSongs = dedupeById(
       (await tjService.fetchSongsFromYearMonth(FULL_SCAN_FROM_YEAR_MONTH)).map(
         fromApiSong,
