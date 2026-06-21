@@ -1,6 +1,5 @@
-import { Activity, DatabaseZap, Play, Search } from "lucide-react";
 import { useState } from "react";
-import "./styles.css";
+import "./tailwind.css";
 
 type ParserStatus = "idle" | "running" | "done" | "error";
 
@@ -12,6 +11,13 @@ type ParserJobResponse = {
 type ActionState = {
   status: ParserStatus;
   message: string;
+};
+
+const statusTextClassName: Record<ParserStatus, string> = {
+  idle: "text-gray-600",
+  running: "text-amber-700",
+  done: "text-green-700",
+  error: "text-red-700",
 };
 
 async function runParser(path: "/parser/recent" | "/parser/search") {
@@ -59,61 +65,81 @@ function App() {
   }
 
   return (
-    <main className="shell">
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">JPOP Admin</p>
-          <h1>Parser Console</h1>
-        </div>
-        <div className="port">
-          <Activity size={18} />
-          <span>localhost:3002</span>
-        </div>
-      </header>
+    <main className="max-w-5xl p-6 text-gray-950">
+      <h1 className="text-2xl font-semibold">JPOP Admin</h1>
+      <p className="mt-2 text-gray-600">TJ 데이터 수집 작업을 실행합니다.</p>
 
-      <section className="panel">
-        <div className="summary">
-          <DatabaseZap size={22} />
-          <div>
-            <h2>TJ 데이터 수집</h2>
-            <p>운영 DB에 TJ 원천 데이터와 신규 큐를 반영합니다.</p>
-          </div>
-        </div>
-
-        <div className="actions">
-          <button
-            type="button"
-            className="action-button"
-            disabled={recent.status === "running"}
-            onClick={handleRecentParser}
-          >
-            <Play size={18} />
-            <span>Recent Parser</span>
-          </button>
-          <StatusBadge state={recent} />
-
-          <button
-            type="button"
-            className="action-button"
-            disabled={search.status === "running"}
-            onClick={handleSearchParser}
-          >
-            <Search size={18} />
-            <span>Search Parser</span>
-          </button>
-          <StatusBadge state={search} />
-        </div>
+      <section aria-labelledby="parser-heading">
+        <h2 id="parser-heading" className="mt-7 text-lg font-semibold">
+          Parser
+        </h2>
+        <table className="mt-3 w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                작업
+              </th>
+              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                실행
+              </th>
+              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                상태
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th
+                className="border border-gray-300 p-2.5 text-left font-semibold"
+                scope="row"
+              >
+                최근 TJ 신곡 수집
+              </th>
+              <td className="border border-gray-300 p-2.5">
+                <button
+                  type="button"
+                  className="cursor-pointer border border-gray-900 px-2.5 py-1.5 disabled:cursor-wait disabled:text-gray-500"
+                  disabled={recent.status === "running"}
+                  onClick={handleRecentParser}
+                >
+                  Recent Parser
+                </button>
+              </td>
+              <td className="border border-gray-300 p-2.5">
+                <StatusText state={recent} />
+              </td>
+            </tr>
+            <tr>
+              <th
+                className="border border-gray-300 p-2.5 text-left font-semibold"
+                scope="row"
+              >
+                아티스트 검색 수집
+              </th>
+              <td className="border border-gray-300 p-2.5">
+                <button
+                  type="button"
+                  className="cursor-pointer border border-gray-900 px-2.5 py-1.5 disabled:cursor-wait disabled:text-gray-500"
+                  disabled={search.status === "running"}
+                  onClick={handleSearchParser}
+                >
+                  Search Parser
+                </button>
+              </td>
+              <td className="border border-gray-300 p-2.5">
+                <StatusText state={search} />
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </section>
     </main>
   );
 }
 
-function StatusBadge({ state }: { state: ActionState }) {
+function StatusText({ state }: { state: ActionState }) {
   return (
-    <div className={`status status-${state.status}`}>
-      <span className="dot" />
-      <span>{state.message}</span>
-    </div>
+    <span className={statusTextClassName[state.status]}>{state.message}</span>
   );
 }
 

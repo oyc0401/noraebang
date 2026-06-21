@@ -6,7 +6,7 @@ import {
   TjService,
   type TjSongData,
   type TjSongInfo,
-} from "../../thirdparty/tj";
+} from "../../tj";
 
 type RecentParserResult = {
   fetched: number;
@@ -270,5 +270,4 @@ export class ParserService {
     const now = new Date();
     return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
   }
-
 }
