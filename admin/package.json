@@ -6,10 +6,13 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "pnpm run build:web && pnpm run build:api",
+    "build:api": "nest build",
+    "build:web": "vite build --config web/vite.config.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "start:web": "vite --config web/vite.config.ts --host 0.0.0.0",
     "start:debug": "nest start --debug --watch",
     "prestart:prod": "pnpm build",
     "start:prod": "node dist/main",
@@ -28,8 +31,11 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "dotenv": "^17.2.3",
+    "lucide-react": "^0.469.0",
     "pg": "^8.16.3",
     "prisma": "^7.2.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -42,6 +48,8 @@
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.7",
     "@types/pg": "^8.16.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -56,6 +64,7 @@
     "tsx": "^4.22.4",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0",
+    "vite": "^8.0.16",
     "vitest": "^4.1.9"
   }
 }

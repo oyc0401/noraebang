@@ -1,9 +1,11 @@
+import { join } from "node:path";
 import { NestFactory } from "@nestjs/core";
+import { type NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const allowedOrigins = [
     process.env.FRONTEND_URL,
@@ -35,6 +37,9 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api", app, document);
+  app.useStaticAssets(join(process.cwd(), "public", "admin"), {
+    prefix: "/admin",
+  });
 
   await app.listen(process.env.PORT ?? 3002, "0.0.0.0");
 }

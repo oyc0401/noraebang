@@ -50,12 +50,21 @@ importers:
       dotenv:
         specifier: ^17.2.3
         version: 17.4.2
+      lucide-react:
+        specifier: ^0.469.0
+        version: 0.469.0(react@19.2.3)
       pg:
         specifier: ^8.16.3
         version: 8.22.0
       prisma:
         specifier: ^7.2.0
         version: 7.2.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
+      react:
+        specifier: 19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: 19.2.3
+        version: 19.2.3(react@19.2.3)
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -87,6 +96,12 @@ importers:
       '@types/pg':
         specifier: ^8.16.0
         version: 8.20.0
+      '@types/react':
+        specifier: ^19
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.2.3(@types/react@19.2.7)
       '@types/supertest':
         specifier: ^6.0.2
         version: 6.0.3
@@ -129,6 +144,9 @@ importers:
       typescript-eslint:
         specifier: ^8.20.0
         version: 8.51.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
+      vite:
+        specifier: ^8.0.16
+        version: 8.0.16(@types/node@22.19.3)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.22.4)(yaml@2.8.2)
       vitest:
         specifier: ^4.1.9
         version: 4.1.9(@types/node@22.19.3)(vite@8.0.16(@types/node@22.19.3)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.44.1)(tsx@4.22.4)(yaml@2.8.2))
