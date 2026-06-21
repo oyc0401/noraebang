@@ -1,1 +1,0 @@
-export const PROPOSE_DEFAULT_PAGE_SIZE = 50;

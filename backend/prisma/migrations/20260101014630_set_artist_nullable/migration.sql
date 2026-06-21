@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "tj_song" ALTER COLUMN "artist" DROP NOT NULL,
-ALTER COLUMN "lyricist" DROP NOT NULL,
-ALTER COLUMN "composer" DROP NOT NULL,
-ALTER COLUMN "nation_type" DROP NOT NULL;

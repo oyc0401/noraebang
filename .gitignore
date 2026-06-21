@@ -48,3 +48,5 @@ coverage/
 Memo.private.md
 
 *.dump
+
+.legacy

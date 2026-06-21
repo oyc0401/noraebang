@@ -23,10 +23,10 @@ type SearchParserResult = {
   queued: number;
 };
 
-type ParserJobResponse<TResult> =
+type ParserJobResponse =
   | {
       status: "started";
-      result: TResult;
+      message: string;
     }
   | {
       status: "already_running";
@@ -43,7 +43,7 @@ export class ParserService {
 
   async runRecentParser(
     yearMonth = this.getCurrentYearMonth(),
-  ): Promise<ParserJobResponse<RecentParserResult>> {
+  ): Promise<ParserJobResponse> {
     if (this.recentJob) {
       return {
         status: "already_running",
@@ -51,17 +51,26 @@ export class ParserService {
       };
     }
 
-    this.recentJob = this.parseRecent(yearMonth).finally(() => {
-      this.recentJob = null;
-    });
+    const job = this.parseRecent(yearMonth);
+    this.recentJob = job;
+
+    void job
+      .catch((error: unknown) => {
+        console.error(error);
+      })
+      .finally(() => {
+        if (this.recentJob === job) {
+          this.recentJob = null;
+        }
+      });
 
     return {
       status: "started",
-      result: await this.recentJob,
+      message: "recent parser started.",
     };
   }
 
-  async runSearchParser(): Promise<ParserJobResponse<SearchParserResult>> {
+  async runSearchParser(): Promise<ParserJobResponse> {
     if (this.searchJob) {
       return {
         status: "already_running",
@@ -69,13 +78,22 @@ export class ParserService {
       };
     }
 
-    this.searchJob = this.parseSearch().finally(() => {
-      this.searchJob = null;
-    });
+    const job = this.parseSearch();
+    this.searchJob = job;
+
+    void job
+      .catch((error: unknown) => {
+        console.error(error);
+      })
+      .finally(() => {
+        if (this.searchJob === job) {
+          this.searchJob = null;
+        }
+      });
 
     return {
       status: "started",
-      result: await this.searchJob,
+      message: "search parser started.",
     };
   }
 
@@ -252,4 +270,5 @@ export class ParserService {
     const now = new Date();
     return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`;
   }
+
 }

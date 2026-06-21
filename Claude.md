@@ -1,6 +1,9 @@
 # 0. 프로젝트 운영 원칙 (공통)
 
-## 0.1 Claude 작업 지침
+백업은 backup폴더에 dump로 백업한다.
+backend폴더, admin 폴더는 레거시라 절대 건들지 말기
+
+## 0.1  작업 지침
 
 * 이 프로젝트는 2년 이상 유지보수 대상이므로 대충 코드 작성 금지
 * 귀찮아서 만든 잘못된 코드 1개가 나중에 여러 배로 비용 증가
@@ -348,22 +351,3 @@ import SpotifyIcon from "@/icons/spotify-filled.svg";
 * Zustand
 * React-hook-form + Zod
 
----
-
-# 4. 포맷팅 & 문서화 (공통)
-
-## 4.1 Biome (포맷팅 & 린팅)
-
-* **VSCode 익스텐션 설치 필수**: `biomejs.biome`
-* 각 프로젝트 루트에 `biome.json` 설정 파일 사용
-* 저장 시 자동 포맷팅 권장
-
-## 4.2 API 문서화: apidoc
-
-* API 문서 관리는 **apidoc** 사용
-
-## 4.3 작업/일정 관리: Linear
-
-* 작업 및 일정 관리는 **Linear** 사용
-
----
