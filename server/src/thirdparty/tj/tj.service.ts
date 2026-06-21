@@ -1,7 +1,7 @@
 import type { TjSongData } from "./types";
 
 export class TjService {
-  async fetchSongsByMonth(yearMonth: string): Promise<TjSongData[]> {
+  async fetchSongsFromYearMonth(yearMonth: string): Promise<TjSongData[]> {
     try {
       const response = await fetch(
         "https://www.tjmedia.com/legacy/api/newSongOfMonth",
@@ -37,36 +37,13 @@ export class TjService {
         composer: item.com,
         thumbnailImg: item.thumbnailImg,
         publishdate: item.publishdate,
+        isMV: item.mv_yn === "Y",
       }));
     } catch {
       return [];
     }
   }
 
-  async *fetchAllSongs(fromYearMonth = "200101"): AsyncGenerator<{
-    yearMonth: string;
-    songs: TjSongData[];
-  }> {
-    const startYear = Number.parseInt(fromYearMonth.substring(0, 4), 10);
-    const startMonth = Number.parseInt(fromYearMonth.substring(4, 6), 10);
-    const now = new Date();
-    const endYear = now.getFullYear();
-    const endMonth = now.getMonth() + 1;
-
-    for (let year = startYear; year <= endYear; year++) {
-      const monthStart = year === startYear ? startMonth : 1;
-      const monthEnd = year === endYear ? endMonth : 12;
-
-      for (let month = monthStart; month <= monthEnd; month++) {
-        const yearMonth = `${year}${String(month).padStart(2, "0")}`;
-        const songs = await this.fetchSongsByMonth(yearMonth);
-
-        yield { yearMonth, songs };
-
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-    }
-  }
 }
 
 interface TjMonthResponse {
@@ -75,11 +52,12 @@ interface TjMonthResponse {
     items: Array<{
       pro: string | number;
       indexTitle: string;
-      indexSong: string;
+      indexSong: string | null;
       word: string;
       com: string;
       thumbnailImg?: string;
       publishdate: string;
+      mv_yn?: string;
     }>;
   };
 }

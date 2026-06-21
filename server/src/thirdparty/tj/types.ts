@@ -1,11 +1,12 @@
 export interface TjSongData {
   karaokeNo: string;
   title: string;
-  artist: string;
+  artist: string | null;
   lyricist: string;
   composer: string;
   thumbnailImg?: string;
   publishdate: string;
+  isMV: boolean;
 }
 
 export interface TjSongInfo {
