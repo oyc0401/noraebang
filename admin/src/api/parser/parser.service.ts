@@ -1,5 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { getCatalog } from "../../lib/getCatalog";
+import {
+  Catalog,
+  findCatalogByKnownArtist,
+  getCatalog,
+} from "../../lib/getCatalog";
 import { PrismaService } from "../../prisma/prisma.service";
 import {
   fetchTjNewSongsByYearMonth,
@@ -128,6 +132,12 @@ export class ParserService {
       throw new Error(`TjSong ${tjNumber} not found.`);
     }
 
+    const catalog = await this.resolveCatalog(
+      song.title,
+      song.artist,
+      song.id,
+    );
+
     await this.prisma.songQueue.upsert({
       where: { tjNumber: song.id },
       create: {
@@ -135,15 +145,32 @@ export class ParserService {
         title: song.title,
         artist: song.artist,
         publishdate: song.publishdate,
-        catalog: getCatalog(song.title, song.artist, song.id),
+        catalog,
       },
       update: {
         title: song.title,
         artist: song.artist,
         publishdate: song.publishdate,
-        catalog: getCatalog(song.title, song.artist, song.id),
+        catalog,
       },
     });
+  }
+
+  // 가나/한글이 없는 제목(예: 일본 엔카 가수가 한자만 쓰는 경우)을 위해
+  // 이미 home_catalog가 등록된 Artist 데이터를 우선 대조한다.
+  private async resolveCatalog(
+    title: string,
+    artist: string | null,
+    tjNumber: string,
+  ): Promise<Catalog | null> {
+    const knownArtists = await this.prisma.artist.findMany({
+      where: { homeCatalog: { not: null } },
+      select: { name: true, tjName: true, homeCatalog: true },
+    });
+
+    const byArtist = findCatalogByKnownArtist(artist, knownArtists);
+
+    return byArtist ?? getCatalog(title, artist, tjNumber);
   }
 
   async parseRecent(yearMonth: string | number): Promise<RecentParserResult> {

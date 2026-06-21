@@ -22,4 +22,17 @@ describe("getCatalog", () => {
   it("returns KPOP for Korean title with null artist", () => {
     expect(getCatalog("테스트", null)).toBe("KPOP");
   });
+
+  it("uses strong JPOP number ranges when text alone is not enough", () => {
+    expect(getCatalog("東京ブルース", "西田佐知子", "68120")).toBe("JPOP");
+    expect(getCatalog("Over Drive", "Judy and Mary", 25000)).toBe("JPOP");
+  });
+
+  it("does not override Korean text with a JPOP number range", () => {
+    expect(getCatalog("테스트", "가수", 25000)).toBe("KPOP");
+  });
+
+  it("does not classify weak mixed ranges by number alone", () => {
+    expect(getCatalog("Human Nature", "Michael Jackson", 74063)).toBeNull();
+  });
 });
