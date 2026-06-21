@@ -22,8 +22,14 @@ type RemoveSongQueueItemsResponse = {
   deletedCount: number;
 };
 
-type SyncSongArtistQueueResponse = {
-  scanned: number;
+type PushSongArtistQueueItem = {
+  tjSongId: string;
+  artist?: string;
+};
+
+type PushSongArtistQueueResponse = {
+  requested: number;
+  pushed: number;
   matched: number;
   unmatched: number;
 };
@@ -156,14 +162,37 @@ export function QueuePage() {
     });
   }
 
-  async function syncSongArtistQueue() {
+  async function pushSongArtistQueue() {
+    const pushItems = visibleItems
+      .filter((item) => selectedTjNumbers.has(item.tjNumber))
+      .map((item) => ({
+        tjSongId: item.tjNumber,
+        artist: item.artist,
+      }));
+    const tjNumbers = pushItems.map((item) => item.tjSongId);
+
+    if (pushItems.length === 0) {
+      window.alert("선택한 행이 없습니다.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `${pushItems.length.toLocaleString()}개의 행을 가수있는곡큐에 푸시하고 최근곡큐에서 삭제할까요?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     setIsSyncing(true);
     setError(undefined);
 
     try {
-      const result = await postSongArtistQueueSync();
+      const result = await pushSongArtistQueueItems(pushItems);
+      const removeResult = await removeSongQueueItems(tjNumbers);
+      await refreshQueue();
       setSyncMessage(
-        `JPOP ${result.scanned}건 중 가수 매칭 ${result.matched}건, 미매칭 ${result.unmatched}건`,
+        `선택 ${result.requested.toLocaleString()}건 중 ${result.pushed.toLocaleString()}건 푸시, 최근곡큐 ${removeResult.deletedCount.toLocaleString()}건 삭제: 가수 매칭 ${result.matched.toLocaleString()}건, 미매칭 ${result.unmatched.toLocaleString()}건`,
       );
     } catch (syncError) {
       setError(String(syncError));
@@ -212,18 +241,6 @@ export function QueuePage() {
       </a>
       <h1 className="mt-3 text-2xl font-semibold">노래 큐 상태</h1>
       <p className="mt-2 text-gray-600">song_queue 테이블에 쌓인 항목입니다.</p>
-
-      <div className="mt-4 flex items-center gap-3">
-        <button
-          type="button"
-          className="cursor-pointer border border-gray-900 px-3 py-1.5 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
-          disabled={isSyncing}
-          onClick={syncSongArtistQueue}
-        >
-          가수있는곡큐로 이동
-        </button>
-        {syncMessage && <p className="text-sm text-gray-600">{syncMessage}</p>}
-      </div>
 
       <section aria-labelledby="queue-filter-heading" className="mt-6">
         <h2 id="queue-filter-heading" className="text-lg font-semibold">
@@ -355,15 +372,26 @@ export function QueuePage() {
           <div className="mt-4 flex items-center gap-3">
             <button
               type="button"
-              className="cursor-pointer border border-red-700 px-3 py-1.5 text-red-700 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
+              className="cursor-pointer border border-gray-900 px-3 py-1.5 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
+              disabled={selectedTjNumbers.size === 0 || isSyncing}
+              onClick={pushSongArtistQueue}
+            >
+              곡가수큐로 이동
+            </button>
+            <p className="text-sm text-gray-600">
+              {selectedTjNumbers.size.toLocaleString()}개 행 선택됨
+            </p>
+            {syncMessage && (
+              <p className="text-sm text-gray-600">{syncMessage}</p>
+            )}
+            <button
+              type="button"
+              className="ml-auto cursor-pointer border border-red-700 bg-red-700 px-3 py-1.5 text-white disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
               disabled={selectedTjNumbers.size === 0 || isRemoving}
               onClick={removeSelectedItems}
             >
               선택 항목 큐에서 제거
             </button>
-            <p className="text-sm text-gray-600">
-              {selectedTjNumbers.size.toLocaleString()}개 행 선택됨
-            </p>
           </div>
 
           <table className="mt-3 w-full border-collapse">
@@ -514,8 +542,14 @@ async function removeSongQueueItems(
   return (await response.json()) as RemoveSongQueueItemsResponse;
 }
 
-async function postSongArtistQueueSync(): Promise<SyncSongArtistQueueResponse> {
-  const response = await fetch("/api/song-artist-queue/sync", {
+async function pushSongArtistQueueItems(
+  items: PushSongArtistQueueItem[],
+): Promise<PushSongArtistQueueResponse> {
+  const response = await fetch("/api/song-artist-queue/push", {
+    body: JSON.stringify({ items }),
+    headers: {
+      "Content-Type": "application/json",
+    },
     method: "POST",
   });
 
@@ -523,7 +557,7 @@ async function postSongArtistQueueSync(): Promise<SyncSongArtistQueueResponse> {
     throw new Error(`Request failed: ${response.status}`);
   }
 
-  return (await response.json()) as SyncSongArtistQueueResponse;
+  return (await response.json()) as PushSongArtistQueueResponse;
 }
 
 function formatCreatedAt(createdAt: string): string {

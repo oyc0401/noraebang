@@ -1,6 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { JpopTjArtistIndex } from "../../lib/jpopTjArtistIndex";
 import { PrismaService } from "../../prisma/prisma.service";
+import { PushSongArtistQueueResponseDto } from "./dto/push-song-artist-queue-response.dto";
 import {
   type SongArtistQueueListQueryDto,
   type SongArtistQueueSortBy,
@@ -8,12 +9,6 @@ import {
   type SortOrder,
 } from "./dto/song-artist-queue-list-query.dto";
 import { SongArtistQueueListResponseDto } from "./dto/song-artist-queue-list-response.dto";
-
-type SyncSongArtistQueueResult = {
-  scanned: number;
-  matched: number;
-  unmatched: number;
-};
 
 type EnrichedItem = {
   id: number;
@@ -98,24 +93,18 @@ export class SongArtistQueueService {
     return { data: sorted };
   }
 
-  // SongQueue의 JPOP 항목을 SongArtistQueue로 옮기면서 가수 매칭을 시도한다.
-  // artistId가 null이면 가수 미매칭 상태이고, 다시 실행하면 매칭이 갱신된다.
-  async syncSongArtistQueue(): Promise<SyncSongArtistQueueResult> {
-    const items = await this.prisma.songQueue.findMany({
-      where: { catalog: "JPOP" },
-      select: { tjNumber: true, artist: true },
-    });
-
+  async pushItems(items: unknown): Promise<PushSongArtistQueueResponseDto> {
+    const pushItems = parsePushItems(items);
     const index = await JpopTjArtistIndex.create(this.prisma);
     let matched = 0;
     let unmatched = 0;
 
-    for (const item of items) {
-      const artistId = index.findJpopArtistId(item.artist);
+    for (const item of pushItems) {
+      const artistId = index.findJpopArtistId(item.artist ?? null);
 
       await this.prisma.songArtistQueue.upsert({
-        where: { tjSongId: item.tjNumber },
-        create: { tjSongId: item.tjNumber, artistId },
+        where: { tjSongId: item.tjSongId },
+        create: { tjSongId: item.tjSongId, artistId },
         update: { artistId },
       });
 
@@ -126,8 +115,54 @@ export class SongArtistQueueService {
       }
     }
 
-    return { scanned: items.length, matched, unmatched };
+    return {
+      requested: pushItems.length,
+      pushed: pushItems.length,
+      matched,
+      unmatched,
+    };
   }
+}
+
+type PushItem = {
+  tjSongId: string;
+  artist?: string;
+};
+
+function parsePushItems(items: unknown): PushItem[] {
+  if (!Array.isArray(items)) {
+    throw new BadRequestException("items must be an array.");
+  }
+
+  const itemByTjSongId = new Map<string, PushItem>();
+
+  for (const item of items) {
+    if (typeof item !== "object" || item === null) {
+      continue;
+    }
+
+    const record = item as Record<string, unknown>;
+    const tjSongId = String(record.tjSongId ?? "").trim();
+
+    if (!tjSongId) {
+      continue;
+    }
+
+    const artist =
+      typeof record.artist === "string" ? record.artist.trim() : undefined;
+    itemByTjSongId.set(tjSongId, {
+      tjSongId,
+      artist: artist || undefined,
+    });
+  }
+
+  const pushItems = Array.from(itemByTjSongId.values());
+
+  if (pushItems.length === 0) {
+    throw new BadRequestException("items is empty.");
+  }
+
+  return pushItems;
 }
 
 function sortItems(

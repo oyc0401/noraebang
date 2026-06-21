@@ -1,5 +1,7 @@
-import { Controller, Get, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { PushSongArtistQueueRequestDto } from "./dto/push-song-artist-queue-request.dto";
+import { PushSongArtistQueueResponseDto } from "./dto/push-song-artist-queue-response.dto";
 import { SongArtistQueueListQueryDto } from "./dto/song-artist-queue-list-query.dto";
 import { SongArtistQueueListResponseDto } from "./dto/song-artist-queue-list-response.dto";
 import { SongArtistQueueService } from "./song-artist-queue.service";
@@ -22,11 +24,14 @@ export class SongArtistQueueController {
     return this.songArtistQueueService.findAll(query);
   }
 
-  @Post("sync")
+  @Post("push")
   @ApiOkResponse({
-    description: "Sync JPOP song queue items into the song-artist queue",
+    description: "Push TJ song items into the song-artist queue",
+    type: PushSongArtistQueueResponseDto,
   })
-  sync(): ReturnType<SongArtistQueueService["syncSongArtistQueue"]> {
-    return this.songArtistQueueService.syncSongArtistQueue();
+  push(
+    @Body() body: PushSongArtistQueueRequestDto | undefined,
+  ): Promise<PushSongArtistQueueResponseDto> {
+    return this.songArtistQueueService.pushItems(body?.items);
   }
 }
