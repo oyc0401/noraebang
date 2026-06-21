@@ -8,28 +8,32 @@ datasource db {
 
 model Artist {
   id                     Int          @id @default(autoincrement())
-  name                   String
-  createdAt              DateTime     @default(now()) @map("created_at")
-  updatedAt              DateTime     @updatedAt @map("updated_at")
-  nameKo                 String       @map("name_ko")
-  slug                   String?      @unique
-  thumbnailDefault       String?      @map("thumbnail_default")
-  thumbnailHigh          String?      @map("thumbnail_high")
-  thumbnailMedium        String?      @map("thumbnail_medium")
   homeCatalog            String?      @map("home_catalog")
-  spotifyId              String?      @map("spotify_id")
-  nameJaKana             String?      @map("name_ja_kana")
-  nameJaKanji            String?      @map("name_ja_kanji")
-  nameLatin              String?      @map("name_latin")
-  nameJaPronu            String?      @map("name_ja_pronu")
-  tjName                 String?      @map("tj_name")
-  tjNameJa               String?      @map("tj_name_ja")
+  name                   String // 그냥 이름
+  nameKo                 String       @map("name_ko") // ai 돌려서 
+  nameJa                 String?      @map("name_ja") // 일본어면 걍 넣기
+  nameJaKana             String?      @map("name_ja_kana") // 일본어 가나버전
+  nameJaPronu            String?      @map("name_ja_pronu") // kanabarum으로 만들기
+  nameLatin              String?      @map("name_latin") // 영어면 걍 넣기
+  tjName                 String?      @map("tj_name") // tj이름 그대로
+  tjNameJa               String?      @map("tj_name_ja") // 얜 뭐냐?
+
+  slug                   String?      @unique // ai 돌리고, 유니크 테스트
+
+  youtube_channel        String?      @map("youtube_channel") // 유튜브 db에서 찾기
+  youtube_topic_channel  String?      @map("youtube_topic_channel") // 토픽채널 찾기 파이프라인
+  spotifyId              String?      @map("spotify_id") // 스포티파이 검색하기
+
+  thumbnailDefault       String?      @map("thumbnail_default") // 유튜브에서 찾기
+  thumbnailHigh          String?      @map("thumbnail_high")  // 유튜브에서 찾기
+  thumbnailMedium        String?      @map("thumbnail_medium")  // 유튜브에서 찾기
+
   spotifyTracksFetchedAt DateTime?    @map("spotify_tracks_fetched_at")
   youtubeTracksFetchedAt DateTime?    @map("youtube_tracks_fetched_at")
-  tjProposeFetchedAt     DateTime?    @map("tj_propose_fetched_at")
-  nameJa                 String?      @map("name_ja")
-  youtube_channel        String?      @map("youtube_channel")
-  youtube_topic_channel  String?      @map("youtube_topic_channel")
+
+  createdAt              DateTime     @default(now()) @map("created_at")
+  updatedAt              DateTime     @updatedAt @map("updated_at")
+
   artistSongs            ArtistSong[]
 
   @@index([spotifyId])
@@ -129,6 +133,37 @@ model SongArtistQueue {
 
   @@index([artistId])
   @@map("song_artist_queue")
+}
+
+model ArtistCreationQueue {
+  id                  Int      @id @default(autoincrement())
+  tjSongId            String?  @map("tj_song_id")
+
+  homeCatalog            String?      @map("home_catalog") // 아마 jpop
+  name                   String // 이름 정규화
+  nameKo                 String       @map("name_ko") // ai 돌려서 
+  nameJa                 String?      @map("name_ja") // 일본어면 걍 넣기
+  nameJaKana             String?      @map("name_ja_kana") // 일본어 가나버전
+  nameJaPronu            String?      @map("name_ja_pronu") // kanabarum으로 만들기
+  nameLatin              String?      @map("name_latin") // 영어면 걍 넣기
+  nameLatinPronu         String?      @map("name_latin_pronu") // konglish로 만들기
+  tjName                 String?      @map("tj_name") // tj이름 그대로
+  tjNameJa               String?      @map("tj_name_ja") // 얜 뭐냐?
+
+  slug                   String?      @unique // ai 돌리고, 유니크 테스트
+
+  youtube_channel        String?      @map("youtube_channel")  // 유튜브 db에서 찾기
+  youtube_topic_channel  String?      @map("youtube_topic_channel")
+  spotifyId              String?      @map("spotify_id") // 스포티파이 검색하기
+
+  thumbnailDefault       String?      @map("thumbnail_default")  // 유튜브에서 찾기
+  thumbnailHigh          String?      @map("thumbnail_high")  // 유튜브에서 찾기
+  thumbnailMedium        String?      @map("thumbnail_medium")  // 유튜브에서 찾기
+
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("artist_creation_queue")
 }
 
 model User {
