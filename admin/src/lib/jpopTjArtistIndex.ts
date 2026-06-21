@@ -10,10 +10,34 @@ export type JpopTjArtistIndexSong = {
   }>;
 };
 
+export type JpopTjArtistIndexArtist = {
+  id: number;
+  name: string;
+  tjName: string | null;
+};
+
 export class JpopTjArtistIndex {
+  private readonly artistIdByArtistName = new Map<string, number>();
   private readonly artistIdByTjArtist = new Map<string, number>();
 
-  constructor(songs: JpopTjArtistIndexSong[]) {
+  constructor(
+    artists: JpopTjArtistIndexArtist[],
+    songs: JpopTjArtistIndexSong[],
+  ) {
+    for (const artist of artists) {
+      for (const name of [artist.name, artist.tjName]) {
+        if (!name) {
+          continue;
+        }
+
+        const key = normalizeTjArtist(name);
+
+        if (!this.artistIdByArtistName.has(key)) {
+          this.artistIdByArtistName.set(key, artist.id);
+        }
+      }
+    }
+
     for (const song of songs) {
       if (song.catalog !== "JPOP") {
         continue;
@@ -35,6 +59,14 @@ export class JpopTjArtistIndex {
   }
 
   static async create(prisma: PrismaService): Promise<JpopTjArtistIndex> {
+    const artists = await prisma.artist.findMany({
+      select: {
+        id: true,
+        name: true,
+        tjName: true,
+      },
+    });
+
     const songs = await prisma.song.findMany({
       where: {
         catalog: "JPOP",
@@ -58,15 +90,23 @@ export class JpopTjArtistIndex {
       },
     });
 
-    return new JpopTjArtistIndex(songs);
+    return new JpopTjArtistIndex(artists, songs);
   }
 
+  // Artist.name/tjName과 직접 일치하는 경우를 먼저 확인하고,
+  // 없으면 기존에 JPOP으로 분류된 곡의 TJ artist 문자열로 보정한다.
   findJpopArtistId(tjArtist: string | null): number | null {
     if (!tjArtist) {
       return null;
     }
 
-    return this.artistIdByTjArtist.get(normalizeTjArtist(tjArtist)) ?? null;
+    const key = normalizeTjArtist(tjArtist);
+
+    return (
+      this.artistIdByArtistName.get(key) ??
+      this.artistIdByTjArtist.get(key) ??
+      null
+    );
   }
 }
 

@@ -121,6 +121,16 @@ model SongQueue {
   @@map("song_queue")
 }
 
+model SongArtistQueue {
+  id        Int      @id @default(autoincrement())
+  tjSongId  String   @unique @map("tj_song_id")
+  artistId  Int?     @map("artist_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([artistId])
+  @@map("song_artist_queue")
+}
+
 model User {
   id          Int      @id @default(autoincrement())
   email       String?  @unique
