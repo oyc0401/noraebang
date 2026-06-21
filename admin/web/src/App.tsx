@@ -2,8 +2,9 @@ import "./tailwind.css";
 import { DataPage } from "./data/DataPage";
 import { QueuePage } from "./queue/QueuePage";
 import { SongPage } from "./song/SongPage";
+import { SongArtistQueuePage } from "./song-artist-queue/SongArtistQueuePage";
 
-type AdminRoute = "home" | "data" | "queue" | "song";
+type AdminRoute = "home" | "data" | "queue" | "song" | "song-artist-queue";
 
 function App() {
   const route = getAdminRoute();
@@ -18,6 +19,10 @@ function App() {
 
   if (route === "song") {
     return <SongPage />;
+  }
+
+  if (route === "song-artist-queue") {
+    return <SongArtistQueuePage />;
   }
 
   return <AdminHomePage />;
@@ -48,6 +53,12 @@ function AdminHomePage() {
         >
           노래 큐 상태
         </a>
+        <a
+          className="ml-2 inline-block cursor-pointer border border-gray-900 px-3 py-2 text-gray-950 hover:bg-gray-100"
+          href="/admin/song-artist-queue"
+        >
+          가수있는곡큐 상태
+        </a>
       </nav>
     </main>
   );
@@ -66,6 +77,10 @@ function getAdminRoute(): AdminRoute {
 
   if (pathname === "/admin/song") {
     return "song";
+  }
+
+  if (pathname === "/admin/song-artist-queue") {
+    return "song-artist-queue";
   }
 
   return "home";
