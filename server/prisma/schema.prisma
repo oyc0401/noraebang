@@ -109,6 +109,18 @@ model TjSong {
   @@map("tj_song")
 }
 
+model SongQueue {
+  id          Int      @id @default(autoincrement())
+  tjNumber    String   @map("tj_number")
+  title       String
+  artist      String
+  publishdate String?  @map("publishdate")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([tjNumber])
+  @@map("song_queue")
+}
+
 model User {
   id          Int      @id @default(autoincrement())
   email       String?  @unique
