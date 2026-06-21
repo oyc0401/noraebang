@@ -6,8 +6,11 @@ import { Pool } from "pg";
 import {
   getTjSongByArtist,
   TjService,
-} from "../../../server/src/thirdparty/tj";
-import type { TjSongData, TjSongInfo } from "../../../server/src/thirdparty/tj";
+} from "../../../server/src/thirdparty/tj/index.js";
+import type {
+  TjSongData,
+  TjSongInfo,
+} from "../../../server/src/thirdparty/tj/index.js";
 
 config({ override: true, quiet: true });
 
