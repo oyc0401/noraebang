@@ -22,6 +22,12 @@ type RemoveSongQueueItemsResponse = {
   deletedCount: number;
 };
 
+type SyncSongArtistQueueResponse = {
+  scanned: number;
+  matched: number;
+  unmatched: number;
+};
+
 type QueueFilters = {
   title: string;
   artist: string;
@@ -53,6 +59,8 @@ export function QueuePage() {
     new Set(),
   );
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string>();
   const visibleItems = items ?? [];
   const isAllVisibleSelected =
     visibleItems.length > 0 &&
@@ -148,6 +156,22 @@ export function QueuePage() {
     });
   }
 
+  async function syncSongArtistQueue() {
+    setIsSyncing(true);
+    setError(undefined);
+
+    try {
+      const result = await postSongArtistQueueSync();
+      setSyncMessage(
+        `JPOP ${result.scanned}건 중 가수 매칭 ${result.matched}건, 미매칭 ${result.unmatched}건`,
+      );
+    } catch (syncError) {
+      setError(String(syncError));
+    } finally {
+      setIsSyncing(false);
+    }
+  }
+
   async function removeSelectedItems() {
     const tjNumbers = Array.from(selectedTjNumbers);
 
@@ -188,6 +212,18 @@ export function QueuePage() {
       </a>
       <h1 className="mt-3 text-2xl font-semibold">노래 큐 상태</h1>
       <p className="mt-2 text-gray-600">song_queue 테이블에 쌓인 항목입니다.</p>
+
+      <div className="mt-4 flex items-center gap-3">
+        <button
+          type="button"
+          className="cursor-pointer border border-gray-900 px-3 py-1.5 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
+          disabled={isSyncing}
+          onClick={syncSongArtistQueue}
+        >
+          가수있는곡큐로 이동
+        </button>
+        {syncMessage && <p className="text-sm text-gray-600">{syncMessage}</p>}
+      </div>
 
       <section aria-labelledby="queue-filter-heading" className="mt-6">
         <h2 id="queue-filter-heading" className="text-lg font-semibold">
@@ -476,6 +512,18 @@ async function removeSongQueueItems(
   }
 
   return (await response.json()) as RemoveSongQueueItemsResponse;
+}
+
+async function postSongArtistQueueSync(): Promise<SyncSongArtistQueueResponse> {
+  const response = await fetch("/api/song-artist-queue/sync", {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return (await response.json()) as SyncSongArtistQueueResponse;
 }
 
 function formatCreatedAt(createdAt: string): string {
