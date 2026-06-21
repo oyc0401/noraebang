@@ -10,6 +10,10 @@ type SongQueueItem = {
   createdAt: string;
 };
 
+type SongQueueListResponse = {
+  data: SongQueueItem[];
+};
+
 export function QueuePage() {
   const [items, setItems] = useState<SongQueueItem[]>();
   const [error, setError] = useState<string>();
@@ -101,7 +105,8 @@ async function fetchSongQueue(): Promise<SongQueueItem[]> {
     throw new Error(`Request failed: ${response.status}`);
   }
 
-  return (await response.json()) as SongQueueItem[];
+  const body = (await response.json()) as SongQueueListResponse;
+  return body.data;
 }
 
 function formatCreatedAt(createdAt: string): string {

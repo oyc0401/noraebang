@@ -1,8 +1,9 @@
 import "./tailwind.css";
 import { DataPage } from "./data/DataPage";
 import { QueuePage } from "./queue/QueuePage";
+import { SongPage } from "./song/SongPage";
 
-type AdminRoute = "home" | "data" | "queue";
+type AdminRoute = "home" | "data" | "queue" | "song";
 
 function App() {
   const route = getAdminRoute();
@@ -13,6 +14,10 @@ function App() {
 
   if (route === "queue") {
     return <QueuePage />;
+  }
+
+  if (route === "song") {
+    return <SongPage />;
   }
 
   return <AdminHomePage />;
@@ -30,6 +35,12 @@ function AdminHomePage() {
           href="/admin/data"
         >
           데이터 수집 작업
+        </a>
+        <a
+          className="ml-2 inline-block cursor-pointer border border-gray-900 px-3 py-2 text-gray-950 hover:bg-gray-100"
+          href="/admin/song"
+        >
+          전체 곡
         </a>
         <a
           className="ml-2 inline-block cursor-pointer border border-gray-900 px-3 py-2 text-gray-950 hover:bg-gray-100"
@@ -51,6 +62,10 @@ function getAdminRoute(): AdminRoute {
 
   if (pathname === "/admin/queue") {
     return "queue";
+  }
+
+  if (pathname === "/admin/song") {
+    return "song";
   }
 
   return "home";

@@ -135,13 +135,13 @@ export class ParserService {
         title: song.title,
         artist: song.artist,
         publishdate: song.publishdate,
-        catalog: getCatalog(song.title, song.artist),
+        catalog: getCatalog(song.title, song.artist, song.id),
       },
       update: {
         title: song.title,
         artist: song.artist,
         publishdate: song.publishdate,
-        catalog: getCatalog(song.title, song.artist),
+        catalog: getCatalog(song.title, song.artist, song.id),
       },
     });
   }
