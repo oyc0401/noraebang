@@ -1,6 +1,5 @@
 import { access, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 
 export type LogValue =
   | string
@@ -79,7 +78,7 @@ async function resolveLogFilePath(): Promise<string> {
   const candidates = [
     resolve(process.cwd(), "admin/src/tj/search/log/log.json"),
     resolve(process.cwd(), "src/tj/search/log/log.json"),
-    fileURLToPath(new URL("./log.json", import.meta.url)),
+    resolve(__dirname, "log.json"),
   ];
 
   for (const candidate of candidates) {
@@ -91,8 +90,5 @@ async function resolveLogFilePath(): Promise<string> {
     }
   }
 
-  return resolve(
-    dirname(fileURLToPath(import.meta.url)),
-    "log.json",
-  );
+  return resolve(__dirname, "log.json");
 }

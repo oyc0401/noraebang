@@ -106,6 +106,7 @@ function DataPage() {
     message: "아티스트 검색 수집 대기 중",
   });
   const [searchLastExecutedAt, setSearchLastExecutedAt] = useState<string>();
+  const [isSearchLogLoaded, setIsSearchLogLoaded] = useState(false);
 
   async function refreshSearchParserLog() {
     try {
@@ -113,6 +114,8 @@ function DataPage() {
       setSearchLastExecutedAt(log.lastExecutedAt);
     } catch {
       setSearchLastExecutedAt(undefined);
+    } finally {
+      setIsSearchLogLoaded(true);
     }
   }
 
@@ -167,6 +170,9 @@ function DataPage() {
               <th className="border border-gray-300 p-2.5 text-left" scope="col">
                 상태
               </th>
+              <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                최근 수집
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -190,6 +196,9 @@ function DataPage() {
               <td className="border border-gray-300 p-2.5">
                 <StatusText state={recent} />
               </td>
+              <td className="border border-gray-300 p-2.5 text-sm text-gray-600">
+                -
+              </td>
             </tr>
             <tr>
               <th
@@ -210,9 +219,9 @@ function DataPage() {
               </td>
               <td className="border border-gray-300 p-2.5">
                 <StatusText state={search} />
-                <p className="mt-1 text-sm text-gray-600">
-                  최근 수집: {formatLastExecutedAt(searchLastExecutedAt)}
-                </p>
+              </td>
+              <td className="border border-gray-300 p-2.5 text-sm text-gray-600">
+                {formatLastExecutedAt(searchLastExecutedAt, isSearchLogLoaded)}
               </td>
             </tr>
           </tbody>
@@ -324,9 +333,16 @@ function getAdminRoute(): AdminRoute {
   return "home";
 }
 
-function formatLastExecutedAt(lastExecutedAt: string | undefined): string {
+function formatLastExecutedAt(
+  lastExecutedAt: string | undefined,
+  isLoaded = true,
+): string {
+  if (!isLoaded) {
+    return "확인 중";
+  }
+
   if (!lastExecutedAt) {
-    return "없음";
+    return "최근 수행하지 않았음";
   }
 
   return new Intl.DateTimeFormat("ko-KR", {

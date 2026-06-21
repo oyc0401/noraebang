@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   root: resolve(__dirname),
-  base: "/admin/",
+  base: "/admin",
   build: {
     outDir: resolve(__dirname, "../public/admin"),
     emptyOutDir: true,
