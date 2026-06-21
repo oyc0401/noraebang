@@ -3,10 +3,12 @@ import { getCatalog } from "../../lib/getCatalog";
 import { PrismaService } from "../../prisma/prisma.service";
 import {
   fetchTjNewSongsByYearMonth,
+  getLastExecutedAt,
   getTjSongByArtist,
   type TjSongData,
   type TjSongInfo,
 } from "../../tj";
+import { SearchParserLogResponseDto } from "./dto/search-parser-log-response.dto";
 
 type RecentParserResult = {
   fetched: number;
@@ -93,6 +95,12 @@ export class ParserService {
     return {
       status: "started",
       message: "search parser started.",
+    };
+  }
+
+  async getSearchParserLog(): Promise<SearchParserLogResponseDto> {
+    return {
+      lastExecutedAt: await getLastExecutedAt("searchByArtist"),
     };
   }
 

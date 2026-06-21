@@ -4,7 +4,7 @@ import type { Response } from "express";
 
 @Controller("admin")
 export class AdminPageController {
-  @Get()
+  @Get(["", "data"])
   getAdminPage(@Res() response: Response): void {
     response.sendFile(join(process.cwd(), "public", "admin", "index.html"));
   }
