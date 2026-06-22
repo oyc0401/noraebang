@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
 } from "@nestjs/common";
@@ -46,7 +47,7 @@ export class SongArtistQueueController {
     return this.songArtistQueueService.pushItems(body?.items);
   }
 
-  @Post(":queueId/connect-artist")
+  @Patch(":queueId/artist")
   @ApiParam({
     name: "queueId",
     description: "song_artist_queue.id: 곡-가수 큐 항목 ID",

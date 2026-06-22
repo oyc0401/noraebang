@@ -73,8 +73,8 @@ POST
 /api/song-artist-queue/push
 
 곡-가수큐 항목 하나를 기존 artist에 수동연결
-POST
-/api/song-artist-queue/{queueId}/connect-artist
+PATCH
+/api/song-artist-queue/{queueId}/artist
 
 song
 

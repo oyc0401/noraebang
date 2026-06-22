@@ -514,9 +514,9 @@ async function connectSongArtistQueueArtist(
   artistName: string,
 ): Promise<ConnectArtistResponse> {
   const response = await fetch(
-    `/api/song-artist-queue/${queueId}/connect-artist`,
+    `/api/song-artist-queue/${queueId}/artist`,
     {
-      method: "POST",
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ artistName }),
     },
