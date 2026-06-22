@@ -1,10 +1,17 @@
 import "./tailwind.css";
+import { ArtistCreationQueuePage } from "./artist-creation-queue/ArtistCreationQueuePage";
 import { DataPage } from "./data/DataPage";
 import { QueuePage } from "./queue/QueuePage";
 import { SongPage } from "./song/SongPage";
 import { SongArtistQueuePage } from "./song-artist-queue/SongArtistQueuePage";
 
-type AdminRoute = "home" | "data" | "queue" | "song" | "song-artist-queue";
+type AdminRoute =
+  | "home"
+  | "data"
+  | "queue"
+  | "song"
+  | "song-artist-queue"
+  | "artist-creation-queue";
 
 function App() {
   const route = getAdminRoute();
@@ -23,6 +30,10 @@ function App() {
 
   if (route === "song-artist-queue") {
     return <SongArtistQueuePage />;
+  }
+
+  if (route === "artist-creation-queue") {
+    return <ArtistCreationQueuePage />;
   }
 
   return <AdminHomePage />;
@@ -59,6 +70,12 @@ function AdminHomePage() {
         >
           가수있는곡큐 상태
         </a>
+        <a
+          className="ml-2 inline-block cursor-pointer border border-gray-900 px-3 py-2 text-gray-950 hover:bg-gray-100"
+          href="/admin/artist-creation-queue"
+        >
+          가수생성큐 상태
+        </a>
       </nav>
     </main>
   );
@@ -81,6 +98,10 @@ function getAdminRoute(): AdminRoute {
 
   if (pathname === "/admin/song-artist-queue") {
     return "song-artist-queue";
+  }
+
+  if (pathname === "/admin/artist-creation-queue") {
+    return "artist-creation-queue";
   }
 
   return "home";

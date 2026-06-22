@@ -1,0 +1,154 @@
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { PrismaService } from "../../prisma/prisma.service";
+import { ArtistCreationQueueListResponseDto } from "./dto/artist-creation-queue-list-response.dto";
+import { CreateArtistFromQueueRequestDto } from "./dto/create-artist-from-queue-request.dto";
+import { CreateArtistFromQueueResponseDto } from "./dto/create-artist-from-queue-response.dto";
+import { DeleteArtistCreationQueueResponseDto } from "./dto/delete-artist-creation-queue-response.dto";
+
+@Injectable()
+export class ArtistCreationQueueService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findAll(): Promise<ArtistCreationQueueListResponseDto> {
+    const items = await this.prisma.artistCreationQueue.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+
+    return {
+      data: items.map((item) => ({
+        id: item.id,
+        tjSongId: item.tjSongId ?? undefined,
+        homeCatalog: item.homeCatalog ?? undefined,
+        name: item.name,
+        nameKo: item.nameKo,
+        nameJa: item.nameJa ?? undefined,
+        nameJaKana: item.nameJaKana ?? undefined,
+        nameJaPronu: item.nameJaPronu ?? undefined,
+        nameLatin: item.nameLatin ?? undefined,
+        nameLatinPronu: item.nameLatinPronu ?? undefined,
+        tjName: item.tjName ?? undefined,
+        tjNameJa: item.tjNameJa ?? undefined,
+        slug: item.slug ?? undefined,
+        youtubeChannel: item.youtube_channel ?? undefined,
+        youtubeTopicChannel: item.youtube_topic_channel ?? undefined,
+        spotifyId: item.spotifyId ?? undefined,
+        thumbnailDefault: item.thumbnailDefault ?? undefined,
+        thumbnailMedium: item.thumbnailMedium ?? undefined,
+        thumbnailHigh: item.thumbnailHigh ?? undefined,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      })),
+    };
+  }
+
+  async createArtist(
+    queueId: number,
+    body: CreateArtistFromQueueRequestDto | undefined,
+  ): Promise<CreateArtistFromQueueResponseDto> {
+    const queueItem = await this.prisma.artistCreationQueue.findUnique({
+      where: { id: queueId },
+      select: { id: true, tjSongId: true },
+    });
+
+    if (!queueItem) {
+      throw new NotFoundException("artist creation queue item not found.");
+    }
+
+    const name = normalizeRequired(body?.name, "name");
+    const nameKo = normalizeRequired(body?.nameKo, "nameKo");
+
+    try {
+      const artist = await this.prisma.$transaction(async (tx) => {
+        const createdArtist = await tx.artist.create({
+          data: {
+            homeCatalog: normalizeNullable(body?.homeCatalog),
+            name,
+            nameKo,
+            nameJa: normalizeNullable(body?.nameJa),
+            nameJaKana: normalizeNullable(body?.nameJaKana),
+            nameJaPronu: normalizeNullable(body?.nameJaPronu),
+            nameLatin: normalizeNullable(body?.nameLatin),
+            tjName: normalizeNullable(body?.tjName),
+            tjNameJa: normalizeNullable(body?.tjNameJa),
+            slug: normalizeNullable(body?.slug),
+            youtube_channel: normalizeNullable(body?.youtubeChannel),
+            youtube_topic_channel: normalizeNullable(body?.youtubeTopicChannel),
+            spotifyId: normalizeNullable(body?.spotifyId),
+            thumbnailDefault: normalizeNullable(body?.thumbnailDefault),
+            thumbnailMedium: normalizeNullable(body?.thumbnailMedium),
+            thumbnailHigh: normalizeNullable(body?.thumbnailHigh),
+          },
+        });
+
+        if (queueItem.tjSongId) {
+          await tx.songArtistQueue.upsert({
+            where: { tjSongId: queueItem.tjSongId },
+            create: {
+              tjSongId: queueItem.tjSongId,
+              artistId: createdArtist.id,
+            },
+            update: {
+              artistId: createdArtist.id,
+            },
+          });
+        }
+
+        return createdArtist;
+      });
+
+      return { artistId: artist.id };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new BadRequestException("artist unique field already exists.");
+      }
+
+      throw error;
+    }
+  }
+
+  async deleteItem(
+    queueId: number,
+  ): Promise<DeleteArtistCreationQueueResponseDto> {
+    const item = await this.prisma.artistCreationQueue.findUnique({
+      where: { id: queueId },
+      select: { id: true },
+    });
+
+    if (!item) {
+      throw new NotFoundException("artist creation queue item not found.");
+    }
+
+    await this.prisma.artistCreationQueue.delete({
+      where: { id: queueId },
+    });
+
+    return { deletedId: queueId };
+  }
+}
+
+function normalizeRequired(
+  value: string | null | undefined,
+  fieldName: string,
+): string {
+  const normalized = normalizeNullable(value);
+
+  if (!normalized) {
+    throw new BadRequestException(`${fieldName} is required.`);
+  }
+
+  return normalized;
+}
+
+function normalizeNullable(value: string | null | undefined): string | null {
+  const normalized = value?.trim().replace(/\s+/g, " ");
+
+  return normalized || null;
+}
