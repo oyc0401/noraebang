@@ -9,10 +9,15 @@ import { ArtistCreationQueueListResponseDto } from "./dto/artist-creation-queue-
 import { CreateArtistFromQueueRequestDto } from "./dto/create-artist-from-queue-request.dto";
 import { CreateArtistFromQueueResponseDto } from "./dto/create-artist-from-queue-response.dto";
 import { DeleteArtistCreationQueueResponseDto } from "./dto/delete-artist-creation-queue-response.dto";
+import { PushArtistCreationQueueResponseDto } from "./dto/push-artist-creation-queue-response.dto";
+import { ArtistCreationQueueManager } from "./artist-creation-queue.manager";
 
 @Injectable()
 export class ArtistCreationQueueService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly artistCreationQueueManager: ArtistCreationQueueManager,
+  ) {}
 
   async findAll(): Promise<ArtistCreationQueueListResponseDto> {
     const items = await this.prisma.artistCreationQueue.findMany({
@@ -32,7 +37,6 @@ export class ArtistCreationQueueService {
         nameLatin: item.nameLatin ?? undefined,
         nameLatinPronu: item.nameLatinPronu ?? undefined,
         tjName: item.tjName ?? undefined,
-        tjNameJa: item.tjNameJa ?? undefined,
         slug: item.slug ?? undefined,
         youtubeChannel: item.youtube_channel ?? undefined,
         youtubeTopicChannel: item.youtube_topic_channel ?? undefined,
@@ -73,8 +77,8 @@ export class ArtistCreationQueueService {
             nameJaKana: normalizeNullable(body?.nameJaKana),
             nameJaPronu: normalizeNullable(body?.nameJaPronu),
             nameLatin: normalizeNullable(body?.nameLatin),
+            nameLatinPronu: normalizeNullable(body?.nameLatinPronu),
             tjName: normalizeNullable(body?.tjName),
-            tjNameJa: normalizeNullable(body?.tjNameJa),
             slug: normalizeNullable(body?.slug),
             youtube_channel: normalizeNullable(body?.youtubeChannel),
             youtube_topic_channel: normalizeNullable(body?.youtubeTopicChannel),
@@ -132,6 +136,50 @@ export class ArtistCreationQueueService {
 
     return { deletedId: queueId };
   }
+
+  async pushTjSongIds(
+    tjSongIds: unknown,
+  ): Promise<PushArtistCreationQueueResponseDto> {
+    const pushTjSongIds = parseTjSongIds(tjSongIds);
+    let pushed = 0;
+
+    for (const tjSongId of pushTjSongIds) {
+      const item =
+        await this.artistCreationQueueManager.pushArtistCreationQueueFromTj(
+          tjSongId,
+        );
+
+      if (item) {
+        pushed += 1;
+      }
+    }
+
+    return {
+      requested: pushTjSongIds.length,
+      pushed,
+      skipped: pushTjSongIds.length - pushed,
+    };
+  }
+}
+
+function parseTjSongIds(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    throw new BadRequestException("tjSongIds must be an array.");
+  }
+
+  const tjSongIds = Array.from(
+    new Set(
+      value
+        .map((item) => String(item).trim())
+        .filter((item) => item.length > 0),
+    ),
+  );
+
+  if (tjSongIds.length === 0) {
+    throw new BadRequestException("tjSongIds is empty.");
+  }
+
+  return tjSongIds;
 }
 
 function normalizeRequired(

@@ -1,5 +1,7 @@
-import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from "@nestjs/common";
 import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { ConnectSongArtistQueueArtistRequestDto } from "./dto/connect-song-artist-queue-artist-request.dto";
+import { ConnectSongArtistQueueArtistResponseDto } from "./dto/connect-song-artist-queue-artist-response.dto";
 import { PushSongArtistQueueRequestDto } from "./dto/push-song-artist-queue-request.dto";
 import { PushSongArtistQueueResponseDto } from "./dto/push-song-artist-queue-response.dto";
 import { SongArtistQueueListQueryDto } from "./dto/song-artist-queue-list-query.dto";
@@ -33,5 +35,17 @@ export class SongArtistQueueController {
     @Body() body: PushSongArtistQueueRequestDto | undefined,
   ): Promise<PushSongArtistQueueResponseDto> {
     return this.songArtistQueueService.pushItems(body?.items);
+  }
+
+  @Post(":id/connect-artist")
+  @ApiOkResponse({
+    description: "Connect a song-artist queue item to an existing artist",
+    type: ConnectSongArtistQueueArtistResponseDto,
+  })
+  connectArtist(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() body: ConnectSongArtistQueueArtistRequestDto | undefined,
+  ): Promise<ConnectSongArtistQueueArtistResponseDto> {
+    return this.songArtistQueueService.connectArtist(id, body?.artistName);
   }
 }

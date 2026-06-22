@@ -1,6 +1,11 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { JpopTjArtistIndex } from "../../lib/jpopTjArtistIndex";
 import { PrismaService } from "../../prisma/prisma.service";
+import { ConnectSongArtistQueueArtistResponseDto } from "./dto/connect-song-artist-queue-artist-response.dto";
 import { PushSongArtistQueueResponseDto } from "./dto/push-song-artist-queue-response.dto";
 import {
   type SongArtistQueueListQueryDto,
@@ -122,6 +127,58 @@ export class SongArtistQueueService {
       unmatched,
     };
   }
+
+  async connectArtist(
+    queueId: number,
+    artistName: unknown,
+  ): Promise<ConnectSongArtistQueueArtistResponseDto> {
+    const normalizedArtistName = parseArtistName(artistName);
+    const queueItem = await this.prisma.songArtistQueue.findUnique({
+      where: { id: queueId },
+      select: { id: true },
+    });
+
+    if (!queueItem) {
+      throw new NotFoundException("song artist queue item not found.");
+    }
+
+    const artists = await this.prisma.artist.findMany({
+      where: {
+        OR: [
+          { name: normalizedArtistName },
+          { nameKo: normalizedArtistName },
+          { nameJa: normalizedArtistName },
+          { nameLatin: normalizedArtistName },
+          { tjName: normalizedArtistName },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: { id: "asc" },
+    });
+
+    if (artists.length === 0) {
+      throw new NotFoundException("artist not found.");
+    }
+
+    if (artists.length > 1) {
+      throw new BadRequestException("artist name is ambiguous.");
+    }
+
+    const artist = artists[0];
+    await this.prisma.songArtistQueue.update({
+      where: { id: queueId },
+      data: { artistId: artist.id },
+    });
+
+    return {
+      queueId,
+      artistId: artist.id,
+      artistName: artist.name,
+    };
+  }
 }
 
 type PushItem = {
@@ -163,6 +220,20 @@ function parsePushItems(items: unknown): PushItem[] {
   }
 
   return pushItems;
+}
+
+function parseArtistName(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new BadRequestException("artistName must be a string.");
+  }
+
+  const artistName = value.trim().replace(/\s+/g, " ");
+
+  if (!artistName) {
+    throw new BadRequestException("artistName is empty.");
+  }
+
+  return artistName;
 }
 
 function sortItems(

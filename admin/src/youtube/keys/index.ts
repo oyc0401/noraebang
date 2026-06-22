@@ -1,4 +1,4 @@
-import { YOUTUBE_KEYS } from "./keys";
+import { getYoutubeKeys } from "./keys";
 
 // 쿼터 초과 에러인지 확인
 function isQuotaError(error: unknown): boolean {
@@ -65,7 +65,7 @@ let cachedManager: YoutubeKeyManager | null = null;
 
 export function getYoutubeKeyManager(): YoutubeKeyManager {
   if (!cachedManager) {
-    cachedManager = new YoutubeKeyManager(YOUTUBE_KEYS);
+    cachedManager = new YoutubeKeyManager(getYoutubeKeys());
   }
   return cachedManager;
 }

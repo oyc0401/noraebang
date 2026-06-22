@@ -22,11 +22,11 @@ export class CreateArtistFromQueueRequestDto {
   @ApiProperty({ required: false, example: "YOASOBI" })
   nameLatin?: string | null;
 
+  @ApiProperty({ required: false, example: "요아소비" })
+  nameLatinPronu?: string | null;
+
   @ApiProperty({ required: false, example: "YOASOBI" })
   tjName?: string | null;
-
-  @ApiProperty({ required: false, example: "요아소비" })
-  tjNameJa?: string | null;
 
   @ApiProperty({ required: false, example: "yoasobi" })
   slug?: string | null;

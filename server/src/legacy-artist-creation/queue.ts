@@ -62,7 +62,6 @@ type ArtistCreationQueueData = {
   nameLatin: string | null;
   nameLatinPronu: string | null;
   tjName: string | null;
-  tjNameJa: string | null;
   slug: string | null;
   youtube_channel: string | null;
   youtube_topic_channel: string | null;
@@ -116,7 +115,6 @@ export async function createArtistCreationQueueFromTjSong(
     nameLatinPronu: codeFields.nameLatinPronu,
 
     tjName: rawArtist,
-    tjNameJa: codeFields.tjNameJa,
 
     slug,
 
@@ -171,7 +169,6 @@ async function deriveCodeOwnedFields(name: string, rawArtist: string) {
     nameJaPronu,
     nameLatin,
     nameLatinPronu,
-    tjNameJa: isJapaneseName(rawArtist) ? rawArtist : null,
     fallbackNameKo: nameJaPronu ?? nameLatinPronu ?? name,
   };
 }

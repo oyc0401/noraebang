@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type MouseEvent, useEffect, useState } from "react";
 
 type SortBy = "createdAt" | "tjSongId" | "title" | "artist";
 type SortOrder = "asc" | "desc";
@@ -18,12 +18,30 @@ type SongArtistQueueListResponse = {
   data: SongArtistQueueItem[];
 };
 
+type PushArtistCreationQueueResponse = {
+  requested: number;
+  pushed: number;
+  skipped: number;
+};
+
+type ConnectArtistResponse = {
+  queueId: number;
+  artistId: number;
+  artistName: string;
+};
+
 type QueueFilters = {
   title: string;
   artist: string;
   status: StatusFilter;
   sortBy: SortBy;
   sortOrder: SortOrder;
+};
+
+type RowMenuState = {
+  item: SongArtistQueueItem;
+  x: number;
+  y: number;
 };
 
 const defaultFilters: QueueFilters = {
@@ -40,22 +58,51 @@ export function SongArtistQueuePage() {
     useState<QueueFilters>(initialFilters);
   const [filters, setFilters] = useState<QueueFilters>(initialFilters);
   const [items, setItems] = useState<SongArtistQueueItem[]>();
+  const [selectedTjSongIds, setSelectedTjSongIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [error, setError] = useState<string>();
+  const [message, setMessage] = useState<string>();
+  const [isPushing, setIsPushing] = useState(false);
+  const [rowMenu, setRowMenu] = useState<RowMenuState>();
 
   useEffect(() => {
     async function loadItems() {
       try {
         const result = await fetchSongArtistQueue(filters);
         setItems(result);
+        setSelectedTjSongIds((current) => {
+          const visibleTjSongIds = new Set(result.map((item) => item.tjSongId));
+          return new Set(
+            Array.from(current).filter((tjSongId) =>
+              visibleTjSongIds.has(tjSongId),
+            ),
+          );
+        });
         setError(undefined);
       } catch (fetchError) {
         setItems(undefined);
+        setSelectedTjSongIds(new Set());
         setError(String(fetchError));
       }
     }
 
     void loadItems();
   }, [filters]);
+
+  useEffect(() => {
+    function closeRowMenu() {
+      setRowMenu(undefined);
+    }
+
+    window.addEventListener("click", closeRowMenu);
+    window.addEventListener("keydown", closeRowMenu);
+
+    return () => {
+      window.removeEventListener("click", closeRowMenu);
+      window.removeEventListener("keydown", closeRowMenu);
+    };
+  }, []);
 
   function applyFilters() {
     setFilters(draftFilters);
@@ -76,6 +123,121 @@ export function SongArtistQueuePage() {
       ...current,
       [key]: value,
     }));
+  }
+
+  const selectedCount = selectedTjSongIds.size;
+  const allVisibleSelected =
+    items && items.length > 0
+      ? items.every((item) => selectedTjSongIds.has(item.tjSongId))
+      : false;
+
+  function toggleAllVisibleItems(checked: boolean) {
+    setSelectedTjSongIds((current) => {
+      const nextSelected = new Set(current);
+
+      for (const item of items ?? []) {
+        if (checked) {
+          nextSelected.add(item.tjSongId);
+        } else {
+          nextSelected.delete(item.tjSongId);
+        }
+      }
+
+      return nextSelected;
+    });
+  }
+
+  function toggleItem(item: SongArtistQueueItem, checked: boolean) {
+    setSelectedTjSongIds((current) => {
+      const nextSelected = new Set(current);
+
+      if (checked) {
+        nextSelected.add(item.tjSongId);
+      } else {
+        nextSelected.delete(item.tjSongId);
+      }
+
+      return nextSelected;
+    });
+  }
+
+  async function pushSelectedArtistCreationQueue() {
+    const tjSongIds = Array.from(selectedTjSongIds);
+
+    if (tjSongIds.length === 0) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `선택 ${tjSongIds.length.toLocaleString()}건을 가수생성큐에 추가할까요?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsPushing(true);
+
+    try {
+      const result = await pushArtistCreationQueue(tjSongIds);
+      setSelectedTjSongIds(new Set());
+      setMessage(
+        `선택 ${result.requested.toLocaleString()}건 중 ${result.pushed.toLocaleString()}건을 가수생성큐에 추가했습니다. 스킵 ${result.skipped.toLocaleString()}건`,
+      );
+      setError(undefined);
+    } catch (pushError) {
+      setError(String(pushError));
+      setMessage(undefined);
+    } finally {
+      setIsPushing(false);
+    }
+  }
+
+  function openRowMenu(
+    event: MouseEvent<HTMLTableRowElement>,
+    item: SongArtistQueueItem,
+  ) {
+    event.preventDefault();
+    setRowMenu({
+      item,
+      x: event.clientX,
+      y: event.clientY,
+    });
+  }
+
+  async function connectArtistFromPrompt(item: SongArtistQueueItem) {
+    const artistName = window.prompt(
+      `${item.tjSongId} / ${item.title}\n연결할 artistName을 입력하세요.`,
+      item.artistName ?? item.artist ?? "",
+    );
+
+    if (artistName === null || !artistName.trim()) {
+      return;
+    }
+
+    try {
+      const result = await connectSongArtistQueueArtist(
+        item.id,
+        artistName.trim(),
+      );
+      setItems((current) =>
+        current?.map((currentItem) =>
+          currentItem.id === item.id
+            ? {
+                ...currentItem,
+                artistId: result.artistId,
+                artistName: result.artistName,
+              }
+            : currentItem,
+        ),
+      );
+      setMessage(`${item.tjSongId}를 ${result.artistName}에 연결했습니다.`);
+      setError(undefined);
+      window.alert("연결되었습니다.");
+    } catch (connectError) {
+      setError(String(connectError));
+      setMessage(undefined);
+    }
   }
 
   return (
@@ -184,6 +346,7 @@ export function SongArtistQueuePage() {
       </section>
 
       {error && <p className="mt-4 text-red-700">{error}</p>}
+      {message && <p className="mt-4 text-green-700">{message}</p>}
 
       {!error && !items && <p className="mt-4 text-gray-600">불러오는 중</p>}
 
@@ -192,49 +355,109 @@ export function SongArtistQueuePage() {
       )}
 
       {!error && items && items.length > 0 && (
-        <table className="mt-3 w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
-                TJ 번호
-              </th>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
-                제목
-              </th>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
-                TJ 아티스트
-              </th>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
-                매칭된 가수
-              </th>
-              <th className="border border-gray-300 p-2.5 text-left" scope="col">
-                등록 시각
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr
-                className={item.artistId ? "" : "bg-yellow-50"}
-                key={item.id}
-              >
-                <td className="border border-gray-300 p-2.5">
-                  {item.tjSongId}
-                </td>
-                <td className="border border-gray-300 p-2.5">{item.title}</td>
-                <td className="border border-gray-300 p-2.5">
-                  {item.artist ?? "-"}
-                </td>
-                <td className="border border-gray-300 p-2.5">
-                  {item.artistName ?? "미매칭"}
-                </td>
-                <td className="border border-gray-300 p-2.5">
-                  {formatCreatedAt(item.createdAt)}
-                </td>
+        <>
+          <div className="mt-6 flex items-center gap-3">
+            <button
+              type="button"
+              className="cursor-pointer border border-gray-900 px-3 py-1.5 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
+              disabled={selectedCount === 0 || isPushing}
+              onClick={pushSelectedArtistCreationQueue}
+            >
+              {isPushing ? "추가 중" : "가수생성큐에 추가"}
+            </button>
+            <span className="text-sm text-gray-600">
+              선택 {selectedCount.toLocaleString()}건
+            </span>
+          </div>
+          <table className="mt-3 w-full border-collapse">
+            <thead>
+              <tr>
+                <th
+                  className="w-12 border border-gray-300 p-2.5 text-center"
+                  scope="col"
+                >
+                  <input
+                    aria-label="현재 목록 전체 선택"
+                    checked={allVisibleSelected}
+                    className="cursor-pointer accent-gray-900"
+                    type="checkbox"
+                    onChange={(event) =>
+                      toggleAllVisibleItems(event.target.checked)
+                    }
+                  />
+                </th>
+                <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                  TJ 번호
+                </th>
+                <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                  제목
+                </th>
+                <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                  TJ 아티스트
+                </th>
+                <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                  매칭된 가수
+                </th>
+                <th className="border border-gray-300 p-2.5 text-left" scope="col">
+                  등록 시각
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr
+                  className={item.artistId ? "" : "bg-yellow-50"}
+                  key={item.id}
+                  onContextMenu={(event) => openRowMenu(event, item)}
+                >
+                  <td className="border border-gray-300 p-2.5 text-center">
+                    <input
+                      aria-label={`${item.tjSongId} 선택`}
+                      checked={selectedTjSongIds.has(item.tjSongId)}
+                      className="cursor-pointer accent-gray-900"
+                      type="checkbox"
+                      onChange={(event) =>
+                        toggleItem(item, event.target.checked)
+                      }
+                    />
+                  </td>
+                  <td className="border border-gray-300 p-2.5">
+                    {item.tjSongId}
+                  </td>
+                  <td className="border border-gray-300 p-2.5">{item.title}</td>
+                  <td className="border border-gray-300 p-2.5">
+                    {item.artist ?? "-"}
+                  </td>
+                  <td className="border border-gray-300 p-2.5">
+                    {item.artistName ?? "미매칭"}
+                  </td>
+                  <td className="border border-gray-300 p-2.5">
+                    {formatCreatedAt(item.createdAt)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {rowMenu && (
+            <div
+              className="fixed z-50 border border-gray-300 bg-white p-1 shadow"
+              style={{ left: rowMenu.x, top: rowMenu.y }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="block cursor-pointer px-3 py-1.5 text-sm hover:bg-gray-100"
+                onClick={() => {
+                  const item = rowMenu.item;
+                  setRowMenu(undefined);
+                  void connectArtistFromPrompt(item);
+                }}
+              >
+                가수연결
+              </button>
+            </div>
+          )}
+        </>
       )}
     </main>
   );
@@ -268,6 +491,42 @@ async function fetchSongArtistQueue(
 
   const body = (await response.json()) as SongArtistQueueListResponse;
   return body.data;
+}
+
+async function pushArtistCreationQueue(
+  tjSongIds: string[],
+): Promise<PushArtistCreationQueueResponse> {
+  const response = await fetch("/api/artist-creation-queue/push", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tjSongIds }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return (await response.json()) as PushArtistCreationQueueResponse;
+}
+
+async function connectSongArtistQueueArtist(
+  queueId: number,
+  artistName: string,
+): Promise<ConnectArtistResponse> {
+  const response = await fetch(
+    `/api/song-artist-queue/${queueId}/connect-artist`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ artistName }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return (await response.json()) as ConnectArtistResponse;
 }
 
 function formatCreatedAt(createdAt: string): string {

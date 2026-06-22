@@ -13,6 +13,8 @@ import { ArtistCreationQueueListResponseDto } from "./dto/artist-creation-queue-
 import { CreateArtistFromQueueRequestDto } from "./dto/create-artist-from-queue-request.dto";
 import { CreateArtistFromQueueResponseDto } from "./dto/create-artist-from-queue-response.dto";
 import { DeleteArtistCreationQueueResponseDto } from "./dto/delete-artist-creation-queue-response.dto";
+import { PushArtistCreationQueueRequestDto } from "./dto/push-artist-creation-queue-request.dto";
+import { PushArtistCreationQueueResponseDto } from "./dto/push-artist-creation-queue-response.dto";
 
 @ApiTags("artist-creation-queue")
 @Controller("api/artist-creation-queue")
@@ -28,6 +30,17 @@ export class ArtistCreationQueueController {
   })
   findAll(): Promise<ArtistCreationQueueListResponseDto> {
     return this.artistCreationQueueService.findAll();
+  }
+
+  @Post("push")
+  @ApiOkResponse({
+    description: "Push TJ song ids into the artist creation queue",
+    type: PushArtistCreationQueueResponseDto,
+  })
+  push(
+    @Body() body: PushArtistCreationQueueRequestDto | undefined,
+  ): Promise<PushArtistCreationQueueResponseDto> {
+    return this.artistCreationQueueService.pushTjSongIds(body?.tjSongIds);
   }
 
   @Post(":id/create-artist")

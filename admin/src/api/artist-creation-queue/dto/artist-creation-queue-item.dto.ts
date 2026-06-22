@@ -34,9 +34,6 @@ export class ArtistCreationQueueItemDto {
   @ApiProperty({ required: false, example: "YOASOBI" })
   tjName?: string;
 
-  @ApiProperty({ required: false, example: "요아소비" })
-  tjNameJa?: string;
-
   @ApiProperty({ required: false, example: "yoasobi" })
   slug?: string;
 

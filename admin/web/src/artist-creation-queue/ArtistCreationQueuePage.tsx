@@ -12,7 +12,6 @@ type ArtistCreationQueueItem = {
   nameLatin?: string;
   nameLatinPronu?: string;
   tjName?: string;
-  tjNameJa?: string;
   slug?: string;
   youtubeChannel?: string;
   youtubeTopicChannel?: string;
@@ -40,8 +39,8 @@ type ArtistForm = {
   nameJaKana: string;
   nameJaPronu: string;
   nameLatin: string;
+  nameLatinPronu: string;
   tjName: string;
-  tjNameJa: string;
   slug: string;
   youtubeChannel: string;
   youtubeTopicChannel: string;
@@ -305,23 +304,20 @@ export function ArtistCreationQueuePage() {
                     onChange={(value) => updateForm("nameLatin", value)}
                   />
                   <TextInput
+                    label="nameLatinPronu"
+                    value={form.nameLatinPronu}
+                    onChange={(value) => updateForm("nameLatinPronu", value)}
+                  />
+                  <TextInput
                     label="tjName"
                     value={form.tjName}
                     onChange={(value) => updateForm("tjName", value)}
-                  />
-                  <TextInput
-                    label="tjNameJa"
-                    value={form.tjNameJa}
-                    onChange={(value) => updateForm("tjNameJa", value)}
                   />
                   <TextInput
                     label="slug"
                     value={form.slug}
                     onChange={(value) => updateForm("slug", value)}
                   />
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-3">
                   <TextInput
                     label="youtubeChannel"
                     value={form.youtubeChannel}
@@ -362,13 +358,6 @@ export function ArtistCreationQueuePage() {
                   />
                   <SpotifyPreview value={form.spotifyId} />
                 </div>
-
-                {selectedItem.nameLatinPronu && (
-                  <p className="text-sm text-gray-600">
-                    nameLatinPronu: {selectedItem.nameLatinPronu} (artist
-                    테이블에는 저장 컬럼 없음)
-                  </p>
-                )}
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <ThumbnailInput
@@ -464,7 +453,7 @@ function SpotifyPreview({ value }: { value: string }) {
   return (
     <iframe
       title="Spotify artist preview"
-      className="h-[152px] w-full border border-gray-300 md:col-start-3"
+      className="h-[152px] w-full border border-gray-300"
       src={embedUrl}
       allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
       loading="lazy"
@@ -553,8 +542,8 @@ function createFormFromItem(item: ArtistCreationQueueItem): ArtistForm {
     nameJaKana: item.nameJaKana ?? "",
     nameJaPronu: item.nameJaPronu ?? "",
     nameLatin: item.nameLatin ?? "",
+    nameLatinPronu: item.nameLatinPronu ?? "",
     tjName: item.tjName ?? "",
-    tjNameJa: item.tjNameJa ?? "",
     slug: item.slug ?? "",
     youtubeChannel: item.youtubeChannel ?? "",
     youtubeTopicChannel: item.youtubeTopicChannel ?? "",

@@ -76,7 +76,6 @@ export class ArtistCreationQueueManager {
       nameLatin,
       nameLatinPronu: nameLatin ? getLatinPron(nameLatin) : null,
       tjName,
-      tjNameJa: null, // 무조건 null
       slug: null, // 일단 null
       youtube_channel: youtubeChannel.main ?? null,
       youtube_topic_channel: youtubeChannel.topic ?? null,

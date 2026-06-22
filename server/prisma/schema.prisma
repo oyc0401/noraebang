@@ -15,8 +15,8 @@ model Artist {
   nameJaKana             String?      @map("name_ja_kana") // 일본어 가나버전
   nameJaPronu            String?      @map("name_ja_pronu") // kanabarum으로 만들기
   nameLatin              String?      @map("name_latin") // 영어면 걍 넣기
+  nameLatinPronu         String?      @map("name_latin_pronu") // konglish로 만들기
   tjName                 String?      @map("tj_name") // tj이름 그대로
-  tjNameJa               String?      @map("tj_name_ja") // 얜 뭐냐?
 
   slug                   String?      @unique // ai 돌리고, 유니크 테스트
 
@@ -148,7 +148,6 @@ model ArtistCreationQueue {
   nameLatin              String?      @map("name_latin") // 영어면 걍 넣기
   nameLatinPronu         String?      @map("name_latin_pronu") // konglish로 만들기
   tjName                 String?      @map("tj_name") // tj이름 그대로
-  tjNameJa               String?      @map("tj_name_ja") // 얜 뭐냐?
 
   slug                   String?      @unique // ai 돌리고, 유니크 테스트
 

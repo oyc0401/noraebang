@@ -20,4 +20,6 @@ function parseEnvKeys(): string[] {
   );
 }
 
-export const YOUTUBE_KEYS: string[] = parseEnvKeys();
+export function getYoutubeKeys(): string[] {
+  return parseEnvKeys();
+}
