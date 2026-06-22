@@ -6,11 +6,123 @@ datasource db {
   provider = "postgresql"
 }
 
-유튜브 채널
+model YoutubeChannel {
+  id String @id @map("id") // 채널 Id ex: UCqECaJ8Gagnn7YCbPEzWH6g
 
-유튜브 비디오
+  title                 String?
+  description           String?
+  customUrl             String?   @map("custom_url")
+  publishedAt           DateTime? @map("published_at")
+  country               String?
+  defaultLanguage       String?   @map("default_language")
+  thumbnailDefault      String?   @map("thumbnail_default")
+  thumbnailMedium       String?   @map("thumbnail_medium")
+  thumbnailHigh         String?   @map("thumbnail_high")
+  subscriberCount       BigInt?   @map("subscriber_count")
+  videoCount            BigInt?   @map("video_count")
+  viewCount             BigInt?   @map("view_count")
+  hiddenSubscriberCount Boolean?  @map("hidden_subscriber_count")
+  uploadsPlaylistId     String?   @map("uploads_playlist_id")
+  fetchedAt             DateTime? @map("fetched_at")
 
-스포티파이 채널
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-스포티파이 트랙
+  videos YoutubeVideo[]
 
+  @@index([subscriberCount(sort: Desc)])
+  @@map("youtube_channel")
+}
+
+model YoutubeVideo {
+  id        String  @id @map("id")
+  channelId String? @map("channel_id")
+
+  title             String?
+  description       String?
+  publishedAt       DateTime? @map("published_at")
+  thumbnailDefault  String?   @map("thumbnail_default")
+  thumbnailMedium   String?   @map("thumbnail_medium")
+  thumbnailHigh     String?   @map("thumbnail_high")
+  thumbnailStandard String?   @map("thumbnail_standard")
+  thumbnailMaxres   String?   @map("thumbnail_maxres")
+  viewCount         BigInt?   @map("view_count")
+  likeCount         BigInt?   @map("like_count")
+  commentCount      BigInt?   @map("comment_count")
+  durationSeconds   Int?      @map("duration_seconds")
+  definition        String?
+  caption           Boolean?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  youtubeChannel YoutubeChannel? @relation(fields: [channelId], references: [id], onDelete: SetNull)
+
+  @@index([channelId])
+  @@map("youtube_video")
+}
+
+model SpotifyArtist {
+  id         String    @id @map("id") // ex: 아티스트 Id: 6lBptQoWw8pF4l7G0V3X5X
+  name       String
+  popularity Int?
+  followers  BigInt?
+  genres     String[]  @default([])
+  images     String[]  @default([])
+  fetchedAt  DateTime? @map("fetched_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tracks SpotifyArtistTrack[]
+
+  @@map("spotify_artist")
+}
+
+model SpotifyTrack {
+  id                   String   @id @map("id") // ex: 트랙 Id: 7yq4Qj7cqayVTp3FF9CWbm
+  name                 String
+  popularity           Int?
+  previewUrl           String?  @map("preview_url")
+  isrc                 String?
+  durationMs           Int?     @map("duration_ms")
+  releaseDate          String?  @map("release_date")
+  releaseDatePrecision String?  @map("release_date_precision")
+  albumImages          String[] @default([]) @map("album_images")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  artists SpotifyArtistTrack[]
+
+  @@index([isrc])
+  @@map("spotify_track")
+}
+
+model SpotifyArtistTrack {
+  id              Int      @id @default(autoincrement())
+  spotifyArtistId String   @map("spotify_artist_id")
+  spotifyTrackId  String   @map("spotify_track_id")
+  artistOrder     Int      @default(0) @map("artist_order")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  spotifyArtist SpotifyArtist @relation(fields: [spotifyArtistId], references: [id], onDelete: Cascade)
+  spotifyTrack  SpotifyTrack  @relation(fields: [spotifyTrackId], references: [id], onDelete: Cascade)
+
+  @@unique([spotifyArtistId, spotifyTrackId])
+  @@index([spotifyTrackId, artistOrder])
+  @@index([spotifyArtistId])
+  @@map("spotify_artist_track")
+}
+
+model MusicBrainz {
+  isrc             String   @id
+  recordingId      String?  @map("recording_id")
+  title            String?
+  artistCreditId   String?  @map("artist_credit_id")
+  artistCreditName String?  @map("artist_credit_name")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("musicbrainz")
+}
