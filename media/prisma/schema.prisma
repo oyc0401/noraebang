@@ -1,0 +1,16 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+유튜브 채널
+
+유튜브 비디오
+
+스포티파이 채널
+
+스포티파이 트랙
+
