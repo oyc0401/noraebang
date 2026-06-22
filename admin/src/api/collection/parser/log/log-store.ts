@@ -76,8 +76,8 @@ async function getLogFilePath(): Promise<string> {
 
 async function resolveLogFilePath(): Promise<string> {
   const candidates = [
-    resolve(process.cwd(), "admin/src/tj/search/log/log.json"),
-    resolve(process.cwd(), "src/tj/search/log/log.json"),
+    resolve(process.cwd(), "admin/src/api/collection/parser/log/log.json"),
+    resolve(process.cwd(), "src/api/collection/parser/log/log.json"),
     resolve(__dirname, "log.json"),
   ];
 

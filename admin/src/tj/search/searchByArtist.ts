@@ -1,9 +1,6 @@
 import { fetchTjSearchPage } from "./lib/userAgent";
 import { getTjSearchTotalPages, parseTjSongList } from "./lib/crawling";
-import { recordExecution } from "./log/log-store";
 import type { TjSongInfo } from "../types";
-
-const SEARCH_BY_ARTIST_LOG_KEY = "searchByArtist";
 
 async function fetchTjPageByArtist(
   artistName: string,
@@ -25,8 +22,6 @@ async function fetchTjPageByArtist(
 export async function searchByArtist(
   artistName: string,
 ): Promise<TjSongInfo[]> {
-  await recordExecution(SEARCH_BY_ARTIST_LOG_KEY);
-
   const firstPageHtml = await fetchTjPageByArtist(artistName, 1);
   const totalPages = getTjSearchTotalPages(firstPageHtml);
   const allSongs = parseTjSongList(firstPageHtml);

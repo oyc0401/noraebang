@@ -4,13 +4,12 @@ import { JpopTjArtistIndex } from "../../../lib/jpopTjArtistIndex";
 import { PrismaService } from "../../../prisma/prisma.service";
 import {
   fetchTjNewSongsByYearMonth,
-  getLastExecutedAt,
   getTjSongByArtist,
-  recordExecution,
   type TjSongData,
   type TjSongInfo,
 } from "../../../tj";
 import { ParserLogResponseDto } from "./dto/parser-log-response.dto";
+import { getLastExecutedAt, recordExecution } from "./log/log-store";
 
 type RecentParserResult = {
   fetched: number;
@@ -83,6 +82,8 @@ export class ParserService {
         message: "search parser is already running.",
       };
     }
+
+    await recordExecution("searchByArtist");
 
     const job = this.parseSearch();
     this.searchJob = job;
