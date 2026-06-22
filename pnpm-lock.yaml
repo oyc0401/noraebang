@@ -50,6 +50,12 @@ importers:
       dotenv:
         specifier: ^17.2.3
         version: 17.4.2
+      kanabarum:
+        specifier: ^0.3.2
+        version: 0.3.2
+      konglish:
+        specifier: ^0.3.0
+        version: 0.3.0
       lucide-react:
         specifier: ^0.469.0
         version: 0.469.0(react@19.2.3)
@@ -2457,6 +2463,9 @@ packages:
     resolution: {integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==}
     engines: {node: '>= 0.4'}
 
+  async@2.6.4:
+    resolution: {integrity: sha512-mzo5dfJYwAn29PeiJ0zvwTo04zj8HDJj0Mn8TD7sno7q12prdbnasKJHhkm2c1LgrhlJ0teaea8860oxi51mGA==}
+
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
@@ -2623,6 +2632,9 @@ packages:
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
+
+  cmu-pronouncing-dictionary@3.0.0:
+    resolution: {integrity: sha512-6y5X4OxsYFnHERo6WSVPnLrk53G07MOQ8aUb2z555JgwynpbZsHR0a//WdN6DUcmE1j2auTF2TtL4PpoKze8QQ==}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -2861,6 +2873,9 @@ packages:
   dotenv@17.4.2:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
+
+  doublearray@0.0.2:
+    resolution: {integrity: sha512-aw55FtZzT6AmiamEj2kvmR6BuFqvYgKZUkfQ7teqVRNqD5UE0rw8IeW/3gieHNKQ5sPuDKlljWEn4bzv5+1bHw==}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -3684,8 +3699,17 @@ packages:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
     engines: {node: '>=4.0'}
 
+  kanabarum@0.3.2:
+    resolution: {integrity: sha512-inyGs3PKdMNztU3Ti/lk3/DM5S9SLcgMZiPACCz6MFC7g724aY++4AWA9mCJGxHzjadh1yaxta91QK7TwNtmdg==}
+
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
+
+  konglish@0.3.0:
+    resolution: {integrity: sha512-DzAn7q4dTYPoMD3aGGSPTf8RCdMhv0JBzr4etGF+zyX603hwQW1ngnsXH7Lak00W+ppZ+w2F7uO80J7cLAHyKg==}
+
+  kuromoji@0.1.2:
+    resolution: {integrity: sha512-V0dUf+C2LpcPEXhoHLMAop/bOht16Dyr+mDiIE39yX3vqau7p80De/koFqpiTcL1zzdZlc3xuHZ8u5gjYRfFaQ==}
 
   language-subtag-registry@0.3.23:
     resolution: {integrity: sha512-0K65Lea881pHotoGEa5gDlMxt3pctLi2RplBb7Ezh4rRdLEOtgi7n4EwK9lamnUCkKBqaeKRVebTq6BAxSkpXQ==}
@@ -5369,6 +5393,9 @@ packages:
 
   zeptomatch@2.0.2:
     resolution: {integrity: sha512-H33jtSKf8Ijtb5BW6wua3G5DhnFjbFML36eFu+VdOoVY4HD9e7ggjqdM6639B+L87rjnR6Y+XeRzBXZdy52B/g==}
+
+  zlibjs@0.3.1:
+    resolution: {integrity: sha512-+J9RrgTKOmlxFSDHo0pI1xM6BLVUv+o0ZT9ANtCxGkjIVCCUdx9alUF8Gm+dGLKbkkkidWIHFDZHDMpfITt4+w==}
 
   zod-validation-error@4.0.2:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
@@ -7530,6 +7557,10 @@ snapshots:
 
   async-function@1.0.0: {}
 
+  async@2.6.4:
+    dependencies:
+      lodash: 4.17.21
+
   asynckit@0.4.0: {}
 
   available-typed-arrays@1.0.7:
@@ -7726,6 +7757,8 @@ snapshots:
   clone@1.0.4: {}
 
   clsx@2.1.1: {}
+
+  cmu-pronouncing-dictionary@3.0.0: {}
 
   color-convert@2.0.1:
     dependencies:
@@ -7938,6 +7971,8 @@ snapshots:
   dotenv@17.2.3: {}
 
   dotenv@17.4.2: {}
+
+  doublearray@0.0.2: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -8990,9 +9025,23 @@ snapshots:
       object.assign: 4.1.7
       object.values: 1.2.1
 
+  kanabarum@0.3.2:
+    dependencies:
+      kuromoji: 0.1.2
+
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  konglish@0.3.0:
+    dependencies:
+      cmu-pronouncing-dictionary: 3.0.0
+
+  kuromoji@0.1.2:
+    dependencies:
+      async: 2.6.4
+      doublearray: 0.0.2
+      zlibjs: 0.3.1
 
   language-subtag-registry@0.3.23: {}
 
@@ -10748,6 +10797,8 @@ snapshots:
   zeptomatch@2.0.2:
     dependencies:
       grammex: 3.1.12
+
+  zlibjs@0.3.1: {}
 
   zod-validation-error@4.0.2(zod@4.3.4):
     dependencies:

@@ -137,10 +137,10 @@ model SongArtistQueue {
 
 model ArtistCreationQueue {
   id                  Int      @id @default(autoincrement())
-  tjSongId            String?  @map("tj_song_id")
+  tjSongId            String?  @unique @map("tj_song_id")
 
   homeCatalog            String?      @map("home_catalog") // 아마 jpop
-  name                   String // 이름 정규화
+  name                   String // ai 돌려서 이름 정규화
   nameKo                 String       @map("name_ko") // ai 돌려서 
   nameJa                 String?      @map("name_ja") // 일본어면 걍 넣기
   nameJaKana             String?      @map("name_ja_kana") // 일본어 가나버전
@@ -153,7 +153,7 @@ model ArtistCreationQueue {
   slug                   String?      @unique // ai 돌리고, 유니크 테스트
 
   youtube_channel        String?      @map("youtube_channel")  // 유튜브 db에서 찾기
-  youtube_topic_channel  String?      @map("youtube_topic_channel")
+  youtube_topic_channel  String?      @map("youtube_topic_channel") // 유튜브 db에서 찾기
   spotifyId              String?      @map("spotify_id") // 스포티파이 검색하기
 
   thumbnailDefault       String?      @map("thumbnail_default")  // 유튜브에서 찾기
