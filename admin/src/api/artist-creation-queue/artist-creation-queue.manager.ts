@@ -4,7 +4,7 @@ import { toHiragana } from "./ja";
 import { getNameKo } from "./name-generater";
 import { getJaPron, getLatinPron } from "./pron";
 import { getArtistId } from "./spotify";
-import { getThumbnails, getYoutubeChannel } from "./youtube";
+import { getYoutubeChannel, getYoutubeChannelInfo } from "./youtube";
 
 export type ArtistCreationQueueInput = {
   tjSongId: string;
@@ -37,7 +37,7 @@ export class ArtistCreationQueueManager {
       tjSongId: tjSong.id,
       tjsongTitle: tjSong.title,
       artist: tjSong.artist,
-      homeCatalog: null,
+      homeCatalog: "JPOP",
     });
   }
 
@@ -56,13 +56,14 @@ export class ArtistCreationQueueManager {
       : null;
     const nameLatin = hasLatinOnly(name) ? name : null;
 
-    const nameKo = getNameKo(name, input.tjsongTitle);
     const youtubeChannel = await getYoutubeChannel(name);
-    const thumbnailSourceChannel =
+    const selectedYoutubeChannelId =
       youtubeChannel.main ?? youtubeChannel.topic ?? null;
-    const thumbnails = thumbnailSourceChannel
-      ? await getThumbnails(thumbnailSourceChannel)
-      : {};
+    const youtubeChannelInfo = await getYoutubeChannelInfo(
+      selectedYoutubeChannelId,
+    );
+    const nameKo = await getNameKo(youtubeChannelInfo?.title ?? name);
+    const thumbnails = youtubeChannelInfo?.thumbnails ?? {};
 
     const data = {
       tjSongId,

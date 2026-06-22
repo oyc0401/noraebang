@@ -11,6 +11,12 @@ export type YoutubeThumbnails = {
   high?: string;
 };
 
+export type YoutubeChannelInfo = {
+  id: string;
+  title: string;
+  thumbnails: YoutubeThumbnails;
+};
+
 type YoutubeChannelDetails = {
   channelId: string;
   title: string;
@@ -62,22 +68,34 @@ export async function getYoutubeChannel(
 export async function getThumbnails(
   youtubeChannelId: string,
 ): Promise<YoutubeThumbnails> {
-  const channelId = youtubeChannelId.trim();
+  const info = await getYoutubeChannelInfo(youtubeChannelId);
+
+  return info?.thumbnails ?? {};
+}
+
+export async function getYoutubeChannelInfo(
+  youtubeChannelId: string | null | undefined,
+): Promise<YoutubeChannelInfo | null> {
+  const channelId = youtubeChannelId?.trim();
 
   if (!channelId) {
-    return {};
+    return null;
   }
 
   const details = await getChannelDetails(channelId);
 
   if (!details) {
-    return {};
+    return null;
   }
 
   return {
-    normal: details.thumbnailDefault,
-    medium: details.thumbnailMedium,
-    high: details.thumbnailHigh,
+    id: details.channelId,
+    title: details.title,
+    thumbnails: {
+      normal: details.thumbnailDefault,
+      medium: details.thumbnailMedium,
+      high: details.thumbnailHigh,
+    },
   };
 }
 
