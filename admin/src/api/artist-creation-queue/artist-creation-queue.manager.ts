@@ -79,7 +79,7 @@ export class ArtistCreationQueueManager {
       slug: null, // 일단 null
       youtube_channel: youtubeChannel.main ?? null,
       youtube_topic_channel: youtubeChannel.topic ?? null,
-      spotifyId: getArtistId(name) || null,
+      spotifyId: (await getArtistId(name)) || null,
       thumbnailDefault: thumbnails.normal ?? null,
       thumbnailHigh: thumbnails.high ?? null,
       thumbnailMedium: thumbnails.medium ?? null,
