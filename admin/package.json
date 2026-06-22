@@ -33,6 +33,8 @@
     "dotenv": "^17.2.3",
     "kanabarum": "^0.3.2",
     "konglish": "^0.3.0",
+    "kuroshiro": "^1.2.0",
+    "kuroshiro-analyzer-kuromoji": "^1.1.0",
     "lucide-react": "^0.469.0",
     "pg": "^8.16.3",
     "prisma": "^7.2.0",

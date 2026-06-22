@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { toHiragana } from "./ja";
 import { getNameKo } from "./name-generater";
 import { getJaPron, getLatinPron } from "./pron";
 import { getArtistId } from "./spotify";
@@ -50,14 +51,17 @@ export class ArtistCreationQueueManager {
 
     const name = normalizeArtistName(tjName);
     const nameJa = hasJapanese(name) ? name : null;
+    const nameJaKana = nameJa
+      ? normalizeNullable(await toHiragana(nameJa))
+      : null;
     const nameLatin = hasLatinOnly(name) ? name : null;
 
     const nameKo = getNameKo(name, input.tjsongTitle);
-    const youtubeChannel = getYoutubeChannel(name);
+    const youtubeChannel = await getYoutubeChannel(name);
     const thumbnailSourceChannel =
       youtubeChannel.main ?? youtubeChannel.topic ?? null;
     const thumbnails = thumbnailSourceChannel
-      ? getThumbnails(thumbnailSourceChannel)
+      ? await getThumbnails(thumbnailSourceChannel)
       : {};
 
     const data = {
@@ -66,13 +70,13 @@ export class ArtistCreationQueueManager {
       name,
       nameKo,
       nameJa,
-      nameJaKana: null,
-      nameJaPronu: nameJa ? await getJaPron(nameJa) : null,
+      nameJaKana,
+      nameJaPronu: nameJaKana ? await getJaPron(nameJaKana) : null,
       nameLatin,
       nameLatinPronu: nameLatin ? getLatinPron(nameLatin) : null,
       tjName,
-      tjNameJa: null,
-      slug: null,
+      tjNameJa: null, // 무조건 null
+      slug: null, // 일단 null
       youtube_channel: youtubeChannel.main ?? null,
       youtube_topic_channel: youtubeChannel.topic ?? null,
       spotifyId: getArtistId(name) || null,
