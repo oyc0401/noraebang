@@ -90,16 +90,17 @@ export class ArtistCreationQueueService {
         });
 
         if (queueItem.tjSongId) {
-          await tx.songArtistQueue.upsert({
+          const songArtistQueueItem = await tx.songArtistQueue.findUnique({
             where: { tjSongId: queueItem.tjSongId },
-            create: {
-              tjSongId: queueItem.tjSongId,
-              artistId: createdArtist.id,
-            },
-            update: {
-              artistId: createdArtist.id,
-            },
+            select: { id: true },
           });
+
+          if (songArtistQueueItem) {
+            await tx.songArtistQueue.update({
+              where: { id: songArtistQueueItem.id },
+              data: { artistId: createdArtist.id },
+            });
+          }
         }
 
         return createdArtist;
