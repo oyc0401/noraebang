@@ -182,12 +182,12 @@ model SongCreationQueue {
   tjTitle         String? @map("tj_title") // tj제목 그대로
   tjArtist        String? @map("tj_artist") // tj가수 그대로
 
-  youtubeVideoId   String?   @map("youtube_video_id") // 유튜브에서 찾기
-  thumbnailDefault String? @map("thumbnail_default") // 유튜브에서 찾기
-  thumbnailHigh    String? @map("thumbnail_high") // 유튜브에서 찾기
-  thumbnailMedium  String? @map("thumbnail_medium") // 유튜브에서 찾기
+  youtubeVideoId   String?   @map("youtube_video_id") // media db에서 찾기
+  thumbnailDefault String? @map("thumbnail_default") // media db에서 찾기
+  thumbnailHigh    String? @map("thumbnail_high") // media db에서 찾기
+  thumbnailMedium  String? @map("thumbnail_medium") // media db에서 찾기
 
-  spotifyTrackId Int?    @map("spotify_track_id") // 스포티파이 검색
+  spotifyTrackId Int?    @map("spotify_track_id") // media db에서 찾기
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
