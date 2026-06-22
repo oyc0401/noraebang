@@ -11,7 +11,7 @@ export class SongController {
 
   @Get()
   @ApiOkResponse({
-    description: "List TJ songs",
+    description: "tj 곡 조회",
     type: SongListResponseDto,
   })
   findAll(@Query() query: SongListQueryDto): Promise<SongListResponseDto> {

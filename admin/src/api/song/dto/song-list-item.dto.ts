@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 export class SongListItemDto {
-  @ApiProperty({ example: "52522" })
+  @ApiProperty({ description: "tj_song.id: TJ 노래방 번호", example: "52522" })
   tjNumber: string;
 
   @ApiProperty({ example: "踊" })

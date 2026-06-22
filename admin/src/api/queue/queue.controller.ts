@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Query } from "@nestjs/common";
-import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { RemoveSongQueueItemsRequestDto } from "./dto/remove-song-queue-items-request.dto";
 import { RemoveSongQueueItemsResponseDto } from "./dto/remove-song-queue-items-response.dto";
 import { SongQueueListQueryDto } from "./dto/song-queue-list-query.dto";
@@ -13,7 +13,7 @@ export class QueueController {
 
   @Get()
   @ApiOkResponse({
-    description: "List song queue items",
+    description: "최근곡 큐 조회",
     type: SongQueueListResponseDto,
   })
   findAll(
@@ -23,8 +23,9 @@ export class QueueController {
   }
 
   @Post("remove")
+  @ApiBody({ type: RemoveSongQueueItemsRequestDto })
   @ApiOkResponse({
-    description: "Remove selected song queue items by TJ numbers",
+    description: "최근곡 큐 삭제",
     type: RemoveSongQueueItemsResponseDto,
   })
   removeItems(

@@ -8,7 +8,7 @@ export class AppController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get()
-  @ApiOkResponse({ description: "Server health" })
+  @ApiOkResponse({ description: "기본 헬스체크" })
   getHealth() {
     return {
       service: "jpop-server",
@@ -17,7 +17,7 @@ export class AppController {
   }
 
   @Get("health/db")
-  @ApiOkResponse({ description: "Database connection health" })
+  @ApiOkResponse({ description: "DB 연결 헬스체크" })
   async getDatabaseHealth() {
     await this.prisma.$queryRaw`SELECT 1`;
 

@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 export class PushSongArtistQueueItemDto {
-  @ApiProperty({ example: "12345" })
+  @ApiProperty({ description: "tj_song.id: TJ 노래방 번호", example: "12345" })
   tjSongId: string;
 
   @ApiProperty({ example: "YOASOBI", required: false })

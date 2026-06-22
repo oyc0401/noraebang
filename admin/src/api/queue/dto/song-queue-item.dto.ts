@@ -1,10 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 export class SongQueueItemDto {
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ description: "song_queue.id: 신곡 큐 항목 ID", example: 1 })
   id: number;
 
-  @ApiProperty({ example: "12345" })
+  @ApiProperty({ description: "tj_song.id: TJ 노래방 번호", example: "12345" })
   tjNumber: string;
 
   @ApiProperty({ example: "夜に駆ける" })

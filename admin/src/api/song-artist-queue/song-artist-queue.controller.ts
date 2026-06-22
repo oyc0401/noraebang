@@ -1,5 +1,13 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from "@nestjs/common";
-import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from "@nestjs/common";
+import { ApiBody, ApiOkResponse, ApiParam, ApiTags } from "@nestjs/swagger";
 import { ConnectSongArtistQueueArtistRequestDto } from "./dto/connect-song-artist-queue-artist-request.dto";
 import { ConnectSongArtistQueueArtistResponseDto } from "./dto/connect-song-artist-queue-artist-response.dto";
 import { PushSongArtistQueueRequestDto } from "./dto/push-song-artist-queue-request.dto";
@@ -17,7 +25,7 @@ export class SongArtistQueueController {
 
   @Get()
   @ApiOkResponse({
-    description: "List song-artist queue items",
+    description: "곡-가수 큐 조회",
     type: SongArtistQueueListResponseDto,
   })
   findAll(
@@ -27,8 +35,9 @@ export class SongArtistQueueController {
   }
 
   @Post("push")
+  @ApiBody({ type: PushSongArtistQueueRequestDto })
   @ApiOkResponse({
-    description: "Push TJ song items into the song-artist queue",
+    description: "곡-가수큐에 노래 추가",
     type: PushSongArtistQueueResponseDto,
   })
   push(
@@ -37,15 +46,21 @@ export class SongArtistQueueController {
     return this.songArtistQueueService.pushItems(body?.items);
   }
 
-  @Post(":id/connect-artist")
+  @Post(":queueId/connect-artist")
+  @ApiParam({
+    name: "queueId",
+    description: "song_artist_queue.id: 곡-가수 큐 항목 ID",
+    example: 1,
+  })
+  @ApiBody({ type: ConnectSongArtistQueueArtistRequestDto })
   @ApiOkResponse({
-    description: "Connect a song-artist queue item to an existing artist",
+    description: "곡-가수큐 항목 하나를 기존 artist에 수동연결",
     type: ConnectSongArtistQueueArtistResponseDto,
   })
   connectArtist(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("queueId", ParseIntPipe) queueId: number,
     @Body() body: ConnectSongArtistQueueArtistRequestDto | undefined,
   ): Promise<ConnectSongArtistQueueArtistResponseDto> {
-    return this.songArtistQueueService.connectArtist(id, body?.artistName);
+    return this.songArtistQueueService.connectArtist(queueId, body?.artistName);
   }
 }

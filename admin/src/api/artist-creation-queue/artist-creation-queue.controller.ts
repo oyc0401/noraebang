@@ -7,7 +7,7 @@ import {
   ParseIntPipe,
   Post,
 } from "@nestjs/common";
-import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiOkResponse, ApiParam, ApiTags } from "@nestjs/swagger";
 import { ArtistCreationQueueService } from "./artist-creation-queue.service";
 import { ArtistCreationQueueListResponseDto } from "./dto/artist-creation-queue-list-response.dto";
 import { CreateArtistFromQueueRequestDto } from "./dto/create-artist-from-queue-request.dto";
@@ -25,7 +25,7 @@ export class ArtistCreationQueueController {
 
   @Get()
   @ApiOkResponse({
-    description: "List artist creation queue items",
+    description: "아티스트 생성 큐에 들어있는 정보를 얻는다.",
     type: ArtistCreationQueueListResponseDto,
   })
   findAll(): Promise<ArtistCreationQueueListResponseDto> {
@@ -33,8 +33,9 @@ export class ArtistCreationQueueController {
   }
 
   @Post("push")
+  @ApiBody({ type: PushArtistCreationQueueRequestDto })
   @ApiOkResponse({
-    description: "Push TJ song ids into the artist creation queue",
+    description: "아티스트 생성 큐에 tj번호를 넣는다.",
     type: PushArtistCreationQueueResponseDto,
   })
   push(
@@ -43,26 +44,37 @@ export class ArtistCreationQueueController {
     return this.artistCreationQueueService.pushTjSongIds(body?.tjSongIds);
   }
 
-  @Post(":id/create-artist")
+  @Post(":queueId/create-artist")
+  @ApiParam({
+    name: "queueId",
+    description: "artist_creation_queue.id: 아티스트 생성 큐 항목 ID",
+    example: 1,
+  })
+  @ApiBody({ type: CreateArtistFromQueueRequestDto })
   @ApiOkResponse({
-    description: "Create artist from edited form data",
+    description: "아티스트 생성 큐에 있는 특정 id의 아티스트를 생성한다.",
     type: CreateArtistFromQueueResponseDto,
   })
   createArtist(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("queueId", ParseIntPipe) queueId: number,
     @Body() body: CreateArtistFromQueueRequestDto | undefined,
   ): Promise<CreateArtistFromQueueResponseDto> {
-    return this.artistCreationQueueService.createArtist(id, body);
+    return this.artistCreationQueueService.createArtist(queueId, body);
   }
 
-  @Delete(":id")
+  @Delete(":queueId")
+  @ApiParam({
+    name: "queueId",
+    description: "artist_creation_queue.id: 삭제할 아티스트 생성 큐 항목 ID",
+    example: 1,
+  })
   @ApiOkResponse({
-    description: "Delete artist creation queue item",
+    description: "아티스트 생성 큐 항목 제거",
     type: DeleteArtistCreationQueueResponseDto,
   })
   deleteItem(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("queueId", ParseIntPipe) queueId: number,
   ): Promise<DeleteArtistCreationQueueResponseDto> {
-    return this.artistCreationQueueService.deleteItem(id);
+    return this.artistCreationQueueService.deleteItem(queueId);
   }
 }
