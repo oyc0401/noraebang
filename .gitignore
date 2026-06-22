@@ -50,3 +50,5 @@ Memo.private.md
 *.dump
 
 .legacy
+
+log.json

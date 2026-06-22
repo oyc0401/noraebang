@@ -280,8 +280,9 @@ export class ParserService {
   private async upsertSearchTjSong(song: TjSongInfo): Promise<boolean> {
     const existing = await this.prisma.tjSong.findUnique({
       where: { id: song.songNumber },
-      select: { id: true },
+      select: { id: true, publishdate: true },
     });
+    const collectedAt = new Date().toISOString();
 
     await this.prisma.tjSong.upsert({
       where: { id: song.songNumber },
@@ -295,6 +296,7 @@ export class ParserService {
         isMV: song.isMV,
         isOver60: song.isOver60,
         youtubeLink: song.youtubeLink || null,
+        publishdate: collectedAt,
       },
       update: {
         title: song.title,
@@ -305,6 +307,7 @@ export class ParserService {
         isMV: song.isMV,
         isOver60: song.isOver60,
         youtubeLink: song.youtubeLink || null,
+        publishdate: existing?.publishdate ?? collectedAt,
       },
     });
 

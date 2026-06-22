@@ -154,11 +154,9 @@ function buildWhereSql({
               or artist.name_ko ilike ${keyword}
               or artist.name_ja ilike ${keyword}
               or artist.name_ja_kana ilike ${keyword}
-              or artist.name_ja_kanji ilike ${keyword}
               or artist.name_latin ilike ${keyword}
               or artist.name_ja_pronu ilike ${keyword}
               or artist.tj_name ilike ${keyword}
-              or artist.tj_name_ja ilike ${keyword}
             )
         )
       )

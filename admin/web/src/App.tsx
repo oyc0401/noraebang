@@ -15,6 +15,7 @@ type AdminRoute =
 
 function App() {
   const route = getAdminRoute();
+  document.title = getDocumentTitle(route);
 
   if (route === "data") {
     return <DataPage />;
@@ -39,45 +40,103 @@ function App() {
   return <AdminHomePage />;
 }
 
+function getDocumentTitle(route: AdminRoute): string {
+  if (route === "data") {
+    return "Admin - 신곡 수집";
+  }
+
+  if (route === "queue") {
+    return "Admin - 신곡 큐";
+  }
+
+  if (route === "song") {
+    return "Admin - Song";
+  }
+
+  if (route === "song-artist-queue") {
+    return "Admin - 곡-가수 큐";
+  }
+
+  if (route === "artist-creation-queue") {
+    return "Admin - 가수 생성 큐";
+  }
+
+  return "Admin - 대시보드";
+}
+
 function AdminHomePage() {
   return (
     <main className="max-w-5xl p-6 text-gray-950">
       <h1 className="text-2xl font-semibold">JPOP Admin</h1>
-      <p className="mt-2 text-gray-600">관리 작업 화면으로 이동합니다.</p>
+      <p className="mt-2 text-gray-600">어드민 페이지 대시보드</p>
 
-      <nav aria-label="Admin navigation" className="mt-7">
-        <a
-          className="inline-block cursor-pointer border border-gray-900 px-3 py-2 text-gray-950 hover:bg-gray-100"
-          href="/admin/data"
-        >
-          데이터 수집 작업
-        </a>
-        <a
-          className="ml-2 inline-block cursor-pointer border border-gray-900 px-3 py-2 text-gray-950 hover:bg-gray-100"
-          href="/admin/song"
-        >
-          전체 곡
-        </a>
-        <a
-          className="ml-2 inline-block cursor-pointer border border-gray-900 px-3 py-2 text-gray-950 hover:bg-gray-100"
-          href="/admin/queue"
-        >
-          노래 큐 상태
-        </a>
-        <a
-          className="ml-2 inline-block cursor-pointer border border-gray-900 px-3 py-2 text-gray-950 hover:bg-gray-100"
-          href="/admin/song-artist-queue"
-        >
-          가수있는곡큐 상태
-        </a>
-        <a
-          className="ml-2 inline-block cursor-pointer border border-gray-900 px-3 py-2 text-gray-950 hover:bg-gray-100"
-          href="/admin/artist-creation-queue"
-        >
-          가수생성큐 상태
-        </a>
+      <nav aria-label="Admin navigation" className="mt-7 grid gap-8">
+        <section aria-labelledby="data-section-heading">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 id="data-section-heading" className="text-lg font-semibold">
+              데이터 조회
+            </h2>
+            <a
+              className="text-sm text-gray-600 underline"
+              href="http://localhost:3002/api/docs"
+            >
+              http://localhost:3002/api/docs
+            </a>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <AdminLink href="/admin/song">Song</AdminLink>
+          </div>
+        </section>
+
+        <section aria-labelledby="collection-section-heading">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2
+              id="collection-section-heading"
+              className="text-lg font-semibold"
+            >
+              Collection
+            </h2>
+            <a
+              className="text-sm text-gray-600 underline"
+              href="http://localhost:3002/api/docs/collection"
+            >
+              http://localhost:3002/api/docs/collection
+            </a>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <AdminLink href="/admin/data">신곡 수집</AdminLink>
+            <AdminLink href="/admin/queue">신곡 큐</AdminLink>
+            <AdminLink href="/admin/song-artist-queue">곡-가수 큐</AdminLink>
+            <AdminLink href="/admin/artist-creation-queue">
+              가수 생성 큐
+            </AdminLink>
+          </div>
+        </section>
       </nav>
+
+      <section aria-labelledby="database-section-heading" className="mt-8">
+        <h2 id="database-section-heading" className="text-lg font-semibold">
+          Database
+        </h2>
+        <a
+          className="mt-3 inline-block text-sm text-gray-600 underline"
+          href="http://localhost:8080/?pgsql=host.docker.internal&username=postgres&db=jpop&ns=public"
+        >
+          http://localhost:8080/?pgsql=host.docker.internal&username=postgres&db=jpop&ns=public
+        </a>
+      </section>
     </main>
+  );
+}
+
+function AdminLink({ children, href }: { children: string; href: string }) {
+  return (
+    <a
+      className="inline-block cursor-pointer border border-gray-900 px-3 py-2 text-gray-950 hover:bg-gray-100"
+      href={href}
+    >
+      {children}
+    </a>
   );
 }
 
