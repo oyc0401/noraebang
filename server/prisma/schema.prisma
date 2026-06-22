@@ -7,34 +7,34 @@ datasource db {
 }
 
 model Artist {
-  id                     Int          @id @default(autoincrement())
-  homeCatalog            String?      @map("home_catalog")
-  name                   String // 그냥 이름
-  nameKo                 String       @map("name_ko") // ai 돌려서 
-  nameJa                 String?      @map("name_ja") // 일본어면 걍 넣기
-  nameJaKana             String?      @map("name_ja_kana") // 일본어 가나버전
-  nameJaPronu            String?      @map("name_ja_pronu") // kanabarum으로 만들기
-  nameLatin              String?      @map("name_latin") // 영어면 걍 넣기
-  nameLatinPronu         String?      @map("name_latin_pronu") // konglish로 만들기
-  tjName                 String?      @map("tj_name") // tj이름 그대로
+  id             Int     @id @default(autoincrement())
+  homeCatalog    String? @map("home_catalog")
+  name           String // 그냥 이름
+  nameKo         String  @map("name_ko") // ai 돌려서 
+  nameJa         String? @map("name_ja") // 일본어면 걍 넣기
+  nameJaKana     String? @map("name_ja_kana") // 일본어 가나버전
+  nameJaPronu    String? @map("name_ja_pronu") // kanabarum으로 만들기
+  nameLatin      String? @map("name_latin") // 영어면 걍 넣기
+  nameLatinPronu String? @map("name_latin_pronu") // konglish로 만들기
+  tjName         String? @map("tj_name") // tj이름 그대로
 
-  slug                   String?      @unique // ai 돌리고, 유니크 테스트
+  slug String? @unique // ai 돌리고, 유니크 테스트
 
-  youtube_channel        String?      @map("youtube_channel") // 유튜브 db에서 찾기
-  youtube_topic_channel  String?      @map("youtube_topic_channel") // 토픽채널 찾기 파이프라인
-  spotifyId              String?      @map("spotify_id") // 스포티파이 검색하기
+  youtube_channel       String? @map("youtube_channel") // 유튜브 db에서 찾기
+  youtube_topic_channel String? @map("youtube_topic_channel") // 토픽채널 찾기 파이프라인
+  spotifyId             String? @map("spotify_id") // 스포티파이 검색하기
 
-  thumbnailDefault       String?      @map("thumbnail_default") // 유튜브에서 찾기
-  thumbnailHigh          String?      @map("thumbnail_high")  // 유튜브에서 찾기
-  thumbnailMedium        String?      @map("thumbnail_medium")  // 유튜브에서 찾기
+  thumbnailDefault String? @map("thumbnail_default") // 유튜브에서 찾기
+  thumbnailHigh    String? @map("thumbnail_high") // 유튜브에서 찾기
+  thumbnailMedium  String? @map("thumbnail_medium") // 유튜브에서 찾기
 
-  spotifyTracksFetchedAt DateTime?    @map("spotify_tracks_fetched_at")
-  youtubeTracksFetchedAt DateTime?    @map("youtube_tracks_fetched_at")
+  spotifyTracksFetchedAt DateTime? @map("spotify_tracks_fetched_at")
+  youtubeTracksFetchedAt DateTime? @map("youtube_tracks_fetched_at")
 
-  createdAt              DateTime     @default(now()) @map("created_at")
-  updatedAt              DateTime     @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  artistSongs            ArtistSong[]
+  artistSongs ArtistSong[]
 
   @@index([spotifyId])
   @@index([homeCatalog])
@@ -42,35 +42,35 @@ model Artist {
 }
 
 model Song {
-  id                  Int          @id @default(autoincrement())
-  title               String
-  titleKo             String?      @map("title_ko")
-  titleJa             String?      @map("title_ja")
-  titleJaPronu        String?      @map("title_ja_pronu")
-  titleJaKana         String?      @map("title_ja_kana")
-  titleJaKanji        String?      @map("title_ja_kanji")
-  titleLatin          String?      @map("title_latin")
-  titleLatinPronu     String?      @map("title_latin_pronu")
-  youtubeVideoId      String?      @map("youtube_video_id")
-  youtubeFetchedAt    DateTime?    @map("youtube_fetched_at")
+  id               Int       @id @default(autoincrement())
+  title            String
+  titleKo          String?   @map("title_ko")
+  titleJa          String?   @map("title_ja")
+  titleJaPronu     String?   @map("title_ja_pronu")
+  titleJaKana      String?   @map("title_ja_kana")
+  titleJaKanji     String?   @map("title_ja_kanji")
+  titleLatin       String?   @map("title_latin")
+  titleLatinPronu  String?   @map("title_latin_pronu")
+  youtubeVideoId   String?   @map("youtube_video_id")
+  youtubeFetchedAt DateTime? @map("youtube_fetched_at")
 
-  createdAt           DateTime     @default(now()) @map("created_at")
-  updatedAt           DateTime     @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  thumbnailDefault    String?      @map("thumbnail_default")
-  thumbnailHigh       String?      @map("thumbnail_high")
-  thumbnailMedium     String?      @map("thumbnail_medium")
+  thumbnailDefault String? @map("thumbnail_default")
+  thumbnailHigh    String? @map("thumbnail_high")
+  thumbnailMedium  String? @map("thumbnail_medium")
 
-  catalog             String?
+  catalog String?
 
-  spotifyTrackGroupId Int?         @map("spotify_track_group_id")
-  tjSongId            String?      @unique @map("tj_song_id")
-  
-  score               Float?       @map("score")
- 
-  visible             Boolean      @default(false)
-  artistSongs         ArtistSong[]
-  tjSong              TjSong?      @relation(fields: [tjSongId], references: [id])
+  spotifyTrackGroupId Int?    @map("spotify_track_group_id")
+  tjSongId            String? @unique @map("tj_song_id")
+
+  score Float? @map("score")
+
+  visible     Boolean      @default(false)
+  artistSongs ArtistSong[]
+  tjSong      TjSong?      @relation(fields: [tjSongId], references: [id])
 
   @@index([youtubeVideoId])
   @@index([catalog])
@@ -136,33 +136,63 @@ model SongArtistQueue {
 }
 
 model ArtistCreationQueue {
-  id                  Int      @id @default(autoincrement())
-  tjSongId            String?  @unique @map("tj_song_id")
+  id       Int     @id @default(autoincrement())
+  tjSongId String? @unique @map("tj_song_id")
 
-  homeCatalog            String?      @map("home_catalog") // 아마 jpop
-  name                   String // ai 돌려서 이름 정규화
-  nameKo                 String       @map("name_ko") // ai 돌려서 
-  nameJa                 String?      @map("name_ja") // 일본어면 걍 넣기
-  nameJaKana             String?      @map("name_ja_kana") // 일본어 가나버전
-  nameJaPronu            String?      @map("name_ja_pronu") // kanabarum으로 만들기
-  nameLatin              String?      @map("name_latin") // 영어면 걍 넣기
-  nameLatinPronu         String?      @map("name_latin_pronu") // konglish로 만들기
-  tjName                 String?      @map("tj_name") // tj이름 그대로
+  homeCatalog    String? @map("home_catalog") // 아마 jpop
+  name           String // 그대로 넘기기
+  nameKo         String  @map("name_ko") // ai 돌려서 
+  nameJa         String? @map("name_ja") // 일본어면 걍 넣기
+  nameJaKana     String? @map("name_ja_kana") // 일본어 가나버전
+  nameJaPronu    String? @map("name_ja_pronu") // kanabarum으로 만들기
+  nameLatin      String? @map("name_latin") // 영어면 걍 넣기
+  nameLatinPronu String? @map("name_latin_pronu") // konglish로 만들기
+  tjName         String? @map("tj_name") // tj이름 그대로
 
-  slug                   String?      @unique // ai 돌리고, 유니크 테스트
+  slug String? @unique // ai 돌리고, 유니크 테스트
 
-  youtube_channel        String?      @map("youtube_channel")  // 유튜브 db에서 찾기
-  youtube_topic_channel  String?      @map("youtube_topic_channel") // 유튜브 db에서 찾기
-  spotifyId              String?      @map("spotify_id") // 스포티파이 검색하기
+  youtube_channel       String? @map("youtube_channel") // 유튜브 db에서 찾기
+  youtube_topic_channel String? @map("youtube_topic_channel") // 유튜브 db에서 찾기
+  spotifyId             String? @map("spotify_id") // 스포티파이 검색하기
 
-  thumbnailDefault       String?      @map("thumbnail_default")  // 유튜브에서 찾기
-  thumbnailHigh          String?      @map("thumbnail_high")  // 유튜브에서 찾기
-  thumbnailMedium        String?      @map("thumbnail_medium")  // 유튜브에서 찾기
+  thumbnailDefault String? @map("thumbnail_default") // 유튜브에서 찾기
+  thumbnailHigh    String? @map("thumbnail_high") // 유튜브에서 찾기
+  thumbnailMedium  String? @map("thumbnail_medium") // 유튜브에서 찾기
 
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("artist_creation_queue")
+}
+
+model SongCreationQueue {
+  id       Int     @id @default(autoincrement())
+  tjSongId String? @unique @map("tj_song_id")
+
+  catalog String?
+
+  title           String // 그냥 넘기기
+  titleKo         String? @map("title_ko") // ai 돌려서
+  titleJa         String? @map("title_ja") // 일본어면 걍 넣기
+  titleJaPronu    String? @map("title_ja_pronu") // kanabarum으로 만들기
+  titleJaKana     String? @map("title_ja_kana") // 일본어 가나버전
+  titleJaKanji    String? @map("title_ja_kanji") // 일본어 한자버전
+  titleLatin      String? @map("title_latin") // 영어면 걍 넣기
+  titleLatinPronu String? @map("title_latin_pronu") // konglish로 만들기
+  tjTitle         String? @map("tj_title") // tj제목 그대로
+  tjArtist        String? @map("tj_artist") // tj가수 그대로
+
+  youtubeVideoId   String?   @map("youtube_video_id") // 유튜브에서 찾기
+  thumbnailDefault String? @map("thumbnail_default") // 유튜브에서 찾기
+  thumbnailHigh    String? @map("thumbnail_high") // 유튜브에서 찾기
+  thumbnailMedium  String? @map("thumbnail_medium") // 유튜브에서 찾기
+
+  spotifyTrackId Int?    @map("spotify_track_id") // 스포티파이 검색
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("song_creation_queue")
 }
 
 model User {
