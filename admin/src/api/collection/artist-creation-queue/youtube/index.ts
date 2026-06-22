@@ -1,4 +1,7 @@
-import { fetchYoutubeChannel, searchYoutubeChannels } from "../../../youtube";
+import {
+  fetchYoutubeChannel,
+  searchYoutubeChannels,
+} from "../../../../youtube";
 
 export type YoutubeChannelResult = {
   main?: string;

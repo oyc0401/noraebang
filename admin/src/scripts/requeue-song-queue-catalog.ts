@@ -4,7 +4,7 @@ import "dotenv/config";
 // song_queue.catalog가 비어 있는 항목을 pushRecentSongQueue로 다시 넣어서
 // 라이브 파이프라인(resolveCatalog)이 그대로 재계산하게 한다.
 
-import { ParserService } from "../api/parser/parser.service";
+import { ParserService } from "../api/collection/parser/parser.service";
 import { PrismaService } from "../prisma/prisma.service";
 
 const shouldApply = process.argv.includes("--apply");

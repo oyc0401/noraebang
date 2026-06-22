@@ -11,7 +11,7 @@
  * 28397 / 天ノ弱 / 164(Feat.GUMI)GUMI
  */
 import "dotenv/config";
-import { PrismaService } from "../../prisma/prisma.service";
+import { PrismaService } from "../../../prisma/prisma.service";
 import { ArtistCreationQueueManager } from "./artist-creation-queue.manager";
 
 const tjsongNumber = "28397";

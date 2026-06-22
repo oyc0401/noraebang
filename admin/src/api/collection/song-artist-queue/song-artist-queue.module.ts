@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { PrismaModule } from "../../prisma/prisma.module";
+import { PrismaModule } from "../../../prisma/prisma.module";
 import { SongArtistQueueController } from "./song-artist-queue.controller";
 import { SongArtistQueueService } from "./song-artist-queue.service";
 

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { Catalog, getCatalog } from "../../lib/getCatalog";
-import { JpopTjArtistIndex } from "../../lib/jpopTjArtistIndex";
-import { PrismaService } from "../../prisma/prisma.service";
+import { Catalog, getCatalog } from "../../../lib/getCatalog";
+import { JpopTjArtistIndex } from "../../../lib/jpopTjArtistIndex";
+import { PrismaService } from "../../../prisma/prisma.service";
 import {
   fetchTjNewSongsByYearMonth,
   getLastExecutedAt,
@@ -9,7 +9,7 @@ import {
   recordExecution,
   type TjSongData,
   type TjSongInfo,
-} from "../../tj";
+} from "../../../tj";
 import { ParserLogResponseDto } from "./dto/parser-log-response.dto";
 
 type RecentParserResult = {
@@ -130,11 +130,7 @@ export class ParserService {
       throw new Error(`TjSong ${tjNumber} not found.`);
     }
 
-    const catalog = await this.resolveCatalog(
-      song.title,
-      song.artist,
-      song.id,
-    );
+    const catalog = await this.resolveCatalog(song.title, song.artist, song.id);
 
     await this.prisma.songQueue.upsert({
       where: { tjNumber: song.id },
@@ -160,9 +156,9 @@ export class ParserService {
     artist: string | null,
     tjNumber: string,
   ): Promise<Catalog | null> {
-    const jpopArtistId = (
-      await this.getJpopTjArtistIndex()
-    ).findJpopArtistId(artist);
+    const jpopArtistId = (await this.getJpopTjArtistIndex()).findJpopArtistId(
+      artist,
+    );
 
     if (jpopArtistId !== null) {
       return "JPOP";
@@ -317,7 +313,8 @@ export class ParserService {
 
   private getPreviousYearMonth(): string {
     const now = new Date();
-    const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const year =
+      now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
     const month = now.getMonth() === 0 ? 12 : now.getMonth();
 
     return `${year}${String(month).padStart(2, "0")}`;

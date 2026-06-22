@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../../prisma/prisma.service";
+import { PrismaService } from "../../../prisma/prisma.service";
 import { toHiragana } from "./ja";
 import { getNameKo } from "./name-generater";
 import { getJaPron, getLatinPron } from "./pron";

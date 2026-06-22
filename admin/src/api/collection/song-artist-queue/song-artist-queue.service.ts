@@ -3,8 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { JpopTjArtistIndex } from "../../lib/jpopTjArtistIndex";
-import { PrismaService } from "../../prisma/prisma.service";
+import { JpopTjArtistIndex } from "../../../lib/jpopTjArtistIndex";
+import { PrismaService } from "../../../prisma/prisma.service";
 import { ConnectSongArtistQueueArtistResponseDto } from "./dto/connect-song-artist-queue-artist-response.dto";
 import { PushSongArtistQueueResponseDto } from "./dto/push-song-artist-queue-response.dto";
 import {

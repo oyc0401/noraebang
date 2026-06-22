@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import { PrismaService } from "../../prisma/prisma.service";
+import { PrismaService } from "../../../prisma/prisma.service";
 import { ArtistCreationQueueListResponseDto } from "./dto/artist-creation-queue-list-response.dto";
 import { CreateArtistFromQueueRequestDto } from "./dto/create-artist-from-queue-request.dto";
 import { CreateArtistFromQueueResponseDto } from "./dto/create-artist-from-queue-response.dto";

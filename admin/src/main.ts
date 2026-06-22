@@ -2,7 +2,14 @@ import { join } from "node:path";
 import { NestFactory } from "@nestjs/core";
 import { type NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { AdminPageModule } from "./admin-page/admin-page.module";
 import { AppModule } from "./app.module";
+import { ArtistCreationQueueModule } from "./api/collection/artist-creation-queue/artist-creation-queue.module";
+import { ParserModule } from "./api/collection/parser/parser.module";
+import { QueueModule } from "./api/collection/queue/queue.module";
+import { SongArtistQueueModule } from "./api/collection/song-artist-queue/song-artist-queue.module";
+import { SongModule } from "./api/song/song.module";
+import { HealthModule } from "./api/health/health.module";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -36,8 +43,27 @@ async function bootstrap() {
     .setVersion("1.0")
     .addBearerAuth()
     .build();
-  const document = SwaggerModule.createDocument(app, config);
+
+  const collectionConfig = new DocumentBuilder()
+    .setTitle("JPOP Admin Collection API")
+    .setDescription("TJ 곡 수집부터 큐 처리까지의 collection API")
+    .setVersion("1.0")
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config, {
+    include: [HealthModule, AdminPageModule, SongModule],
+  });
+  const collectionDocument = SwaggerModule.createDocument(app, collectionConfig, {
+    include: [
+      ParserModule,
+      QueueModule,
+      SongArtistQueueModule,
+      ArtistCreationQueueModule,
+    ],
+  });
   SwaggerModule.setup("api/docs", app, document);
+  SwaggerModule.setup("api/docs/collection", app, collectionDocument);
   app.useStaticAssets(join(process.cwd(), "public", "admin"), {
     prefix: "/admin",
   });

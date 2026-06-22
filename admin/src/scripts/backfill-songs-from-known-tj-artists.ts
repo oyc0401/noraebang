@@ -3,7 +3,7 @@ import "dotenv/config";
 // Apply: cd admin && pnpm ts-node src/scripts/backfill-songs-from-known-tj-artists.ts --apply
 // 기존 JPOP Song의 TJ artist와 같은 미생성 TJ 곡을 큐 매니저로 넣는다.
 
-import { ParserService } from "../api/parser/parser.service";
+import { ParserService } from "../api/collection/parser/parser.service";
 import { JpopTjArtistIndex } from "../lib/jpopTjArtistIndex";
 import { PrismaService } from "../prisma/prisma.service";
 
