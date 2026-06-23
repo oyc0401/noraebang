@@ -13,7 +13,8 @@ export type YoutubeVideoMatch = {
   thumbnailDefault: string | null;
   thumbnailMedium: string | null;
   thumbnailHigh: string | null;
-  isBestMatch: boolean;
+  viewCount: string | null;
+  likeCount: string | null;
 };
 
 type YoutubeVideoRow = {
@@ -25,6 +26,8 @@ type YoutubeVideoRow = {
   thumbnail_default: string | null;
   thumbnail_medium: string | null;
   thumbnail_high: string | null;
+  view_count: string | null;
+  like_count: string | null;
 };
 
 // tjTitle과 artistId로 아티스트의 유튜브 채널들을 찾고, 그 채널의 영상들 중에서 제목이 일치하는 영상들을 모두 찾는다.
@@ -93,7 +96,9 @@ async function findYoutubeVideosByChannel(
           published_at,
           thumbnail_default,
           thumbnail_medium,
-          thumbnail_high
+          thumbnail_high,
+          view_count,
+          like_count
         from youtube_video
         where channel_id = any($1::text[])
         order by published_at desc nulls last, updated_at desc
@@ -135,17 +140,14 @@ function matchVideosToTitle(
     if (!answer && candidate.length === 0) continue;
 
     for (const video of bucket) {
-      matches.push(toMatch(video, answer !== null));
+      matches.push(toMatch(video));
     }
   }
 
   return matches;
 }
 
-function toMatch(
-  row: YoutubeVideoRow,
-  isBestMatch: boolean,
-): YoutubeVideoMatch {
+function toMatch(row: YoutubeVideoRow): YoutubeVideoMatch {
   return {
     id: row.id,
     channelId: row.channel_id,
@@ -155,7 +157,8 @@ function toMatch(
     thumbnailDefault: row.thumbnail_default,
     thumbnailMedium: row.thumbnail_medium,
     thumbnailHigh: row.thumbnail_high,
-    isBestMatch,
+    viewCount: row.view_count,
+    likeCount: row.like_count,
   };
 }
 

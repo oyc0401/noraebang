@@ -11,7 +11,6 @@ export type SpotifyTrackMatch = {
   durationMs: number | null;
   releaseDate: string | null;
   albumImages: string[];
-  isBestMatch: boolean;
 };
 
 type SpotifyTrackRow = {
@@ -123,17 +122,14 @@ function matchTracksToTitle(
     if (!answer && candidate.length === 0) continue;
 
     for (const track of bucket) {
-      matches.push(toMatch(track, answer !== null));
+      matches.push(toMatch(track));
     }
   }
 
   return matches;
 }
 
-function toMatch(
-  row: SpotifyTrackRow,
-  isBestMatch: boolean,
-): SpotifyTrackMatch {
+function toMatch(row: SpotifyTrackRow): SpotifyTrackMatch {
   return {
     id: row.id,
     name: normalizeNullable(row.name) ?? "",
@@ -141,7 +137,6 @@ function toMatch(
     durationMs: row.duration_ms,
     releaseDate: row.release_date,
     albumImages: row.album_images ?? [],
-    isBestMatch,
   };
 }
 

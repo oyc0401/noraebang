@@ -153,8 +153,7 @@ async function findLatinTitleFromMusicBrainz(
 ): Promise<string | null> {
   const isrcs = Array.from(
     new Set(
-      [...spotifyMatches]
-        .sort((a, b) => Number(b.isBestMatch) - Number(a.isBestMatch))
+      spotifyMatches
         .map((match) => match.isrc)
         .filter((isrc): isrc is string => Boolean(isrc)),
     ),
@@ -190,15 +189,14 @@ async function findLatinTitleFromMusicBrainz(
   return null;
 }
 
-function mergeById<T extends { id: string; isBestMatch: boolean }>(
+function mergeById<T extends { id: string }>(
   ...lists: T[][]
 ): T[] {
   const byId = new Map<string, T>();
 
   for (const list of lists) {
     for (const item of list) {
-      const existing = byId.get(item.id);
-      if (!existing || (item.isBestMatch && !existing.isBestMatch)) {
+      if (!byId.has(item.id)) {
         byId.set(item.id, item);
       }
     }
