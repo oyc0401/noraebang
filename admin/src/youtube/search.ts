@@ -1,8 +1,3 @@
-import {
-  buildSearchCacheKey,
-  getCachedYoutubeSearch,
-  saveYoutubeSearchCache,
-} from "./cache";
 import { getYoutubeKeyManager } from "./keys/index";
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
@@ -86,16 +81,6 @@ export async function searchYoutubeVideos(
 
   const clampedResults = Math.min(Math.max(maxResults, 1), 50);
 
-  const cacheKey = buildSearchCacheKey(
-    channelId ? `${query.trim()}::channel:${channelId}` : query,
-    clampedResults,
-  );
-
-  const cached = await getCachedYoutubeSearch(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
   const keyManager = await getYoutubeKeyManager();
   return keyManager.reuseWithRetry(async (apiKey) => {
     const url = new URL(`${YOUTUBE_API_BASE}/search`);
@@ -129,8 +114,6 @@ export async function searchYoutubeVideos(
         `YouTube video search request failed (status ${response.status})`,
       );
     }
-    const payload = (await response.json()) as YoutubeVideoSearchResponse;
-    await saveYoutubeSearchCache(cacheKey, payload);
-    return payload;
+    return (await response.json()) as YoutubeVideoSearchResponse;
   });
 }

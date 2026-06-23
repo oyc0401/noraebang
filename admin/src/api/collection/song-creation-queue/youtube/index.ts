@@ -4,11 +4,6 @@ import { Client } from "pg";
 import { normalizeTitle } from "../../../../lib/normalizer";
 import { findBestMatch } from "../../../../lib/text-matcher";
 
-export type SearchYoutubeVideoTjSong = {
-  title: string;
-  artistId: number;
-};
-
 export type YoutubeVideoMatch = {
   id: string;
   channelId: string | null;
@@ -32,17 +27,18 @@ type YoutubeVideoRow = {
   thumbnail_high: string | null;
 };
 
-// tjSong과 artistId로 아티스트의 유튜브 채널들을 찾고, 그 채널의 영상들 중에서 제목이 일치하는 영상들을 찾는다.
+// tjTitle과 artistId로 아티스트의 유튜브 채널들을 찾고, 그 채널의 영상들 중에서 제목이 일치하는 영상들을 모두 찾는다.
 export async function searchYoutubeVideo(
-  tjSong: SearchYoutubeVideoTjSong,
+  tjTitle: string,
+  artistId: number,
 ): Promise<YoutubeVideoMatch[]> {
-  const title = normalizeNullable(tjSong.title);
+  const title = normalizeNullable(tjTitle);
 
   if (!title) {
     return [];
   }
 
-  const channelIds = await getArtistYoutubeChannelIds(tjSong.artistId);
+  const channelIds = await getArtistYoutubeChannelIds(artistId);
 
   if (channelIds.length === 0) {
     return [];
@@ -127,30 +123,29 @@ function matchVideosToTitle(
     videosByNormalizedTitle.set(normalizedTitle, bucket);
   }
 
-  const candidateTitles = Array.from(videosByNormalizedTitle.keys());
-
-  if (candidateTitles.length === 0) {
-    return [];
-  }
-
-  const { answer, candidate } = findBestMatch(
-    normalizeTitle(songTitle),
-    candidateTitles,
-  );
-
+  const normalizedSongTitle = normalizeTitle(songTitle);
   const matches: YoutubeVideoMatch[] = [];
 
-  for (const normalizedTitle of answer ? [answer, ...candidate] : candidate) {
-    const bucket = videosByNormalizedTitle.get(normalizedTitle) ?? [];
+  // distinct 제목마다 1:1로 비교 → findBestMatch의 후보 5개 캡에 안 걸리고 전부 모음
+  for (const [normalizedTitle, bucket] of videosByNormalizedTitle) {
+    const { answer, candidate } = findBestMatch(normalizedSongTitle, [
+      normalizedTitle,
+    ]);
+
+    if (!answer && candidate.length === 0) continue;
+
     for (const video of bucket) {
-      matches.push(toMatch(video, normalizedTitle === answer));
+      matches.push(toMatch(video, answer !== null));
     }
   }
 
   return matches;
 }
 
-function toMatch(row: YoutubeVideoRow, isBestMatch: boolean): YoutubeVideoMatch {
+function toMatch(
+  row: YoutubeVideoRow,
+  isBestMatch: boolean,
+): YoutubeVideoMatch {
   return {
     id: row.id,
     channelId: row.channel_id,

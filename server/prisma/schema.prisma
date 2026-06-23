@@ -51,7 +51,7 @@ model Song {
   titleJaKanji     String?   @map("title_ja_kanji")
   titleLatin       String?   @map("title_latin")
   titleLatinPronu  String?   @map("title_latin_pronu")
-  youtubeVideoId   String?   @map("youtube_video_id")
+  youtubeVideoIds  String[]  @default([]) @map("youtube_video_ids")
   youtubeFetchedAt DateTime? @map("youtube_fetched_at")
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -63,8 +63,8 @@ model Song {
 
   catalog String?
 
-  spotifyTrackGroupId Int?    @map("spotify_track_group_id")
-  tjSongId            String? @unique @map("tj_song_id")
+  spotifyTrackIds Int[]   @default([]) @map("spotify_track_ids")
+  tjSongId        String? @unique @map("tj_song_id")
 
   score Float? @map("score")
 
@@ -72,9 +72,7 @@ model Song {
   artistSongs ArtistSong[]
   tjSong      TjSong?      @relation(fields: [tjSongId], references: [id])
 
-  @@index([youtubeVideoId])
   @@index([catalog])
-  @@index([spotifyTrackGroupId])
   @@index([tjSongId])
   @@map("song")
 }
