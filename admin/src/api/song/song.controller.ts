@@ -18,7 +18,10 @@ import { ArtistListQueryDto } from "./dto/artist-list-query.dto";
 import { ArtistListResponseDto } from "./dto/artist-list-response.dto";
 import { ArtistSongsQueryDto } from "./dto/artist-songs-query.dto";
 import { ArtistSongsResponseDto } from "./dto/artist-songs-response.dto";
+import { DeleteArtistResponseDto } from "./dto/delete-artist-response.dto";
 import { DeleteSongResponseDto } from "./dto/delete-song-response.dto";
+import { UpdateArtistRequestDto } from "./dto/update-artist-request.dto";
+import { UpdateArtistResponseDto } from "./dto/update-artist-response.dto";
 import { UpdateSongRequestDto } from "./dto/update-song-request.dto";
 import { UpdateSongResponseDto } from "./dto/update-song-response.dto";
 import { SongService } from "./song.service";
@@ -57,6 +60,24 @@ export class SongController {
     return this.songService.findArtistSongs(artistId, query);
   }
 
+  @Patch("artists/:artistId")
+  @ApiParam({
+    name: "artistId",
+    description: "artist.id: 수정할 아티스트 ID",
+    example: 140,
+  })
+  @ApiBody({ type: UpdateArtistRequestDto })
+  @ApiOkResponse({
+    description: "아티스트 수정. 포함된 필드만 반영한다.",
+    type: UpdateArtistResponseDto,
+  })
+  updateArtist(
+    @Param("artistId", ParseIntPipe) artistId: number,
+    @Body() body: UpdateArtistRequestDto | undefined,
+  ): Promise<UpdateArtistResponseDto> {
+    return this.songService.updateArtist(artistId, body);
+  }
+
   @Patch(":songId")
   @ApiParam({
     name: "songId",
@@ -74,6 +95,22 @@ export class SongController {
     @Body() body: UpdateSongRequestDto | undefined,
   ): Promise<UpdateSongResponseDto> {
     return this.songService.updateSong(songId, body);
+  }
+
+  @Delete("artists/:artistId")
+  @ApiParam({
+    name: "artistId",
+    description: "artist.id: 삭제할 아티스트 ID",
+    example: 140,
+  })
+  @ApiOkResponse({
+    description: "아티스트 삭제. 연결된 곡도 모두 함께 삭제한다.",
+    type: DeleteArtistResponseDto,
+  })
+  deleteArtist(
+    @Param("artistId", ParseIntPipe) artistId: number,
+  ): Promise<DeleteArtistResponseDto> {
+    return this.songService.deleteArtist(artistId);
   }
 
   @Delete(":songId")

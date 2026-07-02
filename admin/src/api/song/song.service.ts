@@ -17,7 +17,10 @@ import {
   SongSpotifyTrackDto,
   SongYoutubeVideoDto,
 } from "./dto/artist-songs-response.dto";
+import { DeleteArtistResponseDto } from "./dto/delete-artist-response.dto";
 import { DeleteSongResponseDto } from "./dto/delete-song-response.dto";
+import { UpdateArtistRequestDto } from "./dto/update-artist-request.dto";
+import { UpdateArtistResponseDto } from "./dto/update-artist-response.dto";
 import { UpdateSongRequestDto } from "./dto/update-song-request.dto";
 import { UpdateSongResponseDto } from "./dto/update-song-response.dto";
 import {
@@ -99,6 +102,7 @@ export class SongService {
           include: {
             youtubeVideos: { orderBy: { id: "asc" } },
             spotifyTracks: { orderBy: { id: "asc" } },
+            tjSong: { select: { title: true, artist: true } },
           },
         },
       },
@@ -134,14 +138,18 @@ export class SongService {
         nameKo: artist.nameKo,
         nameJa: artist.nameJa ?? undefined,
         nameJaKana: artist.nameJaKana ?? undefined,
+        nameJaPronu: artist.nameJaPronu ?? undefined,
         nameLatin: artist.nameLatin ?? undefined,
+        nameLatinPronu: artist.nameLatinPronu ?? undefined,
         tjName: artist.tjName ?? undefined,
         slug: artist.slug ?? undefined,
         homeCatalog: artist.homeCatalog ?? undefined,
         youtubeChannel: artist.youtube_channel ?? undefined,
         youtubeTopicChannel: artist.youtube_topic_channel ?? undefined,
         spotifyId: artist.spotifyId ?? undefined,
+        thumbnailDefault: artist.thumbnailDefault ?? undefined,
         thumbnailMedium: artist.thumbnailMedium ?? undefined,
+        thumbnailHigh: artist.thumbnailHigh ?? undefined,
       },
       data: songs.map((song) => ({
         id: song.id,
@@ -155,6 +163,8 @@ export class SongService {
         titleLatinPronu: song.titleLatinPronu ?? undefined,
         catalog: song.catalog ?? undefined,
         tjSongId: song.tjSongId ?? undefined,
+        tjTitle: song.tjSong?.title ?? undefined,
+        tjArtist: song.tjSong?.artist ?? undefined,
         visible: song.visible,
         score: song.score ?? undefined,
         thumbnailDefault: song.thumbnailDefault ?? undefined,
@@ -170,6 +180,81 @@ export class SongService {
         updatedAt: song.updatedAt,
       })),
       total: songs.length,
+    };
+  }
+
+  async updateArtist(
+    artistId: number,
+    body: UpdateArtistRequestDto | undefined,
+  ): Promise<UpdateArtistResponseDto> {
+    const artist = await this.prisma.artist.findUnique({
+      where: { id: artistId },
+      select: { id: true },
+    });
+
+    if (!artist) {
+      throw new NotFoundException("artist not found.");
+    }
+
+    const data = buildArtistUpdateData(body ?? {});
+
+    try {
+      await this.prisma.artist.update({ where: { id: artistId }, data });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new BadRequestException("slug already exists.");
+      }
+
+      throw error;
+    }
+
+    return { artistId };
+  }
+
+  async deleteArtist(artistId: number): Promise<DeleteArtistResponseDto> {
+    const artist = await this.prisma.artist.findUnique({
+      where: { id: artistId },
+      select: { id: true },
+    });
+
+    if (!artist) {
+      throw new NotFoundException("artist not found.");
+    }
+
+    const artistSongs = await this.prisma.artistSong.findMany({
+      where: { artistId },
+      select: { songId: true },
+    });
+    const linkedSongIds = Array.from(
+      new Set(artistSongs.map((row) => row.songId)),
+    );
+
+    // 다른 가수와도 연결된 곡(공유곡)은 남기고, 연결만 끊는다(가수 삭제 시 cascade).
+    const sharedRows = await this.prisma.artistSong.findMany({
+      where: { songId: { in: linkedSongIds }, artistId: { not: artistId } },
+      select: { songId: true },
+    });
+    const sharedSongIds = new Set(sharedRows.map((row) => row.songId));
+    const exclusiveSongIds = linkedSongIds.filter(
+      (songId) => !sharedSongIds.has(songId),
+    );
+
+    await this.prisma.$transaction(async (tx) => {
+      // 이 가수에게만 연결된 곡만 삭제한다.
+      // 곡을 지우면 artist_song / 유튜브 / 스포티파이 연결은 cascade로 함께 지워진다.
+      if (exclusiveSongIds.length > 0) {
+        await tx.song.deleteMany({ where: { id: { in: exclusiveSongIds } } });
+      }
+
+      await tx.artist.delete({ where: { id: artistId } });
+    });
+
+    return {
+      deletedArtistId: artistId,
+      deletedSongCount: exclusiveSongIds.length,
     };
   }
 
@@ -338,6 +423,53 @@ function buildSongSearchWhere(
       { tjSongId: { contains: keyword } },
     ],
   };
+}
+
+function buildArtistUpdateData(
+  body: UpdateArtistRequestDto,
+): Prisma.ArtistUpdateInput {
+  const data: Prisma.ArtistUpdateInput = {};
+
+  if (body.name !== undefined) {
+    data.name = normalizeRequired(body.name, "name");
+  }
+
+  if (body.nameKo !== undefined) {
+    data.nameKo = normalizeRequired(body.nameKo, "nameKo");
+  }
+
+  // DTO 키와 Prisma 필드명이 동일한 nullable 필드들.
+  const nullableFields = [
+    "nameJa",
+    "nameJaKana",
+    "nameJaPronu",
+    "nameLatin",
+    "nameLatinPronu",
+    "tjName",
+    "slug",
+    "homeCatalog",
+    "spotifyId",
+    "thumbnailDefault",
+    "thumbnailMedium",
+    "thumbnailHigh",
+  ] as const;
+
+  for (const field of nullableFields) {
+    if (body[field] !== undefined) {
+      data[field] = normalizeNullable(body[field]);
+    }
+  }
+
+  // youtube 채널은 Prisma 필드명이 snake_case라 따로 매핑한다.
+  if (body.youtubeChannel !== undefined) {
+    data.youtube_channel = normalizeNullable(body.youtubeChannel);
+  }
+
+  if (body.youtubeTopicChannel !== undefined) {
+    data.youtube_topic_channel = normalizeNullable(body.youtubeTopicChannel);
+  }
+
+  return data;
 }
 
 function buildSongUpdateData(

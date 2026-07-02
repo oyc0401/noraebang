@@ -26,14 +26,37 @@ type ArtistDetail = {
   nameKo: string;
   nameJa?: string;
   nameJaKana?: string;
+  nameJaPronu?: string;
   nameLatin?: string;
+  nameLatinPronu?: string;
   tjName?: string;
   slug?: string;
   homeCatalog?: string;
   youtubeChannel?: string;
   youtubeTopicChannel?: string;
   spotifyId?: string;
+  thumbnailDefault?: string;
   thumbnailMedium?: string;
+  thumbnailHigh?: string;
+};
+
+type ArtistEditForm = {
+  name: string;
+  nameKo: string;
+  nameJa: string;
+  nameJaKana: string;
+  nameJaPronu: string;
+  nameLatin: string;
+  nameLatinPronu: string;
+  tjName: string;
+  slug: string;
+  homeCatalog: string;
+  youtubeChannel: string;
+  youtubeTopicChannel: string;
+  spotifyId: string;
+  thumbnailDefault: string;
+  thumbnailMedium: string;
+  thumbnailHigh: string;
 };
 
 type SongYoutubeVideo = {
@@ -62,6 +85,8 @@ type SongItem = {
   titleLatinPronu?: string;
   catalog?: string;
   tjSongId?: string;
+  tjTitle?: string;
+  tjArtist?: string;
   visible: boolean;
   score?: number;
   thumbnailDefault?: string;
@@ -127,6 +152,10 @@ export function SongPage() {
   const [editingSongId, setEditingSongId] = useState<number>();
   const [editForm, setEditForm] = useState<SongEditForm>();
   const [pendingSongId, setPendingSongId] = useState<number>();
+
+  const [isEditingArtist, setIsEditingArtist] = useState(false);
+  const [artistEditForm, setArtistEditForm] = useState<ArtistEditForm>();
+  const [isArtistSaving, setIsArtistSaving] = useState(false);
 
   useEffect(() => {
     void loadFirstArtistPage();
@@ -231,6 +260,8 @@ export function SongPage() {
     setSongSearch("");
     setEditingSongId(undefined);
     setEditForm(undefined);
+    setIsEditingArtist(false);
+    setArtistEditForm(undefined);
     writeArtistIdToUrl(artistId);
   }
 
@@ -394,6 +425,144 @@ export function SongPage() {
       alert(`업데이트 큐 push 실패: ${String(pushError)}`);
     } finally {
       setPendingSongId(undefined);
+    }
+  }
+
+  function startEditArtist() {
+    if (!artistDetail) {
+      return;
+    }
+
+    setIsEditingArtist(true);
+    setArtistEditForm({
+      name: artistDetail.name,
+      nameKo: artistDetail.nameKo,
+      nameJa: artistDetail.nameJa ?? "",
+      nameJaKana: artistDetail.nameJaKana ?? "",
+      nameJaPronu: artistDetail.nameJaPronu ?? "",
+      nameLatin: artistDetail.nameLatin ?? "",
+      nameLatinPronu: artistDetail.nameLatinPronu ?? "",
+      tjName: artistDetail.tjName ?? "",
+      slug: artistDetail.slug ?? "",
+      homeCatalog: artistDetail.homeCatalog ?? "",
+      youtubeChannel: artistDetail.youtubeChannel ?? "",
+      youtubeTopicChannel: artistDetail.youtubeTopicChannel ?? "",
+      spotifyId: artistDetail.spotifyId ?? "",
+      thumbnailDefault: artistDetail.thumbnailDefault ?? "",
+      thumbnailMedium: artistDetail.thumbnailMedium ?? "",
+      thumbnailHigh: artistDetail.thumbnailHigh ?? "",
+    });
+  }
+
+  function cancelEditArtist() {
+    setIsEditingArtist(false);
+    setArtistEditForm(undefined);
+  }
+
+  function updateArtistEditForm<K extends keyof ArtistEditForm>(
+    key: K,
+    value: ArtistEditForm[K],
+  ) {
+    setArtistEditForm((current) =>
+      current ? { ...current, [key]: value } : current,
+    );
+  }
+
+  async function saveEditArtist() {
+    if (!artistEditForm || selectedArtistId === undefined) {
+      return;
+    }
+
+    if (!artistEditForm.name.trim()) {
+      alert("name은 필수입니다.");
+      return;
+    }
+
+    if (!artistEditForm.nameKo.trim()) {
+      alert("nameKo는 필수입니다.");
+      return;
+    }
+
+    setIsArtistSaving(true);
+
+    try {
+      await patchArtist(selectedArtistId, {
+        name: artistEditForm.name,
+        nameKo: artistEditForm.nameKo,
+        nameJa: artistEditForm.nameJa,
+        nameJaKana: artistEditForm.nameJaKana,
+        nameJaPronu: artistEditForm.nameJaPronu,
+        nameLatin: artistEditForm.nameLatin,
+        nameLatinPronu: artistEditForm.nameLatinPronu,
+        tjName: artistEditForm.tjName,
+        slug: artistEditForm.slug,
+        homeCatalog: artistEditForm.homeCatalog,
+        youtubeChannel: artistEditForm.youtubeChannel,
+        youtubeTopicChannel: artistEditForm.youtubeTopicChannel,
+        spotifyId: artistEditForm.spotifyId,
+        thumbnailDefault: artistEditForm.thumbnailDefault,
+        thumbnailMedium: artistEditForm.thumbnailMedium,
+        thumbnailHigh: artistEditForm.thumbnailHigh,
+      });
+      setIsEditingArtist(false);
+      setArtistEditForm(undefined);
+      // 사이드바 목록은 재조회 없이 표시 필드만 반영한다(스크롤/페이지 유지).
+      setArtists((current) =>
+        current.map((artist) =>
+          artist.id === selectedArtistId
+            ? {
+                ...artist,
+                name: artistEditForm.name.trim(),
+                nameKo: artistEditForm.nameKo.trim(),
+                nameLatin: artistEditForm.nameLatin.trim() || undefined,
+                homeCatalog: artistEditForm.homeCatalog.trim() || undefined,
+                thumbnailMedium:
+                  artistEditForm.thumbnailMedium.trim() || undefined,
+              }
+            : artist,
+        ),
+      );
+      await loadSongs(selectedArtistId, songSearch);
+    } catch (saveError) {
+      alert(`가수 저장 실패: ${String(saveError)}`);
+    } finally {
+      setIsArtistSaving(false);
+    }
+  }
+
+  async function deleteArtist() {
+    if (!artistDetail || selectedArtistId === undefined) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `가수 "${artistDetail.name}" (id: ${artistDetail.id})을(를) 삭제할까요?\n연결된 ${songs.length.toLocaleString()}곡도 함께 삭제되며, 되돌릴 수 없습니다.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsArtistSaving(true);
+
+    try {
+      const result = await requestDeleteArtist(selectedArtistId);
+      setArtists((current) =>
+        current.filter((artist) => artist.id !== selectedArtistId),
+      );
+      setSelectedArtistId(undefined);
+      setArtistDetail(undefined);
+      setSongs([]);
+      setIsEditingArtist(false);
+      setArtistEditForm(undefined);
+      writeArtistIdToUrl(undefined);
+      alert(
+        `가수를 삭제했습니다. 함께 삭제된 곡: ${result.deletedSongCount.toLocaleString()}곡`,
+      );
+    } catch (deleteError) {
+      alert(`가수 삭제 실패: ${String(deleteError)}`);
+    } finally {
+      setIsArtistSaving(false);
     }
   }
 
@@ -589,10 +758,169 @@ export function SongPage() {
                       )}
                     </p>
                   </div>
-                  <p className="shrink-0 text-sm text-gray-600">
-                    {songs.length.toLocaleString()}곡
-                  </p>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <p className="text-sm text-gray-600">
+                      {songs.length.toLocaleString()}곡
+                    </p>
+                    <div className="flex gap-2">
+                      {isEditingArtist ? (
+                        <button
+                          type="button"
+                          className="cursor-pointer border border-gray-300 px-3 py-1.5 text-sm text-gray-700"
+                          onClick={cancelEditArtist}
+                        >
+                          닫기
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="cursor-pointer border border-gray-900 px-3 py-1.5 text-sm"
+                          onClick={startEditArtist}
+                        >
+                          가수 수정
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="cursor-pointer border border-red-700 px-3 py-1.5 text-sm text-red-700 disabled:opacity-50"
+                        disabled={isArtistSaving}
+                        onClick={() => void deleteArtist()}
+                      >
+                        가수 삭제
+                      </button>
+                    </div>
+                  </div>
                 </header>
+              )}
+
+              {artistDetail && isEditingArtist && artistEditForm && (
+                <div className="mt-3 border border-gray-300 p-4">
+                  <p className="text-sm font-medium text-gray-700">
+                    가수 정보 수정 (id: {artistDetail.id})
+                  </p>
+                  <div className="mt-3 grid gap-3 md:grid-cols-3">
+                    <EditField
+                      label="name (필수)"
+                      value={artistEditForm.name}
+                      onChange={(value) => updateArtistEditForm("name", value)}
+                    />
+                    <EditField
+                      label="nameKo (필수)"
+                      value={artistEditForm.nameKo}
+                      onChange={(value) => updateArtistEditForm("nameKo", value)}
+                    />
+                    <EditField
+                      label="homeCatalog"
+                      value={artistEditForm.homeCatalog}
+                      onChange={(value) =>
+                        updateArtistEditForm("homeCatalog", value)
+                      }
+                    />
+                    <EditField
+                      label="nameJa"
+                      value={artistEditForm.nameJa}
+                      onChange={(value) => updateArtistEditForm("nameJa", value)}
+                    />
+                    <EditField
+                      label="nameJaKana"
+                      value={artistEditForm.nameJaKana}
+                      onChange={(value) =>
+                        updateArtistEditForm("nameJaKana", value)
+                      }
+                    />
+                    <EditField
+                      label="nameJaPronu"
+                      value={artistEditForm.nameJaPronu}
+                      onChange={(value) =>
+                        updateArtistEditForm("nameJaPronu", value)
+                      }
+                    />
+                    <EditField
+                      label="nameLatin"
+                      value={artistEditForm.nameLatin}
+                      onChange={(value) =>
+                        updateArtistEditForm("nameLatin", value)
+                      }
+                    />
+                    <EditField
+                      label="nameLatinPronu"
+                      value={artistEditForm.nameLatinPronu}
+                      onChange={(value) =>
+                        updateArtistEditForm("nameLatinPronu", value)
+                      }
+                    />
+                    <EditField
+                      label="tjName"
+                      value={artistEditForm.tjName}
+                      onChange={(value) => updateArtistEditForm("tjName", value)}
+                    />
+                    <EditField
+                      label="slug (유니크)"
+                      value={artistEditForm.slug}
+                      onChange={(value) => updateArtistEditForm("slug", value)}
+                    />
+                    <EditField
+                      label="spotifyId"
+                      value={artistEditForm.spotifyId}
+                      onChange={(value) =>
+                        updateArtistEditForm("spotifyId", value)
+                      }
+                    />
+                    <EditField
+                      label="youtubeChannel"
+                      value={artistEditForm.youtubeChannel}
+                      onChange={(value) =>
+                        updateArtistEditForm("youtubeChannel", value)
+                      }
+                    />
+                    <EditField
+                      label="youtubeTopicChannel"
+                      value={artistEditForm.youtubeTopicChannel}
+                      onChange={(value) =>
+                        updateArtistEditForm("youtubeTopicChannel", value)
+                      }
+                    />
+                    <EditField
+                      label="thumbnailDefault"
+                      value={artistEditForm.thumbnailDefault}
+                      onChange={(value) =>
+                        updateArtistEditForm("thumbnailDefault", value)
+                      }
+                    />
+                    <EditField
+                      label="thumbnailMedium"
+                      value={artistEditForm.thumbnailMedium}
+                      onChange={(value) =>
+                        updateArtistEditForm("thumbnailMedium", value)
+                      }
+                    />
+                    <EditField
+                      label="thumbnailHigh"
+                      value={artistEditForm.thumbnailHigh}
+                      onChange={(value) =>
+                        updateArtistEditForm("thumbnailHigh", value)
+                      }
+                    />
+                  </div>
+
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      type="button"
+                      className="cursor-pointer border border-gray-900 bg-gray-900 px-4 py-1.5 text-white disabled:opacity-50"
+                      disabled={isArtistSaving}
+                      onClick={() => void saveEditArtist()}
+                    >
+                      {isArtistSaving ? "저장 중" : "저장"}
+                    </button>
+                    <button
+                      type="button"
+                      className="cursor-pointer border border-gray-300 px-4 py-1.5 text-gray-700"
+                      onClick={cancelEditArtist}
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
               )}
 
               <form
@@ -685,6 +1013,8 @@ export function SongPage() {
                         <p className="mt-1 text-xs text-gray-500">
                           id: {song.id}
                           {song.tjSongId && ` · TJ번호: ${song.tjSongId}`}
+                          {song.tjTitle && ` · TJ제목: ${song.tjTitle}`}
+                          {song.tjArtist && ` · TJ아티스트: ${song.tjArtist}`}
                           {` · 생성: ${formatDate(song.createdAt)}`}
                         </p>
 
@@ -1151,6 +1481,37 @@ async function patchSong(
   }
 }
 
+async function patchArtist(
+  artistId: number,
+  body: Record<string, unknown>,
+): Promise<void> {
+  const response = await fetch(`/api/song/artists/${artistId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+}
+
+async function requestDeleteArtist(
+  artistId: number,
+): Promise<{ deletedArtistId: number; deletedSongCount: number }> {
+  const response = await fetch(`/api/song/artists/${artistId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  const body: { deletedArtistId: number; deletedSongCount: number } =
+    await response.json();
+  return body;
+}
+
 async function pushSongToUpdateQueue(
   songId: number,
 ): Promise<{ requested: number; pushed: number; skipped: number }> {
@@ -1220,6 +1581,11 @@ function parseArtistIdFromUrl(): number | undefined {
   return Number.isInteger(artistId) && artistId > 0 ? artistId : undefined;
 }
 
-function writeArtistIdToUrl(artistId: number) {
+function writeArtistIdToUrl(artistId: number | undefined) {
+  if (artistId === undefined) {
+    window.history.replaceState(null, "", "/admin/song");
+    return;
+  }
+
   window.history.replaceState(null, "", `/admin/song?artistId=${artistId}`);
 }

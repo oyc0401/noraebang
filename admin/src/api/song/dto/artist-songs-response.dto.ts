@@ -62,6 +62,12 @@ export class ArtistSongItemDto {
   @ApiProperty({ description: "tj_song.id: TJ 노래방 번호", required: false, example: "28397" })
   tjSongId?: string;
 
+  @ApiProperty({ description: "tj_song.title: TJ 제목", required: false, example: "마리골드" })
+  tjTitle?: string;
+
+  @ApiProperty({ description: "tj_song.artist: TJ 아티스트", required: false, example: "아이묭" })
+  tjArtist?: string;
+
   @ApiProperty({ example: true })
   visible: boolean;
 
@@ -106,8 +112,14 @@ export class ArtistDetailDto {
   @ApiProperty({ required: false, example: "あいみょん" })
   nameJaKana?: string;
 
+  @ApiProperty({ required: false, example: "아이묭" })
+  nameJaPronu?: string;
+
   @ApiProperty({ required: false, example: "Aimyon" })
   nameLatin?: string;
+
+  @ApiProperty({ required: false, example: "아이묜" })
+  nameLatinPronu?: string;
 
   @ApiProperty({ required: false, example: "아이묭" })
   tjName?: string;
@@ -127,8 +139,14 @@ export class ArtistDetailDto {
   @ApiProperty({ required: false, example: "5faLTiZUXvXATcqDGZTaVQ" })
   spotifyId?: string;
 
-  @ApiProperty({ required: false, example: "https://i.ytimg.com/..." })
+  @ApiProperty({ required: false, example: "https://i.ytimg.com/default.jpg" })
+  thumbnailDefault?: string;
+
+  @ApiProperty({ required: false, example: "https://i.ytimg.com/medium.jpg" })
   thumbnailMedium?: string;
+
+  @ApiProperty({ required: false, example: "https://i.ytimg.com/high.jpg" })
+  thumbnailHigh?: string;
 }
 
 export class ArtistSongsResponseDto {
