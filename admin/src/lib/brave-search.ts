@@ -44,9 +44,9 @@ export async function searchBraveRaw(
 }
 
 export async function searchBraveWebResults(
-  artistName: string,
+  query: string,
 ): Promise<BraveWebSearchResult[]> {
-  const response = await searchBraveRaw(`${artistName} jpop가수 한국어 이름`);
+  const response = await searchBraveRaw(query);
   const webResults = getWebResults(response);
 
   return webResults.slice(0, 10);

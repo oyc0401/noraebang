@@ -1,5 +1,5 @@
+import { searchBraveWebResults } from "../../../../lib/brave-search";
 import { getNameFromAI } from "./ai";
-import { searchBraveWebResults } from "./brave-search";
 
 export async function getNameKo(artistName: string): Promise<string> {
   const name = artistName.trim();
@@ -16,7 +16,9 @@ export async function getNameKo(artistName: string): Promise<string> {
     return name;
   }
 
-  const searchResults = await searchBraveWebResults(name);
+  const searchResults = await searchBraveWebResults(
+    `${name} jpop가수 한국어 이름`,
+  );
 
   return getNameFromAI(name, searchResults);
 }

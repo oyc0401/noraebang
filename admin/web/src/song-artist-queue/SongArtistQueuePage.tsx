@@ -24,6 +24,12 @@ type PushArtistCreationQueueResponse = {
   skipped: number;
 };
 
+type PushSongCreationQueueResponse = {
+  requested: number;
+  pushed: number;
+  skipped: number;
+};
+
 type ConnectArtistResponse = {
   queueId: number;
   artistId: number;
@@ -64,6 +70,7 @@ export function SongArtistQueuePage() {
   const [error, setError] = useState<string>();
   const [message, setMessage] = useState<string>();
   const [isPushing, setIsPushing] = useState(false);
+  const [isSongPushing, setIsSongPushing] = useState(false);
   const [rowMenu, setRowMenu] = useState<RowMenuState>();
 
   useEffect(() => {
@@ -190,6 +197,55 @@ export function SongArtistQueuePage() {
       setMessage(undefined);
     } finally {
       setIsPushing(false);
+    }
+  }
+
+  async function pushSelectedSongCreationQueue() {
+    const selectedItems = (items ?? []).filter((item) =>
+      selectedTjSongIds.has(item.tjSongId),
+    );
+
+    if (selectedItems.length === 0) {
+      return;
+    }
+
+    // 아티스트 미매칭 곡은 서버에서도 스킵되지만, 미리 걸러서 매칭된 것만 보낸다.
+    const matchedTjSongIds = selectedItems
+      .filter((item) => item.artistId)
+      .map((item) => item.tjSongId);
+    const unmatchedCount = selectedItems.length - matchedTjSongIds.length;
+
+    if (matchedTjSongIds.length === 0) {
+      window.alert("선택 항목이 모두 미매칭이라 곡생성큐에 넣을 수 없습니다.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `매칭된 ${matchedTjSongIds.length.toLocaleString()}건을 곡생성큐에 추가할까요?${
+        unmatchedCount > 0
+          ? ` (미매칭 ${unmatchedCount.toLocaleString()}건 제외)`
+          : ""
+      }\n미디어 검색 때문에 시간이 걸릴 수 있습니다.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsSongPushing(true);
+
+    try {
+      const result = await pushSongCreationQueue(matchedTjSongIds);
+      setSelectedTjSongIds(new Set());
+      setMessage(
+        `선택 ${result.requested.toLocaleString()}건 중 ${result.pushed.toLocaleString()}건을 곡생성큐에 추가했습니다. 스킵 ${result.skipped.toLocaleString()}건`,
+      );
+      setError(undefined);
+    } catch (pushError) {
+      setError(String(pushError));
+      setMessage(undefined);
+    } finally {
+      setIsSongPushing(false);
     }
   }
 
@@ -365,6 +421,14 @@ export function SongArtistQueuePage() {
             >
               {isPushing ? "추가 중" : "가수생성큐에 추가"}
             </button>
+            <button
+              type="button"
+              className="cursor-pointer border border-gray-900 px-3 py-1.5 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
+              disabled={selectedCount === 0 || isSongPushing}
+              onClick={pushSelectedSongCreationQueue}
+            >
+              {isSongPushing ? "추가 중" : "곡생성큐에 추가"}
+            </button>
             <span className="text-sm text-gray-600">
               선택 {selectedCount.toLocaleString()}건
             </span>
@@ -507,6 +571,22 @@ async function pushArtistCreationQueue(
   }
 
   return (await response.json()) as PushArtistCreationQueueResponse;
+}
+
+async function pushSongCreationQueue(
+  tjSongIds: string[],
+): Promise<PushSongCreationQueueResponse> {
+  const response = await fetch("/api/song-creation-queue/push", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tjSongIds }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return (await response.json()) as PushSongCreationQueueResponse;
 }
 
 async function connectSongArtistQueueArtist(

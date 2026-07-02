@@ -8,12 +8,13 @@ type OpenAIChatResponse = {
   }>;
 };
 
-type NameKoResponse = {
-  nameKo?: string;
+type TitleKoResponse = {
+  titleKo?: string;
 };
 
-export async function getNameFromAI(
-  artistName: string,
+export async function getTitleFromAI(
+  songTitle: string,
+  artistName: string | null,
   searchResults: BraveWebSearchResult[],
 ): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
@@ -36,11 +37,12 @@ export async function getNameFromAI(
         {
           role: "system",
           content:
-            'Return only JSON like {"nameKo":"구미"}. Find the Korean display name for the artist. Do not return song title translations. If unsure, use "".',
+            'Return only JSON like {"titleKo":"아이돌"}. Find the Korean display title for this song as commonly written on Korean karaoke/music sites (usually a transliteration of the reading, not a translation). Do not return the artist name. If unsure, use "".',
         },
         {
           role: "user",
           content: JSON.stringify({
+            songTitle,
             artistName,
             searchResults,
           }),
@@ -53,20 +55,20 @@ export async function getNameFromAI(
     const errorBody = await response.text();
 
     throw new Error(
-      `OpenAI nameKo request failed: ${response.status} ${response.statusText} ${errorBody}`,
+      `OpenAI titleKo request failed: ${response.status} ${response.statusText} ${errorBody}`,
     );
   }
 
   const data = (await response.json()) as OpenAIChatResponse;
   const content = data.choices?.[0]?.message?.content ?? "";
-  const parsed = parseNameKoResponse(content);
+  const parsed = parseTitleKoResponse(content);
 
-  return parsed.nameKo?.trim() ?? "";
+  return parsed.titleKo?.trim() ?? "";
 }
 
-function parseNameKoResponse(content: string): NameKoResponse {
+function parseTitleKoResponse(content: string): TitleKoResponse {
   try {
-    return JSON.parse(content) as NameKoResponse;
+    return JSON.parse(content) as TitleKoResponse;
   } catch {
     const jsonStart = content.indexOf("{");
     const jsonEnd = content.lastIndexOf("}");
@@ -78,7 +80,7 @@ function parseNameKoResponse(content: string): NameKoResponse {
     try {
       return JSON.parse(
         content.slice(jsonStart, jsonEnd + 1),
-      ) as NameKoResponse;
+      ) as TitleKoResponse;
     } catch {
       return {};
     }

@@ -4,6 +4,7 @@ import { DataPage } from "./data/DataPage";
 import { QueuePage } from "./queue/QueuePage";
 import { SongPage } from "./song/SongPage";
 import { SongArtistQueuePage } from "./song-artist-queue/SongArtistQueuePage";
+import { SongCreationQueuePage } from "./song-creation-queue/SongCreationQueuePage";
 
 type AdminRoute =
   | "home"
@@ -11,7 +12,8 @@ type AdminRoute =
   | "queue"
   | "song"
   | "song-artist-queue"
-  | "artist-creation-queue";
+  | "artist-creation-queue"
+  | "song-creation-queue";
 
 function App() {
   const route = getAdminRoute();
@@ -37,6 +39,10 @@ function App() {
     return <ArtistCreationQueuePage />;
   }
 
+  if (route === "song-creation-queue") {
+    return <SongCreationQueuePage />;
+  }
+
   return <AdminHomePage />;
 }
 
@@ -59,6 +65,10 @@ function getDocumentTitle(route: AdminRoute): string {
 
   if (route === "artist-creation-queue") {
     return "Admin - 가수 생성 큐";
+  }
+
+  if (route === "song-creation-queue") {
+    return "Admin - 곡 생성 큐";
   }
 
   return "Admin - 대시보드";
@@ -110,6 +120,7 @@ function AdminHomePage() {
             <AdminLink href="/admin/artist-creation-queue">
               가수 생성 큐
             </AdminLink>
+            <AdminLink href="/admin/song-creation-queue">곡 생성 큐</AdminLink>
           </div>
         </section>
       </nav>
@@ -161,6 +172,10 @@ function getAdminRoute(): AdminRoute {
 
   if (pathname === "/admin/artist-creation-queue") {
     return "artist-creation-queue";
+  }
+
+  if (pathname === "/admin/song-creation-queue") {
+    return "song-creation-queue";
   }
 
   return "home";

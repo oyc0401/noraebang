@@ -12,7 +12,7 @@
  * Edit artistName and tjsongTitle below before running.
  */
 import "dotenv/config";
-import { searchBraveRaw } from "./brave-search";
+import { searchBraveRaw } from "../../../../lib/brave-search";
 
 const artistName = "GUMI";
 const tjsongTitle = "天ノ弱";
