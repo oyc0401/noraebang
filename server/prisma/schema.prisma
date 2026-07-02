@@ -220,6 +220,34 @@ model SongCreationQueue {
   @@map("song_creation_queue")
 }
 
+model SongUpdateQueue {
+  id     Int @id @default(autoincrement())
+  songId Int @unique @map("song_id")
+
+  // 제목 변형: push 시 AI 재생성 결과 (검토 UI에서 기존 Song 값과 나란히 비교)
+  title           String
+  titleKo         String? @map("title_ko")
+  titleJa         String? @map("title_ja")
+  titleJaPronu    String? @map("title_ja_pronu")
+  titleJaKana     String? @map("title_ja_kana")
+  titleJaKanji    String? @map("title_ja_kanji")
+  titleLatin      String? @map("title_latin")
+  titleLatinPronu String? @map("title_latin_pronu")
+
+  // 미디어 후보 스냅샷 (곡생성큐와 동일하게 JSON 스테이징, UI 표시용 필드 포함)
+  youtubeVideos Json @default("[]") @map("youtube_videos")
+  spotifyTracks Json @default("[]") @map("spotify_tracks")
+
+  thumbnailDefault String? @map("thumbnail_default")
+  thumbnailHigh    String? @map("thumbnail_high")
+  thumbnailMedium  String? @map("thumbnail_medium")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("song_update_queue")
+}
+
 model User {
   id          Int      @id @default(autoincrement())
   email       String?  @unique
