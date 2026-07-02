@@ -369,6 +369,34 @@ export function SongPage() {
     }
   }
 
+  async function pushToUpdateQueue(song: SongItem) {
+    const confirmed = window.confirm(
+      `${song.title} 곡을 업데이트 큐에 올릴까요? 미디어 재검색과 제목 재생성이 실행됩니다.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setPendingSongId(song.id);
+
+    try {
+      const result = await pushSongToUpdateQueue(song.id);
+
+      if (result.pushed > 0) {
+        alert(
+          "업데이트 큐에 올렸습니다. /admin/song-update-queue에서 검토하세요.",
+        );
+      } else {
+        alert("건너뛰었습니다. 이미 큐에 있거나 가수 미연결 곡입니다.");
+      }
+    } catch (pushError) {
+      alert(`업데이트 큐 push 실패: ${String(pushError)}`);
+    } finally {
+      setPendingSongId(undefined);
+    }
+  }
+
   return (
     <main className="flex h-screen flex-col p-6 text-gray-950">
       <div>
@@ -726,6 +754,14 @@ export function SongPage() {
                             수정
                           </button>
                         )}
+                        <button
+                          type="button"
+                          className="cursor-pointer border border-blue-700 px-3 py-1.5 text-blue-700 disabled:opacity-50"
+                          disabled={pendingSongId === song.id}
+                          onClick={() => void pushToUpdateQueue(song)}
+                        >
+                          {pendingSongId === song.id ? "처리 중" : "업데이트 큐"}
+                        </button>
                         <button
                           type="button"
                           className="cursor-pointer border border-red-700 px-3 py-1.5 text-red-700"
@@ -1113,6 +1149,24 @@ async function patchSong(
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
   }
+}
+
+async function pushSongToUpdateQueue(
+  songId: number,
+): Promise<{ requested: number; pushed: number; skipped: number }> {
+  const response = await fetch("/api/song-update-queue/push", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ songIds: [songId] }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  const body: { requested: number; pushed: number; skipped: number } =
+    await response.json();
+  return body;
 }
 
 function parseArtistSortBy(value: string): ArtistSortBy {
