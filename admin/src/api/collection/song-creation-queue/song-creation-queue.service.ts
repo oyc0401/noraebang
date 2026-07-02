@@ -197,7 +197,7 @@ export class SongCreationQueueService {
             thumbnailMedium: normalizeNullable(body?.thumbnailMedium),
             thumbnailHigh: normalizeNullable(body?.thumbnailHigh),
             tjSongId,
-            // visible은 기본값 false — 수동 검토를 거친 초안 상태로 생성한다.
+            visible: true, // 큐에서 수동 검토를 거쳤으므로 바로 공개
           },
         });
 

@@ -70,8 +70,7 @@ export class SongCreationQueueController {
   })
   @ApiBody({ type: CreateSongFromQueueRequestDto })
   @ApiOkResponse({
-    description:
-      "곡 생성 큐에 있는 특정 id의 곡을 초안(visible=false)으로 생성한다.",
+    description: "곡 생성 큐에 있는 특정 id의 곡을 생성한다. (visible=true)",
     type: CreateSongFromQueueResponseDto,
   })
   createSong(

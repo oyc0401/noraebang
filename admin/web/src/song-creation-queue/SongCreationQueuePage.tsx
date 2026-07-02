@@ -230,7 +230,7 @@ export function SongCreationQueuePage() {
     }
 
     const confirmed = window.confirm(
-      `${form.title} 곡을 초안(visible=false)으로 생성하고, ${
+      `${form.title} 곡을 생성하고, ${
         selectedItem.artistName ?? "매칭된 가수"
       }에 연결한 뒤 곡생성큐에서 삭제할까요?`,
     );
