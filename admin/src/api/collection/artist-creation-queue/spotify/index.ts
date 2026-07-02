@@ -55,7 +55,8 @@ async function searchSpotifyArtist(
   return findBestMatch(artistName, artists);
 }
 
-async function getAccessToken(): Promise<string> {
+// 토큰은 모듈 레벨에 캐시되므로 다른 기능(media 갱신 등)도 이 함수를 통해 재사용한다.
+export async function getAccessToken(): Promise<string> {
   if (accessToken && Date.now() < tokenExpiresAt) {
     return accessToken;
   }

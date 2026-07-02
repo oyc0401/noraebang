@@ -6,6 +6,7 @@ import { apiReference } from "@scalar/nestjs-api-reference";
 import { AdminPageModule } from "./admin-page/admin-page.module";
 import { AppModule } from "./app.module";
 import { ArtistCreationQueueModule } from "./api/collection/artist-creation-queue/artist-creation-queue.module";
+import { MediaModule } from "./api/media/media.module";
 import { ParserModule } from "./api/collection/parser/parser.module";
 import { QueueModule } from "./api/collection/queue/queue.module";
 import { SongArtistQueueModule } from "./api/collection/song-artist-queue/song-artist-queue.module";
@@ -55,7 +56,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {
-    include: [HealthModule, AdminPageModule, SongModule, TjSongModule],
+    include: [HealthModule, AdminPageModule, SongModule, TjSongModule, MediaModule],
   });
   const collectionDocument = SwaggerModule.createDocument(app, collectionConfig, {
     include: [

@@ -22,13 +22,18 @@ export interface PlaylistVideoItem {
 
 export interface FetchPlaylistVideosOptions {
   maxVideos?: number;
+  /**
+   * 페이지(최대 50개)마다 호출된다. true를 반환하면 다음 페이지를 가져오지 않는다.
+   * 업로드 재생목록은 최신순이므로 증분 수집 시 이미 저장된 페이지에서 중단해 쿼터를 아낀다.
+   */
+  shouldStop?: (pageItems: PlaylistVideoItem[]) => Promise<boolean> | boolean;
 }
 
 export async function fetchPlaylistVideos(
   playlistId: string,
   options: FetchPlaylistVideosOptions = {},
 ): Promise<PlaylistVideoItem[]> {
-  const { maxVideos } = options;
+  const { maxVideos, shouldStop } = options;
   const keyManager = getYoutubeKeyManager();
   const videos: PlaylistVideoItem[] = [];
   let pageToken: string | undefined;
@@ -58,6 +63,7 @@ export async function fetchPlaylistVideos(
     });
 
     const items = Array.isArray(result.items) ? result.items : [];
+    const pageItems: PlaylistVideoItem[] = [];
 
     for (const item of items) {
       const snippet = item.snippet;
@@ -65,7 +71,7 @@ export async function fetchPlaylistVideos(
 
       if (!videoId) continue;
 
-      videos.push({
+      pageItems.push({
         videoId,
         ownerChannelId: snippet.videoOwnerChannelId,
         title: snippet.title,
@@ -79,7 +85,12 @@ export async function fetchPlaylistVideos(
       });
     }
 
+    videos.push(...pageItems);
     pageToken = result.nextPageToken;
+
+    if (shouldStop && (await shouldStop(pageItems))) {
+      break;
+    }
 
     // maxVideos 도달 시 중단
     if (maxVideos && videos.length >= maxVideos) {

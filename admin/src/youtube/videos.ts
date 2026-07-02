@@ -12,6 +12,11 @@ export interface YoutubeVideoDetailsResponse {
       likeCount?: string;
       commentCount?: string;
     };
+    contentDetails?: {
+      duration?: string;
+      definition?: string;
+      caption?: string;
+    };
   }>;
 }
 
@@ -32,7 +37,7 @@ export async function fetchYoutubeVideos(
   return keyManager.reuseWithRetry(async (apiKey) => {
     const url = new URL(`${YOUTUBE_API_BASE}/videos`);
     url.searchParams.set("key", apiKey);
-    url.searchParams.set("part", "snippet,statistics");
+    url.searchParams.set("part", "snippet,statistics,contentDetails");
     url.searchParams.set("id", videoIds.join(","));
 
     const response = await fetch(url, { cache: "no-store" });

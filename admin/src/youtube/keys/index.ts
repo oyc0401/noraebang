@@ -34,7 +34,9 @@ export class YoutubeKeyManager {
 
   rotateKey() {
     this.index = (this.index + 1) % this.keys.length;
-    console.log(`🔄 YouTube API 키 로테이션: 키 ${this.index + 1}/${this.keys.length}로 전환`);
+    console.log(
+      `🔄 YouTube API 키 로테이션: 키 ${this.index + 1}/${this.keys.length}로 전환`,
+    );
     return this.getCurrentKey();
   }
 

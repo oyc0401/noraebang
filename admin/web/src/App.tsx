@@ -1,6 +1,7 @@
 import "./tailwind.css";
 import { ArtistCreationQueuePage } from "./artist-creation-queue/ArtistCreationQueuePage";
 import { DataPage } from "./data/DataPage";
+import { MediaPage } from "./media/MediaPage";
 import { QueuePage } from "./queue/QueuePage";
 import { SongPage } from "./song/SongPage";
 import { SongArtistQueuePage } from "./song-artist-queue/SongArtistQueuePage";
@@ -13,6 +14,7 @@ type AdminRoute =
   | "queue"
   | "song"
   | "tj-song"
+  | "media"
   | "song-artist-queue"
   | "artist-creation-queue"
   | "song-creation-queue";
@@ -35,6 +37,10 @@ function App() {
 
   if (route === "tj-song") {
     return <TjSongPage />;
+  }
+
+  if (route === "media") {
+    return <MediaPage />;
   }
 
   if (route === "song-artist-queue") {
@@ -67,6 +73,10 @@ function getDocumentTitle(route: AdminRoute): string {
 
   if (route === "tj-song") {
     return "Admin - TJ Song";
+  }
+
+  if (route === "media") {
+    return "Admin - 미디어";
   }
 
   if (route === "song-artist-queue") {
@@ -106,6 +116,7 @@ function AdminHomePage() {
           <div className="mt-3 flex flex-wrap gap-2">
             <AdminLink href="/admin/song">Song</AdminLink>
             <AdminLink href="/admin/tj-song">TJ Song</AdminLink>
+            <AdminLink href="/admin/media">미디어</AdminLink>
           </div>
         </section>
 
@@ -179,6 +190,10 @@ function getAdminRoute(): AdminRoute {
 
   if (pathname === "/admin/tj-song") {
     return "tj-song";
+  }
+
+  if (pathname === "/admin/media") {
+    return "media";
   }
 
   if (pathname === "/admin/song-artist-queue") {

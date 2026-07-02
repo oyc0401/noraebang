@@ -6,6 +6,7 @@ import { ParserModule } from "./api/collection/parser/parser.module";
 import { QueueModule } from "./api/collection/queue/queue.module";
 import { SongArtistQueueModule } from "./api/collection/song-artist-queue/song-artist-queue.module";
 import { SongCreationQueueModule } from "./api/collection/song-creation-queue/song-creation-queue.module";
+import { MediaModule } from "./api/media/media.module";
 import { SongModule } from "./api/song/song.module";
 import { TjSongModule } from "./api/tj-song/tj-song.module";
 import { HealthModule } from "./api/health/health.module";
@@ -26,6 +27,7 @@ import { PrismaModule } from "./prisma/prisma.module";
     SongCreationQueueModule,
     SongModule,
     TjSongModule,
+    MediaModule,
   ],
   controllers: [],
   providers: [],

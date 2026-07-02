@@ -54,7 +54,8 @@
     {
       "includes": [
         "backend/src/**/*.ts",
-        "server/src/**/*.ts"
+        "server/src/**/*.ts",
+        "admin/src/**/*.ts"
       ],
       "linter": {
         "rules": {
