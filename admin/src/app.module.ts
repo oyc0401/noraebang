@@ -7,6 +7,7 @@ import { QueueModule } from "./api/collection/queue/queue.module";
 import { SongArtistQueueModule } from "./api/collection/song-artist-queue/song-artist-queue.module";
 import { SongCreationQueueModule } from "./api/collection/song-creation-queue/song-creation-queue.module";
 import { SongModule } from "./api/song/song.module";
+import { TjSongModule } from "./api/tj-song/tj-song.module";
 import { HealthModule } from "./api/health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
@@ -24,6 +25,7 @@ import { PrismaModule } from "./prisma/prisma.module";
     SongArtistQueueModule,
     SongCreationQueueModule,
     SongModule,
+    TjSongModule,
   ],
   controllers: [],
   providers: [],

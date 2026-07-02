@@ -5,12 +5,14 @@ import { QueuePage } from "./queue/QueuePage";
 import { SongPage } from "./song/SongPage";
 import { SongArtistQueuePage } from "./song-artist-queue/SongArtistQueuePage";
 import { SongCreationQueuePage } from "./song-creation-queue/SongCreationQueuePage";
+import { TjSongPage } from "./tj-song/TjSongPage";
 
 type AdminRoute =
   | "home"
   | "data"
   | "queue"
   | "song"
+  | "tj-song"
   | "song-artist-queue"
   | "artist-creation-queue"
   | "song-creation-queue";
@@ -29,6 +31,10 @@ function App() {
 
   if (route === "song") {
     return <SongPage />;
+  }
+
+  if (route === "tj-song") {
+    return <TjSongPage />;
   }
 
   if (route === "song-artist-queue") {
@@ -57,6 +63,10 @@ function getDocumentTitle(route: AdminRoute): string {
 
   if (route === "song") {
     return "Admin - Song";
+  }
+
+  if (route === "tj-song") {
+    return "Admin - TJ Song";
   }
 
   if (route === "song-artist-queue") {
@@ -95,6 +105,7 @@ function AdminHomePage() {
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             <AdminLink href="/admin/song">Song</AdminLink>
+            <AdminLink href="/admin/tj-song">TJ Song</AdminLink>
           </div>
         </section>
 
@@ -164,6 +175,10 @@ function getAdminRoute(): AdminRoute {
 
   if (pathname === "/admin/song") {
     return "song";
+  }
+
+  if (pathname === "/admin/tj-song") {
+    return "tj-song";
   }
 
   if (pathname === "/admin/song-artist-queue") {

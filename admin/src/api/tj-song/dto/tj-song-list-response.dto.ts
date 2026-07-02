@@ -1,9 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { SongListItemDto } from "./song-list-item.dto";
+import { TjSongListItemDto } from "./tj-song-list-item.dto";
 
-export class SongListResponseDto {
-  @ApiProperty({ type: [SongListItemDto] })
-  data: SongListItemDto[];
+export class TjSongListResponseDto {
+  @ApiProperty({ type: [TjSongListItemDto] })
+  data: TjSongListItemDto[];
 
   @ApiProperty({ example: 50 })
   nextOffset: number;

@@ -11,6 +11,7 @@ import { QueueModule } from "./api/collection/queue/queue.module";
 import { SongArtistQueueModule } from "./api/collection/song-artist-queue/song-artist-queue.module";
 import { SongCreationQueueModule } from "./api/collection/song-creation-queue/song-creation-queue.module";
 import { SongModule } from "./api/song/song.module";
+import { TjSongModule } from "./api/tj-song/tj-song.module";
 import { HealthModule } from "./api/health/health.module";
 
 async function bootstrap() {
@@ -54,7 +55,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {
-    include: [HealthModule, AdminPageModule, SongModule],
+    include: [HealthModule, AdminPageModule, SongModule, TjSongModule],
   });
   const collectionDocument = SwaggerModule.createDocument(app, collectionConfig, {
     include: [

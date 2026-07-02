@@ -1,201 +1,405 @@
-import { Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
 import {
-  type SongCatalogFilter,
-  type SongListQueryDto,
-  type SongSortBy,
-  type SongStatusFilter,
+  type ArtistListQueryDto,
+  type ArtistSortBy,
   type SortOrder,
-} from "./dto/song-list-query.dto";
-import { SongListResponseDto } from "./dto/song-list-response.dto";
-
-type SongRow = {
-  tj_number: string;
-  title: string;
-  artist?: string;
-  catalog?: string;
-  publishdate?: string;
-  is_created_as_song: boolean;
-  is_in_queue: boolean;
-};
-
-type CountRow = {
-  total: bigint;
-};
+} from "./dto/artist-list-query.dto";
+import { ArtistListResponseDto } from "./dto/artist-list-response.dto";
+import { ArtistSongsQueryDto } from "./dto/artist-songs-query.dto";
+import {
+  ArtistSongsResponseDto,
+  SongSpotifyTrackDto,
+  SongYoutubeVideoDto,
+} from "./dto/artist-songs-response.dto";
+import { DeleteSongResponseDto } from "./dto/delete-song-response.dto";
+import { UpdateSongRequestDto } from "./dto/update-song-request.dto";
+import { UpdateSongResponseDto } from "./dto/update-song-response.dto";
+import {
+  findSpotifyTrackInfos,
+  findYoutubeVideoInfos,
+  type SpotifyTrackInfo,
+  type YoutubeVideoInfo,
+} from "./media-lookup";
 
 @Injectable()
 export class SongService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(query: SongListQueryDto): Promise<SongListResponseDto> {
+  async findArtists(query: ArtistListQueryDto): Promise<ArtistListResponseDto> {
     const limit = parseBoundedInteger(query.limit, 50, 1, 100);
     const offset = parseBoundedInteger(query.offset, 0, 0, 1_000_000);
-    const minNumber = parseBoundedInteger(query.minNumber, 0, 0, 99_999);
-    const maxNumber = parseBoundedInteger(query.maxNumber, 99_999, 0, 99_999);
-    const sortBy = parseSortBy(query.sortBy);
-    const sortOrder = parseSortOrder(query.sortOrder);
-    const catalog = parseCatalog(query.catalog);
-    const status = parseStatus(query.status);
-    const whereSql = buildWhereSql({
-      title: query.title,
-      artist: query.artist,
-      minNumber,
-      maxNumber,
-      catalog,
-      status,
-    });
-    const orderSql = buildOrderSql(sortBy, sortOrder);
+    const sortBy = parseArtistSortBy(query.sortBy);
+    const sortOrder = parseSortOrder(query.sortOrder, sortBy);
+    const where = buildArtistWhere(query.search, query.hasSongsOnly === "true");
 
-    const rows = await this.prisma.$queryRaw<SongRow[]>`
-      select
-        t.id as tj_number,
-        t.title,
-        t.artist,
-        s.catalog,
-        t.publishdate,
-        s.id is not null as is_created_as_song,
-        q.id is not null as is_in_queue
-      from tj_song t
-      left join song s on s.tj_song_id = t.id
-      left join song_queue q on q.tj_number = t.id
-      where ${whereSql}
-      ${orderSql}
-      limit ${limit}
-      offset ${offset}
-    `;
-    const countRows = await this.prisma.$queryRaw<CountRow[]>`
-      select count(*)::bigint as total
-      from tj_song t
-      left join song s on s.tj_song_id = t.id
-      left join song_queue q on q.tj_number = t.id
-      where ${whereSql}
-    `;
-    const total = Number(countRows[0]?.total ?? 0);
-    const nextOffset = offset + rows.length;
+    const [artists, total] = await Promise.all([
+      this.prisma.artist.findMany({
+        where,
+        orderBy: [buildArtistOrderBy(sortBy, sortOrder), { id: "asc" }],
+        skip: offset,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          nameKo: true,
+          nameJa: true,
+          nameLatin: true,
+          homeCatalog: true,
+          thumbnailMedium: true,
+          _count: { select: { artistSongs: true } },
+        },
+      }),
+      this.prisma.artist.count({ where }),
+    ]);
+
+    const nextOffset = offset + artists.length;
 
     return {
-      data: rows.map((row) => ({
-        tjNumber: row.tj_number,
-        title: row.title,
-        artist: row.artist ?? undefined,
-        catalog: row.catalog ?? undefined,
-        publishdate: row.publishdate ?? undefined,
-        isCreatedAsSong: row.is_created_as_song,
-        isInQueue: row.is_in_queue,
+      data: artists.map((artist) => ({
+        id: artist.id,
+        name: artist.name,
+        nameKo: artist.nameKo,
+        nameJa: artist.nameJa ?? undefined,
+        nameLatin: artist.nameLatin ?? undefined,
+        homeCatalog: artist.homeCatalog ?? undefined,
+        thumbnailMedium: artist.thumbnailMedium ?? undefined,
+        songCount: artist._count.artistSongs,
       })),
       nextOffset,
       hasMore: nextOffset < total,
       total,
     };
   }
+
+  async findArtistSongs(
+    artistId: number,
+    query: ArtistSongsQueryDto,
+  ): Promise<ArtistSongsResponseDto> {
+    const artist = await this.prisma.artist.findUnique({
+      where: { id: artistId },
+    });
+
+    if (!artist) {
+      throw new NotFoundException("artist not found.");
+    }
+
+    const artistSongs = await this.prisma.artistSong.findMany({
+      where: {
+        artistId,
+        song: buildSongSearchWhere(query.search),
+      },
+      include: {
+        song: {
+          include: {
+            youtubeVideos: { orderBy: { id: "asc" } },
+            spotifyTracks: { orderBy: { id: "asc" } },
+          },
+        },
+      },
+      orderBy: { song: { title: "asc" } },
+    });
+    const songs = artistSongs.map((artistSong) => artistSong.song);
+
+    // 조인 테이블엔 ID뿐이라 표시용 제목/썸네일을 media db에서 한 번에 붙인다.
+    const youtubeVideoIds = unique(
+      songs.flatMap((song) =>
+        song.youtubeVideos.map((video) => video.youtubeVideoId),
+      ),
+    );
+    const spotifyTrackIds = unique(
+      songs.flatMap((song) =>
+        song.spotifyTracks.map((track) => track.spotifyTrackId),
+      ),
+    );
+    // media db가 죽어도 곡 목록 자체는 보여야 하므로 실패 시 ID만 노출한다.
+    const [youtubeInfoById, spotifyInfoById] = await Promise.all([
+      findYoutubeVideoInfos(youtubeVideoIds).catch(
+        () => new Map<string, YoutubeVideoInfo>(),
+      ),
+      findSpotifyTrackInfos(spotifyTrackIds).catch(
+        () => new Map<string, SpotifyTrackInfo>(),
+      ),
+    ]);
+
+    return {
+      artist: {
+        id: artist.id,
+        name: artist.name,
+        nameKo: artist.nameKo,
+        nameJa: artist.nameJa ?? undefined,
+        nameJaKana: artist.nameJaKana ?? undefined,
+        nameLatin: artist.nameLatin ?? undefined,
+        tjName: artist.tjName ?? undefined,
+        slug: artist.slug ?? undefined,
+        homeCatalog: artist.homeCatalog ?? undefined,
+        youtubeChannel: artist.youtube_channel ?? undefined,
+        youtubeTopicChannel: artist.youtube_topic_channel ?? undefined,
+        spotifyId: artist.spotifyId ?? undefined,
+        thumbnailMedium: artist.thumbnailMedium ?? undefined,
+      },
+      data: songs.map((song) => ({
+        id: song.id,
+        title: song.title,
+        titleKo: song.titleKo ?? undefined,
+        titleJa: song.titleJa ?? undefined,
+        titleJaPronu: song.titleJaPronu ?? undefined,
+        titleJaKana: song.titleJaKana ?? undefined,
+        titleJaKanji: song.titleJaKanji ?? undefined,
+        titleLatin: song.titleLatin ?? undefined,
+        titleLatinPronu: song.titleLatinPronu ?? undefined,
+        catalog: song.catalog ?? undefined,
+        tjSongId: song.tjSongId ?? undefined,
+        visible: song.visible,
+        score: song.score ?? undefined,
+        thumbnailDefault: song.thumbnailDefault ?? undefined,
+        thumbnailMedium: song.thumbnailMedium ?? undefined,
+        thumbnailHigh: song.thumbnailHigh ?? undefined,
+        youtubeVideos: song.youtubeVideos.map((video) =>
+          toYoutubeVideoDto(video.youtubeVideoId, youtubeInfoById),
+        ),
+        spotifyTracks: song.spotifyTracks.map((track) =>
+          toSpotifyTrackDto(track.spotifyTrackId, spotifyInfoById),
+        ),
+        createdAt: song.createdAt,
+        updatedAt: song.updatedAt,
+      })),
+      total: songs.length,
+    };
+  }
+
+  async updateSong(
+    songId: number,
+    body: UpdateSongRequestDto | undefined,
+  ): Promise<UpdateSongResponseDto> {
+    const song = await this.prisma.song.findUnique({
+      where: { id: songId },
+      select: { id: true },
+    });
+
+    if (!song) {
+      throw new NotFoundException("song not found.");
+    }
+
+    const data = buildSongUpdateData(body ?? {});
+    const youtubeVideoIds = parseOptionalIdArray(body?.youtubeVideoIds);
+    const spotifyTrackIds = parseOptionalIdArray(body?.spotifyTrackIds);
+
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.song.update({ where: { id: songId }, data });
+
+        // ID 배열이 온 경우에만 연결 목록을 통째로 교체한다.
+        if (youtubeVideoIds) {
+          await tx.songYoutubeVideo.deleteMany({ where: { songId } });
+          await tx.songYoutubeVideo.createMany({
+            data: youtubeVideoIds.map((youtubeVideoId) => ({
+              songId,
+              youtubeVideoId,
+            })),
+          });
+        }
+
+        if (spotifyTrackIds) {
+          await tx.songSpotifyTrack.deleteMany({ where: { songId } });
+          await tx.songSpotifyTrack.createMany({
+            data: spotifyTrackIds.map((spotifyTrackId) => ({
+              songId,
+              spotifyTrackId,
+            })),
+          });
+        }
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new BadRequestException("song unique field already exists.");
+      }
+
+      throw error;
+    }
+
+    return { songId };
+  }
+
+  async deleteSong(songId: number): Promise<DeleteSongResponseDto> {
+    const song = await this.prisma.song.findUnique({
+      where: { id: songId },
+      select: { id: true },
+    });
+
+    if (!song) {
+      throw new NotFoundException("song not found.");
+    }
+
+    // artist_song / song_youtube_video / song_spotify_track는 cascade로 함께 지워진다.
+    await this.prisma.song.delete({ where: { id: songId } });
+
+    return { deletedId: songId };
+  }
 }
 
-function buildWhereSql({
-  title,
-  artist,
-  minNumber,
-  maxNumber,
-  catalog,
-  status,
-}: {
-  title?: string;
-  artist?: string;
-  minNumber: number;
-  maxNumber: number;
-  catalog?: SongCatalogFilter;
-  status?: SongStatusFilter;
-}) {
-  const filters: Prisma.Sql[] = [
-    Prisma.sql`t.id ~ '^[0-9]+$'`,
-    Prisma.sql`t.id::int between ${minNumber} and ${maxNumber}`,
-  ];
-  const trimmedTitle = title?.trim();
-  const trimmedArtist = artist?.trim();
+function toYoutubeVideoDto(
+  youtubeVideoId: string,
+  infoById: Map<string, YoutubeVideoInfo>,
+): SongYoutubeVideoDto {
+  const info = infoById.get(youtubeVideoId);
 
-  if (trimmedTitle) {
-    const keyword = `%${trimmedTitle}%`;
-    filters.push(Prisma.sql`
-      (
-        exists (
-          select 1
-          from song title_song
-          where title_song.tj_song_id = t.id
-            and (
-              title_song.title ilike ${keyword}
-              or title_song.title_ko ilike ${keyword}
-              or title_song.title_ja ilike ${keyword}
-              or title_song.title_ja_pronu ilike ${keyword}
-              or title_song.title_ja_kana ilike ${keyword}
-              or title_song.title_ja_kanji ilike ${keyword}
-              or title_song.title_latin ilike ${keyword}
-              or title_song.title_latin_pronu ilike ${keyword}
-            )
-          )
-        )
-        or t.title ilike ${keyword}
-      )
-    `);
-  }
-
-  if (trimmedArtist) {
-    const keyword = `%${trimmedArtist}%`;
-    filters.push(Prisma.sql`
-      (
-        t.artist ilike ${keyword}
-        or exists (
-          select 1
-          from song artist_song_source
-          join artist_song artist_song_link on artist_song_link.song_id = artist_song_source.id
-          join artist artist on artist.id = artist_song_link.artist_id
-          where artist_song_source.tj_song_id = t.id
-            and (
-              artist.name ilike ${keyword}
-              or artist.name_ko ilike ${keyword}
-              or artist.name_ja ilike ${keyword}
-              or artist.name_ja_kana ilike ${keyword}
-              or artist.name_latin ilike ${keyword}
-              or artist.name_ja_pronu ilike ${keyword}
-              or artist.tj_name ilike ${keyword}
-            )
-        )
-      )
-    `);
-  }
-
-  if (catalog === "NONE") {
-    filters.push(Prisma.sql`s.catalog is null`);
-  } else if (catalog) {
-    filters.push(Prisma.sql`s.catalog = ${catalog}`);
-  }
-
-  if (status === "song") {
-    filters.push(Prisma.sql`s.id is not null`);
-  }
-
-  if (status === "queueOnly") {
-    filters.push(Prisma.sql`s.id is null and q.id is not null`);
-  }
-
-  if (status === "none") {
-    filters.push(Prisma.sql`s.id is null and q.id is null`);
-  }
-
-  return Prisma.join(filters, " and ");
+  return {
+    id: youtubeVideoId,
+    title: info?.title ?? null,
+    thumbnailMedium: info?.thumbnailMedium ?? null,
+    viewCount: info?.viewCount ?? null,
+  };
 }
 
-function buildOrderSql(sortBy: SongSortBy, sortOrder: SortOrder) {
-  const direction = sortOrder === "asc" ? Prisma.sql`asc` : Prisma.sql`desc`;
+function toSpotifyTrackDto(
+  spotifyTrackId: string,
+  infoById: Map<string, SpotifyTrackInfo>,
+): SongSpotifyTrackDto {
+  const info = infoById.get(spotifyTrackId);
 
-  if (sortBy === "title") {
-    return Prisma.sql`order by lower(t.title) ${direction}, t.id::int asc`;
+  return {
+    id: spotifyTrackId,
+    name: info?.name ?? null,
+    releaseDate: info?.releaseDate ?? null,
+    albumImage: info?.albumImage ?? null,
+  };
+}
+
+function buildArtistWhere(
+  search: string | undefined,
+  hasSongsOnly: boolean,
+): Prisma.ArtistWhereInput {
+  const where: Prisma.ArtistWhereInput = {};
+  const keyword = search?.trim();
+
+  if (keyword) {
+    where.OR = [
+      { name: { contains: keyword, mode: "insensitive" } },
+      { nameKo: { contains: keyword, mode: "insensitive" } },
+      { nameJa: { contains: keyword, mode: "insensitive" } },
+      { nameJaKana: { contains: keyword, mode: "insensitive" } },
+      { nameJaPronu: { contains: keyword, mode: "insensitive" } },
+      { nameLatin: { contains: keyword, mode: "insensitive" } },
+      { tjName: { contains: keyword, mode: "insensitive" } },
+      { slug: { contains: keyword, mode: "insensitive" } },
+    ];
   }
 
-  if (sortBy === "artist") {
-    return Prisma.sql`order by lower(coalesce(t.artist, '')) ${direction}, t.id::int asc`;
+  if (hasSongsOnly) {
+    where.artistSongs = { some: {} };
   }
 
-  return Prisma.sql`order by t.id::int ${direction}`;
+  return where;
+}
+
+function buildArtistOrderBy(
+  sortBy: ArtistSortBy,
+  sortOrder: SortOrder,
+): Prisma.ArtistOrderByWithRelationInput {
+  if (sortBy === "name") {
+    return { name: sortOrder };
+  }
+
+  if (sortBy === "createdAt") {
+    return { createdAt: sortOrder };
+  }
+
+  return { artistSongs: { _count: sortOrder } };
+}
+
+function buildSongSearchWhere(
+  search: string | undefined,
+): Prisma.SongWhereInput | undefined {
+  const keyword = search?.trim();
+
+  if (!keyword) {
+    return undefined;
+  }
+
+  return {
+    OR: [
+      { title: { contains: keyword, mode: "insensitive" } },
+      { titleKo: { contains: keyword, mode: "insensitive" } },
+      { titleJa: { contains: keyword, mode: "insensitive" } },
+      { titleJaPronu: { contains: keyword, mode: "insensitive" } },
+      { titleJaKana: { contains: keyword, mode: "insensitive" } },
+      { titleJaKanji: { contains: keyword, mode: "insensitive" } },
+      { titleLatin: { contains: keyword, mode: "insensitive" } },
+      { titleLatinPronu: { contains: keyword, mode: "insensitive" } },
+      { tjSongId: { contains: keyword } },
+    ],
+  };
+}
+
+function buildSongUpdateData(
+  body: UpdateSongRequestDto,
+): Prisma.SongUpdateInput {
+  const data: Prisma.SongUpdateInput = {};
+
+  if (body.title !== undefined) {
+    data.title = normalizeRequired(body.title, "title");
+  }
+
+  const nullableFields = [
+    "titleKo",
+    "titleJa",
+    "titleJaPronu",
+    "titleJaKana",
+    "titleJaKanji",
+    "titleLatin",
+    "titleLatinPronu",
+    "catalog",
+    "thumbnailDefault",
+    "thumbnailMedium",
+    "thumbnailHigh",
+  ] as const;
+
+  for (const field of nullableFields) {
+    if (body[field] !== undefined) {
+      data[field] = normalizeNullable(body[field]);
+    }
+  }
+
+  if (body.visible !== undefined) {
+    if (typeof body.visible !== "boolean") {
+      throw new BadRequestException("visible must be a boolean.");
+    }
+
+    data.visible = body.visible;
+  }
+
+  return data;
+}
+
+function parseOptionalIdArray(
+  value: string[] | undefined,
+): string[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!Array.isArray(value)) {
+    throw new BadRequestException("id list must be an array.");
+  }
+
+  return Array.from(
+    new Set(
+      value.map((item) => String(item).trim()).filter((item) => item.length > 0),
+    ),
+  );
+}
+
+function unique(values: string[]): string[] {
+  return Array.from(new Set(values));
 }
 
 function parseBoundedInteger(
@@ -217,38 +421,41 @@ function parseBoundedInteger(
   return Math.min(Math.max(parsed, min), max);
 }
 
-function parseSortBy(value: string | undefined): SongSortBy {
-  if (value === "title" || value === "artist" || value === "tjNumber") {
+function parseArtistSortBy(value: string | undefined): ArtistSortBy {
+  if (value === "name" || value === "createdAt") {
     return value;
   }
 
-  return "tjNumber";
+  return "songCount";
 }
 
-function parseSortOrder(value: string | undefined): SortOrder {
-  return value === "desc" ? "desc" : "asc";
-}
-
-function parseCatalog(
+function parseSortOrder(
   value: string | undefined,
-): SongCatalogFilter | undefined {
-  if (
-    value === "JPOP" ||
-    value === "KPOP" ||
-    value === "POP" ||
-    value === "CPOP" ||
-    value === "NONE"
-  ) {
+  sortBy: ArtistSortBy,
+): SortOrder {
+  if (value === "asc" || value === "desc") {
     return value;
   }
 
-  return undefined;
+  // 곡 수/최신순은 많은 쪽이 먼저 보이는 게 자연스럽다.
+  return sortBy === "name" ? "asc" : "desc";
 }
 
-function parseStatus(value: string | undefined): SongStatusFilter | undefined {
-  if (value === "song" || value === "queueOnly" || value === "none") {
-    return value;
+function normalizeRequired(
+  value: string | null | undefined,
+  fieldName: string,
+): string {
+  const normalized = normalizeNullable(value);
+
+  if (!normalized) {
+    throw new BadRequestException(`${fieldName} is required.`);
   }
 
-  return undefined;
+  return normalized;
+}
+
+function normalizeNullable(value: string | null | undefined): string | null {
+  const normalized = value?.trim().replace(/\s+/g, " ");
+
+  return normalized || null;
 }
