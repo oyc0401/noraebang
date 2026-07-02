@@ -16,6 +16,12 @@ export class MediaListQueryDto {
   })
   sortBy?: MediaListSortBy;
 
+  @ApiPropertyOptional({
+    enum: ["true"],
+    description: "true면 jpop DB 아티스트에 연결된 채널/아티스트만 조회",
+  })
+  jpopOnly?: string;
+
   @ApiPropertyOptional({ example: "0" })
   offset?: string;
 

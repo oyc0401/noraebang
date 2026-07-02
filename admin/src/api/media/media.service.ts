@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
 import type {
   MediaListQueryDto,
   MediaListSortBy,
@@ -44,11 +45,15 @@ type CountRow = {
 
 @Injectable()
 export class MediaService {
+  constructor(private readonly prisma: PrismaService) {}
+
   async findYoutubeChannels(
     query: MediaListQueryDto,
   ): Promise<YoutubeChannelListResponseDto> {
-    const { search, limit, offset, sortBy } = parseListQuery(query);
+    const { search, limit, offset, sortBy, jpopOnly } = parseListQuery(query);
     const orderSql = buildYoutubeOrderSql(sortBy);
+    const artistsByChannel = await this.findArtistsByChannel();
+    const jpopChannelIds = jpopOnly ? [...artistsByChannel.keys()] : null;
 
     return withMediaDb(async (client) => {
       const rows = await client.query<YoutubeChannelRow>(
@@ -70,10 +75,11 @@ export class MediaService {
             or c.custom_url ilike '%' || $1 || '%'
             or c.id = $1
           )
+          and ($4::text[] is null or c.id = any($4))
           ${orderSql}
           limit $2 offset $3
         `,
-        [search, limit, offset],
+        [search, limit, offset, jpopChannelIds],
       );
       const countRows = await client.query<CountRow>(
         `
@@ -85,8 +91,9 @@ export class MediaService {
             or c.custom_url ilike '%' || $1 || '%'
             or c.id = $1
           )
+          and ($2::text[] is null or c.id = any($2))
         `,
-        [search],
+        [search, jpopChannelIds],
       );
       const total = Number(countRows.rows[0]?.total ?? 0);
       const nextOffset = offset + rows.rows.length;
@@ -101,6 +108,7 @@ export class MediaService {
           videoCount: row.video_count ?? undefined,
           storedVideoCount: row.stored_video_count,
           fetchedAt: row.fetched_at?.toISOString(),
+          artists: artistsByChannel.get(row.id) ?? [],
         })),
         nextOffset,
         hasMore: nextOffset < total,
@@ -112,8 +120,10 @@ export class MediaService {
   async findSpotifyArtists(
     query: MediaListQueryDto,
   ): Promise<SpotifyArtistListResponseDto> {
-    const { search, limit, offset, sortBy } = parseListQuery(query);
+    const { search, limit, offset, sortBy, jpopOnly } = parseListQuery(query);
     const orderSql = buildSpotifyOrderSql(sortBy);
+    const artistsBySpotifyId = await this.findArtistsBySpotifyId();
+    const jpopSpotifyIds = jpopOnly ? [...artistsBySpotifyId.keys()] : null;
 
     return withMediaDb(async (client) => {
       const rows = await client.query<SpotifyArtistRow>(
@@ -134,10 +144,11 @@ export class MediaService {
             or a.name ilike '%' || $1 || '%'
             or a.id = $1
           )
+          and ($4::text[] is null or a.id = any($4))
           ${orderSql}
           limit $2 offset $3
         `,
-        [search, limit, offset],
+        [search, limit, offset, jpopSpotifyIds],
       );
       const countRows = await client.query<CountRow>(
         `
@@ -148,8 +159,9 @@ export class MediaService {
             or a.name ilike '%' || $1 || '%'
             or a.id = $1
           )
+          and ($2::text[] is null or a.id = any($2))
         `,
-        [search],
+        [search, jpopSpotifyIds],
       );
       const total = Number(countRows.rows[0]?.total ?? 0);
       const nextOffset = offset + rows.rows.length;
@@ -163,12 +175,72 @@ export class MediaService {
           popularity: row.popularity ?? undefined,
           storedTrackCount: row.stored_track_count,
           fetchedAt: row.fetched_at?.toISOString(),
+          artists: artistsBySpotifyId.get(row.id) ?? [],
         })),
         nextOffset,
         hasMore: nextOffset < total,
         total,
       };
     });
+  }
+
+  // jpop DB Artist의 채널 연결 맵 (일반 채널 + 토픽 채널 모두 해당 아티스트로 매핑)
+  private async findArtistsByChannel(): Promise<
+    Map<string, { id: number; name: string }[]>
+  > {
+    const artists = await this.prisma.artist.findMany({
+      select: {
+        id: true,
+        name: true,
+        youtube_channel: true,
+        youtube_topic_channel: true,
+      },
+      where: {
+        OR: [
+          { youtube_channel: { not: null } },
+          { youtube_topic_channel: { not: null } },
+        ],
+      },
+    });
+    const artistsByChannel = new Map<string, { id: number; name: string }[]>();
+
+    for (const artist of artists) {
+      for (const channelId of new Set(
+        [artist.youtube_channel, artist.youtube_topic_channel].filter(
+          (id): id is string => Boolean(id),
+        ),
+      )) {
+        const entry = artistsByChannel.get(channelId) ?? [];
+        entry.push({ id: artist.id, name: artist.name });
+        artistsByChannel.set(channelId, entry);
+      }
+    }
+
+    return artistsByChannel;
+  }
+
+  // jpop DB Artist의 스포티파이 연결 맵
+  private async findArtistsBySpotifyId(): Promise<
+    Map<string, { id: number; name: string }[]>
+  > {
+    const artists = await this.prisma.artist.findMany({
+      select: { id: true, name: true, spotifyId: true },
+      where: { spotifyId: { not: null } },
+    });
+    const artistsBySpotifyId = new Map<
+      string,
+      { id: number; name: string }[]
+    >();
+
+    for (const artist of artists) {
+      if (!artist.spotifyId) continue;
+
+      const entry = artistsBySpotifyId.get(artist.spotifyId) ?? [];
+      entry.push({ id: artist.id, name: artist.name });
+      artistsBySpotifyId.set(artist.spotifyId, entry);
+    }
+
+    return artistsBySpotifyId;
   }
 
   updateYoutubeChannel(channelId: string): Promise<YoutubeChannelUpdateResult> {
@@ -191,14 +263,17 @@ function parseListQuery(query: MediaListQueryDto): {
   limit: number;
   offset: number;
   sortBy: MediaListSortBy;
+  jpopOnly: boolean;
 } {
   const trimmedSearch = query.search?.trim();
 
   return {
     search: trimmedSearch ? trimmedSearch : null,
-    limit: parseBoundedInteger(query.limit, 50, 1, 100),
+    // jpop 필터는 전체 선택 업데이트를 위해 한 페이지로 다 받을 수 있게 상한을 넉넉히 둔다.
+    limit: parseBoundedInteger(query.limit, 50, 1, 2_000),
     offset: parseBoundedInteger(query.offset, 0, 0, 1_000_000),
     sortBy: parseSortBy(query.sortBy),
+    jpopOnly: query.jpopOnly === "true",
   };
 }
 

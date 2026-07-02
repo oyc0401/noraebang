@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { LinkedArtistDto } from "./linked-artist.dto";
 
 export class SpotifyArtistListItemDto {
   @ApiProperty({ example: "64tJ2EAv1R6UaZqc4iOCyj" })
@@ -21,6 +22,12 @@ export class SpotifyArtistListItemDto {
 
   @ApiPropertyOptional({ description: "마지막 갱신 시각" })
   fetchedAt?: string;
+
+  @ApiProperty({
+    type: [LinkedArtistDto],
+    description: "jpop DB에서 이 스포티파이 아티스트에 연결된 아티스트",
+  })
+  artists: LinkedArtistDto[];
 }
 
 export class SpotifyArtistListResponseDto {

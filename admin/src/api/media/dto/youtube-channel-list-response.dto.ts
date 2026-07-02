@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { LinkedArtistDto } from "./linked-artist.dto";
 
 export class YoutubeChannelListItemDto {
   @ApiProperty({ example: "UCqECaJ8Gagnn7YCbPEzWH6g" })
@@ -30,6 +31,12 @@ export class YoutubeChannelListItemDto {
 
   @ApiPropertyOptional({ description: "마지막 갱신 시각" })
   fetchedAt?: string;
+
+  @ApiProperty({
+    type: [LinkedArtistDto],
+    description: "jpop DB에서 이 채널에 연결된 아티스트",
+  })
+  artists: LinkedArtistDto[];
 }
 
 export class YoutubeChannelListResponseDto {
