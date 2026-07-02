@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 type QueueYoutubeVideo = {
   id: string;
@@ -528,16 +528,19 @@ export function SongUpdateQueuePage() {
                 <div className="grid gap-4 md:grid-cols-3">
                   <ThumbnailInput
                     label="thumbnailDefault"
+                    currentValue={currentSong?.thumbnailDefault}
                     value={form.thumbnailDefault}
                     onChange={(value) => updateForm("thumbnailDefault", value)}
                   />
                   <ThumbnailInput
                     label="thumbnailMedium"
+                    currentValue={currentSong?.thumbnailMedium}
                     value={form.thumbnailMedium}
                     onChange={(value) => updateForm("thumbnailMedium", value)}
                   />
                   <ThumbnailInput
                     label="thumbnailHigh"
+                    currentValue={currentSong?.thumbnailHigh}
                     value={form.thumbnailHigh}
                     onChange={(value) => updateForm("thumbnailHigh", value)}
                   />
@@ -869,25 +872,33 @@ function MediaOpenButton({ label, url }: { label: string; url: string }) {
 
 function ThumbnailInput({
   label,
+  currentValue,
   value,
   onChange,
 }: {
   label: string;
+  currentValue?: string;
   value: string;
   onChange(value: string): void;
 }) {
   const [failedSrc, setFailedSrc] = useState<string>();
   const trimmedValue = value.trim();
   const imageFailed = failedSrc === trimmedValue;
+  const isChanged = (currentValue ?? "") !== trimmedValue;
 
   return (
     <div>
       <label className="text-sm text-gray-700">{label}</label>
       <input
-        className="mt-1 w-full border border-gray-300 px-2 py-1.5"
+        className={`mt-1 w-full border px-2 py-1.5 ${
+          isChanged ? "border-amber-600" : "border-gray-300"
+        }`}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
+      <p className="mt-0.5 truncate text-xs text-gray-500" title={currentValue}>
+        현재: {currentValue ?? "-"}
+      </p>
       {trimmedValue && !imageFailed && (
         <img
           alt={`${label} preview`}

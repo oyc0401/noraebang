@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaService } from "../../../prisma/prisma.service";
@@ -23,6 +24,8 @@ import { SongUpdateQueueManager } from "./song-update-queue.manager";
 
 @Injectable()
 export class SongUpdateQueueService {
+  private readonly logger = new Logger(SongUpdateQueueService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly songUpdateQueueManager: SongUpdateQueueManager,
@@ -128,11 +131,20 @@ export class SongUpdateQueueService {
     let pushed = 0;
 
     for (const songId of pushSongIds) {
-      const item =
-        await this.songUpdateQueueManager.pushSongUpdateQueueFromSong(songId);
+      try {
+        const item =
+          await this.songUpdateQueueManager.pushSongUpdateQueueFromSong(
+            songId,
+          );
 
-      if (item) {
-        pushed += 1;
+        if (item) {
+          pushed += 1;
+        }
+      } catch (error) {
+        this.logger.error(
+          `Failed to push song update queue for songId=${songId}`,
+          error instanceof Error ? error.stack : error,
+        );
       }
     }
 
